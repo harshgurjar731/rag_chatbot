@@ -106,7 +106,10 @@ from langchain.prompts import ChatPromptTemplate
 from langchain.load import dumps, loads
 from operator import itemgetter
 from langchain_core.runnables import RunnablePassthrough
-from langchain_community.chat_models import ChatOpenAI  # or ChatHuggingFace if you're using HuggingFace models
+from langchain_community.chat_models import ChatOpenAI 
+# from guardrails import Guard
+# from guardrails.hub import toxic_language, profanity
+ # or ChatHuggingFace if you're using HuggingFace models
 
 def get_multiquery_retriever(query: str, db: FAISS | Chroma, llm_model_name: str,temperature:float):
     """RAG pipeline with source link extraction."""

@@ -15,6 +15,8 @@ import { Label } from "@/components/ui/label";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Slider } from "@/components/ui/slider";
 import { Info } from "lucide-react"; // icon for tooltips
+import { X } from "lucide-react";
+
 
 import {
   Select,
@@ -39,7 +41,7 @@ interface QueryPayload {
   llmModel: string;
   vectorDb: string;
   temperature: number;
-  guardrailOption:string;
+  guardrailOption: string;
 
 }
 
@@ -143,6 +145,10 @@ export const ChatInterface = ({ chatbot, chatbotName, onSendMessage }: ChatInter
   const [selectedDocs, setSelectedDocs] = useState<DocumentOption[]>([]);
   const [documentOptions, setDocumentOptions] = useState<DocumentOption[]>([]);
 
+  const handleRemove = (value: string) => {
+    setSelectedDocs((prevDocs) => prevDocs.filter((doc) => doc.value !== value));
+  };
+
   // Automatically update options when chatbot documents change
   useEffect(() => {
     const newOptions = getChatbotDocumentOptions(chatbot);
@@ -221,6 +227,9 @@ export const ChatInterface = ({ chatbot, chatbotName, onSendMessage }: ChatInter
 
     try {
       let fileId = null;
+      if (selectedDocs.length == 0) {
+        fileId = 0;
+      }
 
       // 🔍 Step 1: Get file ID from backend using filename
       if (selectedDocs.length > 0) {
@@ -746,61 +755,110 @@ export const ChatInterface = ({ chatbot, chatbotName, onSendMessage }: ChatInter
             </Popover>
           </div>
           {selectedDocs.length > 0 && (
-            <div className="flex flex-wrap gap-2 mt-2 items-center">
+            <div className="flex flex-wrap gap-1 mt-2 items-center">
               <Label className="text-sm text-muted-foreground">Selected:</Label>
               {selectedDocs.map((doc) => (
                 <span
                   key={doc.value}
-                  className="text-xs bg-chatbot-secondary text-foreground border border-chatbot-primary/20 rounded-md px-2 py-1"
+                  className="flex items-center gap-1 text-xs bg-chatbot-secondary text-foreground border border-chatbot-primary/20 rounded-md px-2 py-1"
                 >
                   {doc.label}
+                  <button
+                    type="button"
+                    className="flex items-center justify-center w-4 h-4 rounded-full hover:bg-destructive hover:text-destructive-foreground transition-colors duration-150"
+                    onClick={() => handleRemove(doc.value)}
+                  >
+                    <X size={10} strokeWidth={2} />
+                  </button>
                 </span>
               ))}
             </div>
+
           )}
-          {(optimizer || embeddingModel || llmModel || vectorDb || temperature || guardrailOption ) && (
+          {(optimizer || embeddingModel || llmModel || vectorDb || typeof temperature === "number" || guardrailOption) && (
             <div className="flex flex-wrap gap-2 mt-2 items-center">
               <Label className="text-sm text-muted-foreground">Settings:</Label>
 
               {optimizer && (
-                <span className="text-xs bg-chatbot-secondary text-foreground border border-chatbot-primary/20 rounded-md px-2 py-1">
+                <span className="flex items-center gap-1 text-xs bg-chatbot-secondary text-foreground border border-chatbot-primary/20 rounded-md px-2 py-1">
                   Optimizer: {optimizer}
+                  <button
+                    type="button"
+                    className="flex items-center justify-center w-4 h-4 rounded-full hover:bg-destructive hover:text-destructive-foreground transition-colors duration-150"
+                    onClick={() => setOptimizer("")}
+                  >
+                    <X size={10} strokeWidth={2} />
+                  </button>
                 </span>
               )}
 
               {embeddingModel && (
-                <span className="text-xs bg-chatbot-secondary text-foreground border border-chatbot-primary/20 rounded-md px-2 py-1">
+                <span className="flex items-center gap-1 text-xs bg-chatbot-secondary text-foreground border border-chatbot-primary/20 rounded-md px-2 py-1">
                   Embedding: {embeddingModel}
+                  <button
+                    type="button"
+                    className="flex items-center justify-center w-4 h-4 rounded-full hover:bg-destructive hover:text-destructive-foreground transition-colors duration-150"
+                    onClick={() => setEmbeddingModel("")}
+                  >
+                    <X size={10} strokeWidth={2} />
+                  </button>
                 </span>
               )}
 
               {llmModel && (
-                <span className="text-xs bg-chatbot-secondary text-foreground border border-chatbot-primary/20 rounded-md px-2 py-1">
+                <span className="flex items-center gap-1 text-xs bg-chatbot-secondary text-foreground border border-chatbot-primary/20 rounded-md px-2 py-1">
                   LLM: {llmModel}
+                  <button
+                    type="button"
+                    className="flex items-center justify-center w-4 h-4 rounded-full hover:bg-destructive hover:text-destructive-foreground transition-colors duration-150"
+                    onClick={() => setLlmModel("")}
+                  >
+                    <X size={10} strokeWidth={2} />
+                  </button>
                 </span>
               )}
 
               {vectorDb && (
-                <span className="text-xs bg-chatbot-secondary text-foreground border border-chatbot-primary/20 rounded-md px-2 py-1">
+                <span className="flex items-center gap-1 text-xs bg-chatbot-secondary text-foreground border border-chatbot-primary/20 rounded-md px-2 py-1">
                   Vector DB: {vectorDb}
+                  <button
+                    type="button"
+                    className="flex items-center justify-center w-4 h-4 rounded-full hover:bg-destructive hover:text-destructive-foreground transition-colors duration-150"
+                    onClick={() => setVectorDb("")}
+                  >
+                    <X size={10} strokeWidth={2} />
+                  </button>
                 </span>
               )}
 
               {typeof temperature === "number" && (
-                <span className="text-xs bg-chatbot-secondary text-foreground border border-chatbot-primary/20 rounded-md px-2 py-1">
+                <span className="flex items-center gap-1 text-xs bg-chatbot-secondary text-foreground border border-chatbot-primary/20 rounded-md px-2 py-1">
                   Temperature: {temperature}
+                  <button
+                    type="button"
+                    className="flex items-center justify-center w-4 h-4 rounded-full hover:bg-destructive hover:text-destructive-foreground transition-colors duration-150"
+                    onClick={() => setTemperature(0.0)}
+                  >
+                    <X size={10} strokeWidth={2} />
+                  </button>
                 </span>
               )}
 
               {guardrailOption && (
-                <span className="text-xs bg-chatbot-secondary text-foreground border border-chatbot-primary/20 rounded-md px-2 py-1">
+                <span className="flex items-center gap-1 text-xs bg-chatbot-secondary text-foreground border border-chatbot-primary/20 rounded-md px-2 py-1">
                   Guardrails: {guardrailOption}
+                  <button
+                    type="button"
+                    className="flex items-center justify-center w-4 h-4 rounded-full hover:bg-destructive hover:text-destructive-foreground transition-colors duration-150"
+                    onClick={() => setGuardrailOption("")}
+                  >
+                    <X size={10} strokeWidth={2} />
+                  </button>
                 </span>
               )}
-
-
             </div>
           )}
+
 
         </div>
 
