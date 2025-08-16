@@ -359,7 +359,7 @@ const ChatbotDetail = () => {
               chatbot={chatbot}
               chatbotName="MyBot"
               onSendMessage={async (payload) => {
-                const { question, fileId, optimizer, embeddingModel, llmModel, vectorDb,temperature,guardrailOption } = payload;
+                const { question, fileId, optimizer, embeddingModel, llmModel, vectorDb,temperature,guardrailOption,tokenSize,showSources } = payload;
 
                 const response = await axios.get("http://localhost:8000/retriever/query", {
                   params: {
@@ -370,7 +370,9 @@ const ChatbotDetail = () => {
                     vector_db: vectorDb || "faiss",
                     file_id: fileId,
                     temperature:temperature || 0.0,
-                    guardrailOption:guardrailOption
+                    guardrailOption:guardrailOption,
+                    token_size: tokenSize || 256,
+                    sources: showSources || false, // Include sources if requested
                   },
                 });
 

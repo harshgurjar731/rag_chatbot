@@ -4,6 +4,7 @@ from fastapi import HTTPException
 from langchain.vectorstores import FAISS, Chroma
 from langchain.embeddings import HuggingFaceEmbeddings
 from Services.multi_query_retriever import get_multiquery_retriever
+from Services.multi_query_retriever_without_sources import get_multiquery_retriever_without_sources
 from Services.general_retriever import get_llm_answer
 
 def load_embeddings(file_id: int, vector_db: str, model_name: str):
@@ -20,14 +21,17 @@ def load_embeddings(file_id: int, vector_db: str, model_name: str):
     else:
         raise HTTPException(status_code=400, detail="Unsupported vector DB")
     
-def retrieve_documents(query: str, query_optimizer: str, embedding_model_name: str,llm_model_name: str, vector_db: str, file_id: int,temperature:float):
+def retrieve_documents(query: str, query_optimizer: str, embedding_model_name: str,llm_model_name: str, vector_db: str, file_id: int,temperature:float,token_size:float,sources: bool):
     embedding = HuggingFaceEmbeddings(model_name=embedding_model_name)
     if file_id == 0:
-        result=get_llm_answer(query, llm_model_name, temperature)
+        result=get_llm_answer(query, llm_model_name, temperature,token_size,sources)
     else:
         db = load_embeddings(file_id, vector_db, embedding_model_name)
         if query_optimizer == "Multi Query":
-            result=get_multiquery_retriever(query,db, llm_model_name,temperature)
+            if sources:
+                result=get_multiquery_retriever(query,db, llm_model_name,temperature,token_size)
+            else:
+                result=get_multiquery_retriever_without_sources(query,db, llm_model_name,temperature,token_size)
         else:
             retriever = db.as_retriever()
     return result

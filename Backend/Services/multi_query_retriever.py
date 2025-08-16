@@ -111,7 +111,7 @@ from langchain_community.chat_models import ChatOpenAI
 # from guardrails.hub import toxic_language, profanity
  # or ChatHuggingFace if you're using HuggingFace models
 
-def get_multiquery_retriever(query: str, db: FAISS | Chroma, llm_model_name: str,temperature:float):
+def get_multiquery_retriever(query: str, db: FAISS | Chroma, llm_model_name: str,temperature:float,token_size:float = 256):
     """RAG pipeline with source link extraction."""
 
     GROQ_API_KEY = "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"
@@ -123,7 +123,7 @@ def get_multiquery_retriever(query: str, db: FAISS | Chroma, llm_model_name: str
         openai_api_key=GROQ_API_KEY,
         model=llm_model_name,
         temperature=temperature,
-        max_tokens=256
+        max_tokens=token_size
     )
 
     # Multi-query prompt
