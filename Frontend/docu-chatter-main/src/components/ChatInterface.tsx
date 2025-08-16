@@ -15,6 +15,8 @@ import { Label } from "@/components/ui/label";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Slider } from "@/components/ui/slider";
 import { Info } from "lucide-react"; // icon for tooltips
+import { X } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
 
 import {
   Select,
@@ -39,7 +41,9 @@ interface QueryPayload {
   llmModel: string;
   vectorDb: string;
   temperature: number;
-  guardrailOption:string;
+  guardrailOption: string;
+  tokenSize: number; // New field for token size,  
+  showSources: boolean; // New field to control source display
 
 }
 
@@ -116,8 +120,8 @@ export const ChatInterface = ({ chatbot, chatbotName, onSendMessage }: ChatInter
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
   const [inputText, setInputText] = useState(""); // This holds the speech-to-text result
-
-
+  const [tokenSize, setTokenSize] = useState(256);
+  const [showSources, setShowSources] = useState(false);
   // const storageKey = `chat_history_${chatbot?.id}`; // Unique key per chatbot
 
 
@@ -142,6 +146,10 @@ export const ChatInterface = ({ chatbot, chatbotName, onSendMessage }: ChatInter
   // Component part (inside your main component)
   const [selectedDocs, setSelectedDocs] = useState<DocumentOption[]>([]);
   const [documentOptions, setDocumentOptions] = useState<DocumentOption[]>([]);
+
+  const handleRemove = (value: string) => {
+    setSelectedDocs((prevDocs) => prevDocs.filter((doc) => doc.value !== value));
+  };
 
   // Automatically update options when chatbot documents change
   useEffect(() => {
@@ -204,7 +212,17 @@ export const ChatInterface = ({ chatbot, chatbotName, onSendMessage }: ChatInter
   //     setIsLoading(false);
   //   }
   // };
+  const handleTokenSizeChange = (e) => {
+    const value = parseInt(e.target.value, 10);
 
+    if (!isNaN(value)) {
+      // clamp value between 128 and 8192
+      const clampedValue = Math.min(Math.max(value, 128), 8192);
+      setTokenSize(clampedValue);
+    } else {
+      setTokenSize(256); // reset if invalid
+    }
+  };
   const handleSend = async () => {
     if (!input.trim() || isLoading) return;
 
@@ -221,6 +239,9 @@ export const ChatInterface = ({ chatbot, chatbotName, onSendMessage }: ChatInter
 
     try {
       let fileId = null;
+      if (selectedDocs.length == 0) {
+        fileId = 0;
+      }
 
       // 🔍 Step 1: Get file ID from backend using filename
       if (selectedDocs.length > 0) {
@@ -242,7 +263,9 @@ export const ChatInterface = ({ chatbot, chatbotName, onSendMessage }: ChatInter
         llmModel,
         vectorDb,
         temperature,
-        guardrailOption
+        guardrailOption,
+        tokenSize,  
+        showSources    
       });
 
       const botMessage: ChatMessage = {
@@ -542,7 +565,7 @@ export const ChatInterface = ({ chatbot, chatbotName, onSendMessage }: ChatInter
 
       <div>
         {/* Original Input Section */}
-        <div className="flex gap-2">
+        <div className="flex gap-4 ml-4 mb-2 ">
           <Button
             variant={isListening ? "destructive" : "chatbot-secondary"}
             size="icon"
@@ -565,11 +588,12 @@ export const ChatInterface = ({ chatbot, chatbotName, onSendMessage }: ChatInter
             onKeyPress={handleKeyPress}
             placeholder="Ask me anything..."
             disabled={isLoading}
-            className="flex-1"
+            className="flex-1 border border-chatbot-primary/40"
           />
 
           <Button
             variant="chatbot"
+            className="flex gap-4 mr-4"
             size="icon"
             onClick={handleSend}
             disabled={!input.trim() || isLoading}
@@ -741,66 +765,174 @@ export const ChatInterface = ({ chatbot, chatbotName, onSendMessage }: ChatInter
                   />
                   <p className="text-sm text-muted-foreground">Temperature: {temperature.toFixed(1)}</p>
                 </div>
+                {/* Token Size */}
+                <div className="space-y-1">
+                  <Label>Token Size</Label>
+                  <Input
+                    type="number"
+                    min={256}
+                    max={2048}
+                    step={128}
+                    placeholder="Enter token size"
+                    value={tokenSize}
+                    onChange={handleTokenSizeChange}
+                    disabled={isLoading}
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Must be between 256 and 2048 tokens (step 128).
+                  </p>
+                </div>
+                <div className="flex items-center justify-between space-x-2">
+                  <Label htmlFor="sources-toggle">Include Sources in Output</Label>
+                  <Switch
+                    id="sources-toggle"
+                    checked={showSources}
+                    onCheckedChange={setShowSources}
+                    disabled={isLoading}
+                  />
+                </div>
+
 
               </PopoverContent>
             </Popover>
           </div>
           {selectedDocs.length > 0 && (
-            <div className="flex flex-wrap gap-2 mt-2 items-center">
+            <div className="flex flex-wrap gap-1 mt-2 items-center">
               <Label className="text-sm text-muted-foreground">Selected:</Label>
               {selectedDocs.map((doc) => (
                 <span
                   key={doc.value}
-                  className="text-xs bg-chatbot-secondary text-foreground border border-chatbot-primary/20 rounded-md px-2 py-1"
+                  className="flex items-center gap-1 text-xs bg-chatbot-secondary text-foreground border border-chatbot-primary/20 rounded-md px-2 py-1"
                 >
                   {doc.label}
+                  <button
+                    type="button"
+                    className="flex items-center justify-center w-4 h-4 rounded-full hover:bg-destructive hover:text-destructive-foreground transition-colors duration-150"
+                    onClick={() => handleRemove(doc.value)}
+                  >
+                    <X size={10} strokeWidth={2} />
+                  </button>
                 </span>
               ))}
             </div>
+
           )}
-          {(optimizer || embeddingModel || llmModel || vectorDb || temperature || guardrailOption ) && (
-            <div className="flex flex-wrap gap-2 mt-2 items-center">
-              <Label className="text-sm text-muted-foreground">Settings:</Label>
+          {(optimizer || embeddingModel || llmModel || vectorDb || typeof temperature === "number" || guardrailOption ||
+            tokenSize ||                     // ✅ Token size
+            typeof showSources === "boolean") && (
+              <div className="flex flex-wrap gap-2 mt-2 items-center">
+                <Label className="text-sm text-muted-foreground">Settings:</Label>
 
-              {optimizer && (
-                <span className="text-xs bg-chatbot-secondary text-foreground border border-chatbot-primary/20 rounded-md px-2 py-1">
-                  Optimizer: {optimizer}
-                </span>
-              )}
+                {optimizer && (
+                  <span className="flex items-center gap-1 text-xs bg-chatbot-secondary text-foreground border border-chatbot-primary/20 rounded-md px-2 py-1">
+                    Optimizer: {optimizer}
+                    <button
+                      type="button"
+                      className="flex items-center justify-center w-4 h-4 rounded-full hover:bg-destructive hover:text-destructive-foreground transition-colors duration-150"
+                      onClick={() => setOptimizer("")}
+                    >
+                      <X size={10} strokeWidth={2} />
+                    </button>
+                  </span>
+                )}
 
-              {embeddingModel && (
-                <span className="text-xs bg-chatbot-secondary text-foreground border border-chatbot-primary/20 rounded-md px-2 py-1">
-                  Embedding: {embeddingModel}
-                </span>
-              )}
+                {embeddingModel && (
+                  <span className="flex items-center gap-1 text-xs bg-chatbot-secondary text-foreground border border-chatbot-primary/20 rounded-md px-2 py-1">
+                    Embedding: {embeddingModel}
+                    <button
+                      type="button"
+                      className="flex items-center justify-center w-4 h-4 rounded-full hover:bg-destructive hover:text-destructive-foreground transition-colors duration-150"
+                      onClick={() => setEmbeddingModel("")}
+                    >
+                      <X size={10} strokeWidth={2} />
+                    </button>
+                  </span>
+                )}
 
-              {llmModel && (
-                <span className="text-xs bg-chatbot-secondary text-foreground border border-chatbot-primary/20 rounded-md px-2 py-1">
-                  LLM: {llmModel}
-                </span>
-              )}
+                {llmModel && (
+                  <span className="flex items-center gap-1 text-xs bg-chatbot-secondary text-foreground border border-chatbot-primary/20 rounded-md px-2 py-1">
+                    LLM: {llmModel}
+                    <button
+                      type="button"
+                      className="flex items-center justify-center w-4 h-4 rounded-full hover:bg-destructive hover:text-destructive-foreground transition-colors duration-150"
+                      onClick={() => setLlmModel("")}
+                    >
+                      <X size={10} strokeWidth={2} />
+                    </button>
+                  </span>
+                )}
 
-              {vectorDb && (
-                <span className="text-xs bg-chatbot-secondary text-foreground border border-chatbot-primary/20 rounded-md px-2 py-1">
-                  Vector DB: {vectorDb}
-                </span>
-              )}
+                {vectorDb && (
+                  <span className="flex items-center gap-1 text-xs bg-chatbot-secondary text-foreground border border-chatbot-primary/20 rounded-md px-2 py-1">
+                    Vector DB: {vectorDb}
+                    <button
+                      type="button"
+                      className="flex items-center justify-center w-4 h-4 rounded-full hover:bg-destructive hover:text-destructive-foreground transition-colors duration-150"
+                      onClick={() => setVectorDb("")}
+                    >
+                      <X size={10} strokeWidth={2} />
+                    </button>
+                  </span>
+                )}
 
-              {typeof temperature === "number" && (
-                <span className="text-xs bg-chatbot-secondary text-foreground border border-chatbot-primary/20 rounded-md px-2 py-1">
-                  Temperature: {temperature}
-                </span>
-              )}
+                {typeof temperature === "number" && (
+                  <span className="flex items-center gap-1 text-xs bg-chatbot-secondary text-foreground border border-chatbot-primary/20 rounded-md px-2 py-1">
+                    Temperature: {temperature}
+                    <button
+                      type="button"
+                      className="flex items-center justify-center w-4 h-4 rounded-full hover:bg-destructive hover:text-destructive-foreground transition-colors duration-150"
+                      onClick={() => setTemperature(0.0)}
+                    >
+                      <X size={10} strokeWidth={2} />
+                    </button>
+                  </span>
+                )}
 
-              {guardrailOption && (
-                <span className="text-xs bg-chatbot-secondary text-foreground border border-chatbot-primary/20 rounded-md px-2 py-1">
-                  Guardrails: {guardrailOption}
-                </span>
-              )}
+                {guardrailOption && (
+                  <span className="flex items-center gap-1 text-xs bg-chatbot-secondary text-foreground border border-chatbot-primary/20 rounded-md px-2 py-1">
+                    Guardrails: {guardrailOption}
+                    <button
+                      type="button"
+                      className="flex items-center justify-center w-4 h-4 rounded-full hover:bg-destructive hover:text-destructive-foreground transition-colors duration-150"
+                      onClick={() => setGuardrailOption("")}
+                    >
+                      <X size={10} strokeWidth={2} />
+                    </button>
+                  </span>
+                )}
+
+                {/* Token Size */}
+                {tokenSize && (
+                  <span className="flex items-center gap-1 text-xs bg-chatbot-secondary text-foreground border border-chatbot-primary/20 rounded-md px-2 py-1">
+                    Token Size: {tokenSize}
+                    <button
+                      type="button"
+                      className="flex items-center justify-center w-4 h-4 rounded-full hover:bg-destructive hover:text-destructive-foreground transition-colors duration-150"
+                      onClick={() => setTokenSize(256)}
+                    >
+                      <X size={10} strokeWidth={2} />
+                    </button>
+                  </span>
+                )}
+
+                {/* Include Sources */}
+                {typeof showSources === "boolean" && (
+                  <span className="flex items-center gap-1 text-xs bg-chatbot-secondary text-foreground border border-chatbot-primary/20 rounded-md px-2 py-1">
+                    Sources: {showSources ? "Yes" : "No"}
+                    <button
+                      type="button"
+                      className="flex items-center justify-center w-4 h-4 rounded-full hover:bg-destructive hover:text-destructive-foreground transition-colors duration-150"
+                      onClick={() => setShowSources(false)} // reset to "No"
+                    >
+                      <X size={10} strokeWidth={2} />
+                    </button>
+                  </span>
+                )}
+              </div>
+            )}
 
 
-            </div>
-          )}
+
 
         </div>
 
