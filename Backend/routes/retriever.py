@@ -11,7 +11,9 @@ def retrieve(query: str = Query(...),
              vector_db: str = Query(...),
              file_id: int = Query(...),
              temperature:float=Query(0.0),
-             guardrailOption:str=Query("none"),):
-    results = retrieve_documents(query,query_optimizer,embedding_model_name,llm_model_name, vector_db, file_id,temperature)
+             guardrailOption:str=Query("none"),
+             token_size:int=Query(256, ge=256, le=2048, description="Token size (between 256 and 2048)"),
+             sources: bool= Query(False, description="Include sources in the response")):
+    results = retrieve_documents(query,query_optimizer,embedding_model_name,llm_model_name, vector_db, file_id,temperature,token_size,sources)
     return {"results": results["answer"]}
 # +"\n\n"+str(results["sources"])
