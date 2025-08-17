@@ -23,22 +23,24 @@ def save_docs_to_json(docs, path: Path):
     ]
     with open(path, "w", encoding="utf-8") as f:
         json.dump(data, f, ensure_ascii=False, indent=2)
-
 def load_file_with_loader(file_path: str, loader_type: str):
+    file_path = Path(file_path)  # ✅ ensure Path object always
+
     if loader_type == "pdf":
-        loader = PyPDFLoader(file_path)
+        loader = PyPDFLoader(str(file_path))
     elif loader_type == "txt":
-        loader = TextLoader(file_path)
+        loader = TextLoader(str(file_path), encoding="utf-8", autodetect_encoding=True)
     elif loader_type == "docx":
-        loader = UnstructuredWordDocumentLoader(file_path)
+        loader = UnstructuredWordDocumentLoader(str(file_path))
     elif loader_type == "html":
-        loader = UnstructuredHTMLLoader(file_path)
+        loader = UnstructuredHTMLLoader(str(file_path))
     elif loader_type == "md":
-        loader = UnstructuredMarkdownLoader(file_path)
+        loader = UnstructuredMarkdownLoader(str(file_path))
     elif loader_type == "csv":
-        loader = CSVLoader(file_path)
+        loader = CSVLoader(str(file_path))
     else:
         raise ValueError(f"Unsupported loader type: {loader_type}")
+
     document_list = loader.load()
-    save_docs_to_json(document_list, Path(file_path).with_suffix('.json'))
+    save_docs_to_json(document_list, file_path.with_suffix('.json'))
     return document_list

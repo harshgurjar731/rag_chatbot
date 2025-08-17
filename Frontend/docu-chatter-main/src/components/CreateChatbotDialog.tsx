@@ -34,6 +34,7 @@ export const CreateChatbotDialog = ({ onCreateChatbot, children }: CreateChatbot
   const { toast } = useToast();
   const { addDocument } = useChatbots();
   const [loading, setLoading] = useState(false);
+  const [url, setUrl] = useState<string>("")
 
 
   const createDatastoreApiCall = async (data: { name: string; topic: string }) => {
@@ -63,7 +64,29 @@ export const CreateChatbotDialog = ({ onCreateChatbot, children }: CreateChatbot
     return response.data; // { message, file_id, filename }
   };
 
- const navigate = useNavigate();
+  interface ScrapeResponse {
+  url: string;
+  file_path: string;
+  message: string;
+}
+
+const scrapeWebsite = async (datastoreId: number, url: string) => {
+  try {
+    const { data } = await axios.post(
+       `http://127.0.0.1:8000/urlscraper/${datastoreId}`,
+    {}, // empty body
+    { params: { url } } // URL as query param
+  );
+    return data; // { url, file_path, message }
+  } catch (err: any) {
+    console.error("Error scraping website:", err.response?.data || err.message);
+    throw err;
+  }
+};
+
+
+
+  const navigate = useNavigate();
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -88,6 +111,9 @@ export const CreateChatbotDialog = ({ onCreateChatbot, children }: CreateChatbot
       if (file) {
         await uploadFileToDatastore(created.id, file);
       }
+      if (url) {
+        await scrapeWebsite(created.id, url);
+      }
 
       // onCreateChatbot(created);
       console.log(created.id)
@@ -103,9 +129,12 @@ export const CreateChatbotDialog = ({ onCreateChatbot, children }: CreateChatbot
 
 
 
+
+
       setFormData({ name: '', topic: '' });
       setFile(null);
       setOpen(false);
+
 
       // ✅ Redirect to chatbot detail page
       navigate(`/`);
@@ -254,8 +283,8 @@ export const CreateChatbotDialog = ({ onCreateChatbot, children }: CreateChatbot
               </Label>
               <Card
                 className={`mt-1.5 border-2 border-dashed transition-colors ${dragActive
-                    ? 'border-chatbot-primary bg-chatbot-primary/5'
-                    : 'border-muted-foreground/25 hover:border-chatbot-primary/50'
+                  ? 'border-chatbot-primary bg-chatbot-primary/5'
+                  : 'border-muted-foreground/25 hover:border-chatbot-primary/50'
                   }`}
                 onDragEnter={handleDrag}
                 onDragLeave={handleDrag}
@@ -307,6 +336,20 @@ export const CreateChatbotDialog = ({ onCreateChatbot, children }: CreateChatbot
                 </CardContent>
               </Card>
             </div>
+            <div>
+              <Label htmlFor="url" className="text-sm font-medium">
+                Website URL
+              </Label>
+              <Input
+                id="url"
+                type="url"
+                placeholder="e.g., https://example.com/"
+                value={url}
+                onChange={(e) => setUrl(e.target.value)}
+                className="mt-1.5"
+              />
+            </div>
+
           </div>
 
           <div className="flex gap-3 pt-4">

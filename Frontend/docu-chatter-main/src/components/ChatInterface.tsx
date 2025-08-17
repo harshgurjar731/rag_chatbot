@@ -17,6 +17,7 @@ import { Slider } from "@/components/ui/slider";
 import { Info } from "lucide-react"; // icon for tooltips
 import { X } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
+import { Loader2 } from "lucide-react";
 
 import {
   Select,
@@ -124,6 +125,9 @@ export const ChatInterface = ({ chatbot, chatbotName, onSendMessage }: ChatInter
   const [showSources, setShowSources] = useState(false);
   // const storageKey = `chat_history_${chatbot?.id}`; // Unique key per chatbot
 
+  const [urlInput, setUrlInput] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const getChatbotDocumentOptions = (chatbot: { documents?: string[] }): DocumentOption[] => {
     if (!chatbot?.documents || chatbot.documents.length === 0) return [];
@@ -132,6 +136,45 @@ export const ChatInterface = ({ chatbot, chatbotName, onSendMessage }: ChatInter
       label: doc,
       value: doc,
     }));
+  };
+  const scrapeWebsite = async (datastoreId: number, url: string) => {
+    try {
+      const { data } = await axios.post(
+        `http://127.0.0.1:8000/urlscraper/${datastoreId}`,
+        {}, // empty body
+        { params: { url } } // URL as query param
+      );
+      return data; // { url, file_path, message }
+    } catch (err: any) {
+      console.error("Error scraping website:", err.response?.data || err.message);
+      throw err;
+    }
+  };
+  const handleUrlSubmit = async () => {
+    if (!urlInput.trim()) return;
+    setIsSubmitting(true);
+    setError(null);
+
+    try {
+      const result = await scrapeWebsite(chatbot.datastoreId, urlInput);
+      console.log("Scrape success:", result);
+
+      // ✅ Show toast instead of auto-refresh
+      toast({
+        title: "Website processed successfully 🎉",
+        description:
+          "Please refresh the page and select the scraped URL file from the 'Select Documents' option.",
+        duration: 10000, // auto-dismiss after 5s
+      });
+
+      // Optional: update parent state if needed
+      setUrlInput(""); // reset input
+      return result;
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   // Optional helper to make labels more readable
@@ -264,8 +307,8 @@ export const ChatInterface = ({ chatbot, chatbotName, onSendMessage }: ChatInter
         vectorDb,
         temperature,
         guardrailOption,
-        tokenSize,  
-        showSources    
+        tokenSize,
+        showSources
       });
 
       const botMessage: ChatMessage = {
@@ -468,6 +511,7 @@ export const ChatInterface = ({ chatbot, chatbotName, onSendMessage }: ChatInter
     }),
   };
 
+
   return (
     <div className="flex flex-col h-[470px] bg-gradient-surface rounded-lg border border-chatbot-primary/20">
 
@@ -614,19 +658,6 @@ export const ChatInterface = ({ chatbot, chatbotName, onSendMessage }: ChatInter
               <PopoverContent className="w-[300px] h-[200px] max-h-[400px] overflow-y-auto">
                 <div className="space-y-2">
                   <Label>Select Documents</Label>
-                  {/* <SelectMulti
-                    isMulti={false}
-                    styles={customMultiStyles}
-                    options={[getChatbotDocumentOptions(chatbot)] 
-                      // ||[]
-                    }
-                    value={selectedDocs[0] || null} // Expect a single selected object
-                    onChange={(selected: { label: string; value: string } | null) =>
-                      setSelectedDocs(selected ? [selected] : [])
-                    }
-                    isDisabled={isLoading}
-                    placeholder="Choose document(s)"
-                  /> */}
                   <SelectMulti
                     isMulti={false}
                     styles={customMultiStyles}
@@ -638,6 +669,31 @@ export const ChatInterface = ({ chatbot, chatbotName, onSendMessage }: ChatInter
                     isDisabled={isLoading}
                     placeholder="Choose document"
                   />
+
+                  {/* Enter URL */}
+                  <div className="space-y-2">
+                    <Label>Enter Website URL</Label>
+                    <div className="flex gap-2">
+                      <Input
+                        type="url"
+                        placeholder="https://example.com"
+                        value={urlInput}
+                        onChange={(e) => setUrlInput(e.target.value)}
+                        disabled={isLoading}
+                      />
+                      <Button
+                        variant="chatbot"
+                        size="sm"
+                        onClick={handleUrlSubmit}
+                        disabled={!urlInput.trim() || isLoading}
+                      >{isSubmitting ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      ) : (
+                        "Add"
+                      )}
+                      </Button>
+                    </div>
+                  </div>
 
 
 
