@@ -152,8 +152,8 @@ const ChatbotDetail = () => {
           `http://127.0.0.1:8000/datastores/${chatbot.datastoreId}/files/${file.id}`
         );
       }
-      
-    // 🔥 Remove associated chat history from localStorage
+
+      // 🔥 Remove associated chat history from localStorage
       localStorage.removeItem(`chat_history_${chatbot.id}`)
 
       // Step 3: Delete chatbot metadata (frontend state)
@@ -359,7 +359,7 @@ const ChatbotDetail = () => {
               chatbot={chatbot}
               chatbotName="MyBot"
               onSendMessage={async (payload) => {
-                const { question, fileId, optimizer, embeddingModel, llmModel, vectorDb,temperature,guardrailOption,tokenSize,showSources } = payload;
+                const { question, fileId, optimizer, embeddingModel, llmModel, vectorDb, temperature, guardrailOption, tokenSize, showSources } = payload;
 
                 const response = await axios.get("http://localhost:8000/retriever/query", {
                   params: {
@@ -369,8 +369,8 @@ const ChatbotDetail = () => {
                     llm_model_name: llmModel || "llama3-8b-8192",
                     vector_db: vectorDb || "faiss",
                     file_id: fileId,
-                    temperature:temperature || 0.0,
-                    guardrailOption:guardrailOption,
+                    temperature: temperature || 0.0,
+                    guardrailOption: guardrailOption,
                     token_size: tokenSize || 256,
                     sources: showSources || false, // Include sources if requested
                   },
@@ -405,11 +405,17 @@ const ChatbotDetail = () => {
                         <div
                           key={index}
                           onClick={() => handleFileClick(chatbot.datastoreId, doc)}
-                          className="flex items-center gap-3 p-3 rounded-lg bg-chatbot-surface-variant"
+                          className="flex items-start gap-3 p-3 rounded-lg bg-chatbot-surface-variant hover:bg-chatbot-surface transition cursor-pointer"
                         >
-                          <FileText className="h-5 w-5 text-chatbot-primary" />
-                          <span className="flex-1 text-sm font-medium">{doc}</span>
-                          {/* <Badge variant="outline" className="text-xs">Active</Badge> */}
+                          {/* File Icon */}
+                          <FileText className="h-5 w-5 text-chatbot-primary shrink-0 mt-1" />
+
+                          {/* File Name */}
+                          <span className="flex-1 text-sm font-medium break-all leading-snug">
+                            {doc}
+                          </span>
+
+                          {/* Delete Button */}
                           <button
                             onClick={(e) => {
                               e.stopPropagation(); // Prevent file click
@@ -422,8 +428,8 @@ const ChatbotDetail = () => {
                           </button>
                         </div>
                       ))}
-
                     </div>
+
                   )}
                 </CardContent>
               </Card>

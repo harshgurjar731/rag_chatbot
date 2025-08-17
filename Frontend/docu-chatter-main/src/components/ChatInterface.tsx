@@ -685,13 +685,15 @@ export const ChatInterface = ({ chatbot, chatbotName, onSendMessage }: ChatInter
                         variant="chatbot"
                         size="sm"
                         onClick={handleUrlSubmit}
-                        disabled={!urlInput.trim() || isLoading}
-                      >{isSubmitting ? (
-                        <Loader2 className="h-4 w-4 animate-spin" />
-                      ) : (
-                        "Add"
-                      )}
+                        disabled={!urlInput.trim() || isSubmitting} // ✅ disable while submitting
+                      >
+                        {isSubmitting ? (
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                        ) : (
+                          "Add"
+                        )}
                       </Button>
+
                     </div>
                   </div>
 
