@@ -120,7 +120,7 @@ export const ChatInterface = ({ chatbot, chatbotName, onSendMessage }: ChatInter
   const [isSpeaking, setIsSpeaking] = useState(false);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
-  const [inputText, setInputText] = useState(""); // This holds the speech-to-text result
+  // const [inputText, setInputText] = useState(""); // This holds the speech-to-text result
   const [tokenSize, setTokenSize] = useState(256);
   const [showSources, setShowSources] = useState(false);
   // const storageKey = `chat_history_${chatbot?.id}`; // Unique key per chatbot
@@ -406,7 +406,7 @@ export const ChatInterface = ({ chatbot, chatbotName, onSendMessage }: ChatInter
 
       recognition.onresult = (event: SpeechRecognitionEvent) => {
         const transcript = event.results[0][0].transcript;
-        setInputText(transcript); // 👈 Store final transcript into inputText or your message state
+        setInput(transcript); // 👈 Store final transcript into inputText or your message state
         setIsListening(false);
       };
 
