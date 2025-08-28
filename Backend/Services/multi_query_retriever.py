@@ -107,11 +107,10 @@ from langchain.load import dumps, loads
 from operator import itemgetter
 from langchain_core.runnables import RunnablePassthrough
 from langchain_community.chat_models import ChatOpenAI 
-# from guardrails import Guard
-# from guardrails.hub import toxic_language, profanity
- # or ChatHuggingFace if you're using HuggingFace models
+from guardrails import Guard
+from guardrails.hub import ToxicLanguage
 
-def get_multiquery_retriever(query: str, db: FAISS | Chroma, llm_model_name: str,temperature:float,token_size:float = 256):
+def get_multiquery_retriever(query: str, db: FAISS | Chroma, llm_model_name: str,temperature:float,token_size:float = 256,guardrail_level: str="none"):
     """RAG pipeline with source link extraction."""
 
     GROQ_API_KEY = "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"
@@ -144,6 +143,19 @@ def get_multiquery_retriever(query: str, db: FAISS | Chroma, llm_model_name: str
         retriever=db.as_retriever(search_kwargs={"k": 2}),
         llm=llm
     )
+    # ✅ Setup Guardrails depending on level
+    if guardrail_level == "none":
+        guard = None  # no validation
+    elif guardrail_level == "basic":
+        guard = Guard().use(ToxicLanguage(threshold=0.9))  # lenient
+    elif guardrail_level == "strict":
+        guard = Guard().use(ToxicLanguage(threshold=0.5))  # strict
+    elif guardrail_level == "custom":
+        guard = Guard().use(
+            ToxicLanguage(threshold=0.7, validation_method="sentence")
+        )
+    else:
+        guard = None
 
     question = query
     generate_queries_output = generate_queries.invoke({"question": question})
@@ -177,6 +189,17 @@ def get_multiquery_retriever(query: str, db: FAISS | Chroma, llm_model_name: str
     )
 
     final_answer = final_rag_chain.invoke({"question": question})
+    
+    if guard:
+        try:
+            validated = guard.validate(final_answer)
+
+            # if not validated.validation_passed:
+            #     return {"answer": "⚠️ Response blocked by guardrails: " + str(validated.errors)}
+
+            final_answer = validated.validated_output.strip()
+        except Exception as e:
+            return {"answer": f"⚠️ Response blocked by guardrail: {str(e)}"}
 
     return {
         "answer": final_answer,

@@ -10,8 +10,11 @@ from langchain.load import dumps, loads
 from operator import itemgetter 
 from langchain_core.runnables import RunnablePassthrough
 from langchain_community.chat_models import ChatOpenAI  # or ChatHuggingFace if you're using HuggingFace models
+from guardrails import Guard
+from guardrails.hub import ToxicLanguage
 
-def get_multiquery_retriever_without_sources(query: str, db: FAISS|Chroma, llm_model_name: str,temperature:float,token_size:float = 256):
+
+def get_multiquery_retriever_without_sources(query: str, db: FAISS|Chroma, llm_model_name: str,temperature:float,token_size:float = 256,guardrail_level: str="none"):
 
     "   Create a MultiQueryRetriever using the provided vector store."
 
@@ -26,7 +29,7 @@ def get_multiquery_retriever_without_sources(query: str, db: FAISS|Chroma, llm_m
     openai_api_key=GROQ_API_KEY,
     model=llm_model_name,  # or use "llama3-70b-8192", "gemma-7b-it", etc.
     temperature=temperature,
-    max_tokens=token_size
+    max_tokens=token_size,
     )
     # Define the prompt template for generating multi-queries
  
@@ -46,6 +49,23 @@ def get_multiquery_retriever_without_sources(query: str, db: FAISS|Chroma, llm_m
         | StrOutputParser() 
         | (lambda x: x.split("\n"))
     )
+
+    
+    # ✅ Setup Guardrails depending on level
+    if guardrail_level == "none":
+        guard = None  # no validation
+    elif guardrail_level == "basic":
+        guard = Guard().use(ToxicLanguage(threshold=0.9))  # lenient
+    elif guardrail_level == "strict":
+        guard = Guard().use(ToxicLanguage(threshold=0.5))  # strict
+    elif guardrail_level == "custom":
+        guard = Guard().use(
+            ToxicLanguage(threshold=0.7, validation_method="sentence")
+        )
+    else:
+        guard = None
+
+    
 
     retriever = MultiQueryRetriever.from_llm(retriever=db.as_retriever(search_kwargs={"k": 2}), llm=llm)
 
@@ -78,9 +98,20 @@ def get_multiquery_retriever_without_sources(query: str, db: FAISS|Chroma, llm_m
         | StrOutputParser()
     )
 
-    final_rag_chain_output = final_rag_chain.invoke({"question":question})
-    print("Final RAG Chain Output:", final_rag_chain_output)
-    return {"answer":final_rag_chain_output}
+    final_answer = final_rag_chain.invoke({"question":question})
+    if guard:
+        try:
+            validated = guard.validate(final_answer)
+
+            # if not validated.validation_passed:
+            #     return {"answer": "⚠️ Response blocked by guardrails: " + str(validated.errors)}
+
+            final_answer = validated.validated_output.strip()
+        except Exception as e:
+            return {"answer": f"⚠️ Response blocked by guardrail: {str(e)}"}
+        
+    print("Final RAG Chain Output:", final_answer)
+    return {"answer":final_answer}
     
 
 def get_unique_union(documents: list[list]):

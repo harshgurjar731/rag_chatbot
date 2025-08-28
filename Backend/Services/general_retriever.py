@@ -48,14 +48,22 @@
 from langchain.prompts import ChatPromptTemplate
 from langchain_core.output_parsers import StrOutputParser
 from langchain_community.chat_models import ChatOpenAI
+from guardrails import Guard
+from guardrails.hub import ToxicLanguage
+# import os
 
+# # Disable OpenTelemetry + Guardrails telemetry
+# os.environ["OTEL_SDK_DISABLED"] = "true"
+# os.environ["OTEL_EXPORTER_OTLP_ENDPOINT"] = "none"
+# os.environ["GUARDRAILS_DISABLE_TELEMETRY"] = "1"
 
 def get_llm_answer(
     query: str,
     llm_model_name: str,
     temperature: float,
     token_size: int = 256,
-    include_sources: bool = False
+    include_sources: bool = False,
+    guardrail_level: str="none"
 ):
     """General purpose chatbot without using any file/vector store data."""
 
@@ -90,6 +98,23 @@ def get_llm_answer(
 
         Question: {question}
         """
+    
+    # ✅ Setup Guardrails depending on level
+    if guardrail_level == "none":
+        guard = None  # no validation
+    elif guardrail_level == "basic":
+        guard = Guard().use(ToxicLanguage(threshold=0.9))  # lenient
+    elif guardrail_level == "strict":
+        guard = Guard().use(ToxicLanguage(threshold=0.5))  # strict
+    elif guardrail_level == "custom":
+        guard = Guard().use(
+            ToxicLanguage(threshold=0.7, validation_method="sentence")
+        )
+    else:
+        guard = None
+
+    
+
 
     prompt = ChatPromptTemplate.from_template(chatbot_template)
 
@@ -102,6 +127,18 @@ def get_llm_answer(
     )
 
     final_answer = chatbot_chain.invoke({"question": query})
+
+    if guard:
+        try:
+            validated = guard.validate(final_answer)
+
+            # if not validated.validation_passed:
+            #     return {"answer": "⚠️ Response blocked by guardrails: " + str(validated.errors)}
+
+            final_answer = validated.validated_output.strip()
+        except Exception as e:
+            return {"answer": f"⚠️ Response blocked by guardrail: {str(e)}"}
+
 
     # If sources included, split answer into text + sources
     if include_sources and "Sources:" in final_answer:

@@ -3,6 +3,10 @@ from database import init_db, list_tables, list_tables_content,list_file_content
 from routes import datastore, upload, preview, chunking,embedding, retriever,delete,url_scraper
 from fastapi.middleware.cors import CORSMiddleware
 # from Backend.db.database import init_db
+# import os
+# os.environ["OTEL_SDK_DISABLED"] = "true"   # disables OpenTelemetry
+# os.environ["GUARDRAILS_DISABLE_TELEMETRY"] = "1" 
+
 
 app = FastAPI(title="RAG Document Store")
 
