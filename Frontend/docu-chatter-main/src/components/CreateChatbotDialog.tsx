@@ -242,7 +242,7 @@ const scrapeWebsite = async (datastoreId: number, url: string) => {
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-xl">
             <Bot className="h-6 w-6 text-chatbot-primary" />
-            Create New Chatbot
+            Create New Assistant
           </DialogTitle>
           <DialogDescription>
             Build a specialized AI assistant for your specific topic and documents.
@@ -253,7 +253,7 @@ const scrapeWebsite = async (datastoreId: number, url: string) => {
           <div className="space-y-4">
             <div>
               <Label htmlFor="name" className="text-sm font-medium">
-                Chatbot Name
+                Assistant Name
               </Label>
               <Input
                 id="name"
@@ -266,7 +266,7 @@ const scrapeWebsite = async (datastoreId: number, url: string) => {
 
             <div>
               <Label htmlFor="topic" className="text-sm font-medium">
-                Topic/Domain
+                Description
               </Label>
               <Input
                 id="topic"
@@ -279,7 +279,7 @@ const scrapeWebsite = async (datastoreId: number, url: string) => {
 
             <div>
               <Label className="text-sm font-medium">
-                Policy Document (Optional)
+                Document (Optional)
               </Label>
               <Card
                 className={`mt-1.5 border-2 border-dashed transition-colors ${dragActive
@@ -368,7 +368,7 @@ const scrapeWebsite = async (datastoreId: number, url: string) => {
               disabled={loading}
             >
               <Sparkles className="h-4 w-4" />
-              {loading ? "Creating..." : "Create Chatbot"}
+              {loading ? "Creating..." : "Create Assistant"}
               {/* Create Chatbot */}
             </Button>
           </div>

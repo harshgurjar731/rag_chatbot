@@ -109,11 +109,16 @@ from langchain_core.runnables import RunnablePassthrough
 from langchain_community.chat_models import ChatOpenAI 
 from guardrails import Guard
 from guardrails.hub import ToxicLanguage
+# ✅ Import our guardrail utilities
+from Services.guardrail import validate_output  
 
 def get_multiquery_retriever(query: str, db: FAISS | Chroma, llm_model_name: str,temperature:float,token_size:float = 256,guardrail_level: str="none"):
     """RAG pipeline with source link extraction."""
 
-    GROQ_API_KEY = "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"
+    # GROQ_API_KEY = "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"
+    GROQ_API_KEY = "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"
+
+
     if not llm_model_name:
         raise ValueError("LLM model name must be provided")
 
@@ -189,18 +194,15 @@ def get_multiquery_retriever(query: str, db: FAISS | Chroma, llm_model_name: str
     )
 
     final_answer = final_rag_chain.invoke({"question": question})
-    
-    if guard:
-        try:
-            validated = guard.validate(final_answer)
 
-            # if not validated.validation_passed:
-            #     return {"answer": "⚠️ Response blocked by guardrails: " + str(validated.errors)}
+   # ✅ Apply guardrails (toxicity, PII etc.)
+    validated = validate_output(final_answer, guardrail_level)
 
-            final_answer = validated.validated_output.strip()
-        except Exception as e:
-            return {"answer": f"⚠️ Response blocked by guardrail: {str(e)}"}
+    # If guard blocked, return directly
+    if "⚠️ Response blocked" in validated["answer"]:
+        return validated
 
+    final_answer = validated["answer"]
     return {
         "answer": final_answer,
         "sources": source_links

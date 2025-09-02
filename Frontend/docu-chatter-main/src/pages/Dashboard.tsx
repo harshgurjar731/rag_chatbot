@@ -33,7 +33,7 @@ const Dashboard = () => {
                 <Bot className="h-8 w-8 text-primary-foreground" />
               </div>
               <div>
-                <h1 className="text-3xl font-bold text-foreground">ChatBot Hub</h1>
+                <h1 className="text-3xl font-bold text-foreground">Knowledge Assistant Hub</h1>
                 <p className="text-muted-foreground">Create and manage your AI assistants</p>
               </div>
             </div>
@@ -41,7 +41,7 @@ const Dashboard = () => {
             <CreateChatbotDialog onCreateChatbot={handleCreateChatbot}>
               <Button variant="chatbot" size="lg" className="hidden md:flex">
                 <Plus className="h-5 w-5" />
-                Create Chatbot
+                Create Assistant
               </Button>
             </CreateChatbotDialog>
           </div>
@@ -91,7 +91,7 @@ const Dashboard = () => {
             <CreateChatbotDialog onCreateChatbot={handleCreateChatbot}>
               <Button variant="chatbot" size="lg">
                 <Plus className="h-5 w-5" />
-                Create Your First Chatbot
+                Create Your First Assistant
               </Button>
             </CreateChatbotDialog>
           </div>
@@ -100,7 +100,7 @@ const Dashboard = () => {
           <div>
             <div className="flex items-center justify-between mb-6">
               <div>
-                <h2 className="text-2xl font-semibold text-foreground">Your Chatbots</h2>
+                <h2 className="text-2xl font-semibold text-foreground">Your Assistants</h2>
                 <p className="text-muted-foreground">
                   {chatbots.length} assistant{chatbots.length !== 1 ? 's' : ''} ready to help
                 </p>
