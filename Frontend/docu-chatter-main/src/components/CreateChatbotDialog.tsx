@@ -194,44 +194,61 @@ const scrapeWebsite = async (datastoreId: number, url: string) => {
     }
   };
 
-  const handleDrop = (e: React.DragEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setDragActive(false);
+const handleDrop = (e: React.DragEvent) => {
+  e.preventDefault();
+  e.stopPropagation();
+  setDragActive(false);
 
-    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
-      const droppedFile = e.dataTransfer.files[0];
-      if (isValidFileType(droppedFile)) {
-        setFile(droppedFile);
-      } else {
-        toast({
-          title: "Invalid File Type",
-          description: "Please upload a PDF, DOCX, or TXT file.",
-          variant: "destructive",
-        });
-      }
+  if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+    const droppedFile = e.dataTransfer.files[0];
+    if (isValidFileType(droppedFile)) {
+      setFile(droppedFile);
+    } else {
+      toast({
+        title: "Invalid File Type",
+        description: "Please upload a PDF, DOCX, TXT, or Image file (JPG, JPEG, PNG, WEBP).",
+        variant: "destructive",
+      });
     }
-  };
+  }
+};
 
-  const handleFileInput = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      const selectedFile = e.target.files[0];
-      if (isValidFileType(selectedFile)) {
-        setFile(selectedFile);
-      } else {
-        toast({
-          title: "Invalid File Type",
-          description: "Please upload a PDF, DOCX, or TXT file.",
-          variant: "destructive",
-        });
-      }
+const handleFileInput = (e: React.ChangeEvent<HTMLInputElement>) => {
+  if (e.target.files && e.target.files[0]) {
+    const selectedFile = e.target.files[0];
+    if (isValidFileType(selectedFile)) {
+      setFile(selectedFile);
+    } else {
+      toast({
+        title: "Invalid File Type",
+        description: "Please upload a PDF, DOCX, TXT, or Image file (JPG, JPEG, PNG, WEBP).",
+        variant: "destructive",
+      });
     }
-  };
+  }
+};
 
   const isValidFileType = (file: File) => {
-    const validTypes = ['application/pdf', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'text/plain'];
-    return validTypes.includes(file.type) || file.name.endsWith('.txt') || file.name.endsWith('.pdf') || file.name.endsWith('.docx');
-  };
+  const validTypes = [
+    'application/pdf',
+    'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+    'text/plain',
+    'image/jpeg',
+    'image/png',
+    'image/webp'
+  ];
+  
+  return (
+    validTypes.includes(file.type) ||
+    file.name.toLowerCase().endsWith('.txt') ||
+    file.name.toLowerCase().endsWith('.pdf') ||
+    file.name.toLowerCase().endsWith('.docx') ||
+    file.name.toLowerCase().endsWith('.jpg') ||
+    file.name.toLowerCase().endsWith('.jpeg') ||
+    file.name.toLowerCase().endsWith('.png') ||
+    file.name.toLowerCase().endsWith('.webp')
+  );
+};
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -242,7 +259,7 @@ const scrapeWebsite = async (datastoreId: number, url: string) => {
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-xl">
             <Bot className="h-6 w-6 text-chatbot-primary" />
-            Create New Chatbot
+            Create New Assistant
           </DialogTitle>
           <DialogDescription>
             Build a specialized AI assistant for your specific topic and documents.
@@ -253,7 +270,7 @@ const scrapeWebsite = async (datastoreId: number, url: string) => {
           <div className="space-y-4">
             <div>
               <Label htmlFor="name" className="text-sm font-medium">
-                Chatbot Name
+                Assistant Name
               </Label>
               <Input
                 id="name"
@@ -266,7 +283,7 @@ const scrapeWebsite = async (datastoreId: number, url: string) => {
 
             <div>
               <Label htmlFor="topic" className="text-sm font-medium">
-                Topic/Domain
+                Description
               </Label>
               <Input
                 id="topic"
@@ -279,7 +296,7 @@ const scrapeWebsite = async (datastoreId: number, url: string) => {
 
             <div>
               <Label className="text-sm font-medium">
-                Policy Document (Optional)
+                Document (Optional)
               </Label>
               <Card
                 className={`mt-1.5 border-2 border-dashed transition-colors ${dragActive
@@ -322,13 +339,13 @@ const scrapeWebsite = async (datastoreId: number, url: string) => {
                             <input
                               type="file"
                               className="hidden"
-                              accept=".pdf,.docx,.txt"
+                              accept=".pdf,.docx,.txt,.jpg,.jpeg,.png,.webp"
                               onChange={handleFileInput}
                             />
                           </label>
                         </p>
                         <p className="text-xs text-muted-foreground">
-                          Supports PDF, DOCX, and TXT files
+                          Supports PDF, DOCX, TXT, and Image files (JPG, JPEG, PNG, WEBP)
                         </p>
                       </div>
                     </div>
@@ -368,7 +385,7 @@ const scrapeWebsite = async (datastoreId: number, url: string) => {
               disabled={loading}
             >
               <Sparkles className="h-4 w-4" />
-              {loading ? "Creating..." : "Create Chatbot"}
+              {loading ? "Creating..." : "Create Assistant"}
               {/* Create Chatbot */}
             </Button>
           </div>

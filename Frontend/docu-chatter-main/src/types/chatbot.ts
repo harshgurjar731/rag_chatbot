@@ -4,12 +4,20 @@ export interface QnAPair {
   answer: string;
 }
 
+// export interface ChatMessage {
+//   id: string;
+//   content: string;
+//   isUser: boolean;
+//   timestamp: Date;
+// }
 export interface ChatMessage {
   id: string;
   content: string;
   isUser: boolean;
-  timestamp: Date;
-}
+  timestamp: Date;         // ✅ use Date instead of number
+  originalContent?: string; // ✅ optional for storing un-translated text
+};
+
 
 export interface Chatbot {
   id: string;

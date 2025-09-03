@@ -33,6 +33,23 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import axios from "axios";
+import {
+  Dialog,
+  DialogTrigger,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from "@/components/ui/dialog"
+import { Separator } from "@/components/ui/separator"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
+
 
 interface QueryPayload {
   question: string;
@@ -82,20 +99,52 @@ export const ChatInterface = ({ chatbot, chatbotName, onSendMessage }: ChatInter
   // ]);
   // Save to localStorage on change
 
+  // const [messages, setMessages] = useState<ChatMessage[]>(() => {
+  //   const saved = localStorage.getItem(storageKey);
+  //   if (saved) {
+  //     try {
+  //       const parsed: ChatMessage[] = JSON.parse(saved);
+  //       return parsed.map((msg) => ({
+  //         ...msg,
+  //         timestamp: new Date(msg.timestamp), // Convert timestamp back to Date
+  //       }));
+  //     } catch {
+  //       return [];
+  //     }
+  //   }
+
+  //   return [
+  //     {
+  //       id: "1",
+  //       content: `Hello! I'm ${chatbotName}. How can I assist you today?`,
+  //       isUser: false,
+  //       timestamp: new Date(),
+  //     },
+  //   ];
+  // });
+
+  // Add this type near your ChatMessage interface
+  type StoredChatMessage = Omit<ChatMessage, "timestamp"> & { timestamp: string };
+
+  // Update your state initialization
   const [messages, setMessages] = useState<ChatMessage[]>(() => {
     const saved = localStorage.getItem(storageKey);
     if (saved) {
       try {
-        const parsed: ChatMessage[] = JSON.parse(saved);
+        const parsed: StoredChatMessage[] = JSON.parse(saved);
+
+        // Convert timestamp string back to Date
         return parsed.map((msg) => ({
           ...msg,
-          timestamp: new Date(msg.timestamp), // Convert timestamp back to Date
+          timestamp: new Date(msg.timestamp),
         }));
-      } catch {
+      } catch (err) {
+        console.error("Failed to parse saved messages:", err);
         return [];
       }
     }
 
+    // Default greeting
     return [
       {
         id: "1",
@@ -106,10 +155,64 @@ export const ChatInterface = ({ chatbot, chatbotName, onSendMessage }: ChatInter
     ];
   });
 
-  useEffect(() => {
-    localStorage.setItem(storageKey, JSON.stringify(messages));
-  }, [messages, storageKey]);
 
+  useEffect(() => {
+    const toStore: StoredChatMessage[] = messages.map((msg) => ({
+      ...msg,
+      timestamp: msg.timestamp.toISOString(), // Convert Date → string
+    }));
+
+    localStorage.setItem(storageKey, JSON.stringify(toStore));
+  }, [messages]);
+
+  // useEffect(() => {
+  //   localStorage.setItem(storageKey, JSON.stringify(messages));
+  // }, [messages, storageKey]);
+
+  const [openDropdownId, setOpenDropdownId] = useState<string | null>(null);
+
+  const toggleLanguageDropdown = (id: string) => {
+    setOpenDropdownId(openDropdownId === id ? null : id);
+  };
+
+  const handleTranslate = async (
+    id: string,
+    text: string,
+    targetLang: string
+  ): Promise<void> => {
+    try {
+      const res = await fetch("http://localhost:8000/translate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          q: text,
+          source: "auto",
+          target: targetLang,
+          format: "text",
+        }),
+      });
+
+      if (!res.ok) throw new Error("Translation API failed");
+
+      const data: { translatedText: string } = await res.json();
+
+      setMessages((prev) =>
+        prev.map((msg) =>
+          msg.id === id
+            ? {
+              ...msg,
+              originalContent: msg.originalContent || msg.content, // ✅ preserve original
+              content: data.translatedText,
+            }
+            : msg
+        )
+      );
+
+      setOpenDropdownId(null);
+    } catch (err) {
+      console.error("Translation failed:", err);
+    }
+  };
 
 
 
@@ -321,11 +424,19 @@ export const ChatInterface = ({ chatbot, chatbotName, onSendMessage }: ChatInter
       setMessages(prev => [...prev, botMessage]);
     } catch (error) {
       console.error("handleSend error:", error);
-      toast({
-        title: "Error",
-        description: "Failed to send message or fetch file ID.",
-        variant: "destructive",
-      });
+      // toast({
+      //   title: "Error",
+      //   description: "Failed to send message or fetch file ID.",
+      //   variant: "destructive",
+      // });
+      const errorMessage: ChatMessage = {
+        id: crypto.randomUUID(),
+        content: error?.message || String(error) || "Failed to send message or fetch file ID.",
+        isUser: false,
+        timestamp: new Date(),
+      };
+
+      setMessages(prev => [...prev, errorMessage]);
     } finally {
       setIsLoading(false);
     }
@@ -455,7 +566,7 @@ export const ChatInterface = ({ chatbot, chatbotName, onSendMessage }: ChatInter
       minute: '2-digit',
     }).format(date);
   };
-
+  const [open, setOpen] = useState(false);
   // const [selectedDocs, setSelectedDocs] = useState<any[]>([]);
   const [optimizer, setOptimizer] = useState("");
   const [embeddingModel, setEmbeddingModel] = useState("");
@@ -463,6 +574,60 @@ export const ChatInterface = ({ chatbot, chatbotName, onSendMessage }: ChatInter
   const [vectorDb, setVectorDb] = useState("");
   const [guardrailOption, setGuardrailOption] = useState("");
   const [temperature, setTemperature] = useState(0);
+
+
+  // Load settings from localStorage on mount
+  useEffect(() => {
+    const saved = localStorage.getItem("model-settings")
+    if (saved) {
+      const parsed = JSON.parse(saved)
+      setOptimizer(parsed.optimizer || "")
+      setEmbeddingModel(parsed.embeddingModel || "")
+      setLlmModel(parsed.llmModel || "")
+      setVectorDb(parsed.vectorDb || "")
+      setGuardrailOption(parsed.guardrailOption || "")
+      setTemperature(parsed.temperature ?? 0.7)
+      setTokenSize(parsed.tokenSize ?? 512)
+      setShowSources(parsed.showSources ?? true)
+    }
+  }, [])
+
+  const handleSave = (overrides: Partial<{
+    optimizer: string;
+    embeddingModel: string;
+    llmModel: string;
+    vectorDb: string;
+    guardrailOption: string;
+    temperature: number;
+    tokenSize: number;
+    showSources: boolean;
+  }> = {}) => {
+    const settings = {
+      optimizer,
+      embeddingModel,
+      llmModel,
+      vectorDb,
+      guardrailOption,
+      temperature,
+      tokenSize,
+      showSources,
+      ...overrides,
+    };
+
+    try {
+      localStorage.setItem("model-settings", JSON.stringify(settings));
+      setOpen(false);
+    } catch (err) {
+      console.error("Error saving settings:", err);
+    }
+  };
+
+
+  // Handle Cancel → just close
+  const handleCancel = () => {
+    setOpen(false)
+  }
+
 
 
 
@@ -510,7 +675,31 @@ export const ChatInterface = ({ chatbot, chatbotName, onSendMessage }: ChatInter
       },
     }),
   };
-
+  const languages = [
+    { code: "en", name: "English" },
+    { code: "hi", name: "Hindi" },
+    { code: "es", name: "Spanish" },
+    { code: "fr", name: "French" },
+    { code: "de", name: "German" },
+    { code: "zh-CN", name: "Chinese (Simplified)" },
+    { code: "zh-TW", name: "Chinese (Traditional)" },
+    { code: "ar", name: "Arabic" },
+    { code: "ja", name: "Japanese" },
+    { code: "ko", name: "Korean" },
+    { code: "ru", name: "Russian" },
+    { code: "pt", name: "Portuguese" },
+    { code: "it", name: "Italian" },
+    { code: "nl", name: "Dutch" },
+    { code: "tr", name: "Turkish" },
+    { code: "sv", name: "Swedish" },
+    { code: "pl", name: "Polish" },
+    { code: "uk", name: "Ukrainian" },
+    { code: "bn", name: "Bengali" },
+    { code: "ta", name: "Tamil" },
+    { code: "te", name: "Telugu" },
+    { code: "gu", name: "Gujarati" },
+    { code: "mr", name: "Marathi" },
+  ];
 
   return (
     <div className="flex flex-col h-[470px] bg-gradient-surface rounded-lg border border-chatbot-primary/20">
@@ -521,37 +710,67 @@ export const ChatInterface = ({ chatbot, chatbotName, onSendMessage }: ChatInter
           {messages.map((message) => (
             <div
               key={message.id}
-              className={`flex ${message.isUser ? 'justify-end' : 'justify-start'}`}
+              className={`flex ${message.isUser ? "justify-end" : "justify-start"}`}
             >
-              <div className={`max-w-[80%] ${message.isUser ? 'order-2' : 'order-1'}`}>
-                <Card className={`${message.isUser
-                  ? 'bg-chatbot-primary text-primary-foreground'
-                  : 'bg-chatbot-secondary border-chatbot-primary/20'
-                  }`}>
+              <div className={`max-w-[80%] ${message.isUser ? "order-2" : "order-1"}`}>
+                <Card
+                  className={`${message.isUser
+                    ? "bg-chatbot-primary text-primary-foreground"
+                    : "bg-chatbot-secondary border-chatbot-primary/20"
+                    }`}
+                >
                   <CardContent className="p-3">
                     <p className="text-sm whitespace-pre-wrap">{message.content}</p>
-                    <div className="flex items-center justify-between mt-2">
-                      <span className="text-xs opacity-70">
-                        {formatTime(message.timestamp)}
-                      </span>
+
+                    <div className="flex flex-col gap-2 mt-2">
+                      {/* Time + Actions */}
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs opacity-70">
+                          {formatTime(message.timestamp)}
+                        </span>
+
+
+                      </div>
+                      {/* Translate Button + Dropdown */}
                       {!message.isUser && (
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          onClick={() => toggleSpeech(message.content)}
-                          className="h-6 w-6 p-0 opacity-70 hover:opacity-100"
-                        >
-                          {isSpeaking ?
-                            <VolumeX className="h-3 w-3" /> :
-                            <Volume2 className="h-3 w-3" />
-                          }
-                        </Button>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <div className="flex justify-end mt-1">
+                              <Button
+                                size="icon"
+                                variant="ghost"
+                                className="h-6 w-6 rounded-full text-[11px] border border-border/40 text-muted-foreground hover:bg-muted/70 transition-colors flex items-center justify-center"
+                              >
+                                🌐
+                              </Button>
+                            </div>
+
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent
+                            align="end"
+                            side="top"
+                            className="w-32 max-h-60 overflow-y-auto rounded-lg shadow-md border border-border/40 bg-background p-1 text-sm"
+
+                          >
+                            {languages.map((lang) => (
+                              <DropdownMenuItem
+                                key={lang.code}
+                                onClick={() => handleTranslate(message.id, message.content, lang.code)}
+                                className="cursor-pointer hover:bg-muted rounded-md px-2 py-1"
+                              >
+                                {lang.name}
+                              </DropdownMenuItem>
+                            ))}
+                          </DropdownMenuContent>
+
+                        </DropdownMenu>
+
                       )}
                     </div>
                   </CardContent>
                 </Card>
               </div>
-            </div>
+            </div >
           ))}
 
           {isLoading && (
@@ -570,8 +789,9 @@ export const ChatInterface = ({ chatbot, chatbotName, onSendMessage }: ChatInter
               </Card>
             </div>
           )}
-        </div>
-      </ScrollArea>
+        </div >
+      </ScrollArea >
+
 
       {/* Input Area */}
       {/* <div className="p-4 border-t border-chatbot-primary/20">
@@ -705,154 +925,175 @@ export const ChatInterface = ({ chatbot, chatbotName, onSendMessage }: ChatInter
             </Popover>
 
             {/* Button 2: Model Settings */}
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button variant="outline" size="default">
-                  Model Settings
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-72 space-y-2 max-h-80 overflow-y-auto">
-                {/* Query Optimizer */}
-                <div className="space-y-1">
-                  <Label>Query Optimizer</Label>
-                  <Select onValueChange={setOptimizer} disabled={isLoading}>
-                    <SelectTrigger>
-                      <SelectValue placeholder={optimizer != "" ? optimizer : "Select Optimizer"} />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="none">None</SelectItem>
-                      <SelectItem value="Multi Query">Multi Query</SelectItem>
-                      {/* <SelectItem value="hybrid">Hybrid</SelectItem> */}
-                    </SelectContent>
-                  </Select>
-                </div>
 
-                {/* Embedding Model */}
-                <div className="space-y-1">
-                  <Label>Embedding Model</Label>
-                  <Select onValueChange={setEmbeddingModel} disabled={isLoading}>
-                    <SelectTrigger>
-                      <SelectValue placeholder={embeddingModel != "" ? embeddingModel : "Select Embedding Model"} />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all-MiniLM-L6-v2">all-MiniLM-L6-v2</SelectItem>
-                      <SelectItem value="sentence-transformers/all-mpnet-base-v2">sentence-transformers</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
+            <Dialog open={open} onOpenChange={setOpen}>
+              <DialogTrigger asChild>
+                <Button variant="outline" size="default">Model Settings</Button>
+              </DialogTrigger>
 
-                {/* LLM Model */}
-                <div className="space-y-1">
-                  <Label>LLM Model</Label>
-                  <Select onValueChange={setLlmModel} disabled={isLoading}>
-                    <SelectTrigger>
-                      <SelectValue placeholder={llmModel != "" ? llmModel : "Select LLM"} />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="gemma-7b-it">gemma-7b-it</SelectItem>
-                      <SelectItem value="llama3-70b-8192">llama3-70b-8192</SelectItem>
-                      <SelectItem value="llama3-8b-8192">llama3-8b-8192</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
+              <DialogContent className="max-w-4xl h-[90vh] flex flex-col rounded-2xl p-0 overflow-hidden">
+                {/* Header */}
+                <DialogHeader className="px-6 py-4 border-b bg-muted/40">
+                  <DialogTitle className="text-xl font-semibold">Model Settings</DialogTitle>
+                  <DialogDescription>
+                    Configure optimizer, embeddings, LLM, safety filters, and output preferences.
+                  </DialogDescription>
+                </DialogHeader>
 
-                {/* Vector DB */}
-                <div className="space-y-1">
-                  <Label>Vector DB</Label>
-                  <Select onValueChange={setVectorDb} disabled={isLoading}>
-                    <SelectTrigger>
-                      <SelectValue placeholder={vectorDb != "" ? vectorDb : "Select Vector DB"} />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="faiss">FAISS</SelectItem>
-                      <SelectItem value="chroma">CHROMA</SelectItem>
-                      {/* <SelectItem value="pinecone">Pinecone</SelectItem> */}
-                    </SelectContent>
-                  </Select>
-                </div>
-                {/* Guardrails Selection */}
-                <div className="space-y-1">
-                  <div className="flex items-center space-x-2">
-                    <Label>Guardrails</Label>
-                    <TooltipProvider>
-                      <Tooltip>
-                        <TooltipTrigger>
-                          <Info className="h-4 w-4 text-muted-foreground cursor-pointer" />
-                        </TooltipTrigger>
-                        <TooltipContent>
-                          <p>Controls content safety filtering. "Strict" blocks more sensitive or unsafe responses.</p>
-                        </TooltipContent>
-                      </Tooltip>
-                    </TooltipProvider>
+                {/* Body */}
+                <div className="flex-1 overflow-y-auto px-6 py-4 space-y-8">
+
+                  {/* Query & Models Section */}
+                  <div>
+                    <h3 className="text-lg font-medium mb-2">Model Selection</h3>
+                    <Separator className="mb-4" />
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      {/* Query Optimizer */}
+                      <div className="space-y-1">
+                        <Label>Query Optimizer</Label>
+                        <Select onValueChange={setOptimizer} disabled={isLoading}>
+                          <SelectTrigger>
+                            <SelectValue placeholder={optimizer != "" ? optimizer : "Select Optimizer"} />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="none">None</SelectItem>
+                            <SelectItem value="Multi Query">Multi Query</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      {/* Embedding Model */}
+                      <div className="space-y-1">
+                        <Label>Embedding Model</Label>
+                        <Select onValueChange={setEmbeddingModel} disabled>
+                          <SelectTrigger>
+                            <SelectValue placeholder={embeddingModel != "" ? embeddingModel : "all-MiniLM-L6-v2"} />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="all-MiniLM-L6-v2">all-MiniLM-L6-v2</SelectItem>
+                            <SelectItem value="sentence-transformers/all-mpnet-base-v2">sentence-transformers</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      {/* LLM Model */}
+                      <div className="space-y-1">
+                        <Label>LLM Model</Label>
+                        <Select onValueChange={setLlmModel} disabled={isLoading}>
+                          <SelectTrigger>
+                            <SelectValue placeholder={llmModel != "" ? llmModel : "Select LLM"} />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="llama-3.3-70b-versatile">llama-3.3-70b-versatile</SelectItem>
+                            <SelectItem value="deepseek-r1-distill-llama-70b">deepseek-r1-distill-llama-70b</SelectItem>
+                            <SelectItem value="gemma2-9b-it">gemma2-9b-it</SelectItem>
+                            <SelectItem value="llama-3.1-8b-instant">llama-3.1-8b-instant</SelectItem>
+                            <SelectItem value="openai/gpt-oss-20b">openai/gpt-oss-20b</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      {/* Vector DB */}
+                      <div className="space-y-1">
+                        <Label>Vector DB</Label>
+                        <Select onValueChange={setVectorDb} disabled>
+                          <SelectTrigger>
+                            <SelectValue placeholder={vectorDb != "" ? vectorDb : "FAISS"} />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="faiss">FAISS</SelectItem>
+                            <SelectItem value="chroma">CHROMA</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
                   </div>
-                  <Select onValueChange={setGuardrailOption} disabled={isLoading}>
-                    <SelectTrigger>
-                      <SelectValue placeholder={guardrailOption !== "" ? guardrailOption : "Select Guardrail Level"} />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="none">None - No filtering</SelectItem>
-                      <SelectItem value="basic">Basic - Mild safety filtering</SelectItem>
-                      <SelectItem value="strict">Strict - High safety filtering</SelectItem>
-                      <SelectItem value="custom">Custom - Use project-defined rules</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
 
-                {/* Temperature Control */}
-                <div className="space-y-1">
-                  <div className="flex items-center space-x-2">
-                    <Label>Creativity</Label>
-                    <TooltipProvider>
-                      <Tooltip>
-                        <TooltipTrigger>
-                          <Info className="h-4 w-4 text-muted-foreground cursor-pointer" />
-                        </TooltipTrigger>
-                        <TooltipContent>
-                          <p>Lower = more precise & factual. Higher = more creative & varied responses.</p>
-                        </TooltipContent>
-                      </Tooltip>
-                    </TooltipProvider>
+                  {/* Guardrails & Creativity Section */}
+                  <div>
+                    <h3 className="text-lg font-medium mb-2">Response Control</h3>
+                    <Separator className="mb-4" />
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      {/* Guardrails */}
+                      <div className="space-y-1">
+                        <Label>Guardrails</Label>
+                        <Select onValueChange={setGuardrailOption} disabled={isLoading}>
+                          <SelectTrigger>
+                            <SelectValue placeholder={guardrailOption !== "" ? guardrailOption : "Select Guardrail Level"} />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="none">None - No filtering</SelectItem>
+                            <SelectItem value="basic">Basic - Mild safety filtering</SelectItem>
+                            <SelectItem value="strict">Strict - High safety filtering</SelectItem>
+                            <SelectItem value="custom">Custom - Use project-defined rules</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      {/* Temperature */}
+                      <div className="space-y-2">
+                        <Label>Creativity</Label>
+                        <Slider
+                          min={0}
+                          max={1}
+                          step={0.1}
+                          value={[temperature]}
+                          onValueChange={(val) => setTemperature(val[0])}
+                          disabled={isLoading}
+                        />
+                        <p className="text-sm text-muted-foreground">
+                          Temperature: {temperature.toFixed(1)}
+                        </p>
+                      </div>
+                    </div>
                   </div>
-                  <Slider
-                    min={0}
-                    max={1}
-                    step={0.1}
-                    value={[temperature]}
-                    onValueChange={(val) => setTemperature(val[0])}
-                    disabled={isLoading}
-                  />
-                  <p className="text-sm text-muted-foreground">Temperature: {temperature.toFixed(1)}</p>
-                </div>
-                {/* Token Size */}
-                <div className="space-y-1">
-                  <Label>Token Size</Label>
-                  <Input
-                    type="number"
-                    min={256}
-                    max={2048}
-                    step={128}
-                    placeholder="Enter token size"
-                    value={tokenSize}
-                    onChange={handleTokenSizeChange}
-                    disabled={isLoading}
-                  />
-                  <p className="text-xs text-muted-foreground">
-                    Must be between 256 and 2048 tokens (step 128).
-                  </p>
-                </div>
-                <div className="flex items-center justify-between space-x-2">
-                  <Label htmlFor="sources-toggle">Include Sources in Output</Label>
-                  <Switch
-                    id="sources-toggle"
-                    checked={showSources}
-                    onCheckedChange={setShowSources}
-                    disabled={isLoading}
-                  />
+
+                  {/* Advanced Section */}
+                  <div>
+                    <h3 className="text-lg font-medium mb-2">Advanced Settings</h3>
+                    <Separator className="mb-4" />
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      {/* Token Size */}
+                      <div className="space-y-1">
+                        <Label>Token Size</Label>
+                        <Input
+                          type="number"
+                          min={256}
+                          max={2048}
+                          step={128}
+                          placeholder="Enter token size"
+                          value={tokenSize}
+                          onChange={handleTokenSizeChange}
+                          disabled={isLoading}
+                        />
+                        <p className="text-xs text-muted-foreground">
+                          Must be between 256 and 2048 tokens (step 128).
+                        </p>
+                      </div>
+
+                      {/* Sources Toggle */}
+                      {/* <div className="flex items-center justify-between border rounded-lg p-3">
+                        <Label htmlFor="sources-toggle">Include Sources in Output</Label>
+                        <Switch
+                          id="sources-toggle"
+                          checked={showSources}
+                          onCheckedChange={setShowSources}
+                          disabled={isLoading}
+                        />
+                      </div> */}
+                    </div>
+                  </div>
                 </div>
 
+                {/* Footer */}
+                {/* Footer */}
+                <DialogFooter className="px-6 py-4 border-t bg-muted/40 flex justify-end gap-3">
+                  <Button variant="outline" onClick={handleCancel}>Cancel</Button>
+                  <Button onClick={() => handleSave()}>Save Settings</Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
 
-              </PopoverContent>
-            </Popover>
           </div>
           {selectedDocs.length > 0 && (
             <div className="flex flex-wrap gap-1 mt-2 items-center">
@@ -887,7 +1128,10 @@ export const ChatInterface = ({ chatbot, chatbotName, onSendMessage }: ChatInter
                     <button
                       type="button"
                       className="flex items-center justify-center w-4 h-4 rounded-full hover:bg-destructive hover:text-destructive-foreground transition-colors duration-150"
-                      onClick={() => setOptimizer("")}
+                      onClick={() => {
+                        setOptimizer("");   // reset state
+                        handleSave({ optimizer: "" });
+                      }}
                     >
                       <X size={10} strokeWidth={2} />
                     </button>
@@ -900,7 +1144,11 @@ export const ChatInterface = ({ chatbot, chatbotName, onSendMessage }: ChatInter
                     <button
                       type="button"
                       className="flex items-center justify-center w-4 h-4 rounded-full hover:bg-destructive hover:text-destructive-foreground transition-colors duration-150"
-                      onClick={() => setEmbeddingModel("")}
+                      onClick={() => {
+                        setEmbeddingModel("");
+                        handleSave({ embeddingModel: "" });
+
+                      }}
                     >
                       <X size={10} strokeWidth={2} />
                     </button>
@@ -913,7 +1161,10 @@ export const ChatInterface = ({ chatbot, chatbotName, onSendMessage }: ChatInter
                     <button
                       type="button"
                       className="flex items-center justify-center w-4 h-4 rounded-full hover:bg-destructive hover:text-destructive-foreground transition-colors duration-150"
-                      onClick={() => setLlmModel("")}
+                      onClick={() => {
+                        setLlmModel("")
+                        handleSave({ llmModel: "" });
+                      }}
                     >
                       <X size={10} strokeWidth={2} />
                     </button>
@@ -926,7 +1177,10 @@ export const ChatInterface = ({ chatbot, chatbotName, onSendMessage }: ChatInter
                     <button
                       type="button"
                       className="flex items-center justify-center w-4 h-4 rounded-full hover:bg-destructive hover:text-destructive-foreground transition-colors duration-150"
-                      onClick={() => setVectorDb("")}
+                      onClick={() => {
+                        setVectorDb("");
+                        handleSave({ vectorDb: "" });
+                      }}
                     >
                       <X size={10} strokeWidth={2} />
                     </button>
@@ -939,7 +1193,10 @@ export const ChatInterface = ({ chatbot, chatbotName, onSendMessage }: ChatInter
                     <button
                       type="button"
                       className="flex items-center justify-center w-4 h-4 rounded-full hover:bg-destructive hover:text-destructive-foreground transition-colors duration-150"
-                      onClick={() => setTemperature(0.0)}
+                      onClick={() => {
+                        setTemperature(0.0);
+                        handleSave({ temperature: 0.0 });
+                      }}
                     >
                       <X size={10} strokeWidth={2} />
                     </button>
@@ -952,7 +1209,10 @@ export const ChatInterface = ({ chatbot, chatbotName, onSendMessage }: ChatInter
                     <button
                       type="button"
                       className="flex items-center justify-center w-4 h-4 rounded-full hover:bg-destructive hover:text-destructive-foreground transition-colors duration-150"
-                      onClick={() => setGuardrailOption("")}
+                      onClick={() => {
+                        setGuardrailOption("");
+                        handleSave({ guardrailOption: "" });
+                      }}
                     >
                       <X size={10} strokeWidth={2} />
                     </button>
@@ -966,7 +1226,10 @@ export const ChatInterface = ({ chatbot, chatbotName, onSendMessage }: ChatInter
                     <button
                       type="button"
                       className="flex items-center justify-center w-4 h-4 rounded-full hover:bg-destructive hover:text-destructive-foreground transition-colors duration-150"
-                      onClick={() => setTokenSize(256)}
+                      onClick={() => {
+                        setTokenSize(256);
+                        handleSave({ tokenSize: 256 });
+                      }}
                     >
                       <X size={10} strokeWidth={2} />
                     </button>
@@ -974,18 +1237,20 @@ export const ChatInterface = ({ chatbot, chatbotName, onSendMessage }: ChatInter
                 )}
 
                 {/* Include Sources */}
-                {typeof showSources === "boolean" && (
+                {/* {typeof showSources === "boolean" && (
                   <span className="flex items-center gap-1 text-xs bg-chatbot-secondary text-foreground border border-chatbot-primary/20 rounded-md px-2 py-1">
                     Sources: {showSources ? "Yes" : "No"}
                     <button
                       type="button"
                       className="flex items-center justify-center w-4 h-4 rounded-full hover:bg-destructive hover:text-destructive-foreground transition-colors duration-150"
-                      onClick={() => setShowSources(false)} // reset to "No"
+                      onClick={() => {setShowSources(false);
+                        handleSave({ showSources: false });
+                      }} // reset to "No"
                     >
                       <X size={10} strokeWidth={2} />
                     </button>
-                  </span>
-                )}
+                  </span> */}
+                {/* )} */}
               </div>
             )}
 
@@ -995,6 +1260,6 @@ export const ChatInterface = ({ chatbot, chatbotName, onSendMessage }: ChatInter
         </div>
 
       </div>
-    </div>
+    </div >
   );
 };

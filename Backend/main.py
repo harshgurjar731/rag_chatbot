@@ -1,7 +1,8 @@
 from fastapi import FastAPI
 from database import init_db, list_tables, list_tables_content,list_file_content
-from routes import datastore, upload, preview, chunking,embedding, retriever,delete,url_scraper
+from routes import datastore, upload, preview, chunking,embedding, retriever,delete,url_scraper,translate
 from fastapi.middleware.cors import CORSMiddleware
+
 # from Backend.db.database import init_db
 # import os
 # os.environ["OTEL_SDK_DISABLED"] = "true"   # disables OpenTelemetry
@@ -30,7 +31,7 @@ app.include_router(embedding.router, prefix="/datastore")
 app.include_router(retriever.router, prefix="/retriever")
 app.include_router(delete.router, prefix="/datastore")
 app.include_router(url_scraper.router, prefix="/urlscraper")
-
+app.include_router(translate.router, prefix="/translate")
 
 init_db()  # 👈 add this right after app initialization
 list_tables()  # 👈 this will print the tables in the database

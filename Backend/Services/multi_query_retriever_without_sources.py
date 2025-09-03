@@ -12,7 +12,8 @@ from langchain_core.runnables import RunnablePassthrough
 from langchain_community.chat_models import ChatOpenAI  # or ChatHuggingFace if you're using HuggingFace models
 from guardrails import Guard
 from guardrails.hub import ToxicLanguage
-
+# ✅ Import our guardrail utilities
+from Services.guardrail import validate_output  
 
 def get_multiquery_retriever_without_sources(query: str, db: FAISS|Chroma, llm_model_name: str,temperature:float,token_size:float = 256,guardrail_level: str="none"):
 
@@ -21,7 +22,10 @@ def get_multiquery_retriever_without_sources(query: str, db: FAISS|Chroma, llm_m
     # Choose your LLM for multi-query generation
     # For open source, replace with 
    # ✅ Use open-source LLM via HuggingFaceHub (Mistral model)
-    GROQ_API_KEY = "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"
+    # GROQ_API_KEY = "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"
+    GROQ_API_KEY = "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"
+
+
     if not llm_model_name:
         raise ValueError("LLM model name must be provided")
     llm = ChatOpenAI(
@@ -50,20 +54,6 @@ def get_multiquery_retriever_without_sources(query: str, db: FAISS|Chroma, llm_m
         | (lambda x: x.split("\n"))
     )
 
-    
-    # ✅ Setup Guardrails depending on level
-    if guardrail_level == "none":
-        guard = None  # no validation
-    elif guardrail_level == "basic":
-        guard = Guard().use(ToxicLanguage(threshold=0.9))  # lenient
-    elif guardrail_level == "strict":
-        guard = Guard().use(ToxicLanguage(threshold=0.5))  # strict
-    elif guardrail_level == "custom":
-        guard = Guard().use(
-            ToxicLanguage(threshold=0.7, validation_method="sentence")
-        )
-    else:
-        guard = None
 
     
 
@@ -99,16 +89,14 @@ def get_multiquery_retriever_without_sources(query: str, db: FAISS|Chroma, llm_m
     )
 
     final_answer = final_rag_chain.invoke({"question":question})
-    if guard:
-        try:
-            validated = guard.validate(final_answer)
+    # ✅ Apply guardrails (toxicity, PII etc.)
+    validated = validate_output(final_answer, guardrail_level)
 
-            # if not validated.validation_passed:
-            #     return {"answer": "⚠️ Response blocked by guardrails: " + str(validated.errors)}
+    # If guard blocked, return directly
+    if "⚠️ Response blocked" in validated["answer"]:
+        return validated
 
-            final_answer = validated.validated_output.strip()
-        except Exception as e:
-            return {"answer": f"⚠️ Response blocked by guardrail: {str(e)}"}
+    final_answer = validated["answer"]
         
     print("Final RAG Chain Output:", final_answer)
     return {"answer":final_answer}

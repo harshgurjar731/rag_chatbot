@@ -300,7 +300,7 @@ const ChatbotDetail = () => {
               </DialogTrigger>
               <DialogContent>
                 <DialogHeader>
-                  <DialogTitle>Delete Chatbot</DialogTitle>
+                  <DialogTitle>Delete Assistant</DialogTitle>
                   <DialogDescription>
                     Are you sure you want to delete "{chatbot.name}"? This action cannot be undone.
                   </DialogDescription>
@@ -318,7 +318,7 @@ const ChatbotDetail = () => {
                     onClick={handleDelete}
                     className="flex-1"
                   >
-                    Delete Chatbot
+                    Delete Assistant
                   </Button>
                 </div>
               </DialogContent>
@@ -457,7 +457,7 @@ const ChatbotDetail = () => {
                             <input
                               type="file"
                               className="hidden"
-                              accept=".pdf,.docx,.txt"
+                              accept=".pdf,.docx,.txt,.jpg,.jpeg,.png,.webp"
                               onChange={(e) => {
                                 if (e.target.files?.[0]) {
                                   handleFileUpload(e.target.files[0]);
@@ -467,7 +467,8 @@ const ChatbotDetail = () => {
                           </label>
                         </p>
                         <p className="text-xs text-muted-foreground">
-                          Supports PDF, DOCX, and TXT files
+                          Supports PDF, DOCX, TXT, and Image files (JPG, JPEG, PNG, WEBP)
+
                         </p>
                       </div>
                     </div>
