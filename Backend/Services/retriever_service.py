@@ -21,17 +21,17 @@ def load_embeddings(file_id: int, vector_db: str, model_name: str):
     else:
         raise HTTPException(status_code=400, detail="Unsupported vector DB")
     
-def retrieve_documents(query: str, query_optimizer: str, embedding_model_name: str,llm_model_name: str, vector_db: str, file_id: int,temperature:float,token_size:float,sources: bool):
+def retrieve_documents(query: str, query_optimizer: str, embedding_model_name: str,llm_model_name: str, vector_db: str, file_id: int,temperature:float,token_size:float,sources: bool,guardrailOption: str):
     embedding = HuggingFaceEmbeddings(model_name=embedding_model_name)
     if file_id == 0:
-        result=get_llm_answer(query, llm_model_name, temperature,token_size,sources)
+        result=get_llm_answer(query, llm_model_name, temperature,token_size,sources,guardrailOption)
     else:
         db = load_embeddings(file_id, vector_db, embedding_model_name)
         if query_optimizer == "Multi Query":
             if sources:
-                result=get_multiquery_retriever(query,db, llm_model_name,temperature,token_size)
+                result=get_multiquery_retriever(query,db, llm_model_name,temperature,token_size,guardrailOption)
             else:
-                result=get_multiquery_retriever_without_sources(query,db, llm_model_name,temperature,token_size)
+                result=get_multiquery_retriever_without_sources(query,db, llm_model_name,temperature,token_size,guardrailOption)
         else:
             retriever = db.as_retriever()
     return result

@@ -10,15 +10,22 @@ from langchain.load import dumps, loads
 from operator import itemgetter 
 from langchain_core.runnables import RunnablePassthrough
 from langchain_community.chat_models import ChatOpenAI  # or ChatHuggingFace if you're using HuggingFace models
+from guardrails import Guard
+from guardrails.hub import ToxicLanguage
+# ✅ Import our guardrail utilities
+from Services.guardrail import validate_output  
 
-def get_multiquery_retriever_without_sources(query: str, db: FAISS|Chroma, llm_model_name: str,temperature:float,token_size:float = 256):
+def get_multiquery_retriever_without_sources(query: str, db: FAISS|Chroma, llm_model_name: str,temperature:float,token_size:float = 256,guardrail_level: str="none"):
 
     "   Create a MultiQueryRetriever using the provided vector store."
 
     # Choose your LLM for multi-query generation
     # For open source, replace with 
    # ✅ Use open-source LLM via HuggingFaceHub (Mistral model)
-    GROQ_API_KEY = "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"
+    # GROQ_API_KEY = "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"
+    GROQ_API_KEY = "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"
+
+
     if not llm_model_name:
         raise ValueError("LLM model name must be provided")
     llm = ChatOpenAI(
@@ -26,7 +33,7 @@ def get_multiquery_retriever_without_sources(query: str, db: FAISS|Chroma, llm_m
     openai_api_key=GROQ_API_KEY,
     model=llm_model_name,  # or use "llama3-70b-8192", "gemma-7b-it", etc.
     temperature=temperature,
-    max_tokens=token_size
+    max_tokens=token_size,
     )
     # Define the prompt template for generating multi-queries
  
@@ -46,6 +53,9 @@ def get_multiquery_retriever_without_sources(query: str, db: FAISS|Chroma, llm_m
         | StrOutputParser() 
         | (lambda x: x.split("\n"))
     )
+
+
+    
 
     retriever = MultiQueryRetriever.from_llm(retriever=db.as_retriever(search_kwargs={"k": 2}), llm=llm)
 
@@ -78,9 +88,18 @@ def get_multiquery_retriever_without_sources(query: str, db: FAISS|Chroma, llm_m
         | StrOutputParser()
     )
 
-    final_rag_chain_output = final_rag_chain.invoke({"question":question})
-    print("Final RAG Chain Output:", final_rag_chain_output)
-    return {"answer":final_rag_chain_output}
+    final_answer = final_rag_chain.invoke({"question":question})
+    # ✅ Apply guardrails (toxicity, PII etc.)
+    validated = validate_output(final_answer, guardrail_level)
+
+    # If guard blocked, return directly
+    if "⚠️ Response blocked" in validated["answer"]:
+        return validated
+
+    final_answer = validated["answer"]
+        
+    print("Final RAG Chain Output:", final_answer)
+    return {"answer":final_answer}
     
 
 def get_unique_union(documents: list[list]):

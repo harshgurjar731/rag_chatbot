@@ -104,6 +104,7 @@ def upload_file_to_datastore(datastore_id: int, file: UploadFile = File(...), se
 
         # You can hardcode or extract loader_type from file extension
         loader_type = file.filename.split(".")[-1]  # e.g., 'pdf', 'docx'
+        
 
         docs = load_file_with_loader(file_path, loader_type)
         preview = docs[0].page_content[:1000]

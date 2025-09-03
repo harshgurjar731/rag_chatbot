@@ -34,6 +34,7 @@ export const CreateChatbotDialog = ({ onCreateChatbot, children }: CreateChatbot
   const { toast } = useToast();
   const { addDocument } = useChatbots();
   const [loading, setLoading] = useState(false);
+  const [url, setUrl] = useState<string>("")
 
 
   const createDatastoreApiCall = async (data: { name: string; topic: string }) => {
@@ -63,7 +64,29 @@ export const CreateChatbotDialog = ({ onCreateChatbot, children }: CreateChatbot
     return response.data; // { message, file_id, filename }
   };
 
- const navigate = useNavigate();
+  interface ScrapeResponse {
+  url: string;
+  file_path: string;
+  message: string;
+}
+
+const scrapeWebsite = async (datastoreId: number, url: string) => {
+  try {
+    const { data } = await axios.post(
+       `http://127.0.0.1:8000/urlscraper/${datastoreId}`,
+    {}, // empty body
+    { params: { url } } // URL as query param
+  );
+    return data; // { url, file_path, message }
+  } catch (err: any) {
+    console.error("Error scraping website:", err.response?.data || err.message);
+    throw err;
+  }
+};
+
+
+
+  const navigate = useNavigate();
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -88,6 +111,9 @@ export const CreateChatbotDialog = ({ onCreateChatbot, children }: CreateChatbot
       if (file) {
         await uploadFileToDatastore(created.id, file);
       }
+      if (url) {
+        await scrapeWebsite(created.id, url);
+      }
 
       // onCreateChatbot(created);
       console.log(created.id)
@@ -103,9 +129,12 @@ export const CreateChatbotDialog = ({ onCreateChatbot, children }: CreateChatbot
 
 
 
+
+
       setFormData({ name: '', topic: '' });
       setFile(null);
       setOpen(false);
+
 
       // ✅ Redirect to chatbot detail page
       navigate(`/`);
@@ -165,44 +194,61 @@ export const CreateChatbotDialog = ({ onCreateChatbot, children }: CreateChatbot
     }
   };
 
-  const handleDrop = (e: React.DragEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setDragActive(false);
+const handleDrop = (e: React.DragEvent) => {
+  e.preventDefault();
+  e.stopPropagation();
+  setDragActive(false);
 
-    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
-      const droppedFile = e.dataTransfer.files[0];
-      if (isValidFileType(droppedFile)) {
-        setFile(droppedFile);
-      } else {
-        toast({
-          title: "Invalid File Type",
-          description: "Please upload a PDF, DOCX, or TXT file.",
-          variant: "destructive",
-        });
-      }
+  if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+    const droppedFile = e.dataTransfer.files[0];
+    if (isValidFileType(droppedFile)) {
+      setFile(droppedFile);
+    } else {
+      toast({
+        title: "Invalid File Type",
+        description: "Please upload a PDF, DOCX, TXT, or Image file (JPG, JPEG, PNG, WEBP).",
+        variant: "destructive",
+      });
     }
-  };
+  }
+};
 
-  const handleFileInput = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      const selectedFile = e.target.files[0];
-      if (isValidFileType(selectedFile)) {
-        setFile(selectedFile);
-      } else {
-        toast({
-          title: "Invalid File Type",
-          description: "Please upload a PDF, DOCX, or TXT file.",
-          variant: "destructive",
-        });
-      }
+const handleFileInput = (e: React.ChangeEvent<HTMLInputElement>) => {
+  if (e.target.files && e.target.files[0]) {
+    const selectedFile = e.target.files[0];
+    if (isValidFileType(selectedFile)) {
+      setFile(selectedFile);
+    } else {
+      toast({
+        title: "Invalid File Type",
+        description: "Please upload a PDF, DOCX, TXT, or Image file (JPG, JPEG, PNG, WEBP).",
+        variant: "destructive",
+      });
     }
-  };
+  }
+};
 
   const isValidFileType = (file: File) => {
-    const validTypes = ['application/pdf', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'text/plain'];
-    return validTypes.includes(file.type) || file.name.endsWith('.txt') || file.name.endsWith('.pdf') || file.name.endsWith('.docx');
-  };
+  const validTypes = [
+    'application/pdf',
+    'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+    'text/plain',
+    'image/jpeg',
+    'image/png',
+    'image/webp'
+  ];
+  
+  return (
+    validTypes.includes(file.type) ||
+    file.name.toLowerCase().endsWith('.txt') ||
+    file.name.toLowerCase().endsWith('.pdf') ||
+    file.name.toLowerCase().endsWith('.docx') ||
+    file.name.toLowerCase().endsWith('.jpg') ||
+    file.name.toLowerCase().endsWith('.jpeg') ||
+    file.name.toLowerCase().endsWith('.png') ||
+    file.name.toLowerCase().endsWith('.webp')
+  );
+};
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -213,7 +259,7 @@ export const CreateChatbotDialog = ({ onCreateChatbot, children }: CreateChatbot
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-xl">
             <Bot className="h-6 w-6 text-chatbot-primary" />
-            Create New Chatbot
+            Create New Assistant
           </DialogTitle>
           <DialogDescription>
             Build a specialized AI assistant for your specific topic and documents.
@@ -224,7 +270,7 @@ export const CreateChatbotDialog = ({ onCreateChatbot, children }: CreateChatbot
           <div className="space-y-4">
             <div>
               <Label htmlFor="name" className="text-sm font-medium">
-                Chatbot Name
+                Assistant Name
               </Label>
               <Input
                 id="name"
@@ -237,7 +283,7 @@ export const CreateChatbotDialog = ({ onCreateChatbot, children }: CreateChatbot
 
             <div>
               <Label htmlFor="topic" className="text-sm font-medium">
-                Topic/Domain
+                Description
               </Label>
               <Input
                 id="topic"
@@ -250,12 +296,12 @@ export const CreateChatbotDialog = ({ onCreateChatbot, children }: CreateChatbot
 
             <div>
               <Label className="text-sm font-medium">
-                Policy Document (Optional)
+                Document (Optional)
               </Label>
               <Card
                 className={`mt-1.5 border-2 border-dashed transition-colors ${dragActive
-                    ? 'border-chatbot-primary bg-chatbot-primary/5'
-                    : 'border-muted-foreground/25 hover:border-chatbot-primary/50'
+                  ? 'border-chatbot-primary bg-chatbot-primary/5'
+                  : 'border-muted-foreground/25 hover:border-chatbot-primary/50'
                   }`}
                 onDragEnter={handleDrag}
                 onDragLeave={handleDrag}
@@ -293,13 +339,13 @@ export const CreateChatbotDialog = ({ onCreateChatbot, children }: CreateChatbot
                             <input
                               type="file"
                               className="hidden"
-                              accept=".pdf,.docx,.txt"
+                              accept=".pdf,.docx,.txt,.jpg,.jpeg,.png,.webp"
                               onChange={handleFileInput}
                             />
                           </label>
                         </p>
                         <p className="text-xs text-muted-foreground">
-                          Supports PDF, DOCX, and TXT files
+                          Supports PDF, DOCX, TXT, and Image files (JPG, JPEG, PNG, WEBP)
                         </p>
                       </div>
                     </div>
@@ -307,6 +353,20 @@ export const CreateChatbotDialog = ({ onCreateChatbot, children }: CreateChatbot
                 </CardContent>
               </Card>
             </div>
+            <div>
+              <Label htmlFor="url" className="text-sm font-medium">
+                Website URL
+              </Label>
+              <Input
+                id="url"
+                type="url"
+                placeholder="e.g., https://example.com/"
+                value={url}
+                onChange={(e) => setUrl(e.target.value)}
+                className="mt-1.5"
+              />
+            </div>
+
           </div>
 
           <div className="flex gap-3 pt-4">
@@ -325,7 +385,7 @@ export const CreateChatbotDialog = ({ onCreateChatbot, children }: CreateChatbot
               disabled={loading}
             >
               <Sparkles className="h-4 w-4" />
-              {loading ? "Creating..." : "Create Chatbot"}
+              {loading ? "Creating..." : "Create Assistant"}
               {/* Create Chatbot */}
             </Button>
           </div>
