@@ -148,6 +148,7 @@ def get_multiquery_retriever(query: str, db: FAISS | Chroma, llm_model_name: str
         retriever=db.as_retriever(search_kwargs={"k": 2}),
         llm=llm
     )
+
     # ✅ Setup Guardrails depending on level
     if guardrail_level == "none":
         guard = None  # no validation
