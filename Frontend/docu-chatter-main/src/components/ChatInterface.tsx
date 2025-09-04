@@ -53,7 +53,7 @@ import {
 
 interface QueryPayload {
   question: string;
-  fileId: number | null;
+  fileId: number[];
   optimizer: string;
   embeddingModel: string;
   llmModel: string;
@@ -384,18 +384,20 @@ export const ChatInterface = ({ chatbot, chatbotName, onSendMessage }: ChatInter
     setIsLoading(true);
 
     try {
-      let fileId = null;
+      let fileId = [];
       if (selectedDocs.length == 0) {
-        fileId = 0;
+        fileId.push(0);
       }
 
-      // 🔍 Step 1: Get file ID from backend using filename
       if (selectedDocs.length > 0) {
-        const docName = selectedDocs[0].label;
-        const idRes = await axios.get<{ file_id: number }>(
-          `http://localhost:8000/datastores/${chatbot.datastoreId}/files/${encodeURIComponent(docName)}/id`
-        );
-        fileId = idRes.data.file_id;
+
+        for (const doc of selectedDocs) {
+          const docName = doc.label;
+          const idRes = await axios.get<{ file_id: number }>(
+            `http://localhost:8000/datastores/${chatbot.datastoreId}/files/${encodeURIComponent(docName)}/id`
+          );
+          fileId.push(idRes.data.file_id);
+        }
       }
 
 
@@ -578,7 +580,9 @@ export const ChatInterface = ({ chatbot, chatbotName, onSendMessage }: ChatInter
 
   // Load settings from localStorage on mount
   useEffect(() => {
-    const saved = localStorage.getItem("model-settings")
+    if (!chatbot?.id) return; // safety check
+
+    const saved = localStorage.getItem(`model-settings-${chatbot.id}`);
     if (saved) {
       const parsed = JSON.parse(saved)
       setOptimizer(parsed.optimizer || "")
@@ -615,7 +619,11 @@ export const ChatInterface = ({ chatbot, chatbotName, onSendMessage }: ChatInter
     };
 
     try {
-      localStorage.setItem("model-settings", JSON.stringify(settings));
+      // 👇 Save per chatbot using its ID
+      localStorage.setItem(
+        `model-settings-${chatbot.id}`,
+        JSON.stringify(settings)
+      );
       setOpen(false);
     } catch (err) {
       console.error("Error saving settings:", err);
@@ -879,12 +887,12 @@ export const ChatInterface = ({ chatbot, chatbotName, onSendMessage }: ChatInter
                 <div className="space-y-2">
                   <Label>Select Documents</Label>
                   <SelectMulti
-                    isMulti={false}
+                    isMulti={true}
                     styles={customMultiStyles}
                     options={getChatbotDocumentOptions(chatbot)}
-                    value={selectedDocs[0] || null}  // Only the first selected item
-                    onChange={(selected: DocumentOption | null) =>
-                      setSelectedDocs(selected ? [selected] : [])
+                    value={selectedDocs}  // Only the first selected item
+                    onChange={(selected: DocumentOption[] | null) =>
+                      setSelectedDocs(selected || [])
                     }
                     isDisabled={isLoading}
                     placeholder="Choose document"
@@ -958,6 +966,8 @@ export const ChatInterface = ({ chatbot, chatbotName, onSendMessage }: ChatInter
                           <SelectContent>
                             <SelectItem value="none">None</SelectItem>
                             <SelectItem value="Multi Query">Multi Query</SelectItem>
+                            <SelectItem value="Step Back">Step Back</SelectItem>
+                            <SelectItem value="Rag Fusion">Rag Fusion</SelectItem>
                           </SelectContent>
                         </Select>
                       </div>
