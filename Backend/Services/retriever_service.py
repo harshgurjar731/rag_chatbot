@@ -24,7 +24,7 @@ def load_embeddings(file_id: int, vector_db: str, model_name: str):
     else:
         raise HTTPException(status_code=400, detail="Unsupported vector DB")
     
-def retrieve_documents(query: str, query_optimizer: str, embedding_model_name: str,llm_model_name: str, vector_db: str, file_id:list,temperature:float,token_size:float,sources: bool,guardrailOption: str):
+def retrieve_documents(query: str, query_optimizer: str, embedding_model_name: str,llm_model_name: str, vector_db: str, file_id:list,temperature:float,token_size:float,sources: bool,guardrailOption: str,rerankerOption: str):
     embedding = HuggingFaceEmbeddings(model_name=embedding_model_name)
     if file_id == [0]:
         result=get_llm_answer(query, llm_model_name, temperature,token_size,sources,guardrailOption)

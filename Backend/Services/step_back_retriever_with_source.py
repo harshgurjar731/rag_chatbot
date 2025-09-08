@@ -9,6 +9,7 @@ from langchain_community.chat_models import ChatOpenAI
 from guardrails import Guard
 from guardrails.hub import ToxicLanguage
 from Services.guardrail import validate_output  # ✅ Guardrail utility
+from Services.reranker_service import get_reranker  # ✅ Import re-ranker factory
 
 
 def get_stepback_retriever_with_sources(
@@ -17,9 +18,10 @@ def get_stepback_retriever_with_sources(
     llm_model_name: str,
     temperature: float,
     token_size: float = 256,
-    guardrail_level: str = "none"
+    guardrail_level: str = "none",
+    rerankerOption: str = "none",  # ✅ new param
 ):
-    """Step-Back RAG pipeline with guardrails & source tracking."""
+    """Step-Back RAG pipeline with guardrails, source tracking & optional re-ranking."""
 
     # 🔑 Groq API setup
     GROQ_API_KEY = "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"
@@ -65,6 +67,22 @@ def get_stepback_retriever_with_sources(
     # ✅ Merge unique docs
     combined_docs = get_unique_union([docs_main, docs_stepback])
     print("Retrieved Documents (combined):", len(combined_docs))
+
+    # ✅ Apply re-ranker if enabled
+    if rerankerOption != "none":
+        reranker = get_reranker(rerankerOption)
+        if reranker:
+            doc_texts = [doc.page_content for doc in combined_docs]
+            ranked = reranker.rerank(query, doc_texts, top_k=5)
+            # Replace docs with reranked ones while preserving metadata
+            reranked_docs = []
+            for ranked_doc, _ in ranked:
+                for original_doc in combined_docs:
+                    if original_doc.page_content == ranked_doc:
+                        reranked_docs.append(original_doc)
+                        break
+            combined_docs = reranked_docs
+            print(f"Applied Re-ranker: {rerankerOption}, Final Docs: {len(combined_docs)}")
 
     # ✅ Extract unique sources
     source_links = list({doc.metadata.get("source", "No source found") for doc in combined_docs})

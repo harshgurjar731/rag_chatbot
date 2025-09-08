@@ -6,6 +6,7 @@ from langchain.load import dumps, loads
 from operator import itemgetter 
 from langchain_community.chat_models import ChatOpenAI  
 from Services.guardrail import validate_output  
+from Services.reranker_service import get_reranker   # ✅ Import re-ranker utility
 
 
 def get_ragfusion_retriever_without_sources(
@@ -14,9 +15,10 @@ def get_ragfusion_retriever_without_sources(
     llm_model_name: str, 
     temperature: float, 
     token_size: float = 256, 
-    guardrail_level: str = "none"
+    guardrail_level: str = "none",
+    rerankerOption: str = "none"   # ✅ new param
 ):
-    """RAG Fusion Retrieval chain using Reciprocal Rank Fusion (no sources)."""
+    """RAG Fusion Retrieval chain using Reciprocal Rank Fusion (no sources, optional re-ranking)."""
 
     # 🔑 Groq API key
     GROQ_API_KEY = "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"
@@ -57,7 +59,25 @@ def get_ragfusion_retriever_without_sources(
         except Exception as e:
             print(f"Retriever failed for query: {cq}, error: {e}")
 
+    # ✅ Reciprocal Rank Fusion
     fused_docs = reciprocal_rank_fusion(all_retrieved)
+    print("Fused Docs Retrieved:", len(fused_docs))
+
+    # ✅ Apply re-ranker (if selected)
+    if rerankerOption != "none":
+        reranker = get_reranker(rerankerOption)
+        if reranker:
+            doc_texts = [doc.page_content for doc in fused_docs]
+            ranked = reranker.rerank(query, doc_texts, top_k=5)
+            # Replace fused_docs with reranked docs (keeping metadata aligned)
+            reranked_docs = []
+            for ranked_doc, _ in ranked:
+                for original_doc in fused_docs:
+                    if original_doc.page_content == ranked_doc:
+                        reranked_docs.append(original_doc)
+                        break
+            fused_docs = reranked_docs
+            print(f"Applied Re-ranker: {rerankerOption}, Final Docs: {len(fused_docs)}")
 
     # RAG prompt
     rag_template = """Answer the following question using the provided context:
