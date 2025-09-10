@@ -110,14 +110,21 @@ from langchain_community.chat_models import ChatOpenAI
 from guardrails import Guard
 from guardrails.hub import ToxicLanguage
 # ✅ Import our guardrail utilities
-from Services.guardrail import validate_output  
+from Services.guardrail import validate_output 
+from Services.reranker_service import get_reranker 
 
-def get_multiquery_retriever(query: str, db: FAISS | Chroma, llm_model_name: str,temperature:float,token_size:float = 256,guardrail_level: str="none"):
-    """RAG pipeline with source link extraction."""
+def get_multiquery_retriever(
+    query: str,
+    db: FAISS | Chroma,
+    llm_model_name: str,
+    temperature: float,
+    token_size: float = 256,
+    guardrail_level: str = "none",
+    rerankerOption: str = "none"
+):
+    """RAG pipeline with source link extraction and optional re-ranking."""
 
-    # GROQ_API_KEY = "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"
     GROQ_API_KEY = "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"
-
 
     if not llm_model_name:
         raise ValueError("LLM model name must be provided")
@@ -148,17 +155,16 @@ def get_multiquery_retriever(query: str, db: FAISS | Chroma, llm_model_name: str
         retriever=db.as_retriever(search_kwargs={"k": 2}),
         llm=llm
     )
+
     # ✅ Setup Guardrails depending on level
     if guardrail_level == "none":
-        guard = None  # no validation
+        guard = None
     elif guardrail_level == "basic":
-        guard = Guard().use(ToxicLanguage(threshold=0.9))  # lenient
+        guard = Guard().use(ToxicLanguage(threshold=0.9))
     elif guardrail_level == "strict":
-        guard = Guard().use(ToxicLanguage(threshold=0.5))  # strict
+        guard = Guard().use(ToxicLanguage(threshold=0.5))
     elif guardrail_level == "custom":
-        guard = Guard().use(
-            ToxicLanguage(threshold=0.7, validation_method="sentence")
-        )
+        guard = Guard().use(ToxicLanguage(threshold=0.7, validation_method="sentence"))
     else:
         guard = None
 
@@ -168,7 +174,18 @@ def get_multiquery_retriever(query: str, db: FAISS | Chroma, llm_model_name: str
 
     retrieval_chain = generate_queries | retriever.map() | get_unique_union
     docs = retrieval_chain.invoke({"question": question})
+
     print(f"Retrieved Documents: {len(docs)}")
+
+    # ✅ Apply Re-ranker here (after docs retrieved, before LLM prompt)
+    if rerankerOption != "none":
+        reranker = get_reranker(rerankerOption)
+        if reranker:
+            doc_texts = [doc.page_content for doc in docs]
+            ranked = reranker.rerank(query, doc_texts, top_k=5)
+            # replace docs with reranked top ones
+            docs = [doc for doc, _ in ranked]
+            print("Applied Re-ranker:", rerankerOption)
 
     # ✅ Extract unique sources
     source_links = list({doc.metadata.get("source", "No source found") for doc in docs})
@@ -195,16 +212,14 @@ def get_multiquery_retriever(query: str, db: FAISS | Chroma, llm_model_name: str
 
     final_answer = final_rag_chain.invoke({"question": question})
 
-   # ✅ Apply guardrails (toxicity, PII etc.)
+    # ✅ Apply guardrails (toxicity, PII etc.)
     validated = validate_output(final_answer, guardrail_level)
 
-    # If guard blocked, return directly
     if "⚠️ Response blocked" in validated["answer"]:
         return validated
 
-    final_answer = validated["answer"]
     return {
-        "answer": final_answer,
+        "answer": validated["answer"],
         "sources": source_links
     }
 

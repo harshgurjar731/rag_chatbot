@@ -53,7 +53,7 @@ import {
 
 interface QueryPayload {
   question: string;
-  fileId: number | null;
+  fileId: number[];
   optimizer: string;
   embeddingModel: string;
   llmModel: string;
@@ -61,7 +61,8 @@ interface QueryPayload {
   temperature: number;
   guardrailOption: string;
   tokenSize: number; // New field for token size,  
-  showSources: boolean; // New field to control source display
+  showSources: boolean; // New field to control source display:
+  rerankerOption: string; // New field for reranker option
 
 }
 
@@ -384,18 +385,20 @@ export const ChatInterface = ({ chatbot, chatbotName, onSendMessage }: ChatInter
     setIsLoading(true);
 
     try {
-      let fileId = null;
+      let fileId = [];
       if (selectedDocs.length == 0) {
-        fileId = 0;
+        fileId.push(0);
       }
 
-      // 🔍 Step 1: Get file ID from backend using filename
       if (selectedDocs.length > 0) {
-        const docName = selectedDocs[0].label;
-        const idRes = await axios.get<{ file_id: number }>(
-          `http://localhost:8000/datastores/${chatbot.datastoreId}/files/${encodeURIComponent(docName)}/id`
-        );
-        fileId = idRes.data.file_id;
+
+        for (const doc of selectedDocs) {
+          const docName = doc.label;
+          const idRes = await axios.get<{ file_id: number }>(
+            `http://localhost:8000/datastores/${chatbot.datastoreId}/files/${encodeURIComponent(docName)}/id`
+          );
+          fileId.push(idRes.data.file_id);
+        }
       }
 
 
@@ -411,7 +414,8 @@ export const ChatInterface = ({ chatbot, chatbotName, onSendMessage }: ChatInter
         temperature,
         guardrailOption,
         tokenSize,
-        showSources
+        showSources,
+        rerankerOption
       });
 
       const botMessage: ChatMessage = {
@@ -578,7 +582,9 @@ export const ChatInterface = ({ chatbot, chatbotName, onSendMessage }: ChatInter
 
   // Load settings from localStorage on mount
   useEffect(() => {
-    const saved = localStorage.getItem("model-settings")
+    if (!chatbot?.id) return; // safety check
+
+    const saved = localStorage.getItem(`model-settings-${chatbot.id}`);
     if (saved) {
       const parsed = JSON.parse(saved)
       setOptimizer(parsed.optimizer || "")
@@ -589,6 +595,7 @@ export const ChatInterface = ({ chatbot, chatbotName, onSendMessage }: ChatInter
       setTemperature(parsed.temperature ?? 0.7)
       setTokenSize(parsed.tokenSize ?? 512)
       setShowSources(parsed.showSources ?? true)
+      setRerankerOption(parsed.rerankerOption ?? "none")  // ✅ Re-ranker (default "none")
     }
   }, [])
 
@@ -601,6 +608,7 @@ export const ChatInterface = ({ chatbot, chatbotName, onSendMessage }: ChatInter
     temperature: number;
     tokenSize: number;
     showSources: boolean;
+    rerankerOption: string;
   }> = {}) => {
     const settings = {
       optimizer,
@@ -611,11 +619,16 @@ export const ChatInterface = ({ chatbot, chatbotName, onSendMessage }: ChatInter
       temperature,
       tokenSize,
       showSources,
+      rerankerOption,
       ...overrides,
     };
 
     try {
-      localStorage.setItem("model-settings", JSON.stringify(settings));
+      // 👇 Save per chatbot using its ID
+      localStorage.setItem(
+        `model-settings-${chatbot.id}`,
+        JSON.stringify(settings)
+      );
       setOpen(false);
     } catch (err) {
       console.error("Error saving settings:", err);
@@ -700,6 +713,10 @@ export const ChatInterface = ({ chatbot, chatbotName, onSendMessage }: ChatInter
     { code: "gu", name: "Gujarati" },
     { code: "mr", name: "Marathi" },
   ];
+  const [rerankerOption, setRerankerOption] = useState<string>("none")
+  const handleRerankerChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    setRerankerOption(e.target.value)
+  }
 
   return (
     <div className="flex flex-col h-[470px] bg-gradient-surface rounded-lg border border-chatbot-primary/20">
@@ -879,12 +896,12 @@ export const ChatInterface = ({ chatbot, chatbotName, onSendMessage }: ChatInter
                 <div className="space-y-2">
                   <Label>Select Documents</Label>
                   <SelectMulti
-                    isMulti={false}
+                    isMulti={true}
                     styles={customMultiStyles}
                     options={getChatbotDocumentOptions(chatbot)}
-                    value={selectedDocs[0] || null}  // Only the first selected item
-                    onChange={(selected: DocumentOption | null) =>
-                      setSelectedDocs(selected ? [selected] : [])
+                    value={selectedDocs}  // Only the first selected item
+                    onChange={(selected: DocumentOption[] | null) =>
+                      setSelectedDocs(selected || [])
                     }
                     isDisabled={isLoading}
                     placeholder="Choose document"
@@ -958,6 +975,8 @@ export const ChatInterface = ({ chatbot, chatbotName, onSendMessage }: ChatInter
                           <SelectContent>
                             <SelectItem value="none">None</SelectItem>
                             <SelectItem value="Multi Query">Multi Query</SelectItem>
+                            <SelectItem value="Step Back">Step Back</SelectItem>
+                            <SelectItem value="Rag Fusion">Rag Fusion</SelectItem>
                           </SelectContent>
                         </Select>
                       </div>
@@ -1081,6 +1100,30 @@ export const ChatInterface = ({ chatbot, chatbotName, onSendMessage }: ChatInter
                           disabled={isLoading}
                         />
                       </div> */}
+                      {/* Re-ranker Option */}
+                      <div className="space-y-1">
+                        <Label>Re-ranker</Label>
+                        <select
+                          className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                          value={rerankerOption}
+                          onChange={(e) => setRerankerOption(e.target.value)}
+                          disabled={isLoading}
+                        >
+                          <option value="none">None – Use retriever results directly</option>
+                          <option value="cross-encoder">
+                            Cross-encoder – Most accurate, but slower (fine-grained relevance)
+                          </option>
+                          <option value="bi-encoder">
+                            Bi-encoder – Faster, less accurate (lightweight ranking)
+                          </option>
+                          <option value="llm-reranker">
+                            LLM-based – Uses a language model to judge document relevance
+                          </option>
+                        </select>
+                        <p className="text-xs text-muted-foreground">
+                          Choose a re-ranking method to reorder retrieved documents before passing them to the LLM.
+                        </p>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -1118,6 +1161,7 @@ export const ChatInterface = ({ chatbot, chatbotName, onSendMessage }: ChatInter
           )}
           {(optimizer || embeddingModel || llmModel || vectorDb || typeof temperature === "number" || guardrailOption ||
             tokenSize ||                     // ✅ Token size
+            rerankerOption !== "none" ||                  // ✅ Token size
             typeof showSources === "boolean") && (
               <div className="flex flex-wrap gap-2 mt-2 items-center">
                 <Label className="text-sm text-muted-foreground">Settings:</Label>
@@ -1235,6 +1279,21 @@ export const ChatInterface = ({ chatbot, chatbotName, onSendMessage }: ChatInter
                     </button>
                   </span>
                 )}
+                {rerankerOption !== "none" && (
+                  <span className="flex items-center gap-1 text-xs bg-chatbot-secondary text-foreground border border-chatbot-primary/20 rounded-md px-2 py-1">
+                    Re-ranker: {rerankerOption}
+                    <button
+                      type="button"
+                      className="flex items-center justify-center w-4 h-4 rounded-full hover:bg-destructive hover:text-destructive-foreground transition-colors duration-150"
+                      onClick={() => {
+                        setRerankerOption("none");
+                        handleSave({ rerankerOption: "none" });
+                      }}
+                    >
+                      <X size={10} strokeWidth={2} />
+                    </button>
+                  </span>
+                )}
 
                 {/* Include Sources */}
                 {/* {typeof showSources === "boolean" && (
@@ -1251,6 +1310,7 @@ export const ChatInterface = ({ chatbot, chatbotName, onSendMessage }: ChatInter
                     </button>
                   </span> */}
                 {/* )} */}
+
               </div>
             )}
 
