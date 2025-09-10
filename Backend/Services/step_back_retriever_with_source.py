@@ -1,37 +1,49 @@
+# services/step_back_retriever_with_source.py
+
+from operator import itemgetter
 from langchain.vectorstores import FAISS, Chroma
 from langchain.embeddings import HuggingFaceEmbeddings
-from langchain.llms import HuggingFaceHub
 from langchain_core.output_parsers import StrOutputParser
 from langchain.prompts import ChatPromptTemplate
 from langchain.load import dumps, loads
-from operator import itemgetter
 from langchain_community.chat_models import ChatOpenAI
+
 from guardrails import Guard
 from guardrails.hub import ToxicLanguage
-from Services.guardrail import validate_output  # ✅ Guardrail utility
-from Services.reranker_service import get_reranker  # ✅ Import re-ranker factory
+
+from config import CONFIG
+from Services.guardrail import validate_output   # ✅ Guardrail utility
+from Services.reranker_service import get_reranker   # ✅ Import re-ranker factory
 
 
 def get_stepback_retriever_with_sources(
     query: str,
     db: FAISS | Chroma,
-    llm_model_name: str,
-    temperature: float,
-    token_size: float = 256,
-    guardrail_level: str = "none",
-    rerankerOption: str = "none",  # ✅ new param
+    llm_model_name: str = None,
+    temperature: float = None,
+    token_size: int = None,
+    guardrail_level: str = None,
+    rerankerOption: str = None,
 ):
     """Step-Back RAG pipeline with guardrails, source tracking & optional re-ranking."""
 
-    # 🔑 Groq API setup
-    GROQ_API_KEY = "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"
+    # ✅ Load defaults from config if not provided
+    llm_model_name = llm_model_name or CONFIG["default_llm_model"]
+    temperature = temperature if temperature is not None else CONFIG["default_temperature"]
+    token_size = token_size or CONFIG["default_token_size"]
+    guardrail_level = guardrail_level or CONFIG["default_guardrail_option"]
+    rerankerOption = rerankerOption or CONFIG["default_reranker_option"]
+
+    # 🔑 Groq API setup (from env)
+    GROQ_API_KEY = CONFIG["groq_api_key"]
+    GROQ_API_BASE = CONFIG["groq_api_base"]
 
     if not llm_model_name:
         raise ValueError("LLM model name must be provided")
 
     # ✅ LLM setup
     llm = ChatOpenAI(
-        openai_api_base="https://api.groq.com/openai/v1",
+        openai_api_base=GROQ_API_BASE,
         openai_api_key=GROQ_API_KEY,
         model=llm_model_name,
         temperature=temperature,
@@ -48,11 +60,7 @@ def get_stepback_retriever_with_sources(
     """
     stepback_prompt = ChatPromptTemplate.from_template(stepback_template)
 
-    generate_stepback_query = (
-        stepback_prompt
-        | llm
-        | StrOutputParser()
-    )
+    generate_stepback_query = stepback_prompt | llm | StrOutputParser()
 
     # Generate step-back query
     stepback_query = generate_stepback_query.invoke({"question": query})
@@ -73,7 +81,11 @@ def get_stepback_retriever_with_sources(
         reranker = get_reranker(rerankerOption)
         if reranker:
             doc_texts = [doc.page_content for doc in combined_docs]
-            ranked = reranker.rerank(query, doc_texts, top_k=5)
+            ranked = reranker.rerank(
+                query,
+                doc_texts,
+                top_k=CONFIG["default_reranker_top_k"]  # ✅ driven from env
+            )
             # Replace docs with reranked ones while preserving metadata
             reranked_docs = []
             for ranked_doc, _ in ranked:
@@ -90,17 +102,19 @@ def get_stepback_retriever_with_sources(
     for src in source_links:
         print(" -", src)
 
-    # ✅ Guardrails setup
-    if guardrail_level == "none":
-        guard = None
-    elif guardrail_level == "basic":
-        guard = Guard().use(ToxicLanguage(threshold=0.9))  # lenient
+    # ✅ Guardrails setup (thresholds from env)
+    guard = None
+    if guardrail_level == "basic":
+        guard = Guard().use(ToxicLanguage(threshold=float(CONFIG["toxicity_threshold_basic"])))
     elif guardrail_level == "strict":
-        guard = Guard().use(ToxicLanguage(threshold=0.5))  # strict
+        guard = Guard().use(ToxicLanguage(threshold=float(CONFIG["toxicity_threshold_strict"])))
     elif guardrail_level == "custom":
-        guard = Guard().use(ToxicLanguage(threshold=0.7, validation_method="sentence"))
-    else:
-        guard = None
+        guard = Guard().use(
+            ToxicLanguage(
+                threshold=float(CONFIG["toxicity_threshold_custom"]),
+                validation_method="sentence"
+            )
+        )
 
     # ✅ RAG template
     rag_template = """Answer the following question using the provided context.
@@ -126,7 +140,7 @@ def get_stepback_retriever_with_sources(
     # Final answer
     final_answer = rag_chain.invoke({"question": query})
 
-    # ✅ Apply guardrails
+    # ✅ Apply guardrails via shared validator
     validated = validate_output(final_answer, guardrail_level)
 
     if "⚠️ Response blocked" in validated["answer"]:

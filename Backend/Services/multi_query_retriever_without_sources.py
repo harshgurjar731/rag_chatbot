@@ -2,8 +2,7 @@ from typing import List
 from langchain.vectorstores import FAISS, Chroma
 from langchain.retrievers.multi_query import MultiQueryRetriever
 from langchain.embeddings import HuggingFaceEmbeddings
-from langchain.llms import HuggingFaceHub  # use OpenAI if you're using OpenAI models
-import os
+from langchain.llms import HuggingFaceHub  # use OpenAI if needed
 from pathlib import Path
 from langchain_core.output_parsers import StrOutputParser
 from langchain.prompts import ChatPromptTemplate
@@ -11,37 +10,45 @@ from langchain.load import dumps, loads
 from operator import itemgetter 
 from langchain_core.runnables import RunnablePassthrough
 from langchain_community.chat_models import ChatOpenAI
-from guardrails import Guard
-from guardrails.hub import ToxicLanguage
 from Services.guardrail import validate_output  
-from Services.reranker_service import get_reranker   # ✅ Import reranker utility
+from Services.reranker_service import get_reranker
+from config import CONFIG   # Load env-driven config
 
 
 def get_multiquery_retriever_without_sources(
     query: str,
     db: FAISS | Chroma,
-    llm_model_name: str,
-    temperature: float,
-    token_size: float = 256,
-    guardrail_level: str = "none",
-    rerankerOption: str = "none"
+    llm_model_name: str = None,
+    temperature: float = None,
+    token_size: float = None,
+    guardrail_level: str = None,
+    rerankerOption: str = None
 ):
     """Create a MultiQueryRetriever pipeline with optional re-ranking."""
 
-    GROQ_API_KEY = "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"
+    # ✅ Load defaults from env/config if not provided
+    llm_model_name = llm_model_name or CONFIG["default_llm_model"]
+    temperature = temperature if temperature is not None else CONFIG["default_temperature"]
+    token_size = token_size if token_size is not None else CONFIG["default_token_size"]
+    guardrail_level = guardrail_level or CONFIG["default_guardrail_option"]
+    rerankerOption = rerankerOption or CONFIG["default_reranker_option"]
+
+    GROQ_API_KEY = CONFIG.get("groq_api_key")
+    GROQ_API_BASE = CONFIG.get("groq_api_base")
 
     if not llm_model_name:
         raise ValueError("LLM model name must be provided")
 
+    # Initialize LLM
     llm = ChatOpenAI(
-        openai_api_base="https://api.groq.com/openai/v1",
+        openai_api_base=GROQ_API_BASE,
         openai_api_key=GROQ_API_KEY,
         model=llm_model_name,
         temperature=temperature,
         max_tokens=token_size,
     )
 
-    # Multi Query: Different Perspectives
+    # Multi Query: Different Perspectives (prompt unchanged)
     template = """You are an AI language model assistant. Your task is to generate five 
     different versions of the given user question to retrieve relevant documents from a vector 
     database. By generating multiple perspectives on the user question, your goal is to help

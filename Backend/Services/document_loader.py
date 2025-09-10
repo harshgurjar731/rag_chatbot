@@ -6,7 +6,6 @@ import os
 from mistralai import Mistral
 
 from langchain_community.document_loaders import (
-    UnstructuredPDFLoader,
     UnstructuredWordDocumentLoader,
     UnstructuredHTMLLoader,
     UnstructuredMarkdownLoader,
@@ -14,6 +13,8 @@ from langchain_community.document_loaders import (
     CSVLoader,
     PyPDFLoader,
 )
+
+from config import CONFIG  # ✅ centralized config
 
 
 def save_docs_to_json(docs: List[Document], path: Path) -> None:
@@ -29,8 +30,11 @@ def save_docs_to_json(docs: List[Document], path: Path) -> None:
 def ocr_image_to_json(file_path: str) -> dict:
     """Upload an image to Mistral OCR and return cleaned text in JSON format."""
     try:
-        # 🔑 Read API key safely
-        api_key = "vIYwB5eYxQdtzjAseppl6don2TDBNOpe"
+        # 🔑 Load API key from config
+        api_key = CONFIG["mistral_api_key"]
+        if not api_key:
+            return {"error": "Mistral API key not configured."}
+
         client = Mistral(api_key=api_key)
 
         # Ensure file exists
@@ -126,7 +130,7 @@ def load_file_with_loader(file_path: str, loader_type: str) -> List[Document]:
     if loader_type == "pdf":
         loader = PyPDFLoader(str(file_path))
     elif loader_type == "txt":
-        # ✅ autodetect_encoding is not always available → fallback safe
+        # ✅ autodetect_encoding fallback safe
         try:
             loader = TextLoader(str(file_path), encoding="utf-8", autodetect_encoding=True)
         except TypeError:

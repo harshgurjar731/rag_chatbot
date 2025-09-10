@@ -154,36 +154,6 @@ const scrapeWebsite = async (datastoreId: number, url: string) => {
     }
   };
 
-
-  // const handleSubmit = (e: React.FormEvent) => {
-  //   e.preventDefault();
-
-  //   if (!formData.name.trim() || !formData.topic.trim()) {
-  //     toast({
-  //       title: "Missing Information",
-  //       description: "Please fill in both name and topic fields.",
-  //       variant: "destructive",
-  //     });
-  //     return;
-  //   }
-
-  //   onCreateChatbot({
-  //     name: formData.name.trim(),
-  //     topic: formData.topic.trim(),
-  //     document: file || undefined,
-  //   });
-
-  //   // Reset form
-  //   setFormData({ name: '', topic: '' });
-  //   setFile(null);
-  //   setOpen(false);
-
-  //   toast({
-  //     title: "Chatbot Created! 🎉",
-  //     description: `${formData.name} is ready to assist with ${formData.topic}.`,
-  //   });
-  // };
-
   const handleDrag = (e: React.DragEvent) => {
     e.preventDefault();
     e.stopPropagation();

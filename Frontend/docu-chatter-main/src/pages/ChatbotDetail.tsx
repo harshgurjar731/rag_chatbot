@@ -38,7 +38,7 @@ const ChatbotDetail = () => {
   const [newFile, setNewFile] = useState<File | null>(null);
   const { chatbots, setChatbots } = useChatbots();
   const { refetchChatbots } = useChatbots();
-
+  const [isDragging, setIsDragging] = useState(false);
   const chatbot = id ? getChatbot(id) : null;
 
   if (!chatbot) {
@@ -239,6 +239,8 @@ const ChatbotDetail = () => {
     });
   };
 
+
+
   const simulateResponse = async (message: string): Promise<string> => {
     // Simulate API delay
     await new Promise(resolve => setTimeout(resolve, 1000 + Math.random() * 2000));
@@ -360,21 +362,21 @@ const ChatbotDetail = () => {
               chatbot={chatbot}
               chatbotName="MyBot"
               onSendMessage={async (payload) => {
-                const { question, fileId, optimizer, embeddingModel, llmModel, vectorDb, temperature, guardrailOption, tokenSize, showSources,rerankerOption } = payload;
+                const { question, fileId, optimizer, embeddingModel, llmModel, vectorDb, temperature, guardrailOption, tokenSize, showSources, rerankerOption } = payload;
 
                 const response = await axios.get("http://localhost:8000/retriever/query", {
                   params: {
                     query: question,
                     query_optimizer: optimizer || "Multi Query",
                     embedding_model_name: embeddingModel || "all-MiniLM-L6-v2",
-                    llm_model_name: llmModel || "llama3-8b-8192",
+                    llm_model_name: llmModel || "llama-3.3-70b-versatile",
                     vector_db: vectorDb || "faiss",
                     file_id: fileId,
                     temperature: temperature || 0.0,
                     guardrailOption: guardrailOption,
                     token_size: tokenSize || 256,
                     sources: showSources || false,
-                    rerankerOption:rerankerOption || "none" // Include sources if requested
+                    rerankerOption: rerankerOption || "none" // Include sources if requested
                   },
 
                   // ✅ ensure arrays become file_id=12&file_id=16 instead of file_id[]=...
@@ -453,33 +455,67 @@ const ChatbotDetail = () => {
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">
-                    <div className="border-2 border-dashed border-muted-foreground/25 rounded-lg p-6 text-center hover:border-chatbot-primary/50 transition-colors">
-                      <Upload className="h-10 w-10 mx-auto text-muted-foreground mb-3" />
+                    <div
+                      className={`border-2 border-dashed rounded-lg p-6 text-center transition-colors duration-200 ${isDragging
+                          ? "border-chatbot-primary bg-chatbot-primary/5 animate-pulse"
+                          : "border-muted-foreground/25 hover:border-chatbot-primary/50"
+                        }`}
+                      onDragOver={(e) => {
+                        e.preventDefault()
+                        e.stopPropagation()
+                        if (!isDragging) setIsDragging(true)
+                      }}
+                      onDragLeave={(e) => {
+                        e.preventDefault()
+                        e.stopPropagation()
+                        setIsDragging(false)
+                      }}
+                      onDrop={(e) => {
+                        e.preventDefault()
+                        e.stopPropagation()
+                        setIsDragging(false)
+                        if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+                          handleFileUpload(e.dataTransfer.files[0])
+                        }
+                      }}
+                    >
+                      <Upload
+                        className="h-10 w-10 mx-auto text-muted-foreground mb-3 transition-transform duration-200"
+                        style={{ transform: isDragging ? "scale(1.1)" : "scale(1)" }}
+                      />
                       <div className="space-y-2">
                         <p className="text-sm font-medium">
-                          Drop your document here, or{' '}
-                          <label className="text-chatbot-primary cursor-pointer hover:underline">
-                            browse files
-                            <input
-                              type="file"
-                              className="hidden"
-                              accept=".pdf,.docx,.txt,.jpg,.jpeg,.png,.webp"
-                              onChange={(e) => {
-                                if (e.target.files?.[0]) {
-                                  handleFileUpload(e.target.files[0]);
-                                }
-                              }}
-                            />
-                          </label>
+                          {isDragging ? (
+                            <span className="text-chatbot-primary font-semibold">
+                              Release to upload your file
+                            </span>
+                          ) : (
+                            <>
+                              Drop your document here, or{" "}
+                              <label className="text-chatbot-primary cursor-pointer hover:underline">
+                                browse files
+                                <input
+                                  type="file"
+                                  className="hidden"
+                                  accept=".pdf,.docx,.txt,.jpg,.jpeg,.png,.webp"
+                                  onChange={(e) => {
+                                    if (e.target.files?.[0]) {
+                                      handleFileUpload(e.target.files[0])
+                                    }
+                                  }}
+                                />
+                              </label>
+                            </>
+                          )}
                         </p>
                         <p className="text-xs text-muted-foreground">
                           Supports PDF, DOCX, TXT, and Image files (JPG, JPEG, PNG, WEBP)
-
                         </p>
                       </div>
                     </div>
                   </div>
                 </CardContent>
+
               </Card>
             </div>
           </TabsContent>

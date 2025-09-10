@@ -1,35 +1,33 @@
 from langchain.vectorstores import FAISS, Chroma
-from langchain.llms import HuggingFaceHub  
 from langchain_core.output_parsers import StrOutputParser
 from langchain.prompts import ChatPromptTemplate
 from langchain.load import dumps, loads
-from operator import itemgetter 
-from langchain_community.chat_models import ChatOpenAI  
-from Services.guardrail import validate_output  
-from Services.reranker_service import get_reranker   # ✅ Import re-ranker utility
+from operator import itemgetter
+from langchain_community.chat_models import ChatOpenAI
+
+from Services.guardrail import validate_output
+from Services.reranker_service import get_reranker
+from config import CONFIG
 
 
 def get_ragfusion_retriever_without_sources(
-    query: str, 
-    db: FAISS | Chroma, 
-    llm_model_name: str, 
-    temperature: float, 
-    token_size: float = 256, 
-    guardrail_level: str = "none",
-    rerankerOption: str = "none"   # ✅ new param
+    query: str,
+    db: FAISS | Chroma,
+    llm_model_name: str = CONFIG["default_llm_model"],
+    temperature: float = CONFIG["default_temperature"],
+    token_size: float = CONFIG["default_token_size"],
+    guardrail_level: str = CONFIG["default_guardrail_option"],
+    rerankerOption: str = CONFIG["default_reranker_option"],
 ):
     """RAG Fusion Retrieval chain using Reciprocal Rank Fusion (no sources, optional re-ranking)."""
-
-    # 🔑 Groq API key
-    GROQ_API_KEY = "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"
 
     if not llm_model_name:
         raise ValueError("LLM model name must be provided")
 
-    # ✅ Setup LLM
+    # ✅ Setup LLM from config
     llm = ChatOpenAI(
-        openai_api_base="https://api.groq.com/openai/v1",
-        openai_api_key=GROQ_API_KEY,
+        openai_api_base=CONFIG["groq_api_base"],
+        openai_api_key=CONFIG["groq_api_key"],
         model=llm_model_name,
         temperature=temperature,
         max_tokens=token_size,
@@ -42,14 +40,13 @@ def get_ragfusion_retriever_without_sources(
     fusion_prompt = ChatPromptTemplate.from_template(fusion_template)
 
     generate_queries = (
-        fusion_prompt
-        | llm
-        | StrOutputParser()
-        | (lambda x: x.split("\n"))
+        fusion_prompt | llm | StrOutputParser() | (lambda x: x.split("\n"))
     )
 
     candidate_queries = generate_queries.invoke({"question": query})
-    retriever = db.as_retriever(search_kwargs={"k": 5})
+    retriever = db.as_retriever(
+        search_kwargs={"k": CONFIG["default_ragfusion_top_k"]}
+    )
 
     all_retrieved = []
     for cq in candidate_queries:
@@ -59,17 +56,16 @@ def get_ragfusion_retriever_without_sources(
         except Exception as e:
             print(f"Retriever failed for query: {cq}, error: {e}")
 
-    # ✅ Reciprocal Rank Fusion
-    fused_docs = reciprocal_rank_fusion(all_retrieved)
+    # ✅ Reciprocal Rank Fusion (RRF k from config)
+    fused_docs = reciprocal_rank_fusion(all_retrieved, k=CONFIG["default_ragfusion_rrf_k"])
     print("Fused Docs Retrieved:", len(fused_docs))
 
-    # ✅ Apply re-ranker (if selected)
+    # ✅ Apply re-ranker (if enabled)
     if rerankerOption != "none":
         reranker = get_reranker(rerankerOption)
         if reranker:
             doc_texts = [doc.page_content for doc in fused_docs]
             ranked = reranker.rerank(query, doc_texts, top_k=5)
-            # Replace fused_docs with reranked docs (keeping metadata aligned)
             reranked_docs = []
             for ranked_doc, _ in ranked:
                 for original_doc in fused_docs:
@@ -107,7 +103,7 @@ def get_ragfusion_retriever_without_sources(
 
 
 # ----------- HELPER: Reciprocal Rank Fusion ----------- #
-def reciprocal_rank_fusion(all_docs: list[list], k: int = 60):
+def reciprocal_rank_fusion(all_docs: list[list], k: int = CONFIG["default_ragfusion_rrf_k"]):
     """Reciprocal Rank Fusion (RRF) to merge ranked document lists."""
     from collections import defaultdict
 
