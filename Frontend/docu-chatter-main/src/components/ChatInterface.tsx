@@ -6,10 +6,6 @@ import { Card, CardContent } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Chatbot, ChatMessage } from '@/types/chatbot';
 import { useToast } from '@/hooks/use-toast';
-// import { useState } from "react";
-// import { Mic, MicOff, Send } from "lucide-react";
-// import { Button } from "@/components/ui/button";
-// import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 // import { Chatbot, CreateChatbotData, QnAPair, RawDatastore,FileRecord } from '@/types/chatbot';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
@@ -49,6 +45,8 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import { useConfigOptions } from "@/hooks/useConfigOptions"
+
 
 
 interface QueryPayload {
@@ -89,41 +87,9 @@ declare global {
 
 export const ChatInterface = ({ chatbot, chatbotName, onSendMessage }: ChatInterfaceProps) => {
 
+  const { config, loading } = useConfigOptions()
+
   const storageKey = `chat_history_${chatbot?.id}`;
-  // const [messages, setMessages] = useState<ChatMessage[]>([
-  //   {
-  //     id: '1',
-  //     content: `Hello! I'm ${chatbotName}. How can I assist you today?`,
-  //     isUser: false,
-  //     timestamp: new Date(),
-  //   }
-  // ]);
-  // Save to localStorage on change
-
-  // const [messages, setMessages] = useState<ChatMessage[]>(() => {
-  //   const saved = localStorage.getItem(storageKey);
-  //   if (saved) {
-  //     try {
-  //       const parsed: ChatMessage[] = JSON.parse(saved);
-  //       return parsed.map((msg) => ({
-  //         ...msg,
-  //         timestamp: new Date(msg.timestamp), // Convert timestamp back to Date
-  //       }));
-  //     } catch {
-  //       return [];
-  //     }
-  //   }
-
-  //   return [
-  //     {
-  //       id: "1",
-  //       content: `Hello! I'm ${chatbotName}. How can I assist you today?`,
-  //       isUser: false,
-  //       timestamp: new Date(),
-  //     },
-  //   ];
-  // });
-
   // Add this type near your ChatMessage interface
   type StoredChatMessage = Omit<ChatMessage, "timestamp"> & { timestamp: string };
 
@@ -149,7 +115,7 @@ export const ChatInterface = ({ chatbot, chatbotName, onSendMessage }: ChatInter
     return [
       {
         id: "1",
-        content: `Hello! I'm ${chatbotName}. How can I assist you today?`,
+        content: `Hello, I am your ${chatbot.name}. How can I help you today?`,
         isUser: false,
         timestamp: new Date(),
       },
@@ -166,10 +132,6 @@ export const ChatInterface = ({ chatbot, chatbotName, onSendMessage }: ChatInter
     localStorage.setItem(storageKey, JSON.stringify(toStore));
   }, [messages]);
 
-  // useEffect(() => {
-  //   localStorage.setItem(storageKey, JSON.stringify(messages));
-  // }, [messages, storageKey]);
-
   const [openDropdownId, setOpenDropdownId] = useState<string | null>(null);
 
   const toggleLanguageDropdown = (id: string) => {
@@ -182,7 +144,7 @@ export const ChatInterface = ({ chatbot, chatbotName, onSendMessage }: ChatInter
     targetLang: string
   ): Promise<void> => {
     try {
-      const res = await fetch("http://localhost:8000/translate", {
+      const res = await fetch(`${config?.base_url}/translate`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -224,10 +186,9 @@ export const ChatInterface = ({ chatbot, chatbotName, onSendMessage }: ChatInter
   const [isSpeaking, setIsSpeaking] = useState(false);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
-  // const [inputText, setInputText] = useState(""); // This holds the speech-to-text result
   const [tokenSize, setTokenSize] = useState(256);
   const [showSources, setShowSources] = useState(false);
-  // const storageKey = `chat_history_${chatbot?.id}`; // Unique key per chatbot
+
 
   const [urlInput, setUrlInput] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -244,7 +205,7 @@ export const ChatInterface = ({ chatbot, chatbotName, onSendMessage }: ChatInter
   const scrapeWebsite = async (datastoreId: number, url: string) => {
     try {
       const { data } = await axios.post(
-        `http://127.0.0.1:8000/urlscraper/${datastoreId}`,
+        `${config?.base_url}/urlscraper/${datastoreId}`,
         {}, // empty body
         { params: { url } } // URL as query param
       );
@@ -324,41 +285,6 @@ export const ChatInterface = ({ chatbot, chatbotName, onSendMessage }: ChatInter
     }
   }, [messages]);
 
-  // const handleSend = async () => {
-  //   if (!input.trim() || isLoading) return;
-
-  //   const userMessage: ChatMessage = {
-  //     id: crypto.randomUUID(),
-  //     content: input.trim(),
-  //     isUser: true,
-  //     timestamp: new Date(),
-  //   };
-
-  //   setMessages(prev => [...prev, userMessage]);
-  //   setInput('');
-  //   setIsLoading(true);
-
-  //   try {
-  //     const response = await onSendMessage(input.trim());
-
-  //     const botMessage: ChatMessage = {
-  //       id: crypto.randomUUID(),
-  //       content: response,
-  //       isUser: false,
-  //       timestamp: new Date(),
-  //     };
-
-  //     setMessages(prev => [...prev, botMessage]);
-  //   } catch (error) {
-  //     toast({
-  //       title: "Error",
-  //       description: "Failed to get response from chatbot.",
-  //       variant: "destructive",
-  //     });
-  //   } finally {
-  //     setIsLoading(false);
-  //   }
-  // };
   const handleTokenSizeChange = (e) => {
     const value = parseInt(e.target.value, 10);
 
@@ -395,7 +321,7 @@ export const ChatInterface = ({ chatbot, chatbotName, onSendMessage }: ChatInter
         for (const doc of selectedDocs) {
           const docName = doc.label;
           const idRes = await axios.get<{ file_id: number }>(
-            `http://localhost:8000/datastores/${chatbot.datastoreId}/files/${encodeURIComponent(docName)}/id`
+            `${config?.base_url}/datastores/${chatbot.datastoreId}/files/${encodeURIComponent(docName)}/id`
           );
           fileId.push(idRes.data.file_id);
         }
@@ -407,16 +333,17 @@ export const ChatInterface = ({ chatbot, chatbotName, onSendMessage }: ChatInter
       const response = await onSendMessage({
         question: input.trim(),
         fileId,
-        optimizer,
-        embeddingModel,
-        llmModel,
-        vectorDb,
-        temperature,
-        guardrailOption,
-        tokenSize,
-        showSources,
-        rerankerOption
+        optimizer: tempSettings.optimizer,
+        embeddingModel: tempSettings.embeddingModel,
+        llmModel: tempSettings.llmModel,
+        vectorDb: tempSettings.vectorDb,
+        temperature: tempSettings.temperature,
+        guardrailOption: tempSettings.guardrailOption,
+        tokenSize: tempSettings.tokenSize,
+        showSources: tempSettings.showSources,
+        rerankerOption: tempSettings.rerankerOption,
       });
+
 
       const botMessage: ChatMessage = {
         id: crypto.randomUUID(),
@@ -428,11 +355,7 @@ export const ChatInterface = ({ chatbot, chatbotName, onSendMessage }: ChatInter
       setMessages(prev => [...prev, botMessage]);
     } catch (error) {
       console.error("handleSend error:", error);
-      // toast({
-      //   title: "Error",
-      //   description: "Failed to send message or fetch file ID.",
-      //   variant: "destructive",
-      // });
+
       const errorMessage: ChatMessage = {
         id: crypto.randomUUID(),
         content: error?.message || String(error) || "Failed to send message or fetch file ID.",
@@ -456,37 +379,6 @@ export const ChatInterface = ({ chatbot, chatbotName, onSendMessage }: ChatInter
     }
   };
 
-  // const toggleListening = () => {
-  //   if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
-  //     toast({
-  //       title: "Not Supported",
-  //       description: "Speech recognition is not supported in your browser.",
-  //       variant: "destructive",
-  //     });
-  //     return;
-  //   }
-
-  //   if (isListening) {
-  //     setIsListening(false);
-  //     // Stop speech recognition
-  //   } else {
-  //     setIsListening(true);
-  //     // Start speech recognition
-  //     toast({
-  //       title: "Listening...",
-  //       description: "Speak your question now.",
-  //     });
-
-  //     // Simulate speech recognition (in a real app, you'd implement actual speech recognition)
-  //     setTimeout(() => {
-  //       setIsListening(false);
-  //       toast({
-  //         title: "Speech Recognition",
-  //         description: "This is a demo. In a real implementation, your speech would be converted to text.",
-  //       });
-  //     }, 3000);
-  //   }
-  // };
 
   const toggleListening = () => {
     const SpeechRecognition =
@@ -570,76 +462,67 @@ export const ChatInterface = ({ chatbot, chatbotName, onSendMessage }: ChatInter
       minute: '2-digit',
     }).format(date);
   };
-  const [open, setOpen] = useState(false);
-  // const [selectedDocs, setSelectedDocs] = useState<any[]>([]);
-  const [optimizer, setOptimizer] = useState("");
-  const [embeddingModel, setEmbeddingModel] = useState("");
-  const [llmModel, setLlmModel] = useState("");
-  const [vectorDb, setVectorDb] = useState("");
-  const [guardrailOption, setGuardrailOption] = useState("");
-  const [temperature, setTemperature] = useState(0);
 
+  const [open, setOpen] = useState(false);
+  // const [optimizer, setOptimizer] = useState("");
+  // const [embeddingModel, setEmbeddingModel] = useState("");
+  // const [llmModel, setLlmModel] = useState("");
+  // const [vectorDb, setVectorDb] = useState("");
+  // const [guardrailOption, setGuardrailOption] = useState("");
+  // const [temperature, setTemperature] = useState(0);
+  // const [rerankerOption, setRerankerOption] = useState<string>("none")
+  // const handleRerankerChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+  //   setRerankerOption(e.target.value)
+  // }
+
+  // Keep everything in one object
+  const [tempSettings, setTempSettings] = useState({
+    optimizer: "",
+    embeddingModel: "",
+    llmModel: "",
+    vectorDb: "",
+    guardrailOption: "",
+    temperature: 0.7,
+    tokenSize: 512,
+    showSources: true,
+    rerankerOption: "none",
+  });
 
   // Load settings from localStorage on mount
   useEffect(() => {
-    if (!chatbot?.id) return; // safety check
+    if (!chatbot?.id) return;
 
     const saved = localStorage.getItem(`model-settings-${chatbot.id}`);
     if (saved) {
-      const parsed = JSON.parse(saved)
-      setOptimizer(parsed.optimizer || "")
-      setEmbeddingModel(parsed.embeddingModel || "")
-      setLlmModel(parsed.llmModel || "")
-      setVectorDb(parsed.vectorDb || "")
-      setGuardrailOption(parsed.guardrailOption || "")
-      setTemperature(parsed.temperature ?? 0.7)
-      setTokenSize(parsed.tokenSize ?? 512)
-      setShowSources(parsed.showSources ?? true)
-      setRerankerOption(parsed.rerankerOption ?? "none")  // ✅ Re-ranker (default "none")
+      setTempSettings(JSON.parse(saved));
     }
-  }, [])
+  }, [chatbot?.id]);
 
-  const handleSave = (overrides: Partial<{
-    optimizer: string;
-    embeddingModel: string;
-    llmModel: string;
-    vectorDb: string;
-    guardrailOption: string;
-    temperature: number;
-    tokenSize: number;
-    showSources: boolean;
-    rerankerOption: string;
-  }> = {}) => {
-    const settings = {
-      optimizer,
-      embeddingModel,
-      llmModel,
-      vectorDb,
-      guardrailOption,
-      temperature,
-      tokenSize,
-      showSources,
-      rerankerOption,
-      ...overrides,
-    };
+  // Save → commit changes
+  const handleSave = (overrides: Partial<typeof tempSettings> = {}) => {
+    const settings = { ...tempSettings, ...overrides };
 
     try {
-      // 👇 Save per chatbot using its ID
       localStorage.setItem(
         `model-settings-${chatbot.id}`,
         JSON.stringify(settings)
       );
+      setTempSettings(settings); // keep UI in sync
       setOpen(false);
     } catch (err) {
       console.error("Error saving settings:", err);
     }
   };
 
-
-  // Handle Cancel → just close
+  // Cancel → restore last saved
   const handleCancel = () => {
-    setOpen(false)
-  }
+    const saved = localStorage.getItem(`model-settings-${chatbot.id}`);
+    if (saved) {
+      setTempSettings(JSON.parse(saved));
+    }
+    setOpen(false);
+  };
+
 
 
 
@@ -688,35 +571,8 @@ export const ChatInterface = ({ chatbot, chatbotName, onSendMessage }: ChatInter
       },
     }),
   };
-  const languages = [
-    { code: "en", name: "English" },
-    { code: "hi", name: "Hindi" },
-    { code: "es", name: "Spanish" },
-    { code: "fr", name: "French" },
-    { code: "de", name: "German" },
-    { code: "zh-CN", name: "Chinese (Simplified)" },
-    { code: "zh-TW", name: "Chinese (Traditional)" },
-    { code: "ar", name: "Arabic" },
-    { code: "ja", name: "Japanese" },
-    { code: "ko", name: "Korean" },
-    { code: "ru", name: "Russian" },
-    { code: "pt", name: "Portuguese" },
-    { code: "it", name: "Italian" },
-    { code: "nl", name: "Dutch" },
-    { code: "tr", name: "Turkish" },
-    { code: "sv", name: "Swedish" },
-    { code: "pl", name: "Polish" },
-    { code: "uk", name: "Ukrainian" },
-    { code: "bn", name: "Bengali" },
-    { code: "ta", name: "Tamil" },
-    { code: "te", name: "Telugu" },
-    { code: "gu", name: "Gujarati" },
-    { code: "mr", name: "Marathi" },
-  ];
-  const [rerankerOption, setRerankerOption] = useState<string>("none")
-  const handleRerankerChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    setRerankerOption(e.target.value)
-  }
+  const languages = config?.languages || [];
+
 
   return (
     <div className="flex flex-col h-[470px] bg-gradient-surface rounded-lg border border-chatbot-primary/20">
@@ -810,39 +666,6 @@ export const ChatInterface = ({ chatbot, chatbotName, onSendMessage }: ChatInter
       </ScrollArea >
 
 
-      {/* Input Area */}
-      {/* <div className="p-4 border-t border-chatbot-primary/20">
-        <div className="flex gap-2">
-          <Button
-            variant={isListening ? "destructive" : "chatbot-secondary"}
-            size="icon"
-            onClick={toggleListening}
-            disabled={isLoading}
-          >
-            {isListening ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
-          </Button>
-          
-          <Input
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            onKeyPress={handleKeyPress}
-            placeholder="Ask me anything..."
-            disabled={isLoading}
-            className="flex-1"
-          />
-          
-          <Button
-            variant="chatbot"
-            size="icon"
-            onClick={handleSend}
-            disabled={!input.trim() || isLoading}
-          >
-            <Send className="h-4 w-4" />
-          </Button>
-        </div>
-      </div> */}
-
-
 
       <div>
         {/* Original Input Section */}
@@ -855,13 +678,6 @@ export const ChatInterface = ({ chatbot, chatbotName, onSendMessage }: ChatInter
           >
             {isListening ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
           </Button>
-          {/* <Input
-            type="text"
-            value={inputText}
-            onChange={(e) => setInputText(e.target.value)}
-            placeholder="Ask something..."
-            className="w-full"
-          /> */}
 
           <Input
             value={input}
@@ -962,90 +778,87 @@ export const ChatInterface = ({ chatbot, chatbotName, onSendMessage }: ChatInter
 
                   {/* Query & Models Section */}
                   <div>
-                    <h3 className="text-lg font-medium mb-2">Model Selection</h3>
-                    <Separator className="mb-4" />
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                      {/* Query Optimizer */}
-                      <div className="space-y-1">
-                        <Label>Query Optimizer</Label>
-                        <Select onValueChange={setOptimizer} disabled={isLoading}>
-                          <SelectTrigger>
-                            <SelectValue placeholder={optimizer != "" ? optimizer : "Select Optimizer"} />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="none">None</SelectItem>
-                            <SelectItem value="Multi Query">Multi Query</SelectItem>
-                            <SelectItem value="Step Back">Step Back</SelectItem>
-                            <SelectItem value="Rag Fusion">Rag Fusion</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-
-                      {/* Embedding Model */}
-                      <div className="space-y-1">
-                        <Label>Embedding Model</Label>
-                        <Select onValueChange={setEmbeddingModel} disabled>
-                          <SelectTrigger>
-                            <SelectValue placeholder={embeddingModel != "" ? embeddingModel : "all-MiniLM-L6-v2"} />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="all-MiniLM-L6-v2">all-MiniLM-L6-v2</SelectItem>
-                            <SelectItem value="sentence-transformers/all-mpnet-base-v2">sentence-transformers</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-
-                      {/* LLM Model */}
-                      <div className="space-y-1">
-                        <Label>LLM Model</Label>
-                        <Select onValueChange={setLlmModel} disabled={isLoading}>
-                          <SelectTrigger>
-                            <SelectValue placeholder={llmModel != "" ? llmModel : "Select LLM"} />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="llama-3.3-70b-versatile">llama-3.3-70b-versatile</SelectItem>
-                            <SelectItem value="deepseek-r1-distill-llama-70b">deepseek-r1-distill-llama-70b</SelectItem>
-                            <SelectItem value="gemma2-9b-it">gemma2-9b-it</SelectItem>
-                            <SelectItem value="llama-3.1-8b-instant">llama-3.1-8b-instant</SelectItem>
-                            <SelectItem value="openai/gpt-oss-20b">openai/gpt-oss-20b</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-
-                      {/* Vector DB */}
-                      <div className="space-y-1">
-                        <Label>Vector DB</Label>
-                        <Select onValueChange={setVectorDb} disabled>
-                          <SelectTrigger>
-                            <SelectValue placeholder={vectorDb != "" ? vectorDb : "FAISS"} />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="faiss">FAISS</SelectItem>
-                            <SelectItem value="chroma">CHROMA</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Guardrails & Creativity Section */}
-                  <div>
                     <h3 className="text-lg font-medium mb-2">Response Control</h3>
                     <Separator className="mb-4" />
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      {/* LLM Model */}
+                      <div className="space-y-1">
+                        <Label>LLM Model</Label>
+                        <Select
+                          onValueChange={(value) =>
+                            setTempSettings({ ...tempSettings, llmModel: value })
+                          }
+                          disabled={isLoading}
+                        >
+                          <SelectTrigger>
+                            <SelectValue
+                              placeholder={
+                                tempSettings.llmModel !== "" ? tempSettings.llmModel : "Select LLM"
+                              }
+                            />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {config?.llm_models.map(model => (
+                              <SelectItem key={model} value={model}>
+                                {model}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+
+                        </Select>
+
+                      </div>
+                      {/* Token Size */}
+                      <div className="space-y-1">
+                        <Label>Token Size</Label>
+                        <Input
+                          type="number"
+                          min={config?.token_size_options?.min ?? 256}
+                          max={config?.token_size_options?.max ?? 2048}
+                          step={config?.token_size_options?.step ?? 128}
+                          placeholder={`Default: ${config?.token_size_options?.default ?? 512}`}
+                          value={tempSettings.tokenSize}
+                          onChange={(e) =>
+                            setTempSettings({
+                              ...tempSettings,
+                              tokenSize: Number(e.target.value),
+                            })
+                          }
+                          disabled={isLoading}
+                        />
+
+
+                        <p className="text-xs text-muted-foreground">
+                          Must be between 256 and 2048 tokens (step 128).
+                        </p>
+                      </div>
+
                       {/* Guardrails */}
                       <div className="space-y-1">
                         <Label>Guardrails</Label>
-                        <Select onValueChange={setGuardrailOption} disabled={isLoading}>
+                        <Select
+                          onValueChange={(value) =>
+                            setTempSettings({ ...tempSettings, guardrailOption: value })
+                          }
+                          disabled={isLoading}
+                        >
                           <SelectTrigger>
-                            <SelectValue placeholder={guardrailOption !== "" ? guardrailOption : "Select Guardrail Level"} />
+                            <SelectValue
+                              placeholder={
+                                tempSettings.guardrailOption !== ""
+                                  ? tempSettings.guardrailOption
+                                  : "Select Guardrail Level"
+                              }
+                            />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="none">None - No filtering</SelectItem>
-                            <SelectItem value="basic">Basic - Mild safety filtering</SelectItem>
-                            <SelectItem value="strict">Strict - High safety filtering</SelectItem>
-                            <SelectItem value="custom">Custom - Use project-defined rules</SelectItem>
+                            {config?.guardrail_options.map(option => (
+                              <SelectItem key={option.value} value={option.value}>
+                                {option.label}
+                              </SelectItem>
+                            ))}
                           </SelectContent>
+
                         </Select>
                       </div>
 
@@ -1056,12 +869,14 @@ export const ChatInterface = ({ chatbot, chatbotName, onSendMessage }: ChatInter
                           min={0}
                           max={1}
                           step={0.1}
-                          value={[temperature]}
-                          onValueChange={(val) => setTemperature(val[0])}
+                          value={[tempSettings.temperature]}
+                          onValueChange={(val) =>
+                            setTempSettings({ ...tempSettings, temperature: val[0] })
+                          }
                           disabled={isLoading}
                         />
                         <p className="text-sm text-muted-foreground">
-                          Temperature: {temperature.toFixed(1)}
+                          Temperature: {tempSettings.temperature.toFixed(1)}
                         </p>
                       </div>
                     </div>
@@ -1072,41 +887,106 @@ export const ChatInterface = ({ chatbot, chatbotName, onSendMessage }: ChatInter
                     <h3 className="text-lg font-medium mb-2">Advanced Settings</h3>
                     <Separator className="mb-4" />
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                      {/* Token Size */}
+                      {/* Query Optimizer */}
                       <div className="space-y-1">
-                        <Label>Token Size</Label>
-                        <Input
-                          type="number"
-                          min={256}
-                          max={2048}
-                          step={128}
-                          placeholder="Enter token size"
-                          value={tokenSize}
-                          onChange={handleTokenSizeChange}
+                        <Label>Query Optimizer</Label>
+                        <Select
+                          onValueChange={(value) =>
+                            setTempSettings({ ...tempSettings, optimizer: value })
+                          }
                           disabled={isLoading}
-                        />
-                        <p className="text-xs text-muted-foreground">
-                          Must be between 256 and 2048 tokens (step 128).
-                        </p>
+                        >
+                          <SelectTrigger>
+                            <SelectValue
+                              placeholder={
+                                tempSettings.optimizer !== ""
+                                  ? tempSettings.optimizer
+                                  : "Select Optimizer"
+                              }
+                            />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {config?.optimizer.map(opt => (
+                              <SelectItem key={opt.value} value={opt.value}>
+                                {opt.label}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
                       </div>
 
-                      {/* Sources Toggle */}
-                      {/* <div className="flex items-center justify-between border rounded-lg p-3">
+                      {/* Embedding Model */}
+                      <div className="space-y-1">
+                        <Label>Embedding Model</Label>
+                        <Select
+                          onValueChange={(value) =>
+                            setTempSettings({ ...tempSettings, embeddingModel: value })
+                          }
+                          disabled
+                        >
+                          <SelectTrigger>
+                            <SelectValue
+                              placeholder={
+                                tempSettings.embeddingModel !== ""
+                                  ? tempSettings.embeddingModel
+                                  : "all-MiniLM-L6-v2"
+                              }
+                            />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="all-MiniLM-L6-v2">all-MiniLM-L6-v2</SelectItem>
+                            <SelectItem value="sentence-transformers/all-mpnet-base-v2">
+                              sentence-transformers
+                            </SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      {/* Vector DB */}
+                      <div className="space-y-1">
+                        <Label>Vector DB</Label>
+                        <Select
+                          onValueChange={(value) =>
+                            setTempSettings({ ...tempSettings, vectorDb: value })
+                          }
+                          disabled
+                        >
+                          <SelectTrigger>
+                            <SelectValue
+                              placeholder={
+                                tempSettings.vectorDb !== "" ? tempSettings.vectorDb : "FAISS"
+                              }
+                            />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="faiss">FAISS</SelectItem>
+                            <SelectItem value="chroma">CHROMA</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      {/* Sources Toggle
+                      <div className="flex items-center justify-between border rounded-lg p-3">
                         <Label htmlFor="sources-toggle">Include Sources in Output</Label>
                         <Switch
                           id="sources-toggle"
-                          checked={showSources}
-                          onCheckedChange={setShowSources}
+                          checked={tempSettings.showSources}
+                          onCheckedChange={(checked) =>
+                            setTempSettings({ ...tempSettings, showSources: checked })
+                          }
                           disabled={isLoading}
                         />
                       </div> */}
+
                       {/* Re-ranker Option */}
                       <div className="space-y-1">
                         <Label>Re-ranker</Label>
                         <select
                           className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-ring"
-                          value={rerankerOption}
-                          onChange={(e) => setRerankerOption(e.target.value)}
+                          value={tempSettings.rerankerOption}
+                          onChange={(e) =>
+                            setTempSettings({ ...tempSettings, rerankerOption: e.target.value })
+                          }
                           disabled={isLoading}
                         >
                           <option value="none">None – Use retriever results directly</option>
@@ -1121,7 +1001,8 @@ export const ChatInterface = ({ chatbot, chatbotName, onSendMessage }: ChatInter
                           </option>
                         </select>
                         <p className="text-xs text-muted-foreground">
-                          Choose a re-ranking method to reorder retrieved documents before passing them to the LLM.
+                          Choose a re-ranking method to reorder retrieved documents before passing
+                          them to the LLM.
                         </p>
                       </div>
                     </div>
@@ -1138,42 +1019,53 @@ export const ChatInterface = ({ chatbot, chatbotName, onSendMessage }: ChatInter
             </Dialog>
 
           </div>
-          {selectedDocs.length > 0 && (
-            <div className="flex flex-wrap gap-1 mt-2 items-center">
-              <Label className="text-sm text-muted-foreground">Selected:</Label>
-              {selectedDocs.map((doc) => (
-                <span
-                  key={doc.value}
-                  className="flex items-center gap-1 text-xs bg-chatbot-secondary text-foreground border border-chatbot-primary/20 rounded-md px-2 py-1"
-                >
-                  {doc.label}
-                  <button
-                    type="button"
-                    className="flex items-center justify-center w-4 h-4 rounded-full hover:bg-destructive hover:text-destructive-foreground transition-colors duration-150"
-                    onClick={() => handleRemove(doc.value)}
+          {
+            selectedDocs.length > 0 && (
+              <div className="flex flex-wrap gap-1 mt-2 items-center">
+                <Label className="text-sm text-muted-foreground">Selected:</Label>
+                {selectedDocs.map((doc) => (
+                  <span
+                    key={doc.value}
+                    className="flex items-center gap-1 text-xs bg-chatbot-secondary text-foreground border border-chatbot-primary/20 rounded-md px-2 py-1"
                   >
-                    <X size={10} strokeWidth={2} />
-                  </button>
-                </span>
-              ))}
-            </div>
+                    {doc.label}
+                    <button
+                      type="button"
+                      className="flex items-center justify-center w-4 h-4 rounded-full hover:bg-destructive hover:text-destructive-foreground transition-colors duration-150"
+                      onClick={() => handleRemove(doc.value)}
+                    >
+                      <X size={10} strokeWidth={2} />
+                    </button>
+                  </span>
+                ))}
+              </div>
 
-          )}
-          {(optimizer || embeddingModel || llmModel || vectorDb || typeof temperature === "number" || guardrailOption ||
-            tokenSize ||                     // ✅ Token size
-            rerankerOption !== "none" ||                  // ✅ Token size
-            typeof showSources === "boolean") && (
+            )
+          }
+          {
+            (
+              tempSettings.optimizer ||
+              tempSettings.embeddingModel ||
+              tempSettings.llmModel ||
+              tempSettings.vectorDb ||
+              typeof tempSettings.temperature === "number" ||
+              tempSettings.guardrailOption ||
+              tempSettings.tokenSize ||
+              tempSettings.rerankerOption !== "none" ||
+              typeof tempSettings.showSources === "boolean"
+            ) && (
               <div className="flex flex-wrap gap-2 mt-2 items-center">
                 <Label className="text-sm text-muted-foreground">Settings:</Label>
 
-                {optimizer && (
+                {tempSettings.optimizer && (
                   <span className="flex items-center gap-1 text-xs bg-chatbot-secondary text-foreground border border-chatbot-primary/20 rounded-md px-2 py-1">
-                    Optimizer: {optimizer}
+                    Optimizer: {tempSettings.optimizer}
                     <button
                       type="button"
                       className="flex items-center justify-center w-4 h-4 rounded-full hover:bg-destructive hover:text-destructive-foreground transition-colors duration-150"
                       onClick={() => {
-                        setOptimizer("");   // reset state
+                        const updated = { ...tempSettings, optimizer: "" };
+                        setTempSettings(updated);
                         handleSave({ optimizer: "" });
                       }}
                     >
@@ -1182,16 +1074,16 @@ export const ChatInterface = ({ chatbot, chatbotName, onSendMessage }: ChatInter
                   </span>
                 )}
 
-                {embeddingModel && (
+                {tempSettings.embeddingModel && (
                   <span className="flex items-center gap-1 text-xs bg-chatbot-secondary text-foreground border border-chatbot-primary/20 rounded-md px-2 py-1">
-                    Embedding: {embeddingModel}
+                    Embedding: {tempSettings.embeddingModel}
                     <button
                       type="button"
                       className="flex items-center justify-center w-4 h-4 rounded-full hover:bg-destructive hover:text-destructive-foreground transition-colors duration-150"
                       onClick={() => {
-                        setEmbeddingModel("");
+                        const updated = { ...tempSettings, embeddingModel: "" };
+                        setTempSettings(updated);
                         handleSave({ embeddingModel: "" });
-
                       }}
                     >
                       <X size={10} strokeWidth={2} />
@@ -1199,14 +1091,15 @@ export const ChatInterface = ({ chatbot, chatbotName, onSendMessage }: ChatInter
                   </span>
                 )}
 
-                {llmModel && (
+                {tempSettings.llmModel && (
                   <span className="flex items-center gap-1 text-xs bg-chatbot-secondary text-foreground border border-chatbot-primary/20 rounded-md px-2 py-1">
-                    LLM: {llmModel}
+                    LLM: {tempSettings.llmModel}
                     <button
                       type="button"
                       className="flex items-center justify-center w-4 h-4 rounded-full hover:bg-destructive hover:text-destructive-foreground transition-colors duration-150"
                       onClick={() => {
-                        setLlmModel("")
+                        const updated = { ...tempSettings, llmModel: "" };
+                        setTempSettings(updated);
                         handleSave({ llmModel: "" });
                       }}
                     >
@@ -1215,14 +1108,15 @@ export const ChatInterface = ({ chatbot, chatbotName, onSendMessage }: ChatInter
                   </span>
                 )}
 
-                {vectorDb && (
+                {tempSettings.vectorDb && (
                   <span className="flex items-center gap-1 text-xs bg-chatbot-secondary text-foreground border border-chatbot-primary/20 rounded-md px-2 py-1">
-                    Vector DB: {vectorDb}
+                    Vector DB: {tempSettings.vectorDb}
                     <button
                       type="button"
                       className="flex items-center justify-center w-4 h-4 rounded-full hover:bg-destructive hover:text-destructive-foreground transition-colors duration-150"
                       onClick={() => {
-                        setVectorDb("");
+                        const updated = { ...tempSettings, vectorDb: "" };
+                        setTempSettings(updated);
                         handleSave({ vectorDb: "" });
                       }}
                     >
@@ -1231,14 +1125,15 @@ export const ChatInterface = ({ chatbot, chatbotName, onSendMessage }: ChatInter
                   </span>
                 )}
 
-                {typeof temperature === "number" && (
+                {typeof tempSettings.temperature === "number" && (
                   <span className="flex items-center gap-1 text-xs bg-chatbot-secondary text-foreground border border-chatbot-primary/20 rounded-md px-2 py-1">
-                    Temperature: {temperature}
+                    Temperature: {tempSettings.temperature}
                     <button
                       type="button"
                       className="flex items-center justify-center w-4 h-4 rounded-full hover:bg-destructive hover:text-destructive-foreground transition-colors duration-150"
                       onClick={() => {
-                        setTemperature(0.0);
+                        const updated = { ...tempSettings, temperature: 0.0 };
+                        setTempSettings(updated);
                         handleSave({ temperature: 0.0 });
                       }}
                     >
@@ -1247,14 +1142,15 @@ export const ChatInterface = ({ chatbot, chatbotName, onSendMessage }: ChatInter
                   </span>
                 )}
 
-                {guardrailOption && (
+                {tempSettings.guardrailOption && (
                   <span className="flex items-center gap-1 text-xs bg-chatbot-secondary text-foreground border border-chatbot-primary/20 rounded-md px-2 py-1">
-                    Guardrails: {guardrailOption}
+                    Guardrails: {tempSettings.guardrailOption}
                     <button
                       type="button"
                       className="flex items-center justify-center w-4 h-4 rounded-full hover:bg-destructive hover:text-destructive-foreground transition-colors duration-150"
                       onClick={() => {
-                        setGuardrailOption("");
+                        const updated = { ...tempSettings, guardrailOption: "" };
+                        setTempSettings(updated);
                         handleSave({ guardrailOption: "" });
                       }}
                     >
@@ -1263,15 +1159,15 @@ export const ChatInterface = ({ chatbot, chatbotName, onSendMessage }: ChatInter
                   </span>
                 )}
 
-                {/* Token Size */}
-                {tokenSize && (
+                {tempSettings.tokenSize && (
                   <span className="flex items-center gap-1 text-xs bg-chatbot-secondary text-foreground border border-chatbot-primary/20 rounded-md px-2 py-1">
-                    Token Size: {tokenSize}
+                    Token Size: {tempSettings.tokenSize}
                     <button
                       type="button"
                       className="flex items-center justify-center w-4 h-4 rounded-full hover:bg-destructive hover:text-destructive-foreground transition-colors duration-150"
                       onClick={() => {
-                        setTokenSize(256);
+                        const updated = { ...tempSettings, tokenSize: 256 };
+                        setTempSettings(updated);
                         handleSave({ tokenSize: 256 });
                       }}
                     >
@@ -1279,14 +1175,16 @@ export const ChatInterface = ({ chatbot, chatbotName, onSendMessage }: ChatInter
                     </button>
                   </span>
                 )}
-                {rerankerOption !== "none" && (
+
+                {tempSettings.rerankerOption !== "none" && (
                   <span className="flex items-center gap-1 text-xs bg-chatbot-secondary text-foreground border border-chatbot-primary/20 rounded-md px-2 py-1">
-                    Re-ranker: {rerankerOption}
+                    Re-ranker: {tempSettings.rerankerOption}
                     <button
                       type="button"
                       className="flex items-center justify-center w-4 h-4 rounded-full hover:bg-destructive hover:text-destructive-foreground transition-colors duration-150"
                       onClick={() => {
-                        setRerankerOption("none");
+                        const updated = { ...tempSettings, rerankerOption: "none" };
+                        setTempSettings(updated);
                         handleSave({ rerankerOption: "none" });
                       }}
                     >
@@ -1294,6 +1192,7 @@ export const ChatInterface = ({ chatbot, chatbotName, onSendMessage }: ChatInter
                     </button>
                   </span>
                 )}
+
 
                 {/* Include Sources */}
                 {/* {typeof showSources === "boolean" && (
@@ -1312,14 +1211,15 @@ export const ChatInterface = ({ chatbot, chatbotName, onSendMessage }: ChatInter
                 {/* )} */}
 
               </div>
-            )}
+            )
+          }
 
 
 
 
-        </div>
+        </div >
 
-      </div>
+      </div >
     </div >
   );
 };

@@ -37,7 +37,7 @@ def create_datastore(data: DataStoreCreate, session: Session = Depends(get_sessi
     ds_folder = datastore_root / str(new_store.name)
     ds_folder.mkdir(parents=True, exist_ok=True)
 
-    chunks_root = CONFIG["project_root"] / CONFIG["chunks_folder"]
+    chunks_root = CONFIG["project_root"] / CONFIG["datastore_data_folder"]
     chunks_root.mkdir(exist_ok=True)
     chunks_ds_folder = chunks_root / str(new_store.name)
     chunks_ds_folder.mkdir(parents=True, exist_ok=True)
