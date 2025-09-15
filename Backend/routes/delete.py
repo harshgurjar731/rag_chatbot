@@ -2,13 +2,14 @@
 import os
 from pathlib import Path
 from fastapi import APIRouter, Depends, HTTPException
-from sqlmodel import Session, select
+from sqlmodel import Session
 from database import get_session
 from models.datastore import DataStore
-from typing import List
 from pydantic import BaseModel
+from config import CONFIG  # ✅ centralized config
 
 router = APIRouter()
+
 
 class DataStoreCreate(BaseModel):
     name: str
@@ -17,26 +18,37 @@ class DataStoreCreate(BaseModel):
 
 @router.delete("/{datastore_id}", response_model=dict)
 def delete_datastore(datastore_id: int, session: Session = Depends(get_session)):
-    # Fetch datastore
+    # 1️⃣ Fetch datastore from DB
     datastore = session.get(DataStore, datastore_id)
     if not datastore:
         raise HTTPException(status_code=404, detail="Datastore not found")
 
-    # Determine folder path
-    project_root = Path(__file__).resolve().parent.parent.parent
-    ds_folder = project_root / "Data" / str(datastore.name)
+    # 2️⃣ Resolve raw data + chunk folders
+    ds_folder = CONFIG["project_root"] / CONFIG["datastore_data_folder"] / str(datastore.name)
+    chunks_folder = CONFIG["project_root"] / CONFIG["datastore_data_folder"]/ str(datastore.name)
 
-    # Attempt to delete folder if it exists
+    # 3️⃣ Delete raw datastore folder
     if ds_folder.exists() and ds_folder.is_dir():
         try:
             for file in ds_folder.iterdir():
-                file.unlink()
+                if file.is_file():
+                    file.unlink()
             ds_folder.rmdir()
         except Exception as e:
-            raise HTTPException(status_code=500, detail=f"Failed to delete folder: {e}")
+            raise HTTPException(status_code=500, detail=f"Failed to delete raw folder: {e}")
 
-    # Delete from database
+    # 4️⃣ Delete chunks folder
+    if chunks_folder.exists() and chunks_folder.is_dir():
+        try:
+            for file in chunks_folder.iterdir():
+                if file.is_file():
+                    file.unlink()
+            chunks_folder.rmdir()
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=f"Failed to delete chunks folder: {e}")
+
+    # 5️⃣ Delete datastore record from DB
     session.delete(datastore)
     session.commit()
 
-    return {"message": f"Datastore '{datastore.name}' deleted successfully."}
+    return {"message": f"Datastore '{datastore.name}' and its chunks deleted successfully."}

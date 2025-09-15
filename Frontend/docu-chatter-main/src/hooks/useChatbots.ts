@@ -73,8 +73,8 @@ export const useChatbots = () => {
 
         return {
           id: ds.chatbotId,
-          name: ds.name,
-          topic: ds.topic ?? "General",
+          name: ds.name ?? "General",
+          topic: ds.description,
           documents: files.map((file) => file.filename),
           qna: ds.qna ?? [],
           icon: ds.icon,

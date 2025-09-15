@@ -1,86 +1,104 @@
-# Backend/routes/chunking.py
+# rag_app/backend/routes/chunking.py
 
 from fastapi import APIRouter, HTTPException, Depends, Query
 from pathlib import Path
 from sqlmodel import Session
 from models.FileRecord import FileRecord
 from database import get_session
-from Services.document_loader import load_file_with_loader
 from Services.chunking_service import chunk_documents, save_chunks_to_json, load_docs_from_json
 from models.datastore import DataStore
-import os   
+import os
+from config import CONFIG  # Load .env variables
 
 router = APIRouter()
+
 
 @router.get("/datastores/{datastore_id}/files/{file_id}/chunk")
 def preview_chunks(
     datastore_id: int,
     file_id: int,
-    method: str = Query("recursive", description="Chunking method"),
-    chunk_size: int = Query(512, description="Chunk size"),
-    chunk_overlap: int = Query(50, description="Chunk overlap"),
-    session: Session = Depends(get_session)
+    method: str = Query(None, description="Chunking method"),
+    chunk_size: int = Query(None, description="Chunk size"),
+    chunk_overlap: int = Query(None, description="Chunk overlap"),
+    session: Session = Depends(get_session),
 ):
-    # 1. Validate file existence
+    # ✅ Use env/defaults if query params not provided
+    method = method or CONFIG["default_chunk_method"]
+    chunk_size = chunk_size or CONFIG["default_chunk_size"]
+    chunk_overlap = chunk_overlap or CONFIG["default_chunk_overlap"]
+
+    # 1️⃣ Validate file existence
     file = session.get(FileRecord, file_id)
-    print(f"File Record: {file}")
     if not file or file.datastore_id != datastore_id:
         raise HTTPException(status_code=404, detail="File not found in specified datastore")
 
-    # 2. Resolve file path
+    # 2️⃣ Resolve file path
     datastore = session.get(DataStore, datastore_id)
     if not datastore:
         raise HTTPException(status_code=404, detail="Datastore not found")
 
-    project_root = Path(__file__).resolve().parent.parent.parent
-    base_folder = project_root / "Data" / str(datastore.name)
-    file_path = base_folder / file.filename
+    file_path = (
+        CONFIG["project_root"]
+        / CONFIG["datastore_data_folder"]
+        / str(datastore.name)
+        / file.filename
+    )
 
-    print(f"File Path: {file_path}")
     if not file_path.exists():
         raise HTTPException(status_code=404, detail="Original file not found on disk")
 
-    # 3. Construct .json path
-    json_path = file_path.with_suffix('.json')
-    print(f"JSON Path: {json_path}")
+    # 3️⃣ Construct .json path
+    json_path = file_path.with_suffix(".json")
     if not json_path.exists():
         raise HTTPException(status_code=404, detail=f"JSON file not found: {json_path}")
 
     try:
-        # 4. Load and chunk
+        # 4️⃣ Load and chunk
         docs = load_docs_from_json(json_path)
-        chunks = chunk_documents(docs, method=method, chunk_size=chunk_size, chunk_overlap=chunk_overlap)
+        chunks = chunk_documents(
+            docs, method=method, chunk_size=chunk_size, chunk_overlap=chunk_overlap
+        )
 
-        # 5. Save chunks to a new .json file
-        chunks_file_path = base_folder / f"{file.filename.rsplit('.', 1)[0]}_chunks.json"
+        # 5️⃣ Save chunks into centralized chunks folder
+        chunks_file_path = (
+            CONFIG["project_root"]
+            /CONFIG["datastore_data_folder"]
+            / str(datastore.name)
+            / f"{file.filename.rsplit('.', 1)[0]}_chunks.json"
+        )
+        chunks_file_path.parent.mkdir(parents=True, exist_ok=True)  # ensure folder exists
         save_chunks_to_json(chunks, chunks_file_path)
 
-        print(f"Chunks File Path: {chunks_file_path}")
         return {"chunks": [chunk.page_content for chunk in chunks]}
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+
 @router.delete("/datastores/{datastore_id}/files/{file_id}/chunk")
 def delete_chunk_file(
     datastore_id: int,
     file_id: int,
-    session: Session = Depends(get_session)
+    session: Session = Depends(get_session),
 ):
-    # Validate file
+    # 1️⃣ Validate file
     file = session.get(FileRecord, file_id)
     if not file or file.datastore_id != datastore_id:
         raise HTTPException(status_code=404, detail="File not found in specified datastore")
 
-    # Get datastore
+    # 2️⃣ Validate datastore
     datastore = session.get(DataStore, datastore_id)
     if not datastore:
         raise HTTPException(status_code=404, detail="Datastore not found")
 
-    # Construct chunk file path
-    project_root = Path(__file__).resolve().parent.parent.parent
-    name_without_extension = file.filename.rsplit('.', 1)[0]
-    chunks_file_path = project_root / "Data" / str(datastore.name) / (name_without_extension + "_chunks.json")
+    # 3️⃣ Construct chunk file path from config
+    name_without_extension = file.filename.rsplit(".", 1)[0]
+    chunks_file_path = (
+        CONFIG["project_root"]
+        /CONFIG["datastore_data_folder"]
+        / str(datastore.name)
+        / f"{name_without_extension}_chunks.json"
+    )
 
     if not chunks_file_path.exists():
         raise HTTPException(status_code=404, detail="Chunk file not found")

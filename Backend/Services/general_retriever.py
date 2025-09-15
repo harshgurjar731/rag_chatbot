@@ -2,8 +2,10 @@ from langchain.prompts import ChatPromptTemplate
 from langchain_core.output_parsers import StrOutputParser
 from langchain_community.chat_models import ChatOpenAI
 
-# ✅ Import our guardrail utilities
 from Services.guardrail import validate_output  
+from config import CONFIG
+
+
 def get_llm_answer(
     query: str,
     llm_model_name: str,
@@ -14,42 +16,41 @@ def get_llm_answer(
 ):
     """General purpose chatbot without using any file/vector store data."""
 
-    # GROQ_API_KEY = "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"
-    GROQ_API_KEY = "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"
+    groq_api_key = CONFIG["groq_api_key"]
+    groq_api_base = CONFIG["groq_api_base"]
+
+    if not groq_api_key:
+        raise ValueError("Groq API key not set. Please update your .env file.")
 
     if not llm_model_name:
         raise ValueError("LLM model name must be provided")
 
-    # Initialize LLM
+    # ✅ Initialize LLM with config values
     llm = ChatOpenAI(
-        openai_api_base="https://api.groq.com/openai/v1",
-        openai_api_key=GROQ_API_KEY,
+        openai_api_base=groq_api_base,
+        openai_api_key=groq_api_key,
         model=llm_model_name,
         temperature=temperature,
         max_tokens=token_size
     )
 
-    # Prompt template (depends on whether sources are included)
-    if include_sources:
-        chatbot_template = """
-        You are a helpful and friendly AI assistant.
-        Answer the following question clearly and concisely.
+    # ✅ Prompt template
+    chatbot_template = """
+    You are a helpful and friendly AI assistant.
+    Answer the following question clearly and concisely.
+    """ + (
+        """
         After the answer, provide a section called "Sources" listing any references,
         even if they are hypothetical or inferred.
-
-        Question: {question}
-        """
-    else:
-        chatbot_template = """
-        You are a helpful and friendly AI assistant.
-        Answer the following question clearly and concisely.
-
-        Question: {question}
-        """
+        """ if include_sources else ""
+    ) + """
+    
+    Question: {question}
+    """
 
     prompt = ChatPromptTemplate.from_template(chatbot_template)
 
-    # Chain: prompt → LLM → output parser
+    # ✅ Chain: prompt → LLM → output parser
     chatbot_chain = (
         {"question": lambda x: x["question"]}
         | prompt
@@ -60,16 +61,14 @@ def get_llm_answer(
     # Raw LLM output
     final_answer = chatbot_chain.invoke({"question": query})
 
-    # ✅ Apply guardrails (toxicity, PII etc.)
+    # ✅ Apply guardrails
     validated = validate_output(final_answer, guardrail_level)
-
-    # If guard blocked, return directly
     if "⚠️ Response blocked" in validated["answer"]:
         return validated
 
     final_answer = validated["answer"]
 
-    # Handle sources if included
+    # ✅ Handle sources
     if include_sources and "Sources:" in final_answer:
         parts = final_answer.split("Sources:")
         answer_text = parts[0].strip()

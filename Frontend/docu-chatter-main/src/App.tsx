@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Dashboard from "./pages/Dashboard";
 import ChatbotDetail from "./pages/ChatbotDetail";
 import NotFound from "./pages/NotFound";
+import SidebarLayout from "./components/SidebarLayout";
 
 const queryClient = new QueryClient();
 
@@ -16,10 +17,11 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <Routes>
-          <Route path="/" element={<Dashboard />} />
-          <Route path="/chatbot/:id" element={<ChatbotDetail />} />
-          {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-          <Route path="*" element={<NotFound />} />
+          <Route path="/" element={<SidebarLayout />}>
+            <Route index element={<Dashboard />} />
+            <Route path="*" element={<NotFound />} />
+          </Route>
+          <Route path="chatbot/:id" element={<ChatbotDetail />} />
         </Routes>
       </BrowserRouter>
     </TooltipProvider>

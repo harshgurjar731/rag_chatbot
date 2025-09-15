@@ -1,37 +1,48 @@
+# services/step_back_retriever_without_source.py
+
+from operator import itemgetter
 from langchain.vectorstores import FAISS, Chroma
-from langchain.embeddings import HuggingFaceEmbeddings
-from langchain.llms import HuggingFaceHub  
 from langchain_core.output_parsers import StrOutputParser
 from langchain.prompts import ChatPromptTemplate
 from langchain.load import dumps, loads
-from operator import itemgetter 
-from langchain_core.runnables import RunnablePassthrough
-from langchain_community.chat_models import ChatOpenAI  
+from langchain_community.chat_models import ChatOpenAI
+
 from guardrails import Guard
 from guardrails.hub import ToxicLanguage
-# ✅ Import our guardrail utilities
-from Services.guardrail import validate_output  
+
+from config import CONFIG
+from Services.guardrail import validate_output   # ✅ Guardrail utility
+from Services.reranker_service import get_reranker   # ✅ Re-ranker factory
 
 
 def get_stepback_retriever_without_sources(
-    query: str, 
-    db: FAISS | Chroma, 
-    llm_model_name: str, 
-    temperature: float, 
-    token_size: float = 256, 
-    guardrail_level: str = "none"
+    query: str,
+    db: FAISS | Chroma,
+    llm_model_name: str = None,
+    temperature: float = None,
+    token_size: int = None,
+    guardrail_level: str = None,
+    rerankerOption: str = None,
 ):
-    """ Create a Step-Back Retrieval chain using the provided vector store. """
+    """Step-Back RAG pipeline without sources, with guardrails & optional re-ranking."""
 
-    # 🔑 Groq API key
-    GROQ_API_KEY = "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"
+    # ✅ Load defaults from config if not provided
+    llm_model_name = llm_model_name or CONFIG["default_llm_model"]
+    temperature = temperature if temperature is not None else CONFIG["default_temperature"]
+    token_size = token_size or CONFIG["default_token_size"]
+    guardrail_level = guardrail_level or CONFIG["default_guardrail_option"]
+    rerankerOption = rerankerOption or CONFIG["default_reranker_option"]
+
+    # 🔑 Groq API setup (from env/config)
+    GROQ_API_KEY = CONFIG["groq_api_key"]
+    GROQ_API_BASE = CONFIG["groq_api_base"]
 
     if not llm_model_name:
         raise ValueError("LLM model name must be provided")
 
     # ✅ Setup LLM
     llm = ChatOpenAI(
-        openai_api_base="https://api.groq.com/openai/v1",
+        openai_api_base=GROQ_API_BASE,
         openai_api_key=GROQ_API_KEY,
         model=llm_model_name,
         temperature=temperature,
@@ -48,11 +59,7 @@ def get_stepback_retriever_without_sources(
     """
     stepback_prompt = ChatPromptTemplate.from_template(stepback_template)
 
-    generate_stepback_query = (
-        stepback_prompt
-        | llm
-        | StrOutputParser()
-    )
+    generate_stepback_query = stepback_prompt | llm | StrOutputParser()
 
     # Generate the step-back query
     stepback_query = generate_stepback_query.invoke({"question": query})
@@ -68,6 +75,26 @@ def get_stepback_retriever_without_sources(
     # Merge unique docs
     combined_docs = get_unique_union([docs_main, docs_stepback])
     print("Retrieved Documents (combined):", len(combined_docs))
+
+    # ✅ Apply re-ranker if enabled
+    if rerankerOption != "none":
+        reranker = get_reranker(rerankerOption)
+        if reranker:
+            doc_texts = [doc.page_content for doc in combined_docs]
+            ranked = reranker.rerank(
+                query,
+                doc_texts,
+                top_k=CONFIG["default_reranker_top_k"]  # ✅ driven from env
+            )
+            # Replace docs with reranked ones while preserving metadata
+            reranked_docs = []
+            for ranked_doc, _ in ranked:
+                for original_doc in combined_docs:
+                    if original_doc.page_content == ranked_doc:
+                        reranked_docs.append(original_doc)
+                        break
+            combined_docs = reranked_docs
+            print(f"Applied Re-ranker: {rerankerOption}, Final Docs: {len(combined_docs)}")
 
     # RAG prompt
     rag_template = """Answer the following question using the provided context:
@@ -92,7 +119,7 @@ def get_stepback_retriever_without_sources(
     # Final answer
     final_answer = final_rag_chain.invoke({"question": query})
 
-    # ✅ Apply guardrails
+    # ✅ Apply guardrails via shared validator
     validated = validate_output(final_answer, guardrail_level)
 
     if "⚠️ Response blocked" in validated["answer"]:
@@ -106,7 +133,7 @@ def get_stepback_retriever_without_sources(
 
 # ----------- HELPER ----------- #
 def get_unique_union(documents: list[list]):
-    """ Unique union of retrieved docs """
+    """Unique union of retrieved docs"""
     flattened_docs = [dumps(doc) for sublist in documents for doc in sublist]
     unique_docs = list(set(flattened_docs))
     return [loads(doc) for doc in unique_docs]

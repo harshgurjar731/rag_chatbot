@@ -1,0 +1,83 @@
+# rag_app/backend/config.py
+import os
+from pathlib import Path
+from dotenv import load_dotenv
+
+# Load variables from .env file
+load_dotenv()
+
+CONFIG = {
+    # Backend
+    "backend_base_url": os.getenv("BACKEND_BASE_URL", "http://127.0.0.1:8000"),
+    "project_root": Path(os.getenv("PROJECT_ROOT", "..")),
+
+    # Models
+    "default_embedding_model": os.getenv("DEFAULT_EMBEDDING_MODEL", "all-MiniLM-L6-v2"),
+    "default_llm_model": os.getenv("DEFAULT_LLM_MODEL", "llama-3.3-70b-versatile"),
+
+    # Vector DB
+    "default_vector_db": os.getenv("DEFAULT_VECTOR_DB", "faiss"),
+
+    # LLM Params
+    "default_temperature": float(os.getenv("DEFAULT_TEMPERATURE", 0.0)),
+    "default_token_size": int(os.getenv("DEFAULT_TOKEN_SIZE", 256)),
+
+    # Query Options
+    "default_query_optimizer": os.getenv("DEFAULT_QUERY_OPTIMIZER", "Multi Query"),
+    "default_reranker_option": os.getenv("DEFAULT_RERANKER_OPTION", "none"),
+    "default_guardrail_option": os.getenv("DEFAULT_GUARDRAIL_OPTION", "none"),
+
+    # Chatbot & Files
+    "default_chat_history_limit": int(os.getenv("DEFAULT_CHAT_HISTORY_LIMIT", 1000)),
+    "default_file_upload_types": os.getenv(
+        "DEFAULT_FILE_UPLOAD_TYPES", ".pdf,.docx,.txt,.jpg,.jpeg,.png,.webp"
+    ).split(","),
+
+    # Chunking
+    "default_chunk_method": os.getenv("DEFAULT_CHUNK_METHOD", "recursive"),
+    "default_chunk_size": int(os.getenv("DEFAULT_CHUNK_SIZE", 512)),
+    "default_chunk_overlap": int(os.getenv("DEFAULT_CHUNK_OVERLAP", 50)),
+
+    # Data Folders
+    "datastore_data_folder": os.getenv("DATASTORE_DATA_FOLDER", "Data"),
+    "chunks_folder": os.getenv("CHUNKS_FOLDER", "Data"),
+
+    # Translation
+    "default_translation_source": os.getenv("DEFAULT_TRANSLATION_SOURCE", "auto"),
+    "default_translation_format": os.getenv("DEFAULT_TRANSLATION_FORMAT", "text"),
+
+    # API Keys
+    "mistral_api_key": os.getenv("MISTRAL_API_KEY", ""),
+    "groq_api_key": os.getenv("GROQ_API_KEY", ""),
+    "groq_api_base": os.getenv("GROQ_API_BASE", "https://api.groq.com/openai/v1"),
+
+    # Guardrail
+    "default_guardrail_level": os.getenv("DEFAULT_GUARDRAIL_OPTION", "none"),
+
+    # Guardrail thresholds
+    "toxicity_threshold_basic": float(os.getenv("TOXICITY_THRESHOLD_BASIC", 0.9)),
+    "toxicity_threshold_strict": float(os.getenv("TOXICITY_THRESHOLD_STRICT", 0.5)),
+    "toxicity_threshold_custom": float(os.getenv("TOXICITY_THRESHOLD_CUSTOM", 0.7)),
+
+    # Guardrail PII
+    "pii_entities_strict": os.getenv("PII_ENTITIES_STRICT", "EMAIL_ADDRESS,PHONE_NUMBER,US_SSN").split(","),
+    "pii_entities_custom": os.getenv("PII_ENTITIES_CUSTOM", "EMAIL_ADDRESS,CREDIT_CARD").split(","),
+    "onfailaction_strict": os.getenv("ONFAILACTION_STRICT", "FIX"),
+    "onfailaction_custom": os.getenv("ONFAILACTION_CUSTOM", "FIX"),
+    
+    # -----------------------------
+    # RAG Fusion
+    # -----------------------------
+    "default_ragfusion_top_k": int(os.getenv("DEFAULT_RAGFUSION_TOP_K", 5)),
+    "default_ragfusion_rrf_k": int(os.getenv("DEFAULT_RAGFUSION_RRF_K", 60)),
+
+        # Re-ranker
+    "default_reranker_top_k": int(os.getenv("DEFAULT_RERANKER_TOP_K", 5)),
+    "cross_encoder_model": os.getenv("CROSS_ENCODER_MODEL", "cross-encoder/ms-marco-MiniLM-L-6-v2"),
+    "bi_encoder_model": os.getenv("BI_ENCODER_MODEL", "sentence-transformers/all-MiniLM-L6-v2"),
+    "llm_reranker_model": os.getenv("LLM_RERANKER_MODEL", "llama-3.3-70b-versatile"),
+    "llm_reranker_max_tokens": int(os.getenv("LLM_RERANKER_MAX_TOKENS", 512)),
+
+
+
+}
