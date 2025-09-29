@@ -8,7 +8,9 @@ from langchain_community.chat_models import ChatOpenAI
 from Services.guardrail import validate_output
 from Services.reranker_service import get_reranker
 from config import CONFIG
-
+from langchain_community.vectorstores import FAISS, Chroma
+from langchain_community.embeddings import HuggingFaceEmbeddings
+from langchain_community.llms import HuggingFaceHub
 
 def get_ragfusion_retriever_with_sources(
     query: str,

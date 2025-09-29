@@ -7,7 +7,9 @@ from langchain_core.output_parsers import StrOutputParser
 from langchain.prompts import ChatPromptTemplate
 from langchain.load import dumps, loads
 from langchain_community.chat_models import ChatOpenAI
-
+from langchain_community.vectorstores import FAISS, Chroma
+from langchain_community.embeddings import HuggingFaceEmbeddings
+from langchain_community.llms import HuggingFaceHub
 from guardrails import Guard
 from guardrails.hub import ToxicLanguage
 

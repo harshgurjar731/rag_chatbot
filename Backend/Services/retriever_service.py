@@ -12,6 +12,48 @@ from Services.step_back_retriever_with_source import get_stepback_retriever_with
 from Services.step_back_retriever_without_source import get_stepback_retriever_without_sources
 from Services.rag_fusion_retriever_with_source import get_ragfusion_retriever_with_sources
 from Services.rag_fusion_retriever_without_sources import get_ragfusion_retriever_without_sources
+import uuid
+
+
+
+# In your `multi_query_retriever_without_sources.py`
+from langchain.chains import RetrievalQA
+# ... (your existing imports)
+
+class MultiQueryRetrieverService:
+    def __init__(self, vector_store):
+        self.vector_store = vector_store
+        self.llm = OpenAI()  # Assuming this is configured
+        self.retriever = self.vector_store.as_retriever()
+        
+        # This is where the chain is built
+        self.qa_chain = RetrievalQA.from_chain_type(
+            llm=self.llm,
+            chain_type="stuff",
+            retriever=self.retriever,
+        )
+
+    def process_query(self, query):
+        # When this method is called, Phoenix will automatically log the trace
+        response = self.qa_chain.invoke({"query": query})
+        return response
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 # -----------------------------
@@ -130,5 +172,6 @@ def retrieve_documents(
     else:
         retriever = db.as_retriever()
         result = retriever.get_relevant_documents(query)
-
+    result["traceId"]=str(uuid.uuid4())
+    # result.append("traceId",str(uuid.uuid4()))
     return result

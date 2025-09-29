@@ -13,7 +13,9 @@ from langchain_community.chat_models import ChatOpenAI
 from Services.guardrail import validate_output  
 from Services.reranker_service import get_reranker
 from config import CONFIG   # Load env-driven config
-
+from langchain_community.vectorstores import FAISS, Chroma
+from langchain_community.embeddings import HuggingFaceEmbeddings
+from langchain_community.llms import HuggingFaceHub
 
 def get_multiquery_retriever_without_sources(
     query: str,

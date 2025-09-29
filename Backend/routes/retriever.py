@@ -1,11 +1,11 @@
-# rag_app/backend/routes/query.py
 from fastapi import APIRouter, Query
 from Services.retriever_service import retrieve_documents
 from typing import List
-from config import CONFIG  # 🔹 centralized env-driven config
+from config import CONFIG
+from opentelemetry import trace
+import uuid  # ✅ CHANGE: Added the import for generating unique IDs
 
 router = APIRouter()
-
 
 @router.get("/query")
 def retrieve(
@@ -38,8 +38,7 @@ def retrieve(
         CONFIG["default_reranker_option"], description="Reranker option to use"
     ),
 ):
-    # 🔹 Call retriever service
-    results = retrieve_documents(
+    results_object = retrieve_documents(
         query,
         query_optimizer,
         embedding_model_name,
@@ -52,5 +51,26 @@ def retrieve(
         guardrailOption,
         rerankerOption,
     )
+    
+    final_answer = ""
+    if isinstance(results_object, dict):
+        final_answer = results_object.get("result") or results_object.get("answer", "No answer found in results.")
+    elif isinstance(results_object, str):
+        final_answer = results_object
+    else:
+        final_answer = "Could not process the response from the service."
 
-    return {"results": results["answer"]}
+    current_span = trace.get_current_span()
+    span_context = current_span.get_span_context()
+
+    trace_id = ""
+    if span_context.is_valid:
+        trace_id = format(span_context.trace_id, '032x')
+        print(f"✅ Successfully captured Phoenix trace_id: {trace_id}")
+    else:
+        # ✅ CHANGE: Added a fallback to generate a UUID if no trace is found.
+        # This ensures the feedback feature will always have a unique ID to work with.
+        trace_id = str(uuid.uuid4())
+        print(f"⚠️ WARNING: Could not find a valid span context. Using generated UUID as trace_id: {trace_id}")
+
+    return {"answer": final_answer, "traceId": trace_id}

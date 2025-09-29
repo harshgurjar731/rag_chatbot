@@ -384,7 +384,7 @@ const ChatbotDetail = () => {
                     qs.stringify(params, { arrayFormat: "repeat" }),
                 });
 
-                return response.data.results || "No results found.";
+                return response.data || "No results found.";
               }}
             />
           </TabsContent>

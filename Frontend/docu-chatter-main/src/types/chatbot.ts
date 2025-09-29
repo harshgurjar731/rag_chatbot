@@ -15,7 +15,8 @@ export interface ChatMessage {
   content: string;
   isUser: boolean;
   timestamp: Date;         // ✅ use Date instead of number
-  originalContent?: string; // ✅ optional for storing un-translated text
+  originalContent?: string;
+  traceId:string// ✅ optional for storing un-translated text
 };
 
 

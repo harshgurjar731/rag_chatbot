@@ -4,7 +4,9 @@ from langchain.prompts import ChatPromptTemplate
 from langchain.load import dumps, loads
 from operator import itemgetter
 from langchain_community.chat_models import ChatOpenAI
-
+from langchain_community.vectorstores import FAISS, Chroma
+from langchain_community.embeddings import HuggingFaceEmbeddings
+from langchain_community.llms import HuggingFaceHub
 from Services.guardrail import validate_output
 from Services.reranker_service import get_reranker
 from config import CONFIG
