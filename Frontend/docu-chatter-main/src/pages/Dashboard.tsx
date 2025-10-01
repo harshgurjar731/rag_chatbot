@@ -9,7 +9,7 @@ import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 
 
-const Dashboard = () => {
+export const Dashboard = () => {
   const { chatbots, createChatbot } = useChatbots();
   const navigate = useNavigate();
 

@@ -86,6 +86,10 @@ def get_multiquery_retriever_without_sources(
             docs = [doc for doc, _ in ranked]
             print("Applied Re-ranker:", rerankerOption)
 
+     # Combine all retrieved docs content as context
+    context_text = "\n".join([getattr(doc, "page_content", str(doc)) for doc in docs])
+
+
     # RAG
     rag_template = """Answer the following question based on this context:
 
@@ -104,6 +108,9 @@ def get_multiquery_retriever_without_sources(
 
     final_answer = final_rag_chain.invoke({"question": question})
 
+    print("Retrieval chain$$$$$",retrieval_chain.dict(),"$$$$$")
+    print("Retrieval docs1111$$$$$",docs,"$$$$$")
+
     # ✅ Apply guardrails
     validated = validate_output(final_answer, guardrail_level)
 
@@ -112,8 +119,13 @@ def get_multiquery_retriever_without_sources(
 
     final_answer = validated["answer"]
     print("Final RAG Chain Output:", final_answer)
+    
 
-    return {"answer": final_answer}
+    # ✅ Return both answer and retrieved context
+    return {
+        "answer": final_answer,
+        "context": context_text
+    }
 
 
 def get_unique_union(documents: list[list]):

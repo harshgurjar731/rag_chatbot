@@ -15,6 +15,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Trash } from "lucide-react"; // Make sure Trash icon is imported
 import axios from 'axios';
 import qs from "qs";
+import { useConfigOptions } from '@/hooks/useConfigOptions';
 
 
 type FileRecord = {
@@ -27,6 +28,7 @@ type FileRecord = {
 
 
 const ChatbotDetail = () => {
+  const { config, loading } = useConfigOptions()
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { getChatbot, deleteChatbot, addDocument, addQnA } = useChatbots();
@@ -59,14 +61,14 @@ const ChatbotDetail = () => {
       // 1. Delete the document from backend
       // Step 1: Get file ID using the filename
       const idResponse = await axios.get<{ file_id: number }>(
-        `http://127.0.0.1:8000/datastores/${datastoreId}/files/${encodeURIComponent(docName)}/id`
+        `${config?.base_url}/datastores/${datastoreId}/files/${encodeURIComponent(docName)}/id`
       );
 
       const fileId = idResponse.data.file_id;
 
       // Step 2: Delete the file using the file ID
       await axios.delete(
-        `http://127.0.0.1:8000/datastores/${datastoreId}/files/${fileId}`
+        `${config?.base_url}/datastores/${datastoreId}/files/${fileId}`
       );
 
       toast({
@@ -76,7 +78,7 @@ const ChatbotDetail = () => {
 
       // 2. Refetch the file list for this chatbot's datastore
       const updatedFilesRes = await axios.get<FileRecord[]>(
-        `http://127.0.0.1:8000/datastores/${datastoreId}/files`
+        `${config?.base_url}/datastores/${datastoreId}/files`
       );
 
       const updatedDocuments = updatedFilesRes.data.map((file) => file.filename);
@@ -111,7 +113,7 @@ const ChatbotDetail = () => {
   //   try {
   //     console.log(chatbot.datastoreId)
   //     deleteChatbot(chatbot.id);
-  //     await axios.delete(`http://127.0.0.1:8000/datastore/${chatbot.datastoreId}`);
+  //     await axios.delete(`${config?.base_url}/datastore/${chatbot.datastoreId}`);
   //     toast({
   //       title: "Chatbot Deleted",
   //       description: `${chatbot.name} has been removed.`,
@@ -143,14 +145,14 @@ const ChatbotDetail = () => {
 
       // Step 1: Get all files in the datastore
       const filesRes = await axios.get<FileRecord[]>(
-        `http://127.0.0.1:8000/datastores/${chatbot.datastoreId}/files`
+        `${config?.base_url}/datastores/${chatbot.datastoreId}/files`
       );
       const files = filesRes.data;
 
       // Step 2: Loop through each file and delete it using file ID
       for (const file of files) {
         await axios.delete(
-          `http://127.0.0.1:8000/datastores/${chatbot.datastoreId}/files/${file.id}`
+          `${config?.base_url}/datastores/${chatbot.datastoreId}/files/${file.id}`
         );
       }
 
@@ -161,7 +163,7 @@ const ChatbotDetail = () => {
       deleteChatbot(chatbot.id);
 
       // Step 4: Delete the datastore itself
-      await axios.delete(`http://127.0.0.1:8000/datastore/${chatbot.datastoreId}`);
+      await axios.delete(`${config?.base_url}/datastore/${chatbot.datastoreId}`);
 
       toast({
         title: "Chatbot & Datastore Deleted",
@@ -184,7 +186,7 @@ const ChatbotDetail = () => {
   const handleFileClick = async (datastoreId: number, filename: string) => {
     try {
       const response = await axios.get(
-        `http://127.0.0.1:8000/datastores/${datastoreId}/files/${filename}`,
+        `${config?.base_url}/datastores/${datastoreId}/files/${filename}`,
         {
           responseType: "blob",
         }
@@ -333,7 +335,7 @@ const ChatbotDetail = () => {
       {/* Main Content */}
       <div className="container mx-auto px-4 py-6">
         <Tabs defaultValue="chat" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-3">
+          <TabsList className="grid w-full grid-cols-2">
             <TabsTrigger value="chat" className="flex items-center gap-2">
               <MessageSquarePlus className="h-4 w-4" />
               Chat
@@ -341,10 +343,6 @@ const ChatbotDetail = () => {
             <TabsTrigger value="documents" className="flex items-center gap-2">
               <FileText className="h-4 w-4" />
               Documents
-            </TabsTrigger>
-            <TabsTrigger value="manage" className="flex items-center gap-2">
-              <Settings className="h-4 w-4" />
-              Manage
             </TabsTrigger>
           </TabsList>
 
@@ -516,94 +514,6 @@ const ChatbotDetail = () => {
                   </div>
                 </CardContent>
 
-              </Card>
-            </div>
-          </TabsContent>
-
-          <TabsContent value="manage" className="space-y-6">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {/* Current Q&As */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <MessageSquarePlus className="h-5 w-5" />
-                    Q&A Pairs ({chatbot.qna.length})
-                  </CardTitle>
-                  <CardDescription>
-                    Custom question and answer pairs for this chatbot
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  {chatbot.qna.length === 0 ? (
-                    <p className="text-muted-foreground text-center py-8">
-                      No custom Q&A pairs added yet
-                    </p>
-                  ) : (
-                    <div className="space-y-4 max-h-96 overflow-y-auto">
-                      {chatbot.qna.map((qa) => (
-                        <div
-                          key={qa.id}
-                          className="p-4 rounded-lg bg-chatbot-surface-variant space-y-2"
-                        >
-                          <div>
-                            <p className="text-sm font-medium text-chatbot-primary">Q:</p>
-                            <p className="text-sm">{qa.question}</p>
-                          </div>
-                          <div>
-                            <p className="text-sm font-medium text-chatbot-accent">A:</p>
-                            <p className="text-sm text-muted-foreground">{qa.answer}</p>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-
-              {/* Add New Q&A */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Plus className="h-5 w-5" />
-                    Add Q&A Pair
-                  </CardTitle>
-                  <CardDescription>
-                    Add custom question and answer pairs
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div>
-                    <Label htmlFor="question">Question</Label>
-                    <Input
-                      id="question"
-                      placeholder="Enter a question..."
-                      value={newQuestion}
-                      onChange={(e) => setNewQuestion(e.target.value)}
-                      className="mt-1.5"
-                    />
-                  </div>
-
-                  <div>
-                    <Label htmlFor="answer">Answer</Label>
-                    <Textarea
-                      id="answer"
-                      placeholder="Enter the answer..."
-                      value={newAnswer}
-                      onChange={(e) => setNewAnswer(e.target.value)}
-                      className="mt-1.5 min-h-[100px]"
-                    />
-                  </div>
-
-                  <Button
-                    onClick={handleAddQnA}
-                    variant="chatbot"
-                    className="w-full"
-                    disabled={!newQuestion.trim() || !newAnswer.trim()}
-                  >
-                    <Plus className="h-4 w-4" />
-                    Add Q&A Pair
-                  </Button>
-                </CardContent>
               </Card>
             </div>
           </TabsContent>

@@ -12,6 +12,7 @@ from Services.embedding_service import embed_and_store, check_embeddings_status,
 from Services.chunking_service import chunk_documents, save_chunks_to_json, load_docs_from_json
 from config import CONFIG  # ✅ centralized env-driven config
 import os
+from Evaluation.delete_qna import delete_qna_by_file,delete_generated_files  # ✅ centralized deletion of QA pairs
 
 router = APIRouter()
 
@@ -135,11 +136,37 @@ def delete_file_from_datastore(
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to delete vectors: {str(e)}")
 
+    # ✅ Delete QA pairs associated with this file
+    try:
+        deleted_count = delete_qna_by_file(session, file_id)
+        print(f"[INFO] Deleted {deleted_count} QA pairs for file_id {file_id}")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to delete QA pairs: {str(e)}")
+    
+    try:
+        delete_generated_files(original_file_path)   
+    except FileNotFoundError as fnf_error:
+        print(f"[WARN] File not found: {fnf_error}")
+    except PermissionError as perm_error:
+        print(f"[ERROR] Permission denied: {perm_error}")
+    except Exception as e:
+        print(f"[ERROR] Failed to delete files: {e}")
+
+    json_file=Path(CONFIG["project_root"] / "Data" / datastore.name / f"{datastore.name}_evaluation_qa.json")
+
+    try:
+        if json_file.exists():
+            json_file.unlink()
+            print(f"[INFO] Deleted: {json_file}")
+    except Exception as e:
+        print(f"[ERROR] Failed to delete {json_file}: {e}")
+
+    # Delete the file record
     session.delete(file_record)
     session.commit()
 
     return {
-        "message": "File, preview, chunks, and embeddings deleted successfully",
+        "message": "File, preview, chunks, embeddings, and QA pairs deleted successfully",
         "file_id": file_id,
         "filename": file_record.filename,
     }
@@ -204,3 +231,24 @@ def get_file_id(datastore_id: int, filename: str, session: Session = Depends(get
         raise HTTPException(status_code=404, detail="File not found in database")
 
     return {"file_id": file_record.id}
+
+@router.get("/datastores/{datastore_id}/files/{file_id}/name")
+def get_file_name(datastore_id: int, file_id: int, session: Session = Depends(get_session)):
+    """
+    Get the filename for a specific file_id in a datastore.
+    """
+    # Check if datastore exists
+    datastore = session.get(DataStore, datastore_id)
+    if not datastore:
+        raise HTTPException(status_code=404, detail="Datastore not found")
+
+    # Query file record
+    statement = select(FileRecord).where(
+        FileRecord.id == file_id,
+        FileRecord.datastore_id == datastore_id
+    )
+    file_record = session.exec(statement).first()
+    if not file_record:
+        raise HTTPException(status_code=404, detail="File not found in database")
+
+    return {"file_name": file_record.filename}

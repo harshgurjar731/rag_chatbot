@@ -12,6 +12,7 @@ from frontend_config import (
     get_token_size_options,
     get_show_sources_default,
     get_api_base_url,
+    get_evaluation_frameworks,
 )
 
 router = APIRouter()
@@ -63,3 +64,8 @@ def fetch_get_token_size_options():
 @router.get("/config/show-sources-default")
 def fetch_show_sources_default():
     return {"show_sources_default": get_show_sources_default()}
+
+# Route to fetch evaluation frameworks
+@router.get("/config/get-evaluation-frameworks")
+def fetch_evaluation_frameworks():
+    return {"evaluation_frameworks": get_evaluation_frameworks()}

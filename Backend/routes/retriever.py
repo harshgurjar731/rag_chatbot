@@ -4,6 +4,8 @@ from Services.retriever_service import retrieve_documents
 from typing import List
 from config import CONFIG  # 🔹 centralized env-driven config
 
+
+
 router = APIRouter()
 
 

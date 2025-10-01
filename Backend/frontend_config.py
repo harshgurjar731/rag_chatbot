@@ -22,6 +22,7 @@ class ModelConfig(BaseModel):
     token_size_options: Dict[str, int]
     show_sources_default: bool
     languages: List[Language]
+    eval_framworks:Dict[str, List[str]]
 
 
 # ---------------------------
@@ -63,11 +64,30 @@ def get_llm_models() -> List[str]:
         "openai/gpt-oss-20b",
     ]
 
+def get_evaluation_frameworks() -> Dict[str, List[str]]:
+    return {
+        "Phoenix": [
+            "Hallucination",      # maps to hallucination_eval
+            "Answer Relevance",   # maps to qna_eval
+            "RAG Relevancy",      # maps to rag_relevancy_eval
+            "Toxicity",           # maps to toxicity_eval
+        ],
+        "Ragas": [
+            "Faithfulness",       # maps to hallucination_eval (or separate faithfulness logic)
+            "Answer Relevance",   # maps to qna_eval
+            "RAG Relevancy",      # maps to rag_relevancy_eval
+            "Toxicity",           # maps to toxicity_eval
+        ],
+    }
+
+
 def get_vector_dbs() -> List[str]:
     return ["FAISS", "Pinecone", "Chroma", "Weaviate"]
 
 def get_reranker_options() -> List[str]:
     return ["None", "Cohere", "Cross-encoder", "OpenAI Reranker"]
+
+
 
 def get_guardrail_options() -> List[Dict[str, str]]:
     return [
@@ -140,4 +160,5 @@ def get_config() -> ModelConfig:
         token_size_options=get_token_size_options(),
         show_sources_default=get_show_sources_default(),
         languages=get_languages(),
+        eval_framworks=get_evaluation_frameworks()
     )

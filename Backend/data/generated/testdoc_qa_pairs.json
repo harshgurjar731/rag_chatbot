@@ -1,0 +1,45 @@
+{
+  "summary": "The document discusses how climate change, driven by greenhouse gas emissions, deforestation, industrial pollution, and agricultural methane, poses significant threats to human health. It highlights key health impacts such as heat\u2011related illnesses, the spread of vector\u2011borne diseases, respiratory problems from poor air quality, and the risks of water scarcity and food insecurity. To address these challenges, the text outlines mitigation strategies\u2014including renewable energy adoption, reforestation, sustainable agriculture, public health campaigns, and international climate agreements\u2014alongside adaptation measures like strengthening healthcare systems, establishing early warning systems, ensuring clean water and nutrition, and supporting community\u2011based adaptation projects.",
+  "qa_pairs": [
+    {
+      "question": "What are the main causes of climate change mentioned in the text?",
+      "answer": "Greenhouse gas emissions from burning fossil fuels, deforestation reducing carbon absorption, industrial pollution and urbanization, and agriculture practices releasing methane."
+    },
+    {
+      "question": "Which health conditions are linked to increased heatwaves?",
+      "answer": "Heatstroke and dehydration."
+    },
+    {
+      "question": "Which vector-borne diseases are said to spread due to climate change?",
+      "answer": "Malaria and dengue."
+    },
+    {
+      "question": "What respiratory illnesses are caused by poor air quality?",
+      "answer": "Asthma and respiratory illnesses."
+    },
+    {
+      "question": "What are the main impacts on human health listed in the text?",
+      "answer": "Increased heatwaves leading to heatstroke and dehydration, spread of vector-borne diseases like malaria and dengue, poor air quality causing asthma and respiratory illnesses, water scarcity and food insecurity."
+    },
+    {
+      "question": "Which renewable energy sources are highlighted for transitioning?",
+      "answer": "Solar, wind, hydro."
+    },
+    {
+      "question": "What are the key components of the mitigation strategies?",
+      "answer": "Transitioning to renewable energy (solar, wind, hydro), reforestation and sustainable agriculture, public health awareness campaigns, international cooperation and climate policy agreements."
+    },
+    {
+      "question": "What adaptation measures are suggested for health?",
+      "answer": "Strengthening healthcare systems to deal with climate-driven diseases, developing early warning systems for extreme weather, improving access to clean water and nutritious food, community-based adaptation projects."
+    },
+    {
+      "question": "Which public health measure is included in the mitigation strategies?",
+      "answer": "Public health awareness campaigns."
+    },
+    {
+      "question": "Which issues are addressed by improving access to clean water and nutritious food?",
+      "answer": "Water scarcity and food insecurity."
+    }
+  ]
+}

@@ -11,7 +11,9 @@ export interface ConfigOptions {
   default_temperature: number
   token_size_options:{ default: number; min: number; max: number; step: number }
   show_sources_default: boolean
-  languages: { code: string; name: string }[]  
+  languages: { code: string; name: string }[] ,
+  eval_framworks: { [framework: string]: string[] }
+
 }
 
 export const useConfigOptions = () => {

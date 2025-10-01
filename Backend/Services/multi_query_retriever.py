@@ -117,6 +117,7 @@ def get_multiquery_retriever(
 
     if "⚠️ Response blocked" in validated["answer"]:
         return validated
+    print("Retrieval chain",retrieval_chain)
 
     return {
         "answer": validated["answer"],

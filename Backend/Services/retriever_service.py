@@ -14,6 +14,8 @@ from Services.rag_fusion_retriever_with_source import get_ragfusion_retriever_wi
 from Services.rag_fusion_retriever_without_sources import get_ragfusion_retriever_without_sources
 
 
+
+
 # -----------------------------
 # Load embeddings
 # -----------------------------
@@ -56,7 +58,7 @@ def retrieve_documents(
     file_id: list = None,
     temperature: float = None,
     token_size: int = None,
-    sources: bool = True,
+    sources: bool = False,
     guardrailOption: str = None,
     rerankerOption: str = None,
 ):
@@ -106,6 +108,7 @@ def retrieve_documents(
             result = get_multiquery_retriever_without_sources(
                 query, db, llm_model_name, temperature, token_size, guardrailOption, rerankerOption
             )
+            
 
     elif query_optimizer == "Step Back":
         if sources:

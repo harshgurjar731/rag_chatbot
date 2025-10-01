@@ -2,6 +2,8 @@
 from sqlmodel import SQLModel, Field
 from typing import Optional
 from datetime import datetime
+from typing import List
+from sqlmodel import Relationship
 
 class DataStore(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
@@ -10,4 +12,3 @@ class DataStore(SQLModel, table=True):
     #storage_path: Optional[str] = None
     created_at: datetime = Field(default_factory=datetime.utcnow)
     chatbotId: Optional[str]= ""
-
