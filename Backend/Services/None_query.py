@@ -1,6 +1,5 @@
 from typing import List
 from langchain.vectorstores import FAISS, Chroma
-from langchain.retrievers.multi_query import MultiQueryRetriever
 from langchain.embeddings import HuggingFaceEmbeddings
 from langchain.llms import HuggingFaceHub # optional if HuggingFace models are used
 from pathlib import Path
@@ -18,10 +17,11 @@ import json
 
 # Assuming these imports exist from your original code and project structure
 from Services.guardrail import validate_output
-from Services.reranker_service import get_reranker
+# from Services.reranker_service import get_reranker # This is now defined below
 from config import CONFIG
 
-def get_multiquery_retriever(
+# Renamed function to reflect that it's no longer using multi-query
+def get_rag_response(
     query: str,
     db: FAISS | Chroma,
     llm_model_name: str = None,
@@ -31,11 +31,11 @@ def get_multiquery_retriever(
     rerankerOption: str = None,
 ):
     """
-    RAG pipeline with multi-query retrieval, optional re-ranking, and
+    RAG pipeline using direct query retrieval, optional re-ranking, and
     detailed source information including chunks and metadata for citation.
     """
 
-    # ✅ Load defaults from config if not provided
+    # Load defaults from config if not provided (no change here)
     llm_model_name = llm_model_name or CONFIG["default_llm_model"]
     temperature = temperature if temperature is not None else CONFIG["default_temperature"]
     token_size = token_size if token_size is not None else CONFIG["default_token_size"]
@@ -48,7 +48,7 @@ def get_multiquery_retriever(
     if not llm_model_name:
         raise ValueError("LLM model name must be provided")
 
-    # ✅ LLM init from env
+    # LLM init from env (no change here)
     llm = ChatOpenAI(
         openai_api_base=GROQ_API_BASE,
         openai_api_key=GROQ_API_KEY,
@@ -57,63 +57,49 @@ def get_multiquery_retriever(
         max_tokens=token_size,
     )
 
-    # Multi-query prompt (unchanged)
-    template = """You are an AI assistant. Generate five different versions of the given user question to retrieve relevant documents.
-    Provide these alternative questions separated by newlines.
-    Original question: {question}"""
-    prompt_perspectives = ChatPromptTemplate.from_template(template)
-
-    generate_queries = (
-        prompt_perspectives
-        | llm
-        | StrOutputParser()
-        | (lambda x: x.split("\n"))
-    )
-
-    # Base retriever
+    # Base retriever for direct search
     base_retriever = db.as_retriever(search_kwargs={"k": 10})
 
-    # Multi-query retriever (generates queries and retrieves documents)
-    multiquery_retriever = MultiQueryRetriever.from_llm(
-        retriever=base_retriever,
-        llm=llm,
-    )
-
-    # ✅ Conditionally add re-ranking to the pipeline
+    # Conditionally add re-ranking to the simplified pipeline
     if rerankerOption != "none":
         compressor = get_reranker(rerankerOption)
         if compressor:
+            # The compression retriever now wraps the simple base_retriever
             retriever_chain = ContextualCompressionRetriever(
                 base_compressor=compressor,
-                base_retriever=multiquery_retriever,
+                base_retriever=base_retriever,
             )
         else:
-            retriever_chain = multiquery_retriever
+            # Fallback to the base retriever if the compressor isn't found
+            retriever_chain = base_retriever
     else:
-        retriever_chain = multiquery_retriever
+        # If no re-ranking, the chain is just the simple retriever
+        retriever_chain = base_retriever
 
-    # This is the core logic. `retriever_chain` now handles both multi-query and re-ranking.
+    # The retriever_chain directly searches with the user's query.
     docs = retriever_chain.invoke(query)
 
     print(f"Retrieved Documents after re-ranking: {len(docs)}")
 
-    # ✅ New: Format documents to include content and metadata for citation
+    # Format documents to include content and metadata for citation (no change here)
     def format_docs_for_context(docs: List[Document]):
         """Formats documents with a citation ID for the final chain."""
         context_string = ""
-        # Store a mapping of ID to full document metadata for final response
         citation_map = {}
         
         for i, doc in enumerate(docs):
             citation_id = i + 1
-            context_string += f"[Chunk {citation_id}] Source: {doc.metadata.get('source', 'N/A')}, Page: {doc.metadata.get('page_number', 'N/A')}\nContent: {doc.page_content}\n\n"
+            # Ensure metadata values exist
+            source = doc.metadata.get('source', 'N/A')
+            page_number = doc.metadata.get('page_number', 'N/A')
+            context_string += f"[Chunk {citation_id}] Source: {source}, Page: {page_number}\nContent: {doc.page_content}\n\n"
             citation_map[str(citation_id)] = doc.metadata
             
         return context_string, citation_map
 
     context_string, citation_map = format_docs_for_context(docs)
 
-    # RAG prompt (updated for citations)
+    # RAG prompt for the final answer generation (no change here)
     rag_template = """Answer the following question based on this context.
 
     Context:
@@ -132,33 +118,30 @@ def get_multiquery_retriever(
 
     final_answer = final_rag_chain.invoke({"context": context_string, "question": query})
 
-    # ✅ Apply guardrails
+    # Apply guardrails (no change here)
     validated = validate_output(final_answer, guardrail_level)
 
     if "⚠️ Response blocked" in validated["answer"]:
         return validated
     
-    # Extract the original source links from the retrieved documents
+    # Extract source links and prepare citation data (no change here)
     source_links = list({doc.metadata.get("source", "No source found") for doc in docs})
 
-
-    # ✅ New function call to process the citation map
+    # ✅ THIS NOW USES THE CORRECTED HELPER FUNCTION
     document_pages_dict = extract_sources_and_pages(citation_map)
-    print(f"Document Pages Dict: {document_pages_dict}")
     
     print(f"Sources used: {source_links}")
-    print(f"Citation Map: {document_pages_dict}")
+    print(f"Document Pages Dict: {document_pages_dict}")
 
-    # The final returned data now includes the full citation map and the new document_pages_dict
     return {
         "answer": validated["answer"],
         "sources": source_links,
         "citation_map": citation_map,
-        "chunks_used": docs, # Optional: Return full document objects for debugging
+        "chunks_used": docs, 
         "document_pages_dict": document_pages_dict
     }
 
-# ----------------- NEW HELPER FUNCTION -----------------
+# ----------------- ✅ UPDATED HELPER FUNCTION -----------------
 def extract_sources_and_pages(citation_map: dict) -> list[dict]:
     """
     Prepares a list of dictionaries, mapping unique documents to a list of unique pages.
@@ -170,13 +153,15 @@ def extract_sources_and_pages(citation_map: dict) -> list[dict]:
     Returns:
         list[dict]: A list of dictionaries, where each dictionary maps a unique
                     document source (file path) to a sorted list of unique page numbers.
+                    Example: [{"source": "path/to/doc.pdf", "pages": [1, 5, 10]}]
     """
     document_pages_dict = {}
     for citation_metadata in citation_map.values():
         source = citation_metadata.get("source")
         page_number = citation_metadata.get("page_number")
         
-        if source and page_number:
+        # Ensure both source and page_number exist to create a valid citation
+        if source and page_number is not None:
             if source not in document_pages_dict:
                 document_pages_dict[source] = set()
             document_pages_dict[source].add(page_number)
@@ -185,20 +170,18 @@ def extract_sources_and_pages(citation_map: dict) -> list[dict]:
     for source in document_pages_dict:
         document_pages_dict[source] = sorted(list(document_pages_dict[source]))
         
-    # --- The main change is here ---
-    # Convert the dictionary to a list of dictionaries
+    # --- Convert the dictionary to the desired list of dictionaries format ---
     result_list = []
     for source, pages in document_pages_dict.items():
         result_list.append({"source": source, "pages": pages})
         
     return result_list
 
-# ----------- HELPER FOR RERANKER SERVICE (optional but good practice) -----------
+
 def get_reranker(reranker_option: str):
     """Factory function to get the correct reranker based on the option."""
     if reranker_option.lower() == "flashrank":
-        # Using a simple re-ranker from langchain_community
         # Ensure 'flashrank' is installed: pip install flashrank
-        return FlashrankRerank(model_name="ms-marco-MiniLM-L-12-v2")
-    # Add other reranker options here (e.g., from HuggingFace, Cohere, etc.)
+        return FlashrankRerank() # model_name defaults are usually sufficient
+    # Add other rerankers here if needed
     return None

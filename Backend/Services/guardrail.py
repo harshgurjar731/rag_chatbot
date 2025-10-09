@@ -2,6 +2,7 @@ from guardrails import Guard
 from guardrails.hub import ToxicLanguage, DetectPII
 from guardrails.types import OnFailAction
 from config import CONFIG
+from guardrails.hub import RegexMatch
 
 def setup_guard(guardrail_level: str = None):
     """

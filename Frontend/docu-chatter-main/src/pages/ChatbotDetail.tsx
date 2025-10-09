@@ -364,8 +364,9 @@ const ChatbotDetail = () => {
               onSendMessage={async (payload) => {
                 const { question, fileId, optimizer, embeddingModel, llmModel, vectorDb, temperature, guardrailOption, tokenSize, showSources, rerankerOption } = payload;
 
-                const response = await axios.get("http://localhost:8000/retriever/query", {
+                const response = await axios.get(`http://localhost:8000/retriever/query/${chatbot.name}`, {
                   params: {
+                    chatbot_id:chatbot.name,
                     query: question,
                     query_optimizer: optimizer || "Multi Query",
                     embedding_model_name: embeddingModel || "all-MiniLM-L6-v2",

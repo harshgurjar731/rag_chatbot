@@ -50,6 +50,15 @@ def get_multiquery_retriever_without_sources(
         max_tokens=token_size,
     )
 
+    llm = AzureChatOpenAI(
+            azure_endpoint=azure_endpoint,
+            api_key=azure_api_key,
+            api_version=azure_api_version,
+            azure_deployment="gpt-5-mini",
+            temperature=temperature,
+            max_completion_tokens=token_size,
+        )
+
     # Multi Query: Different Perspectives (prompt unchanged)
     template = """You are an AI language model assistant. Your task is to generate five 
     different versions of the given user question to retrieve relevant documents from a vector 

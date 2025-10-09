@@ -1,0 +1,892 @@
+[
+  {
+    "content": "TCS Financial Results\nQuarter I Ended FY 2025-26\nJuly 10, 2025",
+    "metadata": {
+      "source": "..\\Data\\citation\\FactSheet.pdf",
+      "file_size_kb": 443.740234375,
+      "total_pages": 23,
+      "page_number": 1,
+      "content_type": "text"
+    }
+  },
+  {
+    "content": "                            0\n0       TCS Financial Results\n1  Quarter I Ended FY 2025-26\n2               July 10, 2025",
+    "metadata": {
+      "source": "..\\Data\\citation\\FactSheet.pdf",
+      "file_size_kb": 443.740234375,
+      "total_pages": 23,
+      "page_number": 1,
+      "content_type": "table",
+      "table_index": 1
+    }
+  },
+  {
+    "content": "TATA\n",
+    "metadata": {
+      "source": "..\\Data\\citation\\FactSheet.pdf",
+      "file_size_kb": 443.740234375,
+      "total_pages": 23,
+      "page_number": 1,
+      "content_type": "ocr_image",
+      "image_index": 2
+    }
+  },
+  {
+    "content": "Disclaimer\n2\nCertain statements in this release concerning our future prospects are forward-looking statements. Forward-looking statements by \ntheir nature involve a number of risks and uncertainties that could cause actual results to differ materially from market \nexpectations. These risks and uncertainties include, but are not limited to, our ability to manage growth, intense competition \namong global IT services companies, various factors which may affect our profitability, such as wage increases or an appreciating \nRupee, our ability to attract and retain highly skilled professionals, time and cost overruns on fixed-price, fixed-time frame \ncontracts, liability for damages on our service contracts, client concentration, our ability to manage our international operations, \nrestrictions on cross-border movement of skilled personnel, reduced demand for technology in our key focus areas, our ability to \ncapitalize on the emerging technology landscape, the success of the companies in which TCS has made strategic investments, our \nability to successfully complete and integrate potential acquisitions, legal restrictions on raising capital or acquiring companies \noutside India, withdrawal of governmental fiscal incentives, geo-political instability, regulatory changes impacting the business \nmodel, supplier concentration and resilience, unauthorized use of our intellectual property, disruptions in telecommunication \nnetworks, cyber attacks, security or data breaches, social media adverse impact, pandemics, natural disasters, our ability to ensure \nbusiness continuity in unforeseen circumstances, and general economic conditions affecting our industry. TCS may, from time to \ntime, make additional written and oral forward-looking statements, including our reports to shareholders. These forward-looking \nstatements represent only the Company’s current intentions, beliefs or expectations, and any forward-looking statement speaks \nonly as of the date on which it was made. \nThe Company assumes no obligation to revise or update any forward-looking statements.",
+    "metadata": {
+      "source": "..\\Data\\citation\\FactSheet.pdf",
+      "file_size_kb": 443.740234375,
+      "total_pages": 23,
+      "page_number": 2,
+      "content_type": "text"
+    }
+  },
+  {
+    "content": "                                                                                        0                                                                                                                                                   1\n0                                                                              Disclaimer                                                                                                                                                    \n1                                                                                                            Certain statements in this release concerning our future prospects are forward-looking statements. Forward-looking statements by\n2                                                                           their  nature                        involve  a  number  of  risks  and  uncertainties  that  could  cause  actual  results  to  differ  materially  from  market\n3                                                                                             expectations.  These  risks  and  uncertainties  include,  but  are  not  limited  to,  our  ability  to  manage  growth,  intense  competition\n4                                                                                                           among global IT services companies, various factors which may affect our profitability, such as wage increases or an appreciating\n5                                                                                             Rupee,  our  ability  to  attract  and  retain  highly  skilled  professionals,  time  and  cost  overruns  on  fixed-price,  fixed-time  frame\n6                                                                                                        contracts, liability for damages on our service contracts, client concentration, our ability to manage our international operations,\n7                                                                                                            restrictions on cross-border movement of skilled personnel, reduced demand for technology in our key focus areas, our ability to\n8                                                                                                              capitalize on the emerging technology landscape, the success of the companies in which TCS has made strategic investments, our\n9                                                                                          ability  to  successfully  complete  and  integrate  potential  acquisitions,  legal  restrictions  on  raising  capital  or  acquiring  companies\n10                                                                                             outside  India,  withdrawal  of  governmental  fiscal  incentives,  geo-political  instability,  regulatory  changes  impacting  the  business\n11                                                                                                 model,  supplier  concentration  and  resilience,  unauthorized  use  of  our  intellectual  property,  disruptions  in  telecommunication\n12                                                                                                       networks, cyber attacks, security or data breaches, social media adverse impact, pandemics, natural disasters, our ability to ensure\n13                                                                                                business  continuity  in  unforeseen circumstances,  and  general economic  conditions  affecting  our  industry.  TCS  may,  from  time to\n14                                                                                                            time, make additional written and oral forward-looking statements, including our reports to shareholders. These forward-looking\n15                                                                                                statements  represent  only  the  Company’s  current  intentions,  beliefs  or  expectations,  and  any  forward-looking  statement  speaks\n16                                              only as of the date on which it was made.                                                                                                                                                    \n17  The Company assumes no obligation to revise or update any forward-looking statements.                                                                                                                                                    ",
+    "metadata": {
+      "source": "..\\Data\\citation\\FactSheet.pdf",
+      "file_size_kb": 443.740234375,
+      "total_pages": 23,
+      "page_number": 2,
+      "content_type": "table",
+      "table_index": 1
+    }
+  },
+  {
+    "content": "TATA\n",
+    "metadata": {
+      "source": "..\\Data\\citation\\FactSheet.pdf",
+      "file_size_kb": 443.740234375,
+      "total_pages": 23,
+      "page_number": 2,
+      "content_type": "ocr_image",
+      "image_index": 1
+    }
+  },
+  {
+    "content": "TATA\nCONSULTANCY\nSERVICES\n",
+    "metadata": {
+      "source": "..\\Data\\citation\\FactSheet.pdf",
+      "file_size_kb": 443.740234375,
+      "total_pages": 23,
+      "page_number": 2,
+      "content_type": "ocr_image",
+      "image_index": 2
+    }
+  },
+  {
+    "content": "Q1 FY26 Performance Highlights\n3\n➢\nRevenue:\n- INR Revenue of ₹ 634,370 Mn, up 1.3% YoY\n- USD Revenue of $ 7,421 Mn, down 1.1% YoY\n- Constant currency revenue down 3.1% YoY\n➢\nProfit:\n- Operating Margin at 24.5%\n- Net Margin at 20.1%\n- Cash flow from operations at 100.3% of net profit\n➢\nDemand:\n-\nClients $100M+ down by 1 ; $10M+ up by 9 & $1M+ up by 26 YoY\n-\nOrder book TCV at $9.4 Bn; North America TCV at $4.4 Bn; BFSI TCV at $2.5 Bn, Consumer Business TCV at $1.6 Bn\n➢\nPeople:\n- Closing headcount: 613,069\n- LTM attrition at 13.8% in IT Services",
+    "metadata": {
+      "source": "..\\Data\\citation\\FactSheet.pdf",
+      "file_size_kb": 443.740234375,
+      "total_pages": 23,
+      "page_number": 3,
+      "content_type": "text"
+    }
+  },
+  {
+    "content": "                                 0                                                                                                                  1\n0   Q1 FY26 Performance Highlights                                                                                                                   \n1                                ➢                                                                                                           Revenue:\n2                                                                                                         -\\nINR Revenue of ₹ 634,370 Mn, up 1.3% YoY\n3                                                                                                          - USD Revenue of $ 7,421 Mn, down 1.1% YoY\n4                                                                                                          -\\nConstant currency revenue down 3.1% YoY\n5                                ➢                                                                                                            Profit:\n6                                                                                                                         - Operating Margin at 24.5%\n7                                                                                                                               - Net Margin at 20.1%\n8                                                                                                -\\nCash flow from operations at 100.3% of net profit\n9                                ➢                                                                                                            Demand:\n10                                                                                    -\\nClients $100M+ down by 1 ; $10M+ up by 9 & $1M+ up by 26 YoY\n11                                  -\\nOrder book TCV at $9.4 Bn; North America TCV at $4.4 Bn; BFSI TCV at $2.5 Bn, Consumer Business TCV at $1.6 Bn\n12                               ➢                                                                                                            People:\n13                                                                                                                      -\\nClosing headcount: 613,069\n14                                                                                                           -\\nLTM attrition at 13.8% in IT Services\n15                                                                                                                                                  3",
+    "metadata": {
+      "source": "..\\Data\\citation\\FactSheet.pdf",
+      "file_size_kb": 443.740234375,
+      "total_pages": 23,
+      "page_number": 3,
+      "content_type": "table",
+      "table_index": 1
+    }
+  },
+  {
+    "content": "TATA\n",
+    "metadata": {
+      "source": "..\\Data\\citation\\FactSheet.pdf",
+      "file_size_kb": 443.740234375,
+      "total_pages": 23,
+      "page_number": 3,
+      "content_type": "ocr_image",
+      "image_index": 1
+    }
+  },
+  {
+    "content": "TATA\nCONSULTANCY\nSERVICES\n",
+    "metadata": {
+      "source": "..\\Data\\citation\\FactSheet.pdf",
+      "file_size_kb": 443.740234375,
+      "total_pages": 23,
+      "page_number": 3,
+      "content_type": "ocr_image",
+      "image_index": 2
+    }
+  },
+  {
+    "content": "Growth Summary (INR)\n4\n626,130 \n642,590 \n639,730 \n644,790 \n634,370 \nQ1 FY25\nQ2 FY25\nQ3 FY25\nQ4 FY25\nQ1 FY26\nRevenue\n` Million\n120,400 \n119,090 \n123,800 \n122,240 \n127,600 \nQ1 FY25\nQ2 FY25\nQ3 FY25\nQ4 FY25\nQ1 FY26\nNet Income\n` Million\n154,420 \n154,650 \n156,570 \n156,010 \n155,140 \nQ1 FY25\nQ2 FY25\nQ3 FY25\nQ4 FY25\nQ1 FY26\nOperating Income\n` Million\n5.4%\n7.6%\n5.6%\n5.3%\n1.3%\n4.4%\n5.5%\n4.5%\n2.5%\n-3.1%\nQ1 FY25\nQ2 FY25\nQ3 FY25\nQ4 FY25\nQ1 FY26\nY-o-Y Growth\nY-o-Y Growth CC\n19.2%\n18.5%\n19.4%\n19.0%\n20.1%\nQ1 FY25\nQ2 FY25\nQ3 FY25\nQ4 FY25\nQ1 FY26\nNet margin (%)\n24.7%\n24.1%\n24.5%\n24.2%\n24.5%\nQ1 FY25\nQ2 FY25\nQ3 FY25\nQ4 FY25\nQ1 FY26\nOperating margin (%)",
+    "metadata": {
+      "source": "..\\Data\\citation\\FactSheet.pdf",
+      "file_size_kb": 443.740234375,
+      "total_pages": 23,
+      "page_number": 4,
+      "content_type": "text"
+    }
+  },
+  {
+    "content": "                       0                            1        2        3                              4        5\n0   Growth Summary (INR)                                                                                       \n1                                                                                                              \n2                                             Revenue                    Y-o-Y Growth\\nY-o-Y Growth CC         \n3                         639,730 \\n644,790 \\n642,590                                                          \n4                                                      634,370                                                 \n5                626,130                                                                                       \n6                                                                                                 7.6%         \n7                                                                  5.4%                     5.6%\\n5.3%         \n8               `Million                                                                                   1.3%\n9                                                                                                 5.5%         \n10                                                                 4.4%                                        \n11                                                                                                4.5%         \n12                                                                                                2.5%         \n13                                                                                                        -3.1%\n14               Q1 FY25    Q2 FY25\\nQ3 FY25\\nQ4 FY25  Q1 FY26  Q1 FY25      Q2 FY25\\nQ3 FY25\\nQ4 FY25  Q1 FY26\n15                                   Operating Income                             Operating margin (%)         \n16               154,420            156,010 \\n156,570  155,140                                                 \n17                                            154,650                                                          \n18                                                                24.7%                          24.5%    24.5%\n19              `Million                                                                  24.2%\\n24.1%         \n20               Q1 FY25    Q2 FY25\\nQ3 FY25\\nQ4 FY25  Q1 FY26  Q1 FY25      Q2 FY25\\nQ3 FY25\\nQ4 FY25  Q1 FY26\n21                                         Net Income                                   Net margin (%)         \n22                                                     127,600                                                 \n23               120,400            123,800 \\n122,240                                                          \n24                                            119,090                                                          \n25                                                                                                        20.1%\n26                                                                19.2%                          19.4%         \n27                                                                                               19.0%         \n28              `Million                                                                         18.5%         \n29               Q1 FY25    Q2 FY25\\nQ3 FY25\\nQ4 FY25  Q1 FY26  Q1 FY25      Q2 FY25\\nQ3 FY25\\nQ4 FY25  Q1 FY26\n30                                                           4                                                 ",
+    "metadata": {
+      "source": "..\\Data\\citation\\FactSheet.pdf",
+      "file_size_kb": 443.740234375,
+      "total_pages": 23,
+      "page_number": 4,
+      "content_type": "table",
+      "table_index": 1
+    }
+  },
+  {
+    "content": "TATA\n",
+    "metadata": {
+      "source": "..\\Data\\citation\\FactSheet.pdf",
+      "file_size_kb": 443.740234375,
+      "total_pages": 23,
+      "page_number": 4,
+      "content_type": "ocr_image",
+      "image_index": 1
+    }
+  },
+  {
+    "content": "TATA\nCONSULTANCY\nSERVICES\n",
+    "metadata": {
+      "source": "..\\Data\\citation\\FactSheet.pdf",
+      "file_size_kb": 443.740234375,
+      "total_pages": 23,
+      "page_number": 4,
+      "content_type": "ocr_image",
+      "image_index": 2
+    }
+  },
+  {
+    "content": "19.2%\n18.5%\n19.4%\n19.0%\n20.1%\nQ1 FY25\nQ2 FY25\nQ3 FY25\nQ4 FY25\nQ1 FY26\nNet margin (%)\nGrowth Summary (USD)\n5\n7,505\n7,670\n7,539\n7,465\n7,421\nQ1 FY25\nQ2 FY25\nQ3 FY25\nQ4 FY25\nQ1 FY26\nRevenue\n$  Million\n3.9%\n6.4%\n3.6%\n1.4%\n-1.1%\n4.4%\n5.5%\n4.5%\n2.5%\n-3.1%\nQ1 FY25\nQ2 FY25\nQ3 FY25\nQ4 FY25\nQ1 FY26\nY-o-Y Growth\nY-o-Y Growth CC\n1,851\n1,846\n1,844\n1,807\n1,815\nQ1 FY25\nQ2 FY25\nQ3 FY25\nQ4 FY25\nQ1 FY26\nOperating Income\n$ Million\n24.7%\n24.1%\n24.5%\n24.2%\n24.5%\nQ1 FY25\nQ2 FY25\nQ3 FY25\nQ4 FY25\nQ1 FY26\nOperating margin (%)\n1,442\n1,421\n1,458\n1,418\n1,493\nQ1 FY25\nQ2 FY25\nQ3 FY25\nQ4 FY25\nQ1 FY26\nNet Income\n$  Million",
+    "metadata": {
+      "source": "..\\Data\\citation\\FactSheet.pdf",
+      "file_size_kb": 443.740234375,
+      "total_pages": 23,
+      "page_number": 5,
+      "content_type": "text"
+    }
+  },
+  {
+    "content": "                       0        1                          2        3        4                                   5\n0   Growth Summary (USD)                                                                                          \n1                                                                                                                 \n2                                                    Revenue                         Y-o-Y Growth\\nY-o-Y Growth CC\n3                                                      7,670                                                  6.4%\n4                           7,505               7,539\\n7,465    7,421                                             \n5                                                                         4.4%                                4.5%\n6                                                                                                             2.5%\n7             $  Million                                                                               5.5%\\n-1.1%\n8                                                                         3.9%                                3.6%\n9                                                                                                             1.4%\n10                                                                                                           -3.1%\n11                        Q1 FY25  Q2 FY25\\nQ3 FY25\\nQ4 FY25  Q1 FY26                                             \n12                                                                     Q1 FY25  Q2 FY25\\nQ3 FY25\\nQ4 FY25\\nQ1 FY26\n13                                          Operating Income                                  Operating margin (%)\n14                          1,851               1,846\\n1,844    1,815                                             \n15                                                     1,807                                                      \n16                                                                       24.7%                                    \n17                                                                                                    24.5%\\n24.5%\n18              $Million                                                                              24.1%\\n24.2%\n19                        Q1 FY25  Q2 FY25\\nQ3 FY25\\nQ4 FY25  Q1 FY26  Q1 FY25  Q2 FY25\\nQ3 FY25\\nQ4 FY25\\nQ1 FY26\n20                                                                                                                \n21                                                Net Income                                        Net margin (%)\n22                                                              1,493                                             \n23                          1,442                      1,458                                                      \n24                                              1,421\\n1,418                                                      \n25                                                                                                           19.4%\n26                                                                                                           20.1%\n27            $  Million                                                 19.2%                        18.5%\\n19.0%\n28                        Q1 FY25  Q2 FY25\\nQ3 FY25\\nQ4 FY25  Q1 FY26  Q1 FY25  Q2 FY25\\nQ3 FY25\\nQ4 FY25\\nQ1 FY26\n29                                                                  5                                             ",
+    "metadata": {
+      "source": "..\\Data\\citation\\FactSheet.pdf",
+      "file_size_kb": 443.740234375,
+      "total_pages": 23,
+      "page_number": 5,
+      "content_type": "table",
+      "table_index": 1
+    }
+  },
+  {
+    "content": "TATA\n",
+    "metadata": {
+      "source": "..\\Data\\citation\\FactSheet.pdf",
+      "file_size_kb": 443.740234375,
+      "total_pages": 23,
+      "page_number": 5,
+      "content_type": "ocr_image",
+      "image_index": 1
+    }
+  },
+  {
+    "content": "TATA\nCONSULTANCY\nSERVICES\n",
+    "metadata": {
+      "source": "..\\Data\\citation\\FactSheet.pdf",
+      "file_size_kb": 443.740234375,
+      "total_pages": 23,
+      "page_number": 5,
+      "content_type": "ocr_image",
+      "image_index": 2
+    }
+  },
+  {
+    "content": "Operational Parameters",
+    "metadata": {
+      "source": "..\\Data\\citation\\FactSheet.pdf",
+      "file_size_kb": 443.740234375,
+      "total_pages": 23,
+      "page_number": 6,
+      "content_type": "text"
+    }
+  },
+  {
+    "content": "                        0\n0  Operational Parameters",
+    "metadata": {
+      "source": "..\\Data\\citation\\FactSheet.pdf",
+      "file_size_kb": 443.740234375,
+      "total_pages": 23,
+      "page_number": 6,
+      "content_type": "table",
+      "table_index": 1
+    }
+  },
+  {
+    "content": "Growth by Market\n7\nGeography (%)\nQ1 FY25\nQ1 FY26\nY-o-Y\nCC Growth\nAmericas\nNorth America\n49.5\n48.7\n- 2.7\nLatin America\n1.9\n1.9\n 3.5\nEurope\nUK\n16.9\n18.0\n- 1.3\nContinental Europe\n14.4\n15.0\n- 3.1\nAsia Pacific\n7.8\n8.4\n 3.6\nIndia\n7.5\n5.8\n- 21.7\nMEA\n2.0\n2.2\n 9.4\nTotal\n100.0\n100.0\n-3.1",
+    "metadata": {
+      "source": "..\\Data\\citation\\FactSheet.pdf",
+      "file_size_kb": 443.740234375,
+      "total_pages": 23,
+      "page_number": 7,
+      "content_type": "text"
+    }
+  },
+  {
+    "content": "                   0                   1  2        3        4          5\n0   Growth by Market                                                    \n1                                                                  Y-o-Y\n2                          Geography (%)     Q1 FY25  Q1 FY26           \n3                                                              CC Growth\n4                               Americas                                \n5                          North America        49.5     48.7      - 2.7\n6                          Latin America         1.9      1.9        3.5\n7                                 Europe                                \n8                                     UK        16.9     18.0      - 1.3\n9                     Continental Europe        14.4     15.0      - 3.1\n10                          Asia Pacific         7.8      8.4        3.6\n11                                 India         7.5      5.8     - 21.7\n12                                   MEA         2.0      2.2        9.4\n13                                 Total       100.0    100.0       -3.1\n14                                        7                             ",
+    "metadata": {
+      "source": "..\\Data\\citation\\FactSheet.pdf",
+      "file_size_kb": 443.740234375,
+      "total_pages": 23,
+      "page_number": 7,
+      "content_type": "table",
+      "table_index": 1
+    }
+  },
+  {
+    "content": "TATA\n",
+    "metadata": {
+      "source": "..\\Data\\citation\\FactSheet.pdf",
+      "file_size_kb": 443.740234375,
+      "total_pages": 23,
+      "page_number": 7,
+      "content_type": "ocr_image",
+      "image_index": 1
+    }
+  },
+  {
+    "content": "TATA\nCONSULTANCY\nSERVICES\n",
+    "metadata": {
+      "source": "..\\Data\\citation\\FactSheet.pdf",
+      "file_size_kb": 443.740234375,
+      "total_pages": 23,
+      "page_number": 7,
+      "content_type": "ocr_image",
+      "image_index": 2
+    }
+  },
+  {
+    "content": "Growth by Domain\n8\nVertical (%)\nQ1 FY25\nQ1 FY26\nY-o-Y\nCC Growth\nBFSI\n30.9\n32.0\n 1.0\nConsumer Business\n15.4\n15.6\n- 3.1\nLife Sciences & Healthcare\n11.0\n10.2\n- 9.6\nManufacturing\n8.8\n8.7\n- 4.0\nTechnology & Services\n8.1\n8.4\n 1.8\nCommunication & Media\n6.2\n5.8\n- 9.6\nEnergy, Resources and Utilities\n5.6\n5.9\n 2.8\nRegional Markets & Others\n14.0\n13.4\n- 8.6\nTotal\n100.0\n100.0\n- 3.1",
+    "metadata": {
+      "source": "..\\Data\\citation\\FactSheet.pdf",
+      "file_size_kb": 443.740234375,
+      "total_pages": 23,
+      "page_number": 8,
+      "content_type": "text"
+    }
+  },
+  {
+    "content": "                                  0        1        2          3\n0                                                          Y-o-Y\n1                      Vertical (%)  Q1 FY25  Q1 FY26           \n2                                                      CC Growth\n3                              BFSI     30.9     32.0        1.0\n4                 Consumer Business     15.4     15.6      - 3.1\n5        Life Sciences & Healthcare     11.0     10.2      - 9.6\n6                     Manufacturing      8.8      8.7      - 4.0\n7             Technology & Services      8.1      8.4        1.8\n8             Communication & Media      6.2      5.8      - 9.6\n9   Energy, Resources and Utilities      5.6      5.9        2.8\n10        Regional Markets & Others     14.0     13.4      - 8.6\n11                            Total    100.0    100.0      - 3.1",
+    "metadata": {
+      "source": "..\\Data\\citation\\FactSheet.pdf",
+      "file_size_kb": 443.740234375,
+      "total_pages": 23,
+      "page_number": 8,
+      "content_type": "table",
+      "table_index": 1
+    }
+  },
+  {
+    "content": "TATA\n",
+    "metadata": {
+      "source": "..\\Data\\citation\\FactSheet.pdf",
+      "file_size_kb": 443.740234375,
+      "total_pages": 23,
+      "page_number": 8,
+      "content_type": "ocr_image",
+      "image_index": 1
+    }
+  },
+  {
+    "content": "TATA\nCONSULTANCY\nSERVICES\n",
+    "metadata": {
+      "source": "..\\Data\\citation\\FactSheet.pdf",
+      "file_size_kb": 443.740234375,
+      "total_pages": 23,
+      "page_number": 8,
+      "content_type": "ocr_image",
+      "image_index": 2
+    }
+  },
+  {
+    "content": "*Last Twelve Months' services revenues\nClient Parameters\n9\nUS$ 1m+ Clients\n1310\n1336\nUS$ 5m+ Clients\n697\n714\nUS$ 10m+ Clients\n486\n495\nUS$ 20m+ Clients\n300\n300\nUS$ 50m+ Clients\n140\n131\nUS$ 100m+ Clients\n63\n62\nClients  Contribution\nQ1 FY25\nQ1 FY26",
+    "metadata": {
+      "source": "..\\Data\\citation\\FactSheet.pdf",
+      "file_size_kb": 443.740234375,
+      "total_pages": 23,
+      "page_number": 9,
+      "content_type": "text"
+    }
+  },
+  {
+    "content": "                       0        1        2\n0  Clients  Contribution  Q1 FY25  Q1 FY26\n1        US$ 1m+ Clients     1310     1336\n2        US$ 5m+ Clients      697      714\n3       US$ 10m+ Clients      486      495\n4       US$ 20m+ Clients      300      300\n5       US$ 50m+ Clients      140      131\n6      US$ 100m+ Clients       63       62",
+    "metadata": {
+      "source": "..\\Data\\citation\\FactSheet.pdf",
+      "file_size_kb": 443.740234375,
+      "total_pages": 23,
+      "page_number": 9,
+      "content_type": "table",
+      "table_index": 1
+    }
+  },
+  {
+    "content": "TATA\n",
+    "metadata": {
+      "source": "..\\Data\\citation\\FactSheet.pdf",
+      "file_size_kb": 443.740234375,
+      "total_pages": 23,
+      "page_number": 9,
+      "content_type": "ocr_image",
+      "image_index": 1
+    }
+  },
+  {
+    "content": "TATA\nCONSULTANCY\nSERVICES\n",
+    "metadata": {
+      "source": "..\\Data\\citation\\FactSheet.pdf",
+      "file_size_kb": 443.740234375,
+      "total_pages": 23,
+      "page_number": 9,
+      "content_type": "ocr_image",
+      "image_index": 2
+    }
+  },
+  {
+    "content": "Human Resources",
+    "metadata": {
+      "source": "..\\Data\\citation\\FactSheet.pdf",
+      "file_size_kb": 443.740234375,
+      "total_pages": 23,
+      "page_number": 10,
+      "content_type": "text"
+    }
+  },
+  {
+    "content": "                 0\n0  Human Resources",
+    "metadata": {
+      "source": "..\\Data\\citation\\FactSheet.pdf",
+      "file_size_kb": 443.740234375,
+      "total_pages": 23,
+      "page_number": 10,
+      "content_type": "table",
+      "table_index": 1
+    }
+  },
+  {
+    "content": "Total Employee Base\n11\nQ4-24\nQ1-25\nQ2-25\nQ3-25\nQ4-25\nQ1-26\n601,546\n606,998\n612,724\n607,354\n607,979\n613,069 \nAttrition*:  \n• 13.8% (LTM), IT Services\nDiversity: \n• 35.1 % Women employees\n• 151 Nationalities\n*Excluding Subsidiaries\nTalent Development:\n• 15Mn Learning Hrs (YTD)\n• 1.3Mn competencies acquired (YTD)\n• 192K+ high demand competencies \nacquired (YTD)",
+    "metadata": {
+      "source": "..\\Data\\citation\\FactSheet.pdf",
+      "file_size_kb": 443.740234375,
+      "total_pages": 23,
+      "page_number": 11,
+      "content_type": "text"
+    }
+  },
+  {
+    "content": "                      0        1        2        3        4        5           6                                  7\n0   Total Employee Base                                                                                            \n1                                                                                                       Attrition*:\n2                                                            613,069                                               \n3                                 612,724                                                                          \n4                                                                              •           13.8% (LTM), IT Services\n5                                                                     Diversity:                                   \n6                                                   607,979                                                        \n7                                          607,354                             •                                   \n8                                                                                            35.1 % Women employees\n9                        606,998                                                                                   \n10                                                                             •                  151 Nationalities\n11                                                                                          *Excluding Subsidiaries\n12              601,546                                                                                            \n13                                                                                              Talent Development:\n14                                                                             •            15Mn Learning Hrs (YTD)\n15                                                                             •  1.3Mn competencies acquired (YTD)\n16                Q4-24    Q1-25    Q2-25    Q3-25    Q4-25    Q1-26           •                                   \n17                                                                                   192K+ high demand competencies\n18                                                                                                   acquired (YTD)\n19                                                       11                                                        ",
+    "metadata": {
+      "source": "..\\Data\\citation\\FactSheet.pdf",
+      "file_size_kb": 443.740234375,
+      "total_pages": 23,
+      "page_number": 11,
+      "content_type": "table",
+      "table_index": 1
+    }
+  },
+  {
+    "content": "TATA\n",
+    "metadata": {
+      "source": "..\\Data\\citation\\FactSheet.pdf",
+      "file_size_kb": 443.740234375,
+      "total_pages": 23,
+      "page_number": 11,
+      "content_type": "ocr_image",
+      "image_index": 1
+    }
+  },
+  {
+    "content": "TATA\nCONSULTANCY\nSERVICES\n",
+    "metadata": {
+      "source": "..\\Data\\citation\\FactSheet.pdf",
+      "file_size_kb": 443.740234375,
+      "total_pages": 23,
+      "page_number": 11,
+      "content_type": "ocr_image",
+      "image_index": 2
+    }
+  },
+  {
+    "content": "Annexure",
+    "metadata": {
+      "source": "..\\Data\\citation\\FactSheet.pdf",
+      "file_size_kb": 443.740234375,
+      "total_pages": 23,
+      "page_number": 12,
+      "content_type": "text"
+    }
+  },
+  {
+    "content": "          0\n0  Annexure",
+    "metadata": {
+      "source": "..\\Data\\citation\\FactSheet.pdf",
+      "file_size_kb": 443.740234375,
+      "total_pages": 23,
+      "page_number": 12,
+      "content_type": "table",
+      "table_index": 1
+    }
+  },
+  {
+    "content": "IFRS Income Statement\n13\nRevenue\n626,130\n634,370\n100.00\n100.00\nCost of revenue\n376,610\n386,120\n60.15\n60.87\nGross margin\n249,520\n248,250\n39.85\n39.13\nSG & A expenses\n95,100\n93,110\n15.19\n14.67\nOperating income\n154,420\n155,140\n24.66\n24.46\nOther income (expense), net\n7,890\n14,650\n1.26\n2.31\nIncome before income taxes\n162,310\n169,790\n25.92\n26.77\nIncome taxes\n41,260\n41,600\n6.59\n6.56\nIncome after income taxes\n121,050\n128,190\n19.33\n20.21\nNon-controlling interests\n650\n590\n0.10\n0.09\nNet income\n120,400\n127,600\n19.23\n20.12\n Earnings per share in ₹\n33.28\n35.27\nQ1 FY26\n₹ Million\nQ1 FY25\nQ1 FY25\n% of Revenue\nQ1 FY26\nConsolidated IFRS",
+    "metadata": {
+      "source": "..\\Data\\citation\\FactSheet.pdf",
+      "file_size_kb": 443.740234375,
+      "total_pages": 23,
+      "page_number": 13,
+      "content_type": "text"
+    }
+  },
+  {
+    "content": "                              0          1        2             3        4\n0                                ₹ Million           % of Revenue         \n1             Consolidated IFRS                                           \n2                                  Q1 FY25  Q1 FY26       Q1 FY25  Q1 FY26\n3                       Revenue    626,130  634,370        100.00   100.00\n4               Cost of revenue    376,610  386,120         60.15    60.87\n5                  Gross margin    249,520  248,250         39.85    39.13\n6               SG & A expenses     95,100   93,110         15.19    14.67\n7              Operating income    154,420  155,140         24.66    24.46\n8   Other income (expense), net      7,890   14,650          1.26     2.31\n9    Income before income taxes    162,310  169,790         25.92    26.77\n10                 Income taxes     41,260   41,600          6.59     6.56\n11    Income after income taxes    121,050  128,190         19.33    20.21\n12    Non-controlling interests        650      590          0.10     0.09\n13                   Net income    120,400  127,600         19.23    20.12\n14      Earnings per share in ₹      33.28    35.27                       ",
+    "metadata": {
+      "source": "..\\Data\\citation\\FactSheet.pdf",
+      "file_size_kb": 443.740234375,
+      "total_pages": 23,
+      "page_number": 13,
+      "content_type": "table",
+      "table_index": 1
+    }
+  },
+  {
+    "content": "TATA\n",
+    "metadata": {
+      "source": "..\\Data\\citation\\FactSheet.pdf",
+      "file_size_kb": 443.740234375,
+      "total_pages": 23,
+      "page_number": 13,
+      "content_type": "ocr_image",
+      "image_index": 1
+    }
+  },
+  {
+    "content": "TATA\nCONSULTANCY\nSERVICES\n",
+    "metadata": {
+      "source": "..\\Data\\citation\\FactSheet.pdf",
+      "file_size_kb": 443.740234375,
+      "total_pages": 23,
+      "page_number": 13,
+      "content_type": "ocr_image",
+      "image_index": 2
+    }
+  },
+  {
+    "content": "COR – SG&A Details\n14\nEmployee cost\n287,850\n301,960\n45.97\n47.60\nFees to external consultants\n25,210\n30,630\n4.03\n4.83\nEquipment and software\n21,510\n7,260\n3.43\n1.14\nFacility expenses\n5,170\n5,940\n0.83\n0.94\nDepreciation\n9,400\n10,670\n1.50\n1.68\nTravel\n6,130\n6,070\n0.98\n0.96\nCommunication\n3,730\n4,320\n0.60\n0.68\nOther expenses\n17,610\n19,270\n2.81\n3.04\nCost of Revenue\n376,610\n386,120\n60.15\n60.87\nEmployee cost\n76,310\n75,190\n12.19\n11.85\nFees to external consultants\n1,450\n1,760\n0.23\n0.28\nFacility expenses\n3,110\n3,220\n0.50\n0.51\nDepreciation\n2,800\n2,940\n0.45\n0.46\nTravel\n2,280\n2,310\n0.36\n0.36\nCommunication\n1,770\n1,880\n0.28\n0.30\nProvision for Doubtful Debts\n430\n250\n0.07\n0.04\nOther expenses\n6,950\n5,560\n1.11\n0.87\nS G & A expenses\n95,100\n93,110\n15.19\n14.67\nCOR\nQ1 FY26\nSG&A\nQ1 FY25\n% of Revenue\n₹ Million\nQ1 FY25\n₹ Million\nQ1 FY26\nQ1 FY25\nQ1 FY26\n% of Revenue\nQ1 FY25\nQ1 FY26",
+    "metadata": {
+      "source": "..\\Data\\citation\\FactSheet.pdf",
+      "file_size_kb": 443.740234375,
+      "total_pages": 23,
+      "page_number": 14,
+      "content_type": "text"
+    }
+  },
+  {
+    "content": "                               0          1        2             3        4\n0                                 ₹ Million           % of Revenue         \n1                            COR                                           \n2                                   Q1 FY25  Q1 FY26       Q1 FY25  Q1 FY26\n3                  Employee cost    287,850  301,960         45.97    47.60\n4   Fees to external consultants     25,210   30,630          4.03     4.83\n5         Equipment and software     21,510    7,260          3.43     1.14\n6              Facility expenses      5,170    5,940          0.83     0.94\n7                   Depreciation      9,400   10,670          1.50     1.68\n8                         Travel      6,130    6,070          0.98     0.96\n9                  Communication      3,730    4,320          0.60     0.68\n10                Other expenses     17,610   19,270          2.81     3.04\n11               Cost of Revenue    376,610  386,120         60.15    60.87",
+    "metadata": {
+      "source": "..\\Data\\citation\\FactSheet.pdf",
+      "file_size_kb": 443.740234375,
+      "total_pages": 23,
+      "page_number": 14,
+      "content_type": "table",
+      "table_index": 1
+    }
+  },
+  {
+    "content": "TATA\n",
+    "metadata": {
+      "source": "..\\Data\\citation\\FactSheet.pdf",
+      "file_size_kb": 443.740234375,
+      "total_pages": 23,
+      "page_number": 14,
+      "content_type": "ocr_image",
+      "image_index": 1
+    }
+  },
+  {
+    "content": "TATA\nCONSULTANCY\nSERVICES\n",
+    "metadata": {
+      "source": "..\\Data\\citation\\FactSheet.pdf",
+      "file_size_kb": 443.740234375,
+      "total_pages": 23,
+      "page_number": 14,
+      "content_type": "ocr_image",
+      "image_index": 2
+    }
+  },
+  {
+    "content": "IFRS in ₹ Mn\nQ1 FY25\nQ1 FY26\n Net Cash from Operations \n      111,680       128,040 \n Capital Expenditure \n          8,750         14,040 \n Free Cash Flow \n      102,930       114,000 \n Dividends Paid \n      101,960       109,400 \n Operating Cash Flow to Sales (%) \n            17.8             20.2 \n Operating Cash Flow to Net Profit (%) \n            92.8           100.3 \n Total Cash and Investments \n      466,470       487,040 \nCash Flow Summary\n15",
+    "metadata": {
+      "source": "..\\Data\\citation\\FactSheet.pdf",
+      "file_size_kb": 443.740234375,
+      "total_pages": 23,
+      "page_number": 15,
+      "content_type": "text"
+    }
+  },
+  {
+    "content": "                                       0        1        2\n0                           IFRS in ₹ Mn  Q1 FY25  Q1 FY26\n1               Net Cash from Operations  111,680  128,040\n2                    Capital Expenditure    8,750   14,040\n3                         Free Cash Flow  102,930  114,000\n4                         Dividends Paid  101,960  109,400\n5       Operating Cash Flow to Sales (%)     17.8     20.2\n6  Operating Cash Flow to Net Profit (%)     92.8    100.3\n7             Total Cash and Investments  466,470  487,040",
+    "metadata": {
+      "source": "..\\Data\\citation\\FactSheet.pdf",
+      "file_size_kb": 443.740234375,
+      "total_pages": 23,
+      "page_number": 15,
+      "content_type": "table",
+      "table_index": 1
+    }
+  },
+  {
+    "content": "TATA\n",
+    "metadata": {
+      "source": "..\\Data\\citation\\FactSheet.pdf",
+      "file_size_kb": 443.740234375,
+      "total_pages": 23,
+      "page_number": 15,
+      "content_type": "ocr_image",
+      "image_index": 1
+    }
+  },
+  {
+    "content": "TATA\nCONSULTANCY\nSERVICES\n",
+    "metadata": {
+      "source": "..\\Data\\citation\\FactSheet.pdf",
+      "file_size_kb": 443.740234375,
+      "total_pages": 23,
+      "page_number": 15,
+      "content_type": "ocr_image",
+      "image_index": 2
+    }
+  },
+  {
+    "content": "IFRS Statement of Financial Position\n16\n31-Mar-25\n30-Jun-25\nAssets\nProperty and equipment\n129,320\n131,000\nRight-of-use Assets\n92,750\n94,260\nIntangible assets and Goodwill\n49,640\n48,530\nAccounts Receivable\n502,330\n531,030\nUnbilled Revenues\n154,700\n161,560\nInvested Funds\n472,220\n487,040\nOther current assets\n124,860\n140,070\nOther non current assets\n91,730\n92,370\n₹\nTotal assets\n1,617,550\n1,685,860\nLiabilities and Shareholders' Equity\nShareholders' Funds\n968,820\n1,000,360\nCurrent liabilities\n530,010\n565,550\nNon-current liabilities\n108,570\n109,740\nNon-controlling interests\n10,150\n10,210\nTotal Liabilities\n1,617,550\n1,685,860\nConsolidated IFRS\n₹ Million\nDetailed financials are uploaded.",
+    "metadata": {
+      "source": "..\\Data\\citation\\FactSheet.pdf",
+      "file_size_kb": 443.740234375,
+      "total_pages": 23,
+      "page_number": 16,
+      "content_type": "text"
+    }
+  },
+  {
+    "content": "                                       0          1          2  3\n0                                                    ₹ Million   \n1                      Consolidated IFRS                         \n2                                         31-Mar-25  30-Jun-25   \n3                                 Assets                         \n4                 Property and equipment    129,320    131,000   \n5                    Right-of-use Assets     92,750     94,260   \n6         Intangible assets and Goodwill     49,640     48,530   \n7                    Accounts Receivable    502,330    531,030   \n8                      Unbilled Revenues    154,700    161,560   \n9                         Invested Funds    472,220    487,040   \n10                  Other current assets    124,860    140,070   \n11              Other non current assets     91,730     92,370   \n12                                                              ₹\n13                          Total assets  1,617,550  1,685,860   \n14  Liabilities and Shareholders' Equity                         \n15                   Shareholders' Funds    968,820  1,000,360   \n16                   Current liabilities    530,010    565,550   \n17               Non-current liabilities    108,570    109,740   \n18             Non-controlling interests     10,150     10,210   \n19                     Total Liabilities  1,617,550  1,685,860   ",
+    "metadata": {
+      "source": "..\\Data\\citation\\FactSheet.pdf",
+      "file_size_kb": 443.740234375,
+      "total_pages": 23,
+      "page_number": 16,
+      "content_type": "table",
+      "table_index": 1
+    }
+  },
+  {
+    "content": "TATA\n",
+    "metadata": {
+      "source": "..\\Data\\citation\\FactSheet.pdf",
+      "file_size_kb": 443.740234375,
+      "total_pages": 23,
+      "page_number": 16,
+      "content_type": "ocr_image",
+      "image_index": 1
+    }
+  },
+  {
+    "content": "TATA\nCONSULTANCY\nSERVICES\n",
+    "metadata": {
+      "source": "..\\Data\\citation\\FactSheet.pdf",
+      "file_size_kb": 443.740234375,
+      "total_pages": 23,
+      "page_number": 16,
+      "content_type": "ocr_image",
+      "image_index": 2
+    }
+  },
+  {
+    "content": "Revenue\n7,505\n7,421\n100.00\n100.00\nCost of revenue\n4,514\n4,517\n60.15\n60.87\nGross margin\n2,991\n2,904\n39.85\n39.13\nSG & A expenses\n1,140\n1,089\n15.19\n14.67\nOperating income\n1,851\n1,815\n24.66\n24.46\nOther income (expense), net\n94\n172\n1.26\n2.31\nIncome before income taxes\n1,945\n1,987\n25.92\n26.77\nIncome taxes\n495\n487\n6.59\n6.56\nIncome after income taxes\n1,450\n1,500\n19.33\n20.21\nNon-controlling interests\n8\n7\n0.10\n0.09\nNet income\n1,442\n1,493\n19.23\n20.12\nEarnings per share in $\n0.40\n0.41\nConsolidated IFRS\nQ1 FY25\nQ1 FY26\n$ Million\nQ1 FY26\nQ1 FY25\n% of Revenue\nIFRS Income Statement – In USD\n17",
+    "metadata": {
+      "source": "..\\Data\\citation\\FactSheet.pdf",
+      "file_size_kb": 443.740234375,
+      "total_pages": 23,
+      "page_number": 17,
+      "content_type": "text"
+    }
+  },
+  {
+    "content": "                              0          1        2             3        4\n0                                $ Million           % of Revenue         \n1             Consolidated IFRS                                           \n2                                  Q1 FY25  Q1 FY26       Q1 FY25  Q1 FY26\n3                       Revenue      7,505    7,421        100.00   100.00\n4               Cost of revenue      4,514    4,517         60.15    60.87\n5                  Gross margin      2,991    2,904         39.85    39.13\n6               SG & A expenses      1,140    1,089         15.19    14.67\n7              Operating income      1,851    1,815         24.66    24.46\n8   Other income (expense), net         94      172          1.26     2.31\n9    Income before income taxes      1,945    1,987         25.92    26.77\n10                 Income taxes        495      487          6.59     6.56\n11    Income after income taxes      1,450    1,500         19.33    20.21\n12    Non-controlling interests          8        7          0.10     0.09\n13                   Net income      1,442    1,493         19.23    20.12",
+    "metadata": {
+      "source": "..\\Data\\citation\\FactSheet.pdf",
+      "file_size_kb": 443.740234375,
+      "total_pages": 23,
+      "page_number": 17,
+      "content_type": "table",
+      "table_index": 1
+    }
+  },
+  {
+    "content": "TATA\n",
+    "metadata": {
+      "source": "..\\Data\\citation\\FactSheet.pdf",
+      "file_size_kb": 443.740234375,
+      "total_pages": 23,
+      "page_number": 17,
+      "content_type": "ocr_image",
+      "image_index": 1
+    }
+  },
+  {
+    "content": "TATA\nCONSULTANCY\nSERVICES\n",
+    "metadata": {
+      "source": "..\\Data\\citation\\FactSheet.pdf",
+      "file_size_kb": 443.740234375,
+      "total_pages": 23,
+      "page_number": 17,
+      "content_type": "ocr_image",
+      "image_index": 2
+    }
+  },
+  {
+    "content": "Employee cost\n3,450\n3,532\n45.97\n47.60\nFees to external consultants\n302\n358\n4.03\n4.83\nEquipment and software\n258\n85\n3.43\n1.14\nFacility expenses\n62\n69\n0.83\n0.94\nDepreciation\n113\n125\n1.50\n1.68\nTravel\n73\n71\n0.98\n0.96\nCommunication\n45\n51\n0.60\n0.68\nOther expenses\n211\n226\n2.81\n3.04\nCost of Revenue\n4,514\n4,517\n60.15\n60.87\nEmployee cost\n915\n880\n12.19\n11.85\nFees to external consultants\n17\n21\n0.23\n0.28\nFacility expenses\n37\n38\n0.50\n0.51\nDepreciation\n34\n34\n0.45\n0.46\nTravel\n27\n27\n0.36\n0.36\nCommunication\n21\n22\n0.28\n0.30\nProvision for Doubtful Debts\n5\n3\n0.07\n0.04\nOther expenses\n84\n64\n1.11\n0.87\nSG&A expenses\n1,140\n1,089\n15.19\n14.67\nSG&A\nQ1 FY25\n$ Million\nQ1 FY26\nCOR\n$ Million\nQ1 FY25\nQ1 FY26\nQ1 FY26\nQ1 FY26\n% of Revenue\nQ1 FY25\n% of Revenue\nQ1 FY25\nCOR – SG&A Details – In USD\n18",
+    "metadata": {
+      "source": "..\\Data\\citation\\FactSheet.pdf",
+      "file_size_kb": 443.740234375,
+      "total_pages": 23,
+      "page_number": 18,
+      "content_type": "text"
+    }
+  },
+  {
+    "content": "                               0          1        2             3        4\n0                                 $ Million           % of Revenue         \n1                            COR                                           \n2                                   Q1 FY25  Q1 FY26       Q1 FY25  Q1 FY26\n3                  Employee cost      3,450    3,532         45.97    47.60\n4   Fees to external consultants        302      358          4.03     4.83\n5         Equipment and software        258       85          3.43     1.14\n6              Facility expenses         62       69          0.83     0.94\n7                   Depreciation        113      125          1.50     1.68\n8                         Travel         73       71          0.98     0.96\n9                  Communication         45       51          0.60     0.68\n10                Other expenses        211      226          2.81     3.04\n11               Cost of Revenue      4,514    4,517         60.15    60.87",
+    "metadata": {
+      "source": "..\\Data\\citation\\FactSheet.pdf",
+      "file_size_kb": 443.740234375,
+      "total_pages": 23,
+      "page_number": 18,
+      "content_type": "table",
+      "table_index": 1
+    }
+  },
+  {
+    "content": "TATA\n",
+    "metadata": {
+      "source": "..\\Data\\citation\\FactSheet.pdf",
+      "file_size_kb": 443.740234375,
+      "total_pages": 23,
+      "page_number": 18,
+      "content_type": "ocr_image",
+      "image_index": 1
+    }
+  },
+  {
+    "content": "TATA\nCONSULTANCY\nSERVICES\n",
+    "metadata": {
+      "source": "..\\Data\\citation\\FactSheet.pdf",
+      "file_size_kb": 443.740234375,
+      "total_pages": 23,
+      "page_number": 18,
+      "content_type": "ocr_image",
+      "image_index": 2
+    }
+  },
+  {
+    "content": "IFRS Statement of Financial Position in USD\n19\n31-Mar-25\n30-Jun-25\nAssets\nProperty and equipment\n1,514\n1,530\nRight-of-use Assets\n1,086\n1,101\nIntangible assets and Goodwill\n580\n567\nAccounts Receivable\n5,880\n6,202\nUnbilled Revenues\n1,811\n1,887\nInvested Funds\n5,526\n5,687\nOther current assets\n1,458\n1,632\nOther non current assets\n1,076\n1,080\nTotal assets\n18,931\n19,686\nLiabilities and Shareholders' Equity\nShareholders' Funds\n11,337\n11,679\nCurrent liabilities\n6,202\n6,603\nNon-current liabilities\n1,270\n1,282\nNon-controlling interests\n122\n122\nTotal Liabilities\n18,931\n19,686\n$ Million\nConsolidated IFRS\nDetailed financials are uploaded.",
+    "metadata": {
+      "source": "..\\Data\\citation\\FactSheet.pdf",
+      "file_size_kb": 443.740234375,
+      "total_pages": 23,
+      "page_number": 19,
+      "content_type": "text"
+    }
+  },
+  {
+    "content": "                                       0          1          2\n0                                         $ Million           \n1                      Consolidated IFRS                      \n2                                         31-Mar-25  30-Jun-25\n3                                 Assets                      \n4                 Property and equipment      1,514      1,530\n5                    Right-of-use Assets      1,086      1,101\n6         Intangible assets and Goodwill        580        567\n7                    Accounts Receivable      5,880      6,202\n8                      Unbilled Revenues      1,811      1,887\n9                         Invested Funds      5,526      5,687\n10                  Other current assets      1,458      1,632\n11              Other non current assets      1,076      1,080\n12                          Total assets     18,931     19,686\n13  Liabilities and Shareholders' Equity                      \n14                   Shareholders' Funds     11,337     11,679\n15                   Current liabilities      6,202      6,603\n16               Non-current liabilities      1,270      1,282\n17             Non-controlling interests        122        122\n18                     Total Liabilities     18,931     19,686",
+    "metadata": {
+      "source": "..\\Data\\citation\\FactSheet.pdf",
+      "file_size_kb": 443.740234375,
+      "total_pages": 23,
+      "page_number": 19,
+      "content_type": "table",
+      "table_index": 1
+    }
+  },
+  {
+    "content": "TATA\n",
+    "metadata": {
+      "source": "..\\Data\\citation\\FactSheet.pdf",
+      "file_size_kb": 443.740234375,
+      "total_pages": 23,
+      "page_number": 19,
+      "content_type": "ocr_image",
+      "image_index": 1
+    }
+  },
+  {
+    "content": "TATA\nCONSULTANCY\nSERVICES\n",
+    "metadata": {
+      "source": "..\\Data\\citation\\FactSheet.pdf",
+      "file_size_kb": 443.740234375,
+      "total_pages": 23,
+      "page_number": 19,
+      "content_type": "ocr_image",
+      "image_index": 2
+    }
+  },
+  {
+    "content": "Revenue\n62,613\n           \n63,437\n      \n100.00\n      \n100.00\n      \nExpenditure\n  a) Employee Costs \n36,416\n           \n37,715\n      \n58.16\n        \n59.45\n        \n  b) Cost of equipment and software licences \n2,151\n             \n726\n           \n3.44\n          \n1.14\n          \n  c) Other Operating expenses \n7,384\n             \n8,121\n        \n11.79\n        \n12.80\n        \n d) Depreciation\n1,220\n             \n1,361\n        \n1.95\n          \n2.15\n          \nTotal Expenditure \n47,171\n           \n47,923\n      \n75.34\n        \n75.54\n        \nProfit Before Taxes & Other Income\n15,442\n           \n15,514\n      \n24.66\n        \n24.46\n        \nOther income (expense), net\n789\n                \n1,465\n        \n1.26\n          \n2.31\n          \nProfit Before Taxes\n16,231\n           \n16,979\n      \n25.92\n        \n26.77\n        \nProvision For Taxes\n4,126\n             \n4,160\n        \n6.59\n          \n6.56\n          \nProfit After Taxes & Before Non-controlling interests\n12,105\n           \n12,819\n      \n19.33\n        \n20.21\n        \nNon-controlling interests\n65\n                  \n59\n             \n0.10\n          \n0.09\n          \nNet Profit\n12,040\n           \n12,760\n      \n19.23\n        \n20.12\n        \n Earnings per share in ₹\n33.28\n35.27\n Q1 FY25 \n Q1 FY26 \nConsolidated Ind AS\n₹ Crore\n% of Revenue\nQ1 FY25\nQ1 FY26\nInd AS Income Statement - Consolidated\n20",
+    "metadata": {
+      "source": "..\\Data\\citation\\FactSheet.pdf",
+      "file_size_kb": 443.740234375,
+      "total_pages": 23,
+      "page_number": 20,
+      "content_type": "text"
+    }
+  },
+  {
+    "content": "                                                        0        1        2             3        4\n0                                                          ₹ Crore           % of Revenue         \n1                                     Consolidated Ind AS                                         \n2                                                          Q1 FY25  Q1 FY26       Q1 FY25  Q1 FY26\n3                                                 Revenue   62,613   63,437        100.00   100.00\n4                                             Expenditure                                         \n5                                       a) Employee Costs   36,416   37,715         58.16    59.45\n6              b) Cost of equipment and software licences    2,151      726          3.44     1.14\n7                             c) Other Operating expenses    7,384    8,121         11.79    12.80\n8                                         d) Depreciation    1,220    1,361          1.95     2.15\n9                                       Total Expenditure   47,171   47,923         75.34    75.54\n10                     Profit Before Taxes & Other Income   15,442   15,514         24.66    24.46\n11                            Other income (expense), net      789    1,465          1.26     2.31\n12                                    Profit Before Taxes   16,231   16,979         25.92    26.77\n13                                    Provision For Taxes    4,126    4,160          6.59     6.56\n14  Profit After Taxes & Before Non-controlling interests   12,105   12,819         19.33    20.21\n15                              Non-controlling interests       65       59          0.10     0.09\n16                                             Net Profit   12,040   12,760         19.23    20.12",
+    "metadata": {
+      "source": "..\\Data\\citation\\FactSheet.pdf",
+      "file_size_kb": 443.740234375,
+      "total_pages": 23,
+      "page_number": 20,
+      "content_type": "table",
+      "table_index": 1
+    }
+  },
+  {
+    "content": "TATA\n",
+    "metadata": {
+      "source": "..\\Data\\citation\\FactSheet.pdf",
+      "file_size_kb": 443.740234375,
+      "total_pages": 23,
+      "page_number": 20,
+      "content_type": "ocr_image",
+      "image_index": 1
+    }
+  },
+  {
+    "content": "TATA\nCONSULTANCY\nSERVICES\n",
+    "metadata": {
+      "source": "..\\Data\\citation\\FactSheet.pdf",
+      "file_size_kb": 443.740234375,
+      "total_pages": 23,
+      "page_number": 20,
+      "content_type": "ocr_image",
+      "image_index": 2
+    }
+  },
+  {
+    "content": "Ind AS Balance Sheet - Consolidated\n21\n31-Mar-25\n30-Jun-25\nAssets\nProperty and equipment\n12,524\n          \n12,666\n          \nRight-of-use Assets\n9,275\n            \n9,426\n            \nIntangible assets and Goodwill\n2,800\n            \n2,689\n            \nAccounts Receivable\n50,233\n          \n53,103\n          \nUnbilled Revenues\n15,470\n          \n16,156\n          \nInvested Funds\n47,222\n          \n48,704\n          \nOther current assets\n12,486\n          \n14,007\n          \nOther non current assets\n9,619\n            \n9,709\n            \nTotal Assets\n159,629\n        \n166,460\n        \nLiabilities and Shareholders' Equity\nShareholders' Funds\n94,756\n          \n97,910\n          \nCurrent liabilities\n53,001\n          \n56,555\n          \nNon-current liabilities\n10,857\n          \n10,974\n          \nNon-controlling interests\n1,015\n            \n1,021\n            \nTotal Liabilities\n159,629\n        \n166,460\n        \nConsolidated Ind AS\n₹ Crore\nDetailed financials are uploaded.",
+    "metadata": {
+      "source": "..\\Data\\citation\\FactSheet.pdf",
+      "file_size_kb": 443.740234375,
+      "total_pages": 23,
+      "page_number": 21,
+      "content_type": "text"
+    }
+  },
+  {
+    "content": "                                       0          1          2\n0                    Consolidated Ind AS                      \n1                                         31-Mar-25  30-Jun-25\n2                                 Assets                      \n3                 Property and equipment     12,524     12,666\n4                    Right-of-use Assets      9,275      9,426\n5         Intangible assets and Goodwill      2,800      2,689\n6                    Accounts Receivable     50,233     53,103\n7                      Unbilled Revenues     15,470     16,156\n8                         Invested Funds     47,222     48,704\n9                   Other current assets     12,486     14,007\n10              Other non current assets      9,619      9,709\n11                          Total Assets    159,629    166,460\n12  Liabilities and Shareholders' Equity                      \n13                   Shareholders' Funds     94,756     97,910\n14                   Current liabilities     53,001     56,555\n15               Non-current liabilities     10,857     10,974\n16             Non-controlling interests      1,015      1,021\n17                     Total Liabilities    159,629    166,460",
+    "metadata": {
+      "source": "..\\Data\\citation\\FactSheet.pdf",
+      "file_size_kb": 443.740234375,
+      "total_pages": 23,
+      "page_number": 21,
+      "content_type": "table",
+      "table_index": 1
+    }
+  },
+  {
+    "content": "TATA\n",
+    "metadata": {
+      "source": "..\\Data\\citation\\FactSheet.pdf",
+      "file_size_kb": 443.740234375,
+      "total_pages": 23,
+      "page_number": 21,
+      "content_type": "ocr_image",
+      "image_index": 1
+    }
+  },
+  {
+    "content": "TATA\nCONSULTANCY\nSERVICES\n",
+    "metadata": {
+      "source": "..\\Data\\citation\\FactSheet.pdf",
+      "file_size_kb": 443.740234375,
+      "total_pages": 23,
+      "page_number": 21,
+      "content_type": "ocr_image",
+      "image_index": 2
+    }
+  },
+  {
+    "content": "Q1 FY25\nQ1 FY26\nQ1 FY25\nQ1 FY26\nUSD\n83.43\n85.49\n51.50%\n49.73%\nGBP\n105.43\n115.80\n14.63%\n15.78%\nEUR\n89.71\n98.04\n11.02%\n11.65%\nOthers\n22.85%\n22.84%\nTotal\n100.00%\n100.00%\nCurrency\nAverage rates\n% of Revenue\nCurrency mix and average realized rates in INR\n22",
+    "metadata": {
+      "source": "..\\Data\\citation\\FactSheet.pdf",
+      "file_size_kb": 443.740234375,
+      "total_pages": 23,
+      "page_number": 22,
+      "content_type": "text"
+    }
+  },
+  {
+    "content": "          0              1        2             3        4\n0            Average rates           % of Revenue         \n1  Currency                                               \n2                  Q1 FY25  Q1 FY26       Q1 FY25  Q1 FY26\n3       USD          83.43    85.49        51.50%   49.73%\n4       GBP         105.43   115.80        14.63%   15.78%\n5       EUR          89.71    98.04        11.02%   11.65%\n6    Others                                22.85%   22.84%\n7     Total                               100.00%  100.00%",
+    "metadata": {
+      "source": "..\\Data\\citation\\FactSheet.pdf",
+      "file_size_kb": 443.740234375,
+      "total_pages": 23,
+      "page_number": 22,
+      "content_type": "table",
+      "table_index": 1
+    }
+  },
+  {
+    "content": "TATA\n",
+    "metadata": {
+      "source": "..\\Data\\citation\\FactSheet.pdf",
+      "file_size_kb": 443.740234375,
+      "total_pages": 23,
+      "page_number": 22,
+      "content_type": "ocr_image",
+      "image_index": 1
+    }
+  },
+  {
+    "content": "TATA\nCONSULTANCY\nSERVICES\n",
+    "metadata": {
+      "source": "..\\Data\\citation\\FactSheet.pdf",
+      "file_size_kb": 443.740234375,
+      "total_pages": 23,
+      "page_number": 22,
+      "content_type": "ocr_image",
+      "image_index": 2
+    }
+  },
+  {
+    "content": "Thank you\nCopyright © 2025 Tata Consultancy Services Limited",
+    "metadata": {
+      "source": "..\\Data\\citation\\FactSheet.pdf",
+      "file_size_kb": 443.740234375,
+      "total_pages": 23,
+      "page_number": 23,
+      "content_type": "text"
+    }
+  },
+  {
+    "content": "                                                    0\n0                                           Thank you\n1  Copyright © 2025 Tata Consultancy Services Limited",
+    "metadata": {
+      "source": "..\\Data\\citation\\FactSheet.pdf",
+      "file_size_kb": 443.740234375,
+      "total_pages": 23,
+      "page_number": 23,
+      "content_type": "table",
+      "table_index": 1
+    }
+  }
+]

@@ -1,3 +1,4 @@
+import { Citation } from '../../../../../../rag-main/frontend/src/types/chat';
 export interface QnAPair {
   id: string;
   question: string;
@@ -16,7 +17,11 @@ export interface ChatMessage {
   isUser: boolean;
   timestamp: Date;         // ✅ use Date instead of number
   originalContent?: string;
-  traceId:string// ✅ optional for storing un-translated text
+  traceId:string;
+  Citation?: { 
+    source: string; // Corresponds to the 'source' key in the Python dict
+    pages: (string | number)[]; // Corresponds to the 'pages' key (list of pages)
+  }[]; 
 };
 
 

@@ -78,6 +78,6 @@ CONFIG = {
     "llm_reranker_model": os.getenv("LLM_RERANKER_MODEL", "llama-3.3-70b-versatile"),
     "llm_reranker_max_tokens": int(os.getenv("LLM_RERANKER_MAX_TOKENS", 512)),
 
-
+    
 
 }

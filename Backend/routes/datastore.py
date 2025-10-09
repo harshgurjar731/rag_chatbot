@@ -9,6 +9,8 @@ from typing import List
 from pydantic import BaseModel
 from models.FileRecord import FileRecord
 from config import CONFIG  # ✅ centralized config
+from phoenix.otel import register
+
 
 router = APIRouter()
 
@@ -47,7 +49,15 @@ def create_datastore(data: DataStoreCreate, session: Session = Depends(get_sessi
 
 @router.get("/", response_model=List[DataStore])
 def list_datastores(session: Session = Depends(get_session)):
-    return session.exec(select(DataStore)).all()
+    DataStores=session.exec(select(DataStore)).all()
+    # for datastore in DataStores:
+    #     tracer_provider = register(
+    #     # project_name="testing1",
+    #     project_name=datastore.name if datastore.chatbotId else "RAG_Document_Store",
+    #     endpoint="http://localhost:6006/v1/traces",
+    #     auto_instrument=True  # Automatically instruments supported libraries
+    # )
+    return DataStores
 
 
 @router.delete("/{datastore_id}", response_model=dict)

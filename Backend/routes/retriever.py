@@ -1,14 +1,16 @@
-from fastapi import APIRouter, Query
+from fastapi import APIRouter, Query, Path
 from Services.retriever_service import retrieve_documents
 from typing import List
 from config import CONFIG
 from opentelemetry import trace
-import uuid  # ✅ CHANGE: Added the import for generating unique IDs
+import uuid
+from phoenix.otel import register
 
 router = APIRouter()
 
-@router.get("/query")
+@router.get("/query/{chatbot_id}", response_model=dict)
 def retrieve(
+    chatbot_id: str = Path(..., description="The ID of the chatbot being queried"),
     query: str = Query(..., description="User query"),
     query_optimizer: str = Query(
         CONFIG["default_query_optimizer"], description="Query optimizer to use"
@@ -33,11 +35,23 @@ def retrieve(
         le=2048,
         description="Token size (between 256 and 2048)",
     ),
-    sources: bool = Query(False, description="Include sources in the response"),
+    sources: bool = Query(False, description="Include that context which was used  in the response"),
     rerankerOption: str = Query(
         CONFIG["default_reranker_option"], description="Reranker option to use"
     ),
 ):
+    # Get the current trace (span) and tag it with the chatbot.id attribute.
+    current_span = trace.get_current_span()
+    current_span.set_attribute("chatbot.id", chatbot_id)
+
+    tracer_provider = register(
+        # project_name="testing1",
+        project_name=chatbot_id,
+        endpoint="http://localhost:6006/v1/traces",
+        auto_instrument=True  # Automatically instruments supported libraries
+    )
+
+    # Call your existing service logic.
     results_object = retrieve_documents(
         query,
         query_optimizer,
@@ -50,8 +64,11 @@ def retrieve(
         sources,
         guardrailOption,
         rerankerOption,
+        chatbot_id
     )
     
+    
+    # Process the final answer.
     final_answer = ""
     if isinstance(results_object, dict):
         final_answer = results_object.get("result") or results_object.get("answer", "No answer found in results.")
@@ -60,17 +77,14 @@ def retrieve(
     else:
         final_answer = "Could not process the response from the service."
 
-    current_span = trace.get_current_span()
+    # Get the traceId to send back to the frontend for the feedback feature.
     span_context = current_span.get_span_context()
-
     trace_id = ""
     if span_context.is_valid:
         trace_id = format(span_context.trace_id, '032x')
         print(f"✅ Successfully captured Phoenix trace_id: {trace_id}")
     else:
-        # ✅ CHANGE: Added a fallback to generate a UUID if no trace is found.
-        # This ensures the feedback feature will always have a unique ID to work with.
         trace_id = str(uuid.uuid4())
         print(f"⚠️ WARNING: Could not find a valid span context. Using generated UUID as trace_id: {trace_id}")
 
-    return {"answer": final_answer, "traceId": trace_id}
+    return {"answer": final_answer, "traceId": trace_id,"citations": results_object.get("document_pages_dict", [])}

@@ -1,0 +1,300 @@
+[
+  {
+    "content": "Revised Roadmap: 3-4 Months to AI Developer \nThis is a comprehensive, topic-by-topic checklist with a timeline for a high-intensity, 3-4 \nmonth learning plan. \nMonth 1: The Foundations \n●​ Week 1: Python & Basics (Days 1-7) \n○​ Python Syntax & Data Types (lists, dicts, tuples, sets). \n○​ Control Flow (if/else, loops) and Functions. \n○​ Object-Oriented Programming (OOP) concepts. \n○​ Project: Simple calculator or number guessing game. \n●​ Week 2: NumPy, Pandas & Git (Days 8-14)",
+    "metadata": {
+      "source": "..\\Data\\citation\\Roadmap_ 3-4 Months to AI Developer.pdf",
+      "file_size_kb": 80.84765625,
+      "total_pages": 2,
+      "page_number": 1,
+      "content_type": "text"
+    }
+  },
+  {
+    "content": "●​ Week 2: NumPy, Pandas & Git (Days 8-14) \n○​ NumPy arrays, slicing, broadcasting, and vectorized operations. \n○​ Pandas DataFrames, data cleaning, filtering, and grouping. \n○​ Git/GitHub: Committing, pushing, and managing a code repository. \n○​ Project: Analyze and clean a simple dataset. \n●​ Week 3: Visualization & Foundational Math (Days 15-21) \n○​ Data Visualization with Matplotlib and Seaborn. \n○​ Linear Algebra: Vectors, matrices, and dot products.",
+    "metadata": {
+      "source": "..\\Data\\citation\\Roadmap_ 3-4 Months to AI Developer.pdf",
+      "file_size_kb": 80.84765625,
+      "total_pages": 2,
+      "page_number": 1,
+      "content_type": "text"
+    }
+  },
+  {
+    "content": "○​ Calculus: The concepts of derivatives and gradients. \n○​ Project: Create visualizations to tell a story from your dataset. \n●​ Week 4: Probability, Stats & Portfolio Building (Days 22-28) \n○​ Probability & Statistics: Descriptive stats (mean, median), Bayes' Theorem. \n○​ Finalize and document your foundational projects on GitHub. \nMonth 2: Core ML & The Deep Learning Bridge \n●​ Week 5: Core ML & Model Evaluation (Days 29-35) \n○​ ML Fundamentals: Supervised vs. Unsupervised Learning, the ML workflow.",
+    "metadata": {
+      "source": "..\\Data\\citation\\Roadmap_ 3-4 Months to AI Developer.pdf",
+      "file_size_kb": 80.84765625,
+      "total_pages": 2,
+      "page_number": 1,
+      "content_type": "text"
+    }
+  },
+  {
+    "content": "○​ Algorithms: Linear/Logistic Regression, K-Nearest Neighbors (KNN). \n○​ Metrics: Accuracy, Precision, Recall, F1-Score, Confusion Matrix. \n○​ Project: Build a classifier on a classic dataset (e.g., Iris or Titanic). \n●​ Week 6: Unsupervised Learning & Deep Learning Intro (Days 36-42) \n○​ Unsupervised: K-Means clustering, Principal Component Analysis (PCA). \n○​ Deep Learning: The Neuron, activation functions, and the concept of \nforward/backward propagation.",
+    "metadata": {
+      "source": "..\\Data\\citation\\Roadmap_ 3-4 Months to AI Developer.pdf",
+      "file_size_kb": 80.84765625,
+      "total_pages": 2,
+      "page_number": 1,
+      "content_type": "text"
+    }
+  },
+  {
+    "content": "forward/backward propagation. \n●​ Week 7: Transformers & Embeddings (Days 43-49) \n○​ The Transformer Architecture: Understand the intuition behind the attention \nmechanism. \n○​ Text Embeddings: Learn how to convert text into numerical vectors using \npre-trained models from Hugging Face. \n○​ Project: Generate embeddings for a set of documents and perform a basic \nsemantic search. \n●​ Week 8: LLMs & Prompt Engineering (Days 50-56) \n○​ LLM Concepts: What LLMs are and how they differ from traditional models.",
+    "metadata": {
+      "source": "..\\Data\\citation\\Roadmap_ 3-4 Months to AI Developer.pdf",
+      "file_size_kb": 80.84765625,
+      "total_pages": 2,
+      "page_number": 1,
+      "content_type": "text"
+    }
+  },
+  {
+    "content": "○​ API Usage: Learn to use APIs from OpenAI or Hugging Face.",
+    "metadata": {
+      "source": "..\\Data\\citation\\Roadmap_ 3-4 Months to AI Developer.pdf",
+      "file_size_kb": 80.84765625,
+      "total_pages": 2,
+      "page_number": 1,
+      "content_type": "text"
+    }
+  },
+  {
+    "content": "0                                                                            1\n0                                    Month 1: The Foundations                                                                             \n1                       ●  Week 1: Python & Basics (Days 1-7)",
+    "metadata": {
+      "source": "..\\Data\\citation\\Roadmap_ 3-4 Months to AI Developer.pdf",
+      "file_size_kb": 80.84765625,
+      "total_pages": 2,
+      "page_number": 1,
+      "content_type": "table",
+      "table_index": 1
+    }
+  },
+  {
+    "content": "2                                                           ○                     Python Syntax & Data Types (lists, dicts, tuples, sets).\n3                                                           ○                                 Control Flow (if/else, loops) and Functions.\n4                                                                                           ○  Object-Oriented Programming (OOP) concepts.",
+    "metadata": {
+      "source": "..\\Data\\citation\\Roadmap_ 3-4 Months to AI Developer.pdf",
+      "file_size_kb": 80.84765625,
+      "total_pages": 2,
+      "page_number": 1,
+      "content_type": "table",
+      "table_index": 1
+    }
+  },
+  {
+    "content": "5                                                           ○                          Project: Simple calculator or number guessing game.\n6                  ●  Week 2: NumPy, Pandas & Git (Days 8-14)                                                                             \n7                                                           ○              NumPy arrays, slicing, broadcasting, and vectorized operations.",
+    "metadata": {
+      "source": "..\\Data\\citation\\Roadmap_ 3-4 Months to AI Developer.pdf",
+      "file_size_kb": 80.84765625,
+      "total_pages": 2,
+      "page_number": 1,
+      "content_type": "table",
+      "table_index": 1
+    }
+  },
+  {
+    "content": "8                                                           ○                   Pandas DataFrames, data cleaning, filtering, and grouping.\n9                                                                      ○  Git/GitHub: Committing, pushing, and managing a code repository.\n10                                                          ○                                 Project: Analyze and clean a simple dataset.",
+    "metadata": {
+      "source": "..\\Data\\citation\\Roadmap_ 3-4 Months to AI Developer.pdf",
+      "file_size_kb": 80.84765625,
+      "total_pages": 2,
+      "page_number": 1,
+      "content_type": "table",
+      "table_index": 1
+    }
+  },
+  {
+    "content": "11  ●  Week 3: Visualization & Foundational Math (Days 15-21)                                                                             \n12                                                          ○                              Data Visualization with Matplotlib and Seaborn.\n13                                                          ○                         Linear Algebra: Vectors, matrices, and dot products.",
+    "metadata": {
+      "source": "..\\Data\\citation\\Roadmap_ 3-4 Months to AI Developer.pdf",
+      "file_size_kb": 80.84765625,
+      "total_pages": 2,
+      "page_number": 1,
+      "content_type": "table",
+      "table_index": 1
+    }
+  },
+  {
+    "content": "14                                                          ○                         Calculus: The concepts of derivatives and gradients.\n15                                                          ○            Project: Create visualizations to tell a story from your dataset.\n16                                                                         ●  Week 4: Probability, Stats & Portfolio Building (Days 22-28)",
+    "metadata": {
+      "source": "..\\Data\\citation\\Roadmap_ 3-4 Months to AI Developer.pdf",
+      "file_size_kb": 80.84765625,
+      "total_pages": 2,
+      "page_number": 1,
+      "content_type": "table",
+      "table_index": 1
+    }
+  },
+  {
+    "content": "17                                                          ○  Probability & Statistics: Descriptive stats (mean, median), Bayes' Theorem.\n18                                                          ○                  Finalize and document your foundational projects on GitHub.",
+    "metadata": {
+      "source": "..\\Data\\citation\\Roadmap_ 3-4 Months to AI Developer.pdf",
+      "file_size_kb": 80.84765625,
+      "total_pages": 2,
+      "page_number": 1,
+      "content_type": "table",
+      "table_index": 1
+    }
+  },
+  {
+    "content": "○​ Prompt Engineering: The art of creating effective prompts. \n○​ Project: Build a simple chatbot using an LLM API. \nMonth 3: RAG & Fine-Tuning \n●​ Week 9: Retrieval-Augmented Generation (RAG) (Days 57-63) \n○​ Vector Databases: The purpose and use of a vector database (e.g., \nChromaDB, Pinecone). \n○​ The RAG Pipeline: The full process of document chunking, embedding, \nretrieval, and generation. \n○​ Project: Build a Q&A application over a custom PDF or set of documents",
+    "metadata": {
+      "source": "..\\Data\\citation\\Roadmap_ 3-4 Months to AI Developer.pdf",
+      "file_size_kb": 80.84765625,
+      "total_pages": 2,
+      "page_number": 2,
+      "content_type": "text"
+    }
+  },
+  {
+    "content": "using a library like LangChain or LlamaIndex. \n●​ Week 10: Fine-Tuning (Days 64-70) \n○​ Theory: The difference between fine-tuning and prompt engineering, and \nwhen to use each. \n○​ PEFT: Learn about Parameter-Efficient Fine-Tuning (PEFT) and techniques \nlike LoRA. \n○​ Practice: Fine-tune a pre-trained model on a specific task using the Hugging \nFace ecosystem. \nMonth 4: Specialization & Capstone Project \n●​ Week 11: Advanced Concepts & MLOps (Days 71-77)",
+    "metadata": {
+      "source": "..\\Data\\citation\\Roadmap_ 3-4 Months to AI Developer.pdf",
+      "file_size_kb": 80.84765625,
+      "total_pages": 2,
+      "page_number": 2,
+      "content_type": "text"
+    }
+  },
+  {
+    "content": "○​ Advanced RAG: Learn multi-query retrieval and other advanced techniques. \n○​ MLOps for LLMs: Containerization with Docker and serving a model with a \nframework like FastAPI. \n●​ Weeks 12-16: The Capstone Project (Days 78-120) \n○​ Problem Definition: Choose a problem to solve using RAG or fine-tuning \nthat is more complex than your previous projects. \n○​ Full Implementation: Build the entire application from start to finish. \n○​ Documentation: Create a detailed README, explaining your project's",
+    "metadata": {
+      "source": "..\\Data\\citation\\Roadmap_ 3-4 Months to AI Developer.pdf",
+      "file_size_kb": 80.84765625,
+      "total_pages": 2,
+      "page_number": 2,
+      "content_type": "text"
+    }
+  },
+  {
+    "content": "architecture. \n○​ Deployment: Deploy a functional prototype to a cloud service to showcase \nyour work.",
+    "metadata": {
+      "source": "..\\Data\\citation\\Roadmap_ 3-4 Months to AI Developer.pdf",
+      "file_size_kb": 80.84765625,
+      "total_pages": 2,
+      "page_number": 2,
+      "content_type": "text"
+    }
+  },
+  {
+    "content": "0                                                                             1\n0                                                    ○                    Prompt Engineering: The art of creating effective prompts.\n1                                                    ○                             Project: Build a simple chatbot using an LLM API.",
+    "metadata": {
+      "source": "..\\Data\\citation\\Roadmap_ 3-4 Months to AI Developer.pdf",
+      "file_size_kb": 80.84765625,
+      "total_pages": 2,
+      "page_number": 2,
+      "content_type": "table",
+      "table_index": 1
+    }
+  },
+  {
+    "content": "2                           Month 3: RAG & Fine-Tuning                                                                              \n3                                                                       ●  Week 9: Retrieval-Augmented Generation (RAG) (Days 57-63)\n4                                                    ○             Vector Databases: The purpose and use of a vector database (e.g.,",
+    "metadata": {
+      "source": "..\\Data\\citation\\Roadmap_ 3-4 Months to AI Developer.pdf",
+      "file_size_kb": 80.84765625,
+      "total_pages": 2,
+      "page_number": 2,
+      "content_type": "table",
+      "table_index": 1
+    }
+  },
+  {
+    "content": "5                                                                                                               ChromaDB, Pinecone).\n6                                                    ○           The RAG Pipeline: The full process of document chunking, embedding,\n7                                                                                                         retrieval, and generation.",
+    "metadata": {
+      "source": "..\\Data\\citation\\Roadmap_ 3-4 Months to AI Developer.pdf",
+      "file_size_kb": 80.84765625,
+      "total_pages": 2,
+      "page_number": 2,
+      "content_type": "table",
+      "table_index": 1
+    }
+  },
+  {
+    "content": "8                                                    ○        Project: Build a Q&A application over a custom PDF or set of documents\n9                                                                                      using a library like LangChain or LlamaIndex.\n10                ●  Week 10: Fine-Tuning (Days 64-70)",
+    "metadata": {
+      "source": "..\\Data\\citation\\Roadmap_ 3-4 Months to AI Developer.pdf",
+      "file_size_kb": 80.84765625,
+      "total_pages": 2,
+      "page_number": 2,
+      "content_type": "table",
+      "table_index": 1
+    }
+  },
+  {
+    "content": "11                                                   ○        Theory: The difference between fine-tuning and prompt engineering, and\n12                                                                                                                 when to use each.\n13                                                   ○       PEFT: Learn about Parameter-Efficient Fine-Tuning (PEFT) and techniques",
+    "metadata": {
+      "source": "..\\Data\\citation\\Roadmap_ 3-4 Months to AI Developer.pdf",
+      "file_size_kb": 80.84765625,
+      "total_pages": 2,
+      "page_number": 2,
+      "content_type": "table",
+      "table_index": 1
+    }
+  },
+  {
+    "content": "14                                                                                                                        like LoRA.\n15                                                   ○  Practice: Fine-tune a pre-trained model on a specific task using the Hugging\n16                                                                                                                   Face ecosystem.",
+    "metadata": {
+      "source": "..\\Data\\citation\\Roadmap_ 3-4 Months to AI Developer.pdf",
+      "file_size_kb": 80.84765625,
+      "total_pages": 2,
+      "page_number": 2,
+      "content_type": "table",
+      "table_index": 1
+    }
+  },
+  {
+    "content": "17          Month 4: Specialization & Capstone Project                                                                              \n18  ●  Week 11: Advanced Concepts & MLOps (Days 71-77)                                                                              \n19                                                   ○      Advanced RAG: Learn multi-query retrieval and other advanced techniques.",
+    "metadata": {
+      "source": "..\\Data\\citation\\Roadmap_ 3-4 Months to AI Developer.pdf",
+      "file_size_kb": 80.84765625,
+      "total_pages": 2,
+      "page_number": 2,
+      "content_type": "table",
+      "table_index": 1
+    }
+  },
+  {
+    "content": "20                                                        ○  MLOps for LLMs: Containerization with Docker and serving a model with a\n21                                                                                                           framework like FastAPI.\n22  ●  Weeks 12-16: The Capstone Project (Days 78-120)",
+    "metadata": {
+      "source": "..\\Data\\citation\\Roadmap_ 3-4 Months to AI Developer.pdf",
+      "file_size_kb": 80.84765625,
+      "total_pages": 2,
+      "page_number": 2,
+      "content_type": "table",
+      "table_index": 1
+    }
+  },
+  {
+    "content": "23                                                   ○        Problem Definition: Choose a problem to solve using RAG or fine-tuning\n24                                                                                 that is more complex than your previous projects.\n25                                                   ○       Full Implementation: Build the entire application from start to finish.",
+    "metadata": {
+      "source": "..\\Data\\citation\\Roadmap_ 3-4 Months to AI Developer.pdf",
+      "file_size_kb": 80.84765625,
+      "total_pages": 2,
+      "page_number": 2,
+      "content_type": "table",
+      "table_index": 1
+    }
+  },
+  {
+    "content": "26                                                   ○            Documentation: Create a detailed README, explaining your project's\n27                                                                                                                     architecture.\n28                                                   ○      Deployment: Deploy a functional prototype to a cloud service to showcase",
+    "metadata": {
+      "source": "..\\Data\\citation\\Roadmap_ 3-4 Months to AI Developer.pdf",
+      "file_size_kb": 80.84765625,
+      "total_pages": 2,
+      "page_number": 2,
+      "content_type": "table",
+      "table_index": 1
+    }
+  },
+  {
+    "content": "29                                                                                                                        your work.",
+    "metadata": {
+      "source": "..\\Data\\citation\\Roadmap_ 3-4 Months to AI Developer.pdf",
+      "file_size_kb": 80.84765625,
+      "total_pages": 2,
+      "page_number": 2,
+      "content_type": "table",
+      "table_index": 1
+    }
+  }
+]

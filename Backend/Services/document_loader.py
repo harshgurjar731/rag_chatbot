@@ -265,19 +265,169 @@ from config import CONFIG  # ✅ centralized config
 
 
 
-import os
-import io
-import json
+# import os
+# import io
+# import json
+# from pathlib import Path
+# from typing import List
+# import pytesseract
+# from PIL import Image
+# import fitz  # PyMuPDF
+# import camelot
+# import csv
+# from langchain_core.documents import Document
+
+
+# def save_docs_to_json(docs: List[Document], path: Path) -> None:
+#     """Save list of Document objects into JSON format."""
+#     try:
+#         data = [{"content": doc.page_content, "metadata": doc.metadata} for doc in docs]
+#         with open(path, "w", encoding="utf-8") as f:
+#             json.dump(data, f, ensure_ascii=False, indent=2)
+#     except Exception as e:
+#         raise RuntimeError(f"Failed to save JSON: {e}")
+
+
+# def ocr_image_with_tesseract(image_path: str) -> str:
+#     """Perform OCR on an image using pytesseract."""
+#     try:
+#         from PIL import Image
+#         # Using a comprehensive set of languages for better OCR accuracy
+#         text = pytesseract.image_to_string(Image.open(image_path), lang='hin+eng+fra+deu+ita+spa+por+rus+jpn+kor+chi_sim')
+#         return text
+#     except Exception as e:
+#         raise RuntimeError(f"Tesseract OCR failed on {image_path}: {e}")
+
+
+# def load_file_with_loader(file_path: str, loader_type: str) -> List[Document]:
+#     """
+#     Loads various file types into LangChain Document objects using
+#     Tesseract for images, PyMuPDF/Camelot for PDFs, and native Python libraries
+#     for other document types, including embedded images in PDFs.
+#     """
+#     file_path = Path(file_path)
+
+#     document_list = []
+#     content = ""
+   
+#     # --- Image Formats (using Pytesseract) ---
+#     if loader_type.lower() in ["jpg", "jpeg", "png", "webp"]:
+#         try:
+#             content = ocr_image_with_tesseract(str(file_path))
+#             document_list.append(Document(page_content=content, metadata={"source": str(file_path)}))
+#         except RuntimeError as e:
+#             raise ValueError(f"Image processing error: {e}")
+
+#     # --- PDF Documents (using PyMuPDF and Camelot) ---
+#     elif loader_type.lower() == "pdf":
+#         try:
+#             pdf_document = fitz.open(file_path)
+#             full_content = ""
+           
+#             for page_num, page in enumerate(pdf_document):
+#                 # 1. Extract general text with PyMuPDF
+#                 full_content += page.get_text() + "\n\n"
+
+#                 # 2. Extract tables with Camelot (if needed)
+#                 try:
+#                     tables = camelot.read_pdf(str(file_path), pages=str(page_num + 1), flavor='stream')
+#                     if tables:
+#                         for table in tables:
+#                             full_content += f"Table on page {page_num + 1}:\n"
+#                             full_content += table.df.to_string() + "\n\n"
+#                 except Exception as e:
+#                     print(f"Warning: Failed to extract tables from page {page_num + 1}: {e}")
+#                     pass # Continue processing even if table extraction fails
+
+#                 # 3. Extract and OCR images from the page
+#                 image_list = page.get_images(full=True)
+#                 for img_index, img_info in enumerate(image_list):
+#                     xref = img_info[0]
+#                     base_image = pdf_document.extract_image(xref)
+#                     image_bytes = base_image["image"]
+                   
+#                     try:
+#                         # Process image data directly from memory
+#                         ocr_text = pytesseract.image_to_string(Image.open(io.BytesIO(image_bytes)), lang='hin+eng+fra+deu+ita+spa+por+rus+jpn+kor+chi_sim')
+#                         full_content += f"OCR from image on page {page_num + 1}:\n"
+#                         full_content += ocr_text + "\n\n"
+                       
+#                     except Exception as e:
+#                         print(f"Warning: Failed to OCR image on page {page_num + 1}: {e}")
+           
+#             document_list.append(Document(page_content=full_content, metadata={"source": str(file_path)}))
+
+#         except Exception as e:
+#             raise RuntimeError(f"Failed to load PDF file {file_path}: {e}")
+
+#     # --- Other Document Types (using native Python) ---
+#     elif loader_type.lower() == "txt":
+#         try:
+#             with open(file_path, 'r', encoding='utf-8') as f:
+#                 content = f.read()
+#             document_list.append(Document(page_content=content, metadata={"source": str(file_path)}))
+#         except Exception as e:
+#             raise RuntimeError(f"Failed to load TXT file {file_path}: {e}")
+           
+#     elif loader_type.lower() == "html":
+#         try:
+#             with open(file_path, 'r', encoding='utf-8') as f:
+#                 content = f.read()
+#             document_list.append(Document(page_content=content, metadata={"source": str(file_path)}))
+#         except Exception as e:
+#             raise RuntimeError(f"Failed to load HTML file {file_path}: {e}")
+
+#     elif loader_type.lower() == "md":
+#         try:
+#             with open(file_path, 'r', encoding='utf-8') as f:
+#                 content = f.read()
+#             document_list.append(Document(page_content=content, metadata={"source": str(file_path)}))
+#         except Exception as e:
+#             raise RuntimeError(f"Failed to load Markdown file {file_path}: {e}")
+
+#     elif loader_type.lower() == "csv":
+#         try:
+#             content = ""
+#             with open(file_path, newline='', encoding='utf-8') as csvfile:
+#                 reader = csv.reader(csvfile)
+#                 for row in reader:
+#                     content += ', '.join(row) + '\n'
+#             document_list.append(Document(page_content=content, metadata={"source": str(file_path)}))
+#         except Exception as e:
+#             raise RuntimeError(f"Failed to load CSV file {file_path}: {e}")
+
+#     else:
+#         raise ValueError(f"Unsupported loader type: {loader_type}")
+
+#     # Save documents to JSON
+#     if document_list:
+#         save_docs_to_json(document_list, file_path.with_suffix('.json'))
+   
+#     return document_list
+
+
+
+
+
+
+
 from pathlib import Path
 from typing import List
+from langchain_core.documents import Document
+import json
+import os
 import pytesseract
 from PIL import Image
 import fitz  # PyMuPDF
 import camelot
 import csv
-from langchain_core.documents import Document
+import io
+import mimetypes
 
+# This assumes config.py is available with necessary configurations
+# from config import CONFIG 
 
+# Placeholder for the save_docs_to_json function to keep the code runnable
 def save_docs_to_json(docs: List[Document], path: Path) -> None:
     """Save list of Document objects into JSON format."""
     try:
@@ -287,34 +437,54 @@ def save_docs_to_json(docs: List[Document], path: Path) -> None:
     except Exception as e:
         raise RuntimeError(f"Failed to save JSON: {e}")
 
-
+# Placeholder for the OCR function
 def ocr_image_with_tesseract(image_path: str) -> str:
     """Perform OCR on an image using pytesseract."""
     try:
-        from PIL import Image
-        # Using a comprehensive set of languages for better OCR accuracy
-        text = pytesseract.image_to_string(Image.open(image_path), lang='hin+eng+fra+deu+ita+spa+por+rus+jpn+kor+chi_sim')
+        text = pytesseract.image_to_string(Image.open(image_path), lang='eng')
         return text
     except Exception as e:
         raise RuntimeError(f"Tesseract OCR failed on {image_path}: {e}")
 
-
-def load_file_with_loader(file_path: str, loader_type: str) -> List[Document]:
+def load_file_with_loader(file_path: str, loader_type: str = None) -> List[Document]:
     """
-    Loads various file types into LangChain Document objects using
-    Tesseract for images, PyMuPDF/Camelot for PDFs, and native Python libraries
-    for other document types, including embedded images in PDFs.
+    Loads various file types into LangChain Document objects with enhanced metadata.
+    Automatically determines loader type if not specified.
     """
     file_path = Path(file_path)
-
     document_list = []
-    content = ""
-   
+    
+    # Automatically determine file type if not provided
+    if not loader_type:
+        mime_type, _ = mimetypes.guess_type(file_path)
+        if mime_type:
+            if 'image' in mime_type:
+                loader_type = mime_type.split('/')[-1]
+            elif 'text' in mime_type:
+                loader_type = 'txt'
+            elif 'pdf' in mime_type:
+                loader_type = 'pdf'
+            elif 'csv' in mime_type:
+                loader_type = 'csv'
+            else:
+                loader_type = file_path.suffix[1:]
+    
+    if not loader_type:
+        raise ValueError(f"Could not determine loader type for file: {file_path}")
+
     # --- Image Formats (using Pytesseract) ---
     if loader_type.lower() in ["jpg", "jpeg", "png", "webp"]:
         try:
             content = ocr_image_with_tesseract(str(file_path))
-            document_list.append(Document(page_content=content, metadata={"source": str(file_path)}))
+            if content.strip():
+                document_list.append(Document(
+                    page_content=content, 
+                    metadata={
+                        "source": str(file_path),
+                        "content_type": "ocr_image",
+                        "file_size_kb": file_path.stat().st_size / 1024
+                    }
+                ))
         except RuntimeError as e:
             raise ValueError(f"Image processing error: {e}")
 
@@ -322,85 +492,80 @@ def load_file_with_loader(file_path: str, loader_type: str) -> List[Document]:
     elif loader_type.lower() == "pdf":
         try:
             pdf_document = fitz.open(file_path)
-            full_content = ""
-           
-            for page_num, page in enumerate(pdf_document):
-                # 1. Extract general text with PyMuPDF
-                full_content += page.get_text() + "\n\n"
+            
+            # Extract file-level metadata once
+            file_metadata = {
+                "source": str(file_path),
+                "file_size_kb": file_path.stat().st_size / 1024,
+                "total_pages": pdf_document.page_count
+            }
 
-                # 2. Extract tables with Camelot (if needed)
+            for page_num, page in enumerate(pdf_document):
+                
+                # 1. Extract and store general text
+                text_content = page.get_text().strip()
+                if text_content:
+                    document_list.append(Document(
+                        page_content=text_content,
+                        metadata={**file_metadata, "page_number": page_num + 1, "content_type": "text"}
+                    ))
+                
+                # 2. Extract tables and store as separate documents
                 try:
                     tables = camelot.read_pdf(str(file_path), pages=str(page_num + 1), flavor='stream')
-                    if tables:
-                        for table in tables:
-                            full_content += f"Table on page {page_num + 1}:\n"
-                            full_content += table.df.to_string() + "\n\n"
+                    for table_idx, table in enumerate(tables):
+                        table_string = table.df.to_string()
+                        document_list.append(Document(
+                            page_content=table_string,
+                            metadata={**file_metadata, "page_number": page_num + 1, "content_type": "table", "table_index": table_idx + 1}
+                        ))
                 except Exception as e:
                     print(f"Warning: Failed to extract tables from page {page_num + 1}: {e}")
-                    pass # Continue processing even if table extraction fails
-
-                # 3. Extract and OCR images from the page
+                
+                # 3. Extract and OCR images and store as separate documents
                 image_list = page.get_images(full=True)
                 for img_index, img_info in enumerate(image_list):
                     xref = img_info[0]
                     base_image = pdf_document.extract_image(xref)
                     image_bytes = base_image["image"]
-                   
+                    
                     try:
-                        # Process image data directly from memory
-                        ocr_text = pytesseract.image_to_string(Image.open(io.BytesIO(image_bytes)), lang='hin+eng+fra+deu+ita+spa+por+rus+jpn+kor+chi_sim')
-                        full_content += f"OCR from image on page {page_num + 1}:\n"
-                        full_content += ocr_text + "\n\n"
-                       
+                        ocr_text = pytesseract.image_to_string(Image.open(io.BytesIO(image_bytes)), lang='eng')
+                        if ocr_text.strip():
+                            document_list.append(Document(
+                                page_content=ocr_text,
+                                metadata={**file_metadata, "page_number": page_num + 1, "content_type": "ocr_image", "image_index": img_index + 1}
+                            ))
                     except Exception as e:
                         print(f"Warning: Failed to OCR image on page {page_num + 1}: {e}")
-           
-            document_list.append(Document(page_content=full_content, metadata={"source": str(file_path)}))
-
         except Exception as e:
             raise RuntimeError(f"Failed to load PDF file {file_path}: {e}")
 
     # --- Other Document Types (using native Python) ---
-    elif loader_type.lower() == "txt":
-        try:
-            with open(file_path, 'r', encoding='utf-8') as f:
-                content = f.read()
-            document_list.append(Document(page_content=content, metadata={"source": str(file_path)}))
-        except Exception as e:
-            raise RuntimeError(f"Failed to load TXT file {file_path}: {e}")
-           
-    elif loader_type.lower() == "html":
-        try:
-            with open(file_path, 'r', encoding='utf-8') as f:
-                content = f.read()
-            document_list.append(Document(page_content=content, metadata={"source": str(file_path)}))
-        except Exception as e:
-            raise RuntimeError(f"Failed to load HTML file {file_path}: {e}")
-
-    elif loader_type.lower() == "md":
-        try:
-            with open(file_path, 'r', encoding='utf-8') as f:
-                content = f.read()
-            document_list.append(Document(page_content=content, metadata={"source": str(file_path)}))
-        except Exception as e:
-            raise RuntimeError(f"Failed to load Markdown file {file_path}: {e}")
-
-    elif loader_type.lower() == "csv":
+    elif loader_type.lower() in ["txt", "html", "md", "csv"]:
         try:
             content = ""
-            with open(file_path, newline='', encoding='utf-8') as csvfile:
-                reader = csv.reader(csvfile)
-                for row in reader:
-                    content += ', '.join(row) + '\n'
-            document_list.append(Document(page_content=content, metadata={"source": str(file_path)}))
-        except Exception as e:
-            raise RuntimeError(f"Failed to load CSV file {file_path}: {e}")
+            if loader_type.lower() == "csv":
+                with open(file_path, newline='', encoding='utf-8') as csvfile:
+                    reader = csv.reader(csvfile)
+                    for row in reader:
+                        content += ', '.join(row) + '\n'
+            else:
+                with open(file_path, 'r', encoding='utf-8') as f:
+                    content = f.read()
 
+            if content.strip():
+                document_list.append(Document(
+                    page_content=content,
+                    metadata={"source": str(file_path), "content_type": loader_type.lower()}
+                ))
+        except Exception as e:
+            raise RuntimeError(f"Failed to load {loader_type.upper()} file {file_path}: {e}")
     else:
         raise ValueError(f"Unsupported loader type: {loader_type}")
 
     # Save documents to JSON
     if document_list:
         save_docs_to_json(document_list, file_path.with_suffix('.json'))
-   
+    
     return document_list

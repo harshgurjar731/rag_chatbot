@@ -12,7 +12,14 @@ from Services.step_back_retriever_with_source import get_stepback_retriever_with
 from Services.step_back_retriever_without_source import get_stepback_retriever_without_sources
 from Services.rag_fusion_retriever_with_source import get_ragfusion_retriever_with_sources
 from Services.rag_fusion_retriever_without_sources import get_ragfusion_retriever_without_sources
+from Services.None_query import get_rag_response
+from Services.azure_openai import get_llm_answer_azure
+from Services.azure_multi_query import get_multiquery_rag_with_azure
 import uuid
+from phoenix.otel import register
+from langchain.chat_models import AzureChatOpenAI
+# from langchain_community.chat_models import OpenAI
+
 
 
 
@@ -101,8 +108,15 @@ def retrieve_documents(
     sources: bool = True,
     guardrailOption: str = None,
     rerankerOption: str = None,
+    chatbot_id: str = "RAG_Document_Store"
 ):
     """Main entry for retrieving documents with selected retriever pipeline."""
+    # tracer_provider = register(
+    #     # project_name="testing1",
+    #     project_name=chatbot_id,
+    #     endpoint="http://localhost:6006/v1/traces",
+    #     auto_instrument=True  # Automatically instruments supported libraries
+    # )
 
     # ✅ Load defaults from config if not provided
     query_optimizer = query_optimizer or CONFIG["default_query_optimizer"]
@@ -116,7 +130,7 @@ def retrieve_documents(
 
     file_id = file_id or [0]
     embedding = HuggingFaceEmbeddings(model_name=embedding_model_name)
-
+    sources = True
     # -----------------------------
     # Case 1: No files -> plain LLM answer
     # -----------------------------
@@ -124,6 +138,11 @@ def retrieve_documents(
         return get_llm_answer(
             query, llm_model_name, temperature, token_size, sources, guardrailOption
         )
+    
+        # return get_llm_answer_azure(
+        #     query, llm_model_name, temperature, token_size, sources, guardrailOption
+        # )
+    
 
     # -----------------------------
     # Case 2: Merge embeddings from all files
@@ -148,6 +167,9 @@ def retrieve_documents(
             result = get_multiquery_retriever_without_sources(
                 query, db, llm_model_name, temperature, token_size, guardrailOption, rerankerOption
             )
+            # result = get_multiquery_rag_with_azure(
+            #     query, db, llm_model_name, temperature, token_size, guardrailOption, rerankerOption
+            # )
 
     elif query_optimizer == "Step Back":
         if sources:
@@ -170,8 +192,8 @@ def retrieve_documents(
             )
 
     else:
-        retriever = db.as_retriever()
-        result = retriever.get_relevant_documents(query)
+        # retriever = db.as_retriever()
+        result = get_rag_response(query, db, llm_model_name, temperature, token_size, guardrailOption, rerankerOption)
     result["traceId"]=str(uuid.uuid4())
     # result.append("traceId",str(uuid.uuid4()))
     return result
