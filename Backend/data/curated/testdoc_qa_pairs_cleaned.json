@@ -1,18 +1,18 @@
 {
-  "summary": "The document discusses how climate change, driven by greenhouse gas emissions, deforestation, industrial pollution, and agricultural methane, poses significant threats to human health. It highlights key health impacts such as heat\u2011related illnesses, the spread of vector\u2011borne diseases, respiratory problems from poor air quality, and the risks of water scarcity and food insecurity. To address these challenges, the text outlines mitigation strategies\u2014including renewable energy adoption, reforestation, sustainable agriculture, public health campaigns, and international climate agreements\u2014alongside adaptation measures like strengthening healthcare systems, establishing early warning systems, ensuring clean water and nutrition, and supporting community\u2011based adaptation projects.",
+  "summary": "The document examines how climate change threatens human health by outlining its primary drivers\u2014greenhouse gas emissions, deforestation, industrial pollution, and agricultural methane releases\u2014and the resulting health impacts such as heat\u2011related illnesses, the spread of vector\u2011borne diseases, respiratory problems from poor air quality, and water and food insecurity. It highlights mitigation measures including a shift to renewable energy, reforestation, sustainable agriculture, public health campaigns, and international climate agreements. Adaptation strategies focus on bolstering healthcare systems, establishing early warning systems for extreme weather, ensuring clean water and nutritious food access, and supporting community\u2011based adaptation projects. Together, these sections emphasize the urgent need for coordinated global action to protect public health in a warming world.",
   "qa_pairs": [
     {
-      "question": "What are the main causes of climate change mentioned in the text?",
+      "question": "What are the main causes of climate change listed in the text?",
       "answer": "Greenhouse gas emissions from burning fossil fuels, deforestation reducing carbon absorption, industrial pollution and urbanization, and agriculture practices releasing methane.",
       "rating": 9
     },
     {
-      "question": "Which health conditions are linked to increased heatwaves?",
+      "question": "What health issue is associated with increased heatwaves?",
       "answer": "Heatstroke and dehydration.",
       "rating": 9
     },
     {
-      "question": "Which vector-borne diseases are said to spread due to climate change?",
+      "question": "Which vector-borne diseases are mentioned as spreading due to climate change?",
       "answer": "Malaria and dengue.",
       "rating": 9
     },
@@ -22,34 +22,39 @@
       "rating": 8
     },
     {
-      "question": "What are the main impacts on human health listed in the text?",
-      "answer": "Increased heatwaves leading to heatstroke and dehydration, spread of vector-borne diseases like malaria and dengue, poor air quality causing asthma and respiratory illnesses, water scarcity and food insecurity.",
+      "question": "What water and food related health issues are highlighted?",
+      "answer": "Water scarcity and food insecurity.",
       "rating": 9
     },
     {
-      "question": "Which renewable energy sources are highlighted for transitioning?",
-      "answer": "Solar, wind, hydro.",
-      "rating": 10
+      "question": "Which renewable energy sources are part of the mitigation strategies?",
+      "answer": "Solar, wind, and hydro.",
+      "rating": 9
     },
     {
-      "question": "What are the key components of the mitigation strategies?",
-      "answer": "Transitioning to renewable energy (solar, wind, hydro), reforestation and sustainable agriculture, public health awareness campaigns, international cooperation and climate policy agreements.",
-      "rating": 10
-    },
-    {
-      "question": "What adaptation measures are suggested for health?",
-      "answer": "Strengthening healthcare systems to deal with climate-driven diseases, developing early warning systems for extreme weather, improving access to clean water and nutritious food, community-based adaptation projects.",
-      "rating": 10
-    },
-    {
-      "question": "Which public health measure is included in the mitigation strategies?",
+      "question": "What public health action is recommended under mitigation strategies?",
       "answer": "Public health awareness campaigns.",
-      "rating": 10
+      "rating": 9
     },
     {
-      "question": "Which issues are addressed by improving access to clean water and nutritious food?",
-      "answer": "Water scarcity and food insecurity.",
-      "rating": 10
+      "question": "What international approach is suggested for mitigation?",
+      "answer": "International cooperation and climate policy agreements.",
+      "rating": 9
+    },
+    {
+      "question": "What adaptation strategy involves strengthening healthcare systems?",
+      "answer": "Strengthening healthcare systems to deal with climate-driven diseases.",
+      "rating": 9
+    },
+    {
+      "question": "What early warning system is recommended for extreme weather?",
+      "answer": "Developing early warning systems for extreme weather.",
+      "rating": 9
+    },
+    {
+      "question": "What community-based approach is mentioned for adaptation?",
+      "answer": "Community-based adaptation projects.",
+      "rating": 8
     }
   ],
   "conversations": [
@@ -60,7 +65,7 @@
       },
       {
         "role": "user",
-        "content": "What are the main causes of climate change mentioned in the text?"
+        "content": "What are the main causes of climate change listed in the text?"
       },
       {
         "role": "assistant",
@@ -74,7 +79,7 @@
       },
       {
         "role": "user",
-        "content": "Which health conditions are linked to increased heatwaves?"
+        "content": "What health issue is associated with increased heatwaves?"
       },
       {
         "role": "assistant",
@@ -88,7 +93,7 @@
       },
       {
         "role": "user",
-        "content": "Which vector-borne diseases are said to spread due to climate change?"
+        "content": "Which vector-borne diseases are mentioned as spreading due to climate change?"
       },
       {
         "role": "assistant",
@@ -116,11 +121,11 @@
       },
       {
         "role": "user",
-        "content": "What are the main impacts on human health listed in the text?"
+        "content": "What water and food related health issues are highlighted?"
       },
       {
         "role": "assistant",
-        "content": "Increased heatwaves leading to heatstroke and dehydration, spread of vector-borne diseases like malaria and dengue, poor air quality causing asthma and respiratory illnesses, water scarcity and food insecurity."
+        "content": "Water scarcity and food insecurity."
       }
     ],
     [
@@ -130,11 +135,11 @@
       },
       {
         "role": "user",
-        "content": "Which renewable energy sources are highlighted for transitioning?"
+        "content": "Which renewable energy sources are part of the mitigation strategies?"
       },
       {
         "role": "assistant",
-        "content": "Solar, wind, hydro."
+        "content": "Solar, wind, and hydro."
       }
     ],
     [
@@ -144,35 +149,7 @@
       },
       {
         "role": "user",
-        "content": "What are the key components of the mitigation strategies?"
-      },
-      {
-        "role": "assistant",
-        "content": "Transitioning to renewable energy (solar, wind, hydro), reforestation and sustainable agriculture, public health awareness campaigns, international cooperation and climate policy agreements."
-      }
-    ],
-    [
-      {
-        "role": "system",
-        "content": "You are a helpful AI assistant that provides accurate, detailed responses."
-      },
-      {
-        "role": "user",
-        "content": "What adaptation measures are suggested for health?"
-      },
-      {
-        "role": "assistant",
-        "content": "Strengthening healthcare systems to deal with climate-driven diseases, developing early warning systems for extreme weather, improving access to clean water and nutritious food, community-based adaptation projects."
-      }
-    ],
-    [
-      {
-        "role": "system",
-        "content": "You are a helpful AI assistant that provides accurate, detailed responses."
-      },
-      {
-        "role": "user",
-        "content": "Which public health measure is included in the mitigation strategies?"
+        "content": "What public health action is recommended under mitigation strategies?"
       },
       {
         "role": "assistant",
@@ -186,18 +163,60 @@
       },
       {
         "role": "user",
-        "content": "Which issues are addressed by improving access to clean water and nutritious food?"
+        "content": "What international approach is suggested for mitigation?"
       },
       {
         "role": "assistant",
-        "content": "Water scarcity and food insecurity."
+        "content": "International cooperation and climate policy agreements."
+      }
+    ],
+    [
+      {
+        "role": "system",
+        "content": "You are a helpful AI assistant that provides accurate, detailed responses."
+      },
+      {
+        "role": "user",
+        "content": "What adaptation strategy involves strengthening healthcare systems?"
+      },
+      {
+        "role": "assistant",
+        "content": "Strengthening healthcare systems to deal with climate-driven diseases."
+      }
+    ],
+    [
+      {
+        "role": "system",
+        "content": "You are a helpful AI assistant that provides accurate, detailed responses."
+      },
+      {
+        "role": "user",
+        "content": "What early warning system is recommended for extreme weather?"
+      },
+      {
+        "role": "assistant",
+        "content": "Developing early warning systems for extreme weather."
+      }
+    ],
+    [
+      {
+        "role": "system",
+        "content": "You are a helpful AI assistant that provides accurate, detailed responses."
+      },
+      {
+        "role": "user",
+        "content": "What community-based approach is mentioned for adaptation?"
+      },
+      {
+        "role": "assistant",
+        "content": "Community-based adaptation projects."
       }
     ]
   ],
   "metrics": {
-    "total": 10,
-    "filtered": 10,
+    "total": 11,
+    "filtered": 11,
     "retention_rate": 1.0,
-    "avg_score": 9.4
+    "avg_score": 8.8
   }
 }

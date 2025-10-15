@@ -153,11 +153,14 @@ def delete_file_from_datastore(
         print(f"[ERROR] Failed to delete files: {e}")
 
     json_file=Path(CONFIG["project_root"] / "Data" / datastore.name / f"{datastore.name}_evaluation_qa.json")
+    json_file1=Path(CONFIG["project_root"] / "Data" / datastore.name / f"{file_record.filename}_qa_pairs_cleaned.json")
 
     try:
-        if json_file.exists():
+        if json_file.exists() and json_file1.exists():
             json_file.unlink()
+            json_file1.unlink()
             print(f"[INFO] Deleted: {json_file}")
+            print(f"[INFO] Deleted: {json_file1}")
     except Exception as e:
         print(f"[ERROR] Failed to delete {json_file}: {e}")
 

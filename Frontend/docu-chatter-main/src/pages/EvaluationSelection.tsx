@@ -644,57 +644,57 @@ const EvaluationSelection = () => {
                 </CardHeader>
 
                 <CardContent className="space-y-8">
-  {/* Framework Selection */}
-  <div className="space-y-2">
-    <label className="text-sm font-medium text-gray-700">Select Framework</label>
-    <Select
-      value={selectedFramework || ""}
-      onValueChange={(value) => {
-        setSelectedFramework(value);
-        // Reset selected metrics when framework changes
-        setSelectedMetrics([]);
-      }}
-      disabled={evaluationStarted}
-    >
-      <SelectTrigger className="w-full md:w-2/3">
-        <SelectValue placeholder="Choose evaluation framework" />
-      </SelectTrigger>
+                  {/* Framework Selection */}
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-gray-700">Select Framework</label>
+                    <Select
+                      value={selectedFramework || ""}
+                      onValueChange={(value) => {
+                        setSelectedFramework(value);
+                        // Reset selected metrics when framework changes
+                        setSelectedMetrics([]);
+                      }}
+                      disabled={evaluationStarted}
+                    >
+                      <SelectTrigger className="w-full md:w-2/3">
+                        <SelectValue placeholder="Choose evaluation framework" />
+                      </SelectTrigger>
 
-      <SelectContent>
-        {frameworks.map((framework) => (
-          <SelectItem key={framework} value={framework}>
-            {framework}
-          </SelectItem>
-        ))}
-      </SelectContent>
-    </Select>
-  </div>
+                      <SelectContent>
+                        {frameworks.map((framework) => (
+                          <SelectItem key={framework} value={framework}>
+                            {framework}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
 
-  {/* Metrics Selection */}
-  <div className="space-y-2">
-    <label className="text-sm font-medium text-gray-700">Select Evaluator Metrics</label>
-    <SelectMulti
-      isMulti
-      styles={customMultiStyles}
-      options={
-        selectedFramework && evalFrameworksObj[selectedFramework]
-          ? evalFrameworksObj[selectedFramework].map((metric) => ({
-              value: metric,
-              label: metric,
-            }))
-          : []
-      }
-      value={selectedMetrics.map((metric) => ({ value: metric, label: metric }))}
-      onChange={(selectedOptions) =>
-        setSelectedMetrics(selectedOptions.map((opt) => opt.value))
-      }
-      placeholder="Select Evaluator metrics"
-      isDisabled={!selectedFramework || evaluationStarted}
-    />
-  </div>
+                  {/* Metrics Selection */}
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-gray-700">Select Evaluator Metrics</label>
+                    <SelectMulti
+                      isMulti
+                      styles={customMultiStyles}
+                      options={
+                        selectedFramework && evalFrameworksObj[selectedFramework]
+                          ? evalFrameworksObj[selectedFramework].map((metric) => ({
+                            value: metric,
+                            label: metric,
+                          }))
+                          : []
+                      }
+                      value={selectedMetrics.map((metric) => ({ value: metric, label: metric }))}
+                      onChange={(selectedOptions) =>
+                        setSelectedMetrics(selectedOptions.map((opt) => opt.value))
+                      }
+                      placeholder="Select Evaluator metrics"
+                      isDisabled={!selectedFramework || evaluationStarted}
+                    />
+                  </div>
 
-  {/* Start Evaluation Button */}
-  {/* <Button
+                  {/* Start Evaluation Button */}
+                  {/* <Button
     onClick={handleStartEvaluation}
     disabled={
       !selectedFramework || selectedMetrics.length === 0 || evaluationStarted || loading
@@ -735,108 +735,115 @@ ${loading ? "opacity-70 cursor-not-allowed" : "hover:opacity-90"}`}
     )}
   </Button> */}
 
-  <Button
-    onClick={() => {
-      if (!selectedFramework) {
-        toast({
-          title: "Framework not selected",
-          description: "Please select a framework before starting evaluation.",
-          variant: "destructive",
-        });
-        return;
-      }
+                  <Button
+                    onClick={() => {
+                      if (!selectedFramework) {
+                        toast({
+                          title: "Framework not selected",
+                          description: "Please select a framework before starting evaluation.",
+                          variant: "destructive",
+                        });
+                        return;
+                      }
 
-      if (selectedMetrics.length === 0) {
-        toast({
-          title: "Metrics not selected",
-          description: "Please select at least one metric.",
-          variant: "destructive",
-        });
-        return;
-      }
+                      if (selectedMetrics.length === 0) {
+                        toast({
+                          title: "Metrics not selected",
+                          description: "Please select at least one metric.",
+                          variant: "destructive",
+                        });
+                        return;
+                      }
 
-      // ✅ Safe to proceed
-      handleStartEvaluation();
-    }}
-    disabled={loading || evaluationStarted}
-    className={`w-full md:w-2/3 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 
+                      // ✅ Safe to proceed
+                      handleStartEvaluation();
+                    }}
+                    disabled={loading || evaluationStarted}
+                    className={`w-full md:w-2/3 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 
 text-white shadow-lg flex items-center justify-center py-3 rounded-xl 
 ${loading ? "opacity-70 cursor-not-allowed" : "hover:opacity-90"}`}
-  >
-    {loading ? (
-      <span>Starting...</span>
-    ) : (
-      <>
-        <Play className="h-5 w-5 mr-2" />
-        Start Evaluation
-      </>
-    )}
-  </Button>
-</CardContent>
+                  >
+                    {loading ? (
+                      <span>Starting...</span>
+                    ) : (
+                      <>
+                        <Play className="h-5 w-5 mr-2" />
+                        Start Evaluation
+                      </>
+                    )}
+                  </Button>
+                </CardContent>
 
               </Card>
 
               {/* Evaluation Timeline */}
               {evaluationStarted && (
-  <Card
-    ref={timelineRef}
-    className="w-full shadow-md rounded-2xl border border-gray-10"
-  >
-    {/* Header */}
-    <CardHeader className="px-6 pt-6 pb-4">
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between">
-        <CardTitle className="text-xl font-semibold text-gray-10">
-          Processing Timeline
-        </CardTitle>
-        <p className="text-sm text-gray-500 mt-2 md:mt-0">{timelineStatus}</p>
-      </div>
-    </CardHeader>
+                <Card
+                  ref={timelineRef}
+                  className="w-full shadow-md rounded-2xl border border-gray-10"
+                >
+                  {/* Header */}
+                  <CardHeader className="px-6 pt-6 pb-4">
+                    <div className="flex flex-col md:flex-row md:items-center md:justify-between">
+                      <CardTitle className="text-xl font-semibold text-gray-10">
+                        Processing Timeline
+                      </CardTitle>
+                      <p className="text-sm text-gray-500 mt-2 md:mt-0">{timelineStatus}</p>
+                    </div>
+                  </CardHeader>
 
-    {/* Timeline */}
-    <CardContent className="px-6 pb-8 space-y-8">
-      <div className="flex items-center justify-between w-full overflow-x-auto py-4 gap-8 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-transparent">
-        {timelineSteps.map((step, index) => (
-          <div
-            key={index}
-            className="timeline-step flex-shrink-0 transition-all duration-500 ease-out"
-            style={{
-              opacity: visibleSteps.includes(index) ? 1 : 0,
-              transform: visibleSteps.includes(index)
-                ? "translateY(0)"
-                : "translateY(40px)",
-            }}
-          >
-            <TimelineStep
-              label={step}
-              status={getStepStatus(index)}
-              isLast={index === timelineSteps.length - 1}
-            />
-          </div>
-        ))}
-      </div>
+                  {/* Timeline */}
+                  <CardContent className="px-6 pb-8 space-y-8">
+                    <div className="flex items-center justify-between w-full overflow-x-auto py-4 gap-8 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-transparent">
+                      {timelineSteps.map((step, index) => (
+                        <div
+                          key={index}
+                          className="timeline-step flex-shrink-0 transition-all duration-500 ease-out"
+                          style={{
+                            opacity: visibleSteps.includes(index) ? 1 : 0,
+                            transform: visibleSteps.includes(index)
+                              ? "translateY(0)"
+                              : "translateY(40px)",
+                          }}
+                        >
+                          <TimelineStep
+                            label={step}
+                            status={getStepStatus(index)}
+                            isLast={index === timelineSteps.length - 1}
+                          />
+                        </div>
+                      ))}
+                    </div>
 
-      {/* CTA Button */}
-      <div className="flex justify-center">
-        <Button
-          onClick={() => {
-            if (evaluationResult) {
-              navigate(`/rag-output/${chatbot.id}`, {
-                state: { evaluationResponse: evaluationResult },
-              });
-            }
-          }}
-          disabled={!isCompleted}
-          className="w-full md:w-2/3 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 
-            text-white shadow-lg hover:opacity-90 transition-opacity disabled:opacity-50 
-            flex items-center justify-center py-3 text-base rounded-xl"
-        >
-          <Eye className="h-5 w-5 mr-2" />
-          Show Result
-        </Button>
-      </div>
-    </CardContent>
-  </Card>
-)}
+                    {/* CTA Button */}
+                    <div className="flex justify-center">
+                      <Button
+                        onClick={() => {
+                          if (evaluationResult) {
+                            const framework = evaluationResult?.framework?.toLowerCase();
+                            const targetPath =
+                              framework === "ragaas"
+                                ? `/ragaas-output/${chatbot.id}`
+                                : `/rag-output/${chatbot.id}`;
+
+                            navigate(targetPath, {
+                              state: { evaluationResponse: evaluationResult },
+                            });
+                          }
+                        }}
+                        disabled={!isCompleted}
+                        className="w-full md:w-2/3 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 
+    text-white shadow-lg hover:opacity-90 transition-opacity disabled:opacity-50 
+    flex items-center justify-center py-3 text-base rounded-xl"
+                      >
+                        <Eye className="h-5 w-5 mr-2" />
+                        Show Result
+                      </Button>
+
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
 
             </div>
           </TabsContent>

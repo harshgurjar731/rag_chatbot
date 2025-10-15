@@ -51,97 +51,97 @@ const RAGOutput = () => {
   const metrics = apiResponse.metrics || Object.keys(apiResponse.results || {});
 
   const normalizeValue = (val: string | null | undefined) =>
-  val && val.toLowerCase() !== "unknown" ? val : null;
+    val && val.toLowerCase() !== "unknown" ? val : null;
 
-// Build textual summary per record dynamically
-const buildTextualSummary = (metric: string, record: any, metricData: any) => {
-  const counts: Record<string, number> = {};
-  Object.keys(record)
-    .filter((k) => k.endsWith("_eval"))
-    .forEach((key) => {
-      const val = normalizeValue(record[key]);
-      if (val) counts[val] = (counts[val] || 0) + 1;
-    });
+  // Build textual summary per record dynamically
+  const buildTextualSummary = (metric: string, record: any, metricData: any) => {
+    const counts: Record<string, number> = {};
+    Object.keys(record)
+      .filter((k) => k.endsWith("_eval"))
+      .forEach((key) => {
+        const val = normalizeValue(record[key]);
+        if (val) counts[val] = (counts[val] || 0) + 1;
+      });
 
-  const totalValid = Object.values(counts).reduce((a, b) => a + b, 0);
-  const mostCommon = Object.entries(counts).sort((a, b) => b[1] - a[1])[0]?.[0] || "N/A";
+    const totalValid = Object.values(counts).reduce((a, b) => a + b, 0);
+    const mostCommon = Object.entries(counts).sort((a, b) => b[1] - a[1])[0]?.[0] || "N/A";
 
-  return `
+    return `
 Metric: ${metric}
 Total Records: ${metricData?.total_records || 1}
 ${Object.entries(counts)
-    .map(([label, val]) => `${label}: ${val} (${((val / totalValid) * 100).toFixed(1)}%)`)
-    .join("\n")}
+        .map(([label, val]) => `${label}: ${val} (${((val / totalValid) * 100).toFixed(1)}%)`)
+        .join("\n")}
 Most Frequent Outcome: ${mostCommon}
 Model Used: ${metricData?.model_used || "Unknown"}
 `;
-};
+  };
 
-// Prepare export data with only metrics values + necessary meta
-const prepareExportData = () => {
-  const rows: any[] = [];
-  metrics.forEach((metric) => {
-    const metricData = apiResponse.results[metric];
-    const results = metricData?.results || [];
-    results.forEach((r: any, idx: number) => {
-      const row: Record<string, any> = {
-        metric,
-        record_index: idx + 1,
-        framework: apiResponse.framework,
-        progress: apiResponse.progress,
-        status: apiResponse.status,
-        model_used: metricData?.model_used || "Unknown",
-        textual_summary: buildTextualSummary(metric, r, metricData),
-      };
+  // Prepare export data with only metrics values + necessary meta
+  const prepareExportData = () => {
+    const rows: any[] = [];
+    metrics.forEach((metric) => {
+      const metricData = apiResponse.results[metric];
+      const results = metricData?.results || [];
+      results.forEach((r: any, idx: number) => {
+        const row: Record<string, any> = {
+          metric,
+          record_index: idx + 1,
+          framework: apiResponse.framework,
+          progress: apiResponse.progress,
+          status: apiResponse.status,
+          model_used: metricData?.model_used || "Unknown",
+          textual_summary: buildTextualSummary(metric, r, metricData),
+        };
 
-      // Include only valid metric evaluation keys
-      Object.keys(r)
-        .filter((k) => k.endsWith("_eval"))
-        .forEach((key) => {
-          const val = normalizeValue(r[key]);
-          if (val) row[key] = val;
-        });
+        // Include only valid metric evaluation keys
+        Object.keys(r)
+          .filter((k) => k.endsWith("_eval"))
+          .forEach((key) => {
+            const val = normalizeValue(r[key]);
+            if (val) row[key] = val;
+          });
 
-      rows.push(row);
+        rows.push(row);
+      });
     });
-  });
-  return rows;
-};
+    return rows;
+  };
 
-// Export CSV
-const exportCSV = () => {
-  const data = prepareExportData();
-  if (!data.length) {
-    toast({ title: "No data to export" });
-    return;
-  }
+  // Export CSV
+  const exportCSV = () => {
+    const data = prepareExportData();
+    if (!data.length) {
+      toast({ title: "No data to export" });
+      return;
+    }
 
-  const headers = Object.keys(data[0]);
-  let csv = headers.join(",") + "\n";
+    const headers = Object.keys(data[0]);
+    let csv = headers.join(",") + "\n";
 
-  data.forEach((row) => {
-    const values = headers.map((h) =>
-      `"${(row[h] || "").toString().replace(/"/g, '""')}"`
+    data.forEach((row) => {
+      const values = headers.map((h) =>
+        `"${(row[h] || "").toString().replace(/"/g, '""')}"`
+      );
+      csv += values.join(",") + "\n";
+    });
+
+    saveAs(
+      new Blob([csv], { type: "text/csv;charset=utf-8;" }),
+      `${chatbot.name}_evaluation_metrics.csv`
     );
-    csv += values.join(",") + "\n";
-  });
+    toast({ title: "CSV exported successfully!" });
+  };
 
-  saveAs(
-    new Blob([csv], { type: "text/csv;charset=utf-8;" }),
-    `${chatbot.name}_evaluation_metrics.csv`
-  );
-  toast({ title: "CSV exported successfully!" });
-};
-
-// Export JSON
-const exportJSON = () => {
-  const data = prepareExportData();
-  saveAs(
-    new Blob([JSON.stringify({ meta: apiResponse, results: data }, null, 2)], { type: "application/json" }),
-    `${chatbot.name}_evaluation_metrics.json`
-  );
-  toast({ title: "JSON exported successfully!" });
-};
+  // Export JSON
+  const exportJSON = () => {
+    const data = prepareExportData();
+    saveAs(
+      new Blob([JSON.stringify({ meta: apiResponse, results: data }, null, 2)], { type: "application/json" }),
+      `${chatbot.name}_evaluation_metrics.json`
+    );
+    toast({ title: "JSON exported successfully!" });
+  };
 
 
   // Prepare overall summary counts
@@ -247,75 +247,76 @@ const exportJSON = () => {
 
         {/* Overall summary */}
         <Card className="shadow-elegant w-full h-full p-4">
-  <CardHeader>
-    <CardTitle className="text-2xl">Overall Summary</CardTitle>
-  </CardHeader>
-  <CardContent className="space-y-6">
+          <CardHeader>
+            <CardTitle className="text-2xl">Overall Summary</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-6">
 
-    <div className="lg:flex lg:flex-row gap-8">
+            <div className="lg:flex lg:flex-row gap-8">
 
-      {/* Overall Pie Chart */}
-      <div className="flex-1 h-60">
-        <ResponsiveContainer width="100%" height="100%">
-          <PieChart>
-            <Pie
-              data={overallPieData.filter(
-                (d) => d.name && d.name.toLowerCase() !== "unknown"
-              )}
-              cx="50%"
-              cy="50%"
-              outerRadius={80}
-              label={({ name, value }) => `${name}: ${value}`}
-              labelLine={true}
-              dataKey="value"
-              fontSize={12}
-            >
-              {overallPieData
-                .filter((d) => d.name && d.name.toLowerCase() !== "unknown")
-                .map((entry, idx) => (
-                  <Cell key={idx} fill={entry.color} />
-                ))}
-            </Pie>
-            <Tooltip />
-          </PieChart>
-        </ResponsiveContainer>
-      </div>
+              {/* Overall Pie Chart */}
+              <div className="flex-1 h-60">
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie
+                      data={overallPieData.filter(
+                        (d) => d.name && d.name.toLowerCase() !== "unknown"
+                      )}
+                      cx="50%"
+                      cy="50%"
+                      outerRadius={80}
+                      label={({ name, value }) => `${name}: ${value}`}
+                      labelLine={true}
+                      dataKey="value"
+                      fontSize={14}
+                    >
+                      {overallPieData
+                        .filter((d) => d.name && d.name.toLowerCase() !== "unknown")
+                        .map((entry, idx) => (
+                          <Cell key={idx} fill={entry.color} />
+                        ))}
+                    </Pie>
+                    <Tooltip />
+                  </PieChart>
+                </ResponsiveContainer>
+              </div>
 
-      {/* Overall Bar Chart */}
-      <div className="flex-1 h-60">
-        <ResponsiveContainer width="100%" height="100%">
-          <BarChart data={overallBarData}>
-            <XAxis
-              dataKey="name"
-              interval={0}
-              angle={-30}
-              textAnchor="end"
-              height={80}
-              fontSize={12}
-            />
-            <YAxis />
-            <Tooltip />
-            {/* <Legend /> */}
-            <Bar dataKey="value"
-              isAnimationActive={true}
-              animationDuration={800}
-              animationEasing="ease-out"
-              // barSize={30}
-              // fill="#8884d8"
-              label={{ position: 'top', fontSize: 12 }}
-              >
-              {overallBarData.map((entry, idx) => (
-                <Cell key={idx} fill={entry.color} />
-              ))}
-            </Bar>
-          </BarChart>
-        </ResponsiveContainer>
-      </div>
+              {/* Overall Bar Chart */}
+              <div className="flex-1 h-60">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={overallBarData}>
+                    <XAxis
+                      dataKey="name"
+                      interval={0}
+                      angle={-20}
+                      textAnchor="end"
+                      height={80}
+                      fontSize={12}
+                    />
+                    <YAxis />
+                    <Tooltip />
+                    {/* <Legend /> */}
+                    <Bar dataKey="value"
+                      isAnimationActive={true}
+                      animationDuration={800}
+                      animationEasing="ease-out"
+                      // barSize={30}
+                      // fill="#8884d8"
+                      label={{ position: 'top', fontSize: 14 }}
+                    >
+                      {overallBarData.map((entry, idx) => (
+                        <Cell key={idx} fill={entry.color}
+                        />
+                      ))}
+                    </Bar>
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
 
-    </div>
+            </div>
 
-    {/* Overall Textual Summary (moved below charts) */}
-    {/* <div className="bg-gray-50 p-4 rounded-md whitespace-pre-wrap mt-6">
+            {/* Overall Textual Summary (moved below charts) */}
+            {/* <div className="bg-gray-50 p-4 rounded-md whitespace-pre-wrap mt-6">
       {metrics.length > 0 ? (
         <>
           <p>Total Metrics Evaluated: {metrics.length}</p>
@@ -355,8 +356,8 @@ const exportJSON = () => {
       )}
     </div> */}
 
-  </CardContent>
-</Card>
+          </CardContent>
+        </Card>
 
         {/* Metric-wise row: Text | Pie | Bar */}
         {/* {metrics.map((metric) => {
@@ -391,52 +392,52 @@ const exportJSON = () => {
           });
 
 
-// Calculate total counted labels (excluding unknowns)
-const countedTotal = Object.entries(counts)
-  .filter(([label, val]) => val && label.toLowerCase() !== "unknown")
-  .reduce((sum, [, val]) => sum + val, 0);
+          // Calculate total counted labels (excluding unknowns)
+          const countedTotal = Object.entries(counts)
+            .filter(([label, val]) => val && label.toLowerCase() !== "unknown")
+            .reduce((sum, [, val]) => sum + val, 0);
 
-// Determine the most common label dynamically
-const mostCommon = Object.entries(counts)
-  .filter(([label, val]) => val && label.toLowerCase() !== "unknown")
-  .sort((a, b) => b[1] - a[1])[0]?.[0] || "N/A";
+          // Determine the most common label dynamically
+          const mostCommon = Object.entries(counts)
+            .filter(([label, val]) => val && label.toLowerCase() !== "unknown")
+            .sort((a, b) => b[1] - a[1])[0]?.[0] || "N/A";
 
-// Generate dynamic descriptions for known labels
-const getLabelDescription = (label: string) => {
-  switch (label.toLowerCase()) {
-    case "factual":
-      return "✔️ Correct based on reference";
-    case "hallucinated":
-      return "❌ Incorrect or unsupported answer";
-    case "neutral":
-      return "➖ Partial or inconclusive result";
-    case "relevant":
-      return "🔎 Contextually relevant";
-    case "irrelevant":
-      return "🚫 Irrelevant to query";
-    case "non-toxic":
-      return "🟢 Safe content";
-    case "toxic":
-      return "⚠️ May contain harmful content";
-    default:
-      return "";
-  }
-};
+          // Generate dynamic descriptions for known labels
+          const getLabelDescription = (label: string) => {
+            switch (label.toLowerCase()) {
+              case "factual":
+                return "✔️ Correct based on reference";
+              case "hallucinated":
+                return "❌ Incorrect or unsupported answer";
+              case "neutral":
+                return "➖ Partial or inconclusive result";
+              case "relevant":
+                return "🔎 Contextually relevant";
+              case "irrelevant":
+                return "🚫 Irrelevant to query";
+              case "non-toxic":
+                return "🟢 Safe content";
+              case "toxic":
+                return "⚠️ May contain harmful content";
+              default:
+                return "";
+            }
+          };
 
-// Build textual summary
-const textualSummary = `
+          // Build textual summary
+          const textualSummary = `
 📌 Metric: ${metric}
 ────────────────────────────
 Total Records: ${totalRecords}
 
 ${Object.entries(counts)
-  .filter(([label, val]) => val && label.toLowerCase() !== "unknown") 
-  .map(([label, val]) => {
-    const percentage = countedTotal ? ((val / countedTotal) * 100).toFixed(1) : "0";
-    const description = getLabelDescription(label);
-    return `• ${label}: ${val} (${percentage}%) ${description ? `→ ${description}` : ""}`;
-  })
-  .join("\n")}
+              .filter(([label, val]) => val && label.toLowerCase() !== "unknown")
+              .map(([label, val]) => {
+                const percentage = countedTotal ? ((val / countedTotal) * 100).toFixed(1) : "0";
+                const description = getLabelDescription(label);
+                return `• ${label}: ${val} (${percentage}%) ${description ? `→ ${description}` : ""}`;
+              })
+              .join("\n")}
 
 🌟 Most Common Outcome: ${mostCommon}
 📈 Accuracy Estimate: ${countedTotal ? `${((counts.factual || 0) / countedTotal * 100).toFixed(1)}%` : "N/A"}
@@ -474,6 +475,8 @@ ${Object.entries(counts)
                           label={({ name, value }) => `${name}: ${value}`}
                           labelLine={false}
                           dataKey="value"
+
+                          fontSize={14}
                         >
                           {pieData.map((entry, idx) => <Cell key={idx} fill={entry.color} />)}
                         </Pie>
@@ -483,12 +486,19 @@ ${Object.entries(counts)
                   </div>
                   <div className="flex-1 h-60">
                     <ResponsiveContainer width="100%" height="100%">
-                      <BarChart data={barData}>
-                        <XAxis dataKey="name" />
+                      <BarChart data={barData}><XAxis
+                        dataKey="name"
+                        interval={0}
+                        angle={-30}
+                        textAnchor="end"
+                        height={80}
+                        fontSize={14}
+                      />
                         <YAxis />
                         <Tooltip />
                         <Legend />
-                        <Bar dataKey="value" fill={THEME_COLORS.purple}>
+                        <Bar dataKey="value" fill={THEME_COLORS.purple}
+                          fontSize={12} >
                           {barData.map((entry, idx) => <Cell key={idx} fill={THEME_COLORS[Object.keys(THEME_COLORS)[idx % Object.keys(THEME_COLORS).length]]} />)}
                         </Bar>
                       </BarChart>

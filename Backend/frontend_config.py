@@ -72,11 +72,11 @@ def get_evaluation_frameworks() -> Dict[str, List[str]]:
             "RAG Relevancy",      # maps to rag_relevancy_eval
             "Toxicity",           # maps to toxicity_eval
         ],
-        "Ragas": [
-            "Faithfulness",       # maps to hallucination_eval (or separate faithfulness logic)
-            "Answer Relevance",   # maps to qna_eval
-            "RAG Relevancy",      # maps to rag_relevancy_eval
-            "Toxicity",           # maps to toxicity_eval
+        "Ragaas": [
+            "Faithfulness",
+        "Answer Relevancy",
+        "Context Precision",
+        "Context Recall",          # maps to toxicity_eval
         ],
     }
 

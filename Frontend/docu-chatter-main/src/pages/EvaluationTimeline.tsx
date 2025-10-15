@@ -8,7 +8,7 @@ import { Outlet } from "react-router-dom";
 
 const timelineSteps = [
   "Document Uploaded",
-  "Document Chunked", 
+  "Document Chunked",
   "Indexing Completed",
   "Embedding Completed"
 ];
@@ -17,7 +17,7 @@ const EvaluationTimeline = () => {
   const navigate = useNavigate();
   const [currentStep, setCurrentStep] = useState(0);
   const [isCompleted, setIsCompleted] = useState(false);
-   const { id } = useParams<{ id: string }>();
+  const { id } = useParams<{ id: string }>();
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -47,8 +47,8 @@ const EvaluationTimeline = () => {
       <header className="border-b bg-card shadow-card">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           <div className="flex items-center space-x-4">
-            <Button 
-              variant="ghost" 
+            <Button
+              variant="ghost"
               size="sm"
               onClick={() => navigate("/evaluation-selection")}
               className="hover:bg-muted"
@@ -86,19 +86,26 @@ const EvaluationTimeline = () => {
 
           <Card className="shadow-elegant">
             <CardContent className="pt-6">
-              <Button 
-                onClick={() => navigate(`/rag-output${id}`)}
+              <Button
+                onClick={() => {
+                  if (selected === "ragaas") {
+                    navigate(`/ragaas-output/${id}`);
+                  } else {
+                    navigate(`/rag-output/${id}`);
+                  }
+                }}
                 disabled={!isCompleted}
                 className="w-full bg-gradient-primary hover:opacity-90 transition-opacity disabled:opacity-50"
               >
                 <Eye className="h-4 w-4 mr-2" />
                 Show Result
               </Button>
+
             </CardContent>
           </Card>
         </div>
       </main>
-       <Outlet />
+      <Outlet />
     </div>
   );
 };

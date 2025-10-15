@@ -12,7 +12,7 @@ import ChatbotDetail from "./pages/ChatbotDetail";
 import NotFound from "./pages/NotFound";
 import SidebarLayout from "./components/SidebarLayout";
 import EvaluationDashboard from "./pages/EvaluationDashboard";
-
+import RAGASEvaluationOutput from "./pages/RagaasOutput";
 const queryClient = new QueryClient();
 
 const App = () => (
@@ -31,6 +31,7 @@ const App = () => (
           <Route path="evaluation-selection/:id" element={<EvaluationSelection />} />
           <Route path="evaluation-timeline/:id" element={<EvaluationTimeline />} />
           <Route path="rag-output/:id" element={<RAGOutput />} />
+          <Route path="ragaas-output/:id" element={<RAGASEvaluationOutput/>} />
           <Route path="chatbot/:id" element={<ChatbotDetail />} />
         </Routes>
       </BrowserRouter>
