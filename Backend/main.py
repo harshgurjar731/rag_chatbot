@@ -33,7 +33,7 @@ def initialize_phoenix():
 
 
 # Call this function at the start of your application
-initialize_phoenix()
+# initialize_phoenix()
 
 
 app = FastAPI(title="RAG Document Store")

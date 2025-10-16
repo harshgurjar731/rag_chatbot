@@ -51,6 +51,11 @@ CONFIG = {
     "groq_api_key": os.getenv("GROQ_API_KEY", ""),
     "groq_api_base": os.getenv("GROQ_API_BASE", "https://api.groq.com/openai/v1"),
 
+       # Azure OpenAI
+    "azure_api_key": os.getenv("AZURE_API_KEY", ""),
+    "azure_api_base": os.getenv("AZURE_API_BASE", ""),
+    "azure_api_version": os.getenv("AZURE_API_VERSION", "2024-12-01-preview"),
+
     # Guardrail
     "default_guardrail_level": os.getenv("DEFAULT_GUARDRAIL_OPTION", "none"),
 
@@ -77,6 +82,20 @@ CONFIG = {
     "bi_encoder_model": os.getenv("BI_ENCODER_MODEL", "sentence-transformers/all-MiniLM-L6-v2"),
     "llm_reranker_model": os.getenv("LLM_RERANKER_MODEL", "llama-3.3-70b-versatile"),
     "llm_reranker_max_tokens": int(os.getenv("LLM_RERANKER_MAX_TOKENS", 512)),
+
+
+    # -----------------------------
+    # Model Platform Configurations
+    # -----------------------------
+    "groq_supported_models": os.getenv(
+        "GROQ_SUPPORTED_MODELS",
+        "llama-3.3-70b-versatile,deepseek-r1-distill-llama-70b,gemma2-9b-it,llama-3.1-8b-instant,openai/gpt-oss-20b"
+    ).split(","),
+
+    "azure_supported_models": os.getenv(
+        "AZURE_SUPPORTED_MODELS",
+        "gpt-4o-mini"
+    ).split(","),
 
 
 
