@@ -61,6 +61,7 @@ def get_llm_models() -> List[str]:
         "gemma2-9b-it",
         "llama-3.1-8b-instant",
         "openai/gpt-oss-20b",
+        "gpt-4o-mini",
     ]
 
 def get_vector_dbs() -> List[str]:

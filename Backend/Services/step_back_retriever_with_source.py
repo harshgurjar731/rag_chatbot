@@ -1,58 +1,30 @@
-# services/step_back_retriever_with_source.py
-
 from operator import itemgetter
-from langchain.vectorstores import FAISS, Chroma
-from langchain.embeddings import HuggingFaceEmbeddings
-from langchain_core.output_parsers import StrOutputParser
+from typing import List
+
 from langchain.prompts import ChatPromptTemplate
-from langchain.load import dumps, loads
-from langchain_community.chat_models import ChatOpenAI
+from langchain.schema import Document
+from langchain_core.language_models.chat_models import BaseChatModel
+from langchain_core.output_parsers import StrOutputParser
 from langchain_community.vectorstores import FAISS, Chroma
-from langchain_community.embeddings import HuggingFaceEmbeddings
-from langchain_community.llms import HuggingFaceHub
-from guardrails import Guard
-from guardrails.hub import ToxicLanguage
+from langchain.load import dumps, loads
 
 from config import CONFIG
-from Services.guardrail import validate_output   # ✅ Guardrail utility
-from Services.reranker_service import get_reranker   # ✅ Import re-ranker factory
-
+from Services.guardrail import validate_output
+from Services.reranker_service import get_reranker
 
 def get_stepback_retriever_with_sources(
     query: str,
     db: FAISS | Chroma,
-    llm_model_name: str = None,
-    temperature: float = None,
-    token_size: int = None,
+    llm: BaseChatModel,
     guardrail_level: str = None,
-    rerankerOption: str = None,
+    reranker_option: str = None,
 ):
     """Step-Back RAG pipeline with guardrails, source tracking & optional re-ranking."""
-
-    # ✅ Load defaults from config if not provided
-    llm_model_name = llm_model_name or CONFIG["default_llm_model"]
-    temperature = temperature if temperature is not None else CONFIG["default_temperature"]
-    token_size = token_size or CONFIG["default_token_size"]
+    # Load defaults from config
     guardrail_level = guardrail_level or CONFIG["default_guardrail_option"]
-    rerankerOption = rerankerOption or CONFIG["default_reranker_option"]
+    reranker_option = reranker_option or CONFIG["default_reranker_option"]
 
-    # 🔑 Groq API setup (from env)
-    GROQ_API_KEY = CONFIG["groq_api_key"]
-    GROQ_API_BASE = CONFIG["groq_api_base"]
-
-    if not llm_model_name:
-        raise ValueError("LLM model name must be provided")
-
-    # ✅ LLM setup
-    llm = ChatOpenAI(
-        openai_api_base=GROQ_API_BASE,
-        openai_api_key=GROQ_API_KEY,
-        model=llm_model_name,
-        temperature=temperature,
-        max_tokens=token_size,
-    )
-
-    # ✅ Step-back prompt
+    # --- 1. Generate Step-Back Query ---
     stepback_template = """You are an AI assistant. Reformulate the following user question into
     a broader 'step-back' version that captures general background knowledge needed to answer it.
 
@@ -61,66 +33,53 @@ def get_stepback_retriever_with_sources(
     Provide only the step-back reformulated question as output.
     """
     stepback_prompt = ChatPromptTemplate.from_template(stepback_template)
-
     generate_stepback_query = stepback_prompt | llm | StrOutputParser()
-
-    # Generate step-back query
     stepback_query = generate_stepback_query.invoke({"question": query})
     print("Step-Back Reformulated Query:", stepback_query)
 
-    # ✅ Setup retriever
+    # --- 2. Retrieve Documents ---
     retriever = db.as_retriever(search_kwargs={"k": 3})
+    docs_main = retriever.invoke(query)
+    docs_stepback = retriever.invoke(stepback_query)
 
-    docs_main = retriever.get_relevant_documents(query)
-    docs_stepback = retriever.get_relevant_documents(stepback_query)
-
-    # ✅ Merge unique docs
+    # Merge documents from original and step-back queries
     combined_docs = get_unique_union([docs_main, docs_stepback])
     print("Retrieved Documents (combined):", len(combined_docs))
 
-    # ✅ Apply re-ranker if enabled
-    if rerankerOption != "none":
-        reranker = get_reranker(rerankerOption)
+    # --- 3. Conditionally Re-rank ---
+    if reranker_option != "none":
+        reranker = get_reranker(reranker_option)
         if reranker:
+            content_to_doc_map = {doc.page_content: doc for doc in combined_docs}
             doc_texts = [doc.page_content for doc in combined_docs]
-            ranked = reranker.rerank(
-                query,
-                doc_texts,
-                top_k=CONFIG["default_reranker_top_k"]  # ✅ driven from env
+
+            ranked_results = reranker.rank(
+                query=query,
+                docs=doc_texts,
+                top_k=CONFIG.get("default_reranker_top_k", 5)
             )
-            # Replace docs with reranked ones while preserving metadata
-            reranked_docs = []
-            for ranked_doc, _ in ranked:
-                for original_doc in combined_docs:
-                    if original_doc.page_content == ranked_doc:
-                        reranked_docs.append(original_doc)
-                        break
+
+            reranked_docs = [content_to_doc_map[result["text"]] for result in ranked_results if result["text"] in content_to_doc_map]
             combined_docs = reranked_docs
-            print(f"Applied Re-ranker: {rerankerOption}, Final Docs: {len(combined_docs)}")
+            print(f"Applied Re-ranker: {reranker_option}, Final Docs: {len(combined_docs)}")
 
-    # ✅ Extract unique sources
-    source_links = list({doc.metadata.get("source", "No source found") for doc in combined_docs})
-    print("Sources Used:")
-    for src in source_links:
-        print(" -", src)
+    # --- 4. Context Formatting & Citation Mapping (ADDED LOGIC) ---
+    def format_docs_for_context(docs: List[Document]):
+        """Formats docs and creates a map for citations."""
+        context_string = ""
+        citation_map = {}
+        for i, doc in enumerate(docs):
+            citation_id = i + 1
+            source = doc.metadata.get('source', 'N/A')
+            page = doc.metadata.get('page_number', 'N/A')
+            context_string += f"[Chunk {citation_id}] Source: {source}, Page: {page}\nContent: {doc.page_content}\n\n"
+            citation_map[str(citation_id)] = doc.metadata
+        return context_string, citation_map
 
-    # ✅ Guardrails setup (thresholds from env)
-    guard = None
-    if guardrail_level == "basic":
-        guard = Guard().use(ToxicLanguage(threshold=float(CONFIG["toxicity_threshold_basic"])))
-    elif guardrail_level == "strict":
-        guard = Guard().use(ToxicLanguage(threshold=float(CONFIG["toxicity_threshold_strict"])))
-    elif guardrail_level == "custom":
-        guard = Guard().use(
-            ToxicLanguage(
-                threshold=float(CONFIG["toxicity_threshold_custom"]),
-                validation_method="sentence"
-            )
-        )
+    context_string, citation_map = format_docs_for_context(combined_docs)
 
-    # ✅ RAG template
+    # --- 5. Generate Final Answer ---
     rag_template = """Answer the following question using the provided context.
-    At the end of your answer, include: Sources: <link1>, <link2>
 
     Context:
     {context}
@@ -130,33 +89,54 @@ def get_stepback_retriever_with_sources(
     rag_prompt = ChatPromptTemplate.from_template(rag_template)
 
     rag_chain = (
-        {
-            "context": lambda x: "\n\n".join([d.page_content for d in combined_docs]),
-            "question": itemgetter("question"),
-        }
-        | rag_prompt
+        rag_prompt
         | llm
         | StrOutputParser()
     )
 
-    # Final answer
-    final_answer = rag_chain.invoke({"question": query})
+    final_answer = rag_chain.invoke({"context": context_string, "question": query})
 
-    # ✅ Apply guardrails via shared validator
+    # --- 6. Apply Guardrails and Format Output (UPDATED LOGIC) ---
     validated = validate_output(final_answer, guardrail_level)
-
     if "⚠️ Response blocked" in validated["answer"]:
         return validated
 
+    document_pages_list = extract_sources_and_pages(citation_map)
+    source_links = list({doc["source"] for doc in document_pages_list})
+
     return {
         "answer": validated["answer"],
-        "sources": source_links
+        "sources": source_links,
+        "document_pages_dict": document_pages_list,
+        "citation_map": citation_map,
+        "chunks_used": combined_docs,
     }
 
 
-# ----------- HELPER: UNIQUE DOCS ----------- #
 def get_unique_union(documents: list[list]):
     """Unique union of retrieved docs."""
     flattened_docs = [dumps(doc) for sublist in documents for doc in sublist]
     unique_docs = list(set(flattened_docs))
     return [loads(doc) for doc in unique_docs]
+
+
+# Helper function for citation processing (ADDED)
+def extract_sources_and_pages(citation_map: dict) -> list[dict]:
+    """
+    Prepares a list of dictionaries, mapping unique documents to a list of unique pages.
+    """
+    document_pages = {}
+    for citation_metadata in citation_map.values():
+        source = citation_metadata.get("source")
+        page_number = citation_metadata.get("page_number")
+
+        if source and page_number is not None:
+            if source not in document_pages:
+                document_pages[source] = set()
+            document_pages[source].add(page_number)
+
+    result_list = []
+    for source, pages in document_pages.items():
+        result_list.append({"source": source, "pages": sorted(list(pages))})
+
+    return result_list

@@ -5,6 +5,16 @@ from config import CONFIG
 from opentelemetry import trace
 import uuid
 from phoenix.otel import register
+import os
+from opentelemetry import trace
+from opentelemetry.sdk.trace import TracerProvider
+import phoenix as px
+from opentelemetry.instrumentation.langchain import LangchainInstrumentor
+from opentelemetry.instrumentation.openai import OpenAIInstrumentor
+# from opentelemetry.instrumentation.langchain import LangchainInstrumentor # etc.
+
+from opentelemetry import trace
+from opentelemetry.sdk.trace import TracerProvider
 
 router = APIRouter()
 
@@ -44,12 +54,16 @@ def retrieve(
     current_span = trace.get_current_span()
     current_span.set_attribute("chatbot.id", chatbot_id)
 
-    tracer_provider = register(
-        # project_name="testing1",
-        project_name=chatbot_id,
-        endpoint="http://localhost:6006/v1/traces",
-        auto_instrument=True  # Automatically instruments supported libraries
-    )
+    def update_phoenix_project_name(chatbot_id: str):
+        os.environ["PHOENIX_PROJECT_NAME"] = chatbot_id
+
+        tracer_provider = register(project_name=chatbot_id,endpoint="http://localhost:6006/v1/traces",auto_instrument=True)
+        #  ,  # Automatically instruments supported libraries
+        return tracer_provider
+    
+    tracer_provider = update_phoenix_project_name(chatbot_id)
+    
+
 
     # Call your existing service logic.
     results_object = retrieve_documents(
@@ -87,4 +101,42 @@ def retrieve(
         trace_id = str(uuid.uuid4())
         print(f"⚠️ WARNING: Could not find a valid span context. Using generated UUID as trace_id: {trace_id}")
 
+
+    # def reset_tracing():
+    #     provider = trace.get_tracer_provider()
+    #     if isinstance(provider, TracerProvider):
+    #         provider.shutdown()
+    #         trace.set_tracer_provider(TracerProvider())
+
+    #     print("✅ OpenTelemetry traces reset successfully.")
+    
+    # reset_tracing()
+    
+
+
+#     def reset_tracing():
+    
+#         # Step 1: Gracefully shut down the current provider to flush all buffered traces.
+#         provider = trace.get_tracer_provider()
+#         if isinstance(provider, TracerProvider):
+#             provider.shutdown()
+
+#     # Step 2: CRITICAL - Un-instrument the libraries to remove the old configuration.
+#     # You must add a line here for every library you are tracing.
+#         LangchainInstrumentor().uninstrument()
+#         OpenAIInstrumentor().uninstrument()
+
+#     # LangchainInstrumentor().uninstrument() # Add this line if you trace LangChain
+
+#     # Step 3: Reset the global provider to a clean, default state for the next session.
+#         trace.set_tracer_provider(TracerProvider())
+
+#         print("✅ OpenTelemetry traces reset successfully.")
+
+# # Example of how you'd call it after a session ends
+#     reset_tracing()
+
+
+
+    del tracer_provider
     return {"answer": final_answer, "traceId": trace_id,"citations": results_object.get("document_pages_dict", [])}

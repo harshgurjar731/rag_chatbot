@@ -3,6 +3,7 @@
 from fastapi import HTTPException
 from langchain.vectorstores import FAISS, Chroma
 from langchain.embeddings import HuggingFaceEmbeddings
+import uuid
 
 from config import CONFIG
 from Services.multi_query_retriever import get_multiquery_retriever
@@ -13,55 +14,12 @@ from Services.step_back_retriever_without_source import get_stepback_retriever_w
 from Services.rag_fusion_retriever_with_source import get_ragfusion_retriever_with_sources
 from Services.rag_fusion_retriever_without_sources import get_ragfusion_retriever_without_sources
 from Services.None_query import get_rag_response
-from Services.azure_openai import get_llm_answer_azure
-from Services.azure_multi_query import get_multiquery_rag_with_azure
-import uuid
-from phoenix.otel import register
-from langchain.chat_models import AzureChatOpenAI
-# from langchain_community.chat_models import OpenAI
+# Remove unused Azure-specific imports if they are now handled by the factory
+# from Services.azure_openai import get_llm_answer_azure
+# from Services.azure_multi_query import get_multiquery_rag_with_azure
 
-
-
-
-# In your `multi_query_retriever_without_sources.py`
-from langchain.chains import RetrievalQA
-# ... (your existing imports)
-
-class MultiQueryRetrieverService:
-    def __init__(self, vector_store):
-        self.vector_store = vector_store
-        self.llm = OpenAI()  # Assuming this is configured
-        self.retriever = self.vector_store.as_retriever()
-        
-        # This is where the chain is built
-        self.qa_chain = RetrievalQA.from_chain_type(
-            llm=self.llm,
-            chain_type="stuff",
-            retriever=self.retriever,
-        )
-
-    def process_query(self, query):
-        # When this method is called, Phoenix will automatically log the trace
-        response = self.qa_chain.invoke({"query": query})
-        return response
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+# ✅ Import the factory
+from utils.llm_factory import LLMFactory
 
 # -----------------------------
 # Load embeddings
@@ -111,12 +69,6 @@ def retrieve_documents(
     chatbot_id: str = "RAG_Document_Store"
 ):
     """Main entry for retrieving documents with selected retriever pipeline."""
-    # tracer_provider = register(
-    #     # project_name="testing1",
-    #     project_name=chatbot_id,
-    #     endpoint="http://localhost:6006/v1/traces",
-    #     auto_instrument=True  # Automatically instruments supported libraries
-    # )
 
     # ✅ Load defaults from config if not provided
     query_optimizer = query_optimizer or CONFIG["default_query_optimizer"]
@@ -129,20 +81,22 @@ def retrieve_documents(
     rerankerOption = rerankerOption or CONFIG["default_reranker_option"]
 
     file_id = file_id or [0]
-    embedding = HuggingFaceEmbeddings(model_name=embedding_model_name)
-    sources = True
+
+    # ✨ 1. Instantiate the LLM using the factory
+    # This is the single point where the LLM is created based on the model name.
+    llm_factory = LLMFactory(
+        model_name=llm_model_name,
+        temperature=temperature,
+        token_size=token_size
+    )
+    llm = llm_factory.get_llm()
+
     # -----------------------------
     # Case 1: No files -> plain LLM answer
     # -----------------------------
     if file_id == [0]:
-        return get_llm_answer(
-            query, llm_model_name, temperature, token_size, sources, guardrailOption
-        )
-    
-        # return get_llm_answer_azure(
-        #     query, llm_model_name, temperature, token_size, sources, guardrailOption
-        # )
-    
+        # NOTE: You'll need to update get_llm_answer to accept the 'llm' object
+        return get_llm_answer(query, llm, sources, guardrailOption)
 
     # -----------------------------
     # Case 2: Merge embeddings from all files
@@ -153,47 +107,45 @@ def retrieve_documents(
         if db is None:
             db = new_db
         else:
+            # Note: merge_from is specific to FAISS. If using Chroma, you'd handle this differently.
             db.merge_from(new_db)
 
     # -----------------------------
     # Case 3: Choose retriever pipeline
+    # ✨ 2. Pass the 'llm' object to the appropriate function
     # -----------------------------
     if query_optimizer == "Multi Query":
         if sources:
             result = get_multiquery_retriever(
-                query, db, llm_model_name, temperature, token_size, guardrailOption, rerankerOption
+                query, db, llm, guardrailOption, rerankerOption
             )
         else:
             result = get_multiquery_retriever_without_sources(
-                query, db, llm_model_name, temperature, token_size, guardrailOption, rerankerOption
+                query, db, llm, guardrailOption, rerankerOption
             )
-            # result = get_multiquery_rag_with_azure(
-            #     query, db, llm_model_name, temperature, token_size, guardrailOption, rerankerOption
-            # )
 
     elif query_optimizer == "Step Back":
         if sources:
             result = get_stepback_retriever_with_sources(
-                query, db, llm_model_name, temperature, token_size, guardrailOption, rerankerOption
+                query, db, llm, guardrailOption, rerankerOption
             )
         else:
             result = get_stepback_retriever_without_sources(
-                query, db, llm_model_name, temperature, token_size, guardrailOption, rerankerOption
+                query, db, llm, guardrailOption, rerankerOption
             )
 
     elif query_optimizer == "Rag Fusion":
         if sources:
             result = get_ragfusion_retriever_with_sources(
-                query, db, llm_model_name, temperature, token_size, guardrailOption, rerankerOption
+                query, db, llm, guardrailOption, rerankerOption
             )
         else:
             result = get_ragfusion_retriever_without_sources(
-                query, db, llm_model_name, temperature, token_size, guardrailOption, rerankerOption
+                query, db, llm, guardrailOption, rerankerOption
             )
 
-    else:
-        # retriever = db.as_retriever()
-        result = get_rag_response(query, db, llm_model_name, temperature, token_size, guardrailOption, rerankerOption)
-    result["traceId"]=str(uuid.uuid4())
-    # result.append("traceId",str(uuid.uuid4()))
+    else: # Default case
+        result = get_rag_response(query, db, llm, guardrailOption, rerankerOption)
+    
+    result["traceId"] = str(uuid.uuid4())
     return result
