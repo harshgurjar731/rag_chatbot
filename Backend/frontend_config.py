@@ -41,7 +41,7 @@ def get_optimizer() -> List[Dict[str, str]]:
     Returns available optimizer options with machine-friendly values and user-friendly labels.
     """
     return [
-        {"value": "none", "label": "None"},
+        {"value": "None", "label": "None"},
         {"value": "Multi Query", "label": "Multi Query"},
         {"value": "Step Back", "label": "Step Back"},
         {"value": "Rag Fusion", "label": "RAG Fusion"},

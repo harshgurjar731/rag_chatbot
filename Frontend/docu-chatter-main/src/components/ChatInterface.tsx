@@ -1,20 +1,32 @@
-import { useState, useRef, useEffect } from 'react';
-import { Send, Mic, MicOff, Volume2, VolumeX } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Card, CardContent } from '@/components/ui/card';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { Chatbot, ChatMessage } from '@/types/chatbot';
-import { useToast } from '@/hooks/use-toast';
+import { useState, useRef, useEffect } from "react";
+import {
+  Send,
+  Mic,
+  MicOff,
+  Volume2,
+  VolumeX,
+  ThumbsUp,
+  ThumbsDown,
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Card, CardContent } from "@/components/ui/card";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Chatbot, ChatMessage } from "@/types/chatbot";
+import { useToast } from "@/hooks/use-toast";
 import { Label } from "@/components/ui/label";
-// import { Chatbot, CreateChatbotData, QnAPair, RawDatastore,FileRecord } from '@/types/chatbot';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { Slider } from "@/components/ui/slider";
-import { Info } from "lucide-react"; // icon for tooltips
+import { Info } from "lucide-react";
 import { X } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { Loader2 } from "lucide-react";
-
+import React from "react";
 import {
   Select,
   SelectTrigger,
@@ -37,18 +49,15 @@ import {
   DialogTitle,
   DialogDescription,
   DialogFooter,
-} from "@/components/ui/dialog"
-import { Separator } from "@/components/ui/separator"
+} from "@/components/ui/dialog";
+import { Separator } from "@/components/ui/separator";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
-import { useConfigOptions } from "@/hooks/useConfigOptions"
-
-
-
+} from "@/components/ui/dropdown-menu";
+import { useConfigOptions } from "@/hooks/useConfigOptions";
 interface QueryPayload {
   question: string;
   fileId: number[];
@@ -58,18 +67,17 @@ interface QueryPayload {
   vectorDb: string;
   temperature: number;
   guardrailOption: string;
-  tokenSize: number; // New field for token size,  
-  showSources: boolean; // New field to control source display:
-  rerankerOption: string; // New field for reranker option
-
+  tokenSize: number;
+  showSources: boolean;
+  rerankerOption: string;
 }
 
 interface ChatInterfaceProps {
   chatbot: Chatbot;
   chatbotName: string;
-  // onSendMessage: (message: string) => Promise<string>;
   onSendMessage: (payload: QueryPayload) => Promise<string>;
 }
+
 type DocumentOption = {
   label: string;
   value: string;
@@ -85,50 +93,66 @@ declare global {
   }
 }
 
-export const ChatInterface = ({ chatbot, chatbotName, onSendMessage }: ChatInterfaceProps) => {
-
-  const { config, loading } = useConfigOptions()
-
+export const ChatInterface = ({
+  chatbot,
+  chatbotName,
+  onSendMessage,
+}: ChatInterfaceProps) => {
+  const { config, loading } = useConfigOptions();
   const storageKey = `chat_history_${chatbot?.id}`;
-  // Add this type near your ChatMessage interface
-  type StoredChatMessage = Omit<ChatMessage, "timestamp"> & { timestamp: string };
+  type StoredChatMessage = Omit<ChatMessage, "timestamp"> & {
+    timestamp: string;
+  };
 
-  // Update your state initialization
   const [messages, setMessages] = useState<ChatMessage[]>(() => {
     const saved = localStorage.getItem(storageKey);
     if (saved) {
       try {
         const parsed: StoredChatMessage[] = JSON.parse(saved);
-
-        // Convert timestamp string back to Date
         return parsed.map((msg) => ({
           ...msg,
           timestamp: new Date(msg.timestamp),
+          traceId: msg.traceId || "",
+          Citation: msg.Citation || [],
         }));
       } catch (err) {
         console.error("Failed to parse saved messages:", err);
         return [];
       }
     }
-
-    // Default greeting
     return [
       {
         id: "1",
         content: `Hello, I am your ${chatbot.name}. How can I help you today?`,
         isUser: false,
         timestamp: new Date(),
+        traceId: "-1",
+        Citation: [],
       },
     ];
   });
 
+  function getFilenameFromPath(fullPath: string): string {
+    if (!fullPath) {
+      return "";
+    }
+
+    // 1. Normalize slashes: Replace all backslashes (\) with forward slashes (/).
+    const normalizedPath = fullPath.replace(/\\/g, "/");
+
+    // 2. Find the last index of the forward slash.
+    const lastSlashIndex = normalizedPath.lastIndexOf("/");
+
+    // 3. Extract the substring starting right after the last slash.
+    // If no slash is found (e.g., just "file.txt"), slice returns the whole string.
+    return normalizedPath.substring(lastSlashIndex + 1);
+  }
 
   useEffect(() => {
     const toStore: StoredChatMessage[] = messages.map((msg) => ({
       ...msg,
-      timestamp: msg.timestamp.toISOString(), // Convert Date → string
+      timestamp: msg.timestamp.toISOString(),
     }));
-
     localStorage.setItem(storageKey, JSON.stringify(toStore));
   }, [messages]);
 
@@ -156,7 +180,6 @@ export const ChatInterface = ({ chatbot, chatbotName, onSendMessage }: ChatInter
       });
 
       if (!res.ok) throw new Error("Translation API failed");
-
       const data: { translatedText: string } = await res.json();
 
       setMessages((prev) =>
@@ -164,23 +187,19 @@ export const ChatInterface = ({ chatbot, chatbotName, onSendMessage }: ChatInter
           msg.id === id
             ? {
               ...msg,
-              originalContent: msg.originalContent || msg.content, // ✅ preserve original
+              originalContent: msg.originalContent || msg.content,
               content: data.translatedText,
             }
             : msg
         )
       );
-
       setOpenDropdownId(null);
     } catch (err) {
       console.error("Translation failed:", err);
     }
   };
 
-
-
-
-  const [input, setInput] = useState('');
+  const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [isListening, setIsListening] = useState(false);
   const [isSpeaking, setIsSpeaking] = useState(false);
@@ -188,52 +207,52 @@ export const ChatInterface = ({ chatbot, chatbotName, onSendMessage }: ChatInter
   const { toast } = useToast();
   const [tokenSize, setTokenSize] = useState(256);
   const [showSources, setShowSources] = useState(false);
-
-
   const [urlInput, setUrlInput] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [openPopoverId, setOpenPopoverId] = useState<string | null>(null);
 
-  const getChatbotDocumentOptions = (chatbot: { documents?: string[] }): DocumentOption[] => {
+  const getChatbotDocumentOptions = (chatbot: {
+    documents?: string[];
+  }): DocumentOption[] => {
     if (!chatbot?.documents || chatbot.documents.length === 0) return [];
-
     return chatbot.documents.map((doc) => ({
       label: doc,
       value: doc,
     }));
   };
+
   const scrapeWebsite = async (datastoreId: number, url: string) => {
     try {
       const { data } = await axios.post(
         `${config?.base_url}/urlscraper/${datastoreId}`,
-        {}, // empty body
-        { params: { url } } // URL as query param
+        {},
+        { params: { url } }
       );
-      return data; // { url, file_path, message }
+      return data;
     } catch (err: any) {
-      console.error("Error scraping website:", err.response?.data || err.message);
+      console.error(
+        "Error scraping website:",
+        err.response?.data || err.message
+      );
       throw err;
     }
   };
+
   const handleUrlSubmit = async () => {
     if (!urlInput.trim()) return;
     setIsSubmitting(true);
     setError(null);
-
     try {
       const result = await scrapeWebsite(chatbot.datastoreId, urlInput);
       console.log("Scrape success:", result);
-
-      // ✅ Show toast instead of auto-refresh
       toast({
         title: "Website processed successfully 🎉",
         description:
           "Please refresh the page and select the scraped URL file from the 'Select Documents' option.",
-        duration: 10000, // auto-dismiss after 5s
+        duration: 10000,
       });
-
-      // Optional: update parent state if needed
-      setUrlInput(""); // reset input
+      setUrlInput("");
       return result;
     } catch (err: any) {
       setError(err.message);
@@ -242,24 +261,22 @@ export const ChatInterface = ({ chatbot, chatbotName, onSendMessage }: ChatInter
     }
   };
 
-  // Optional helper to make labels more readable
   const getFormattedLabel = (filename: string): string => {
-    // Remove extension and convert snake_case or kebab-case to title case
     const nameWithoutExt = filename.replace(/\.[^/.]+$/, "");
     return nameWithoutExt
       .replace(/[_\-]/g, " ")
-      .replace(/\b\w/g, (char) => char.toUpperCase()); // Capitalize each word
+      .replace(/\b\w/g, (char) => char.toUpperCase());
   };
 
-  // Component part (inside your main component)
   const [selectedDocs, setSelectedDocs] = useState<DocumentOption[]>([]);
   const [documentOptions, setDocumentOptions] = useState<DocumentOption[]>([]);
 
   const handleRemove = (value: string) => {
-    setSelectedDocs((prevDocs) => prevDocs.filter((doc) => doc.value !== value));
+    setSelectedDocs((prevDocs) =>
+      prevDocs.filter((doc) => doc.value !== value)
+    );
   };
 
-  // Automatically update options when chatbot documents change
   useEffect(() => {
     const newOptions = getChatbotDocumentOptions(chatbot);
     setDocumentOptions(newOptions);
@@ -276,61 +293,110 @@ export const ChatInterface = ({ chatbot, chatbotName, onSendMessage }: ChatInter
   }, [chatbot?.documents]);
 
   useEffect(() => {
-    // Auto-scroll to bottom when new messages are added
     if (scrollAreaRef.current) {
-      const scrollContainer = scrollAreaRef.current.querySelector('[data-radix-scroll-area-viewport]');
+      const scrollContainer = scrollAreaRef.current.querySelector(
+        "[data-radix-scroll-area-viewport]"
+      );
       if (scrollContainer) {
         scrollContainer.scrollTop = scrollContainer.scrollHeight;
       }
     }
   }, [messages]);
 
-  const handleTokenSizeChange = (e) => {
-    const value = parseInt(e.target.value, 10);
+  // Define this function inside your ChatInterface component
+  const handleFileClick = async (
+    e: React.MouseEvent<HTMLAnchorElement>,
+    datastoreId: number,
+    filename: string,
+    // ✅ NEW: Accept pageNumber, assuming the citation passes the first page
+    pageNumber?: string | number
+  ) => {
+    // Prevent the default navigation of the anchor tag (href="#")
+    e.preventDefault();
 
+    try {
+      // 1. Fetch the file content as a blob
+      const response = await axios.get(
+        // Assuming config?.base_url is available in scope.
+        `${config?.base_url}/datastores/${datastoreId}/files/${filename}`,
+        {
+          responseType: "blob",
+        }
+      );
+
+      // 2. Create a Blob URL
+      const contentType = response.headers["content-type"];
+      const blob = new Blob([response.data], { type: contentType });
+      let blobUrl = window.URL.createObjectURL(blob);
+
+      // 3. ✅ DEEP LINK LOGIC: Redirect to a specific page if pageNumber is provided
+      if (pageNumber && contentType === "application/pdf") {
+        const pageNum = parseInt(String(pageNumber), 10);
+        if (!isNaN(pageNum) && pageNum > 0) {
+          // Append the standard PDF fragment identifier for page redirection
+          // The browser will handle the redirect once the PDF loads in the new window
+          blobUrl = `${blobUrl}#page=${pageNum}`;
+        }
+      }
+
+      // 4. Open in a new window
+      window.open(blobUrl, "_blank");
+
+      // Clean up the URL object after opening (optional but good practice)
+      window.URL.revokeObjectURL(blobUrl);
+    } catch (error) {
+      console.error("Error opening document:", error);
+      // Use toast instead of alert()
+      toast({
+        title: "Error Opening File",
+        description:
+          "Failed to download and open the document. Please ensure the backend is running.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleTokenSizeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = parseInt(e.target.value, 10);
     if (!isNaN(value)) {
-      // clamp value between 128 and 8192
       const clampedValue = Math.min(Math.max(value, 128), 8192);
       setTokenSize(clampedValue);
     } else {
-      setTokenSize(256); // reset if invalid
+      setTokenSize(256);
     }
   };
+
   const handleSend = async () => {
     if (!input.trim() || isLoading) return;
-
     const userMessage: ChatMessage = {
       id: crypto.randomUUID(),
       content: input.trim(),
       isUser: true,
       timestamp: new Date(),
+      traceId: "",
+      Citation: [],
     };
-
-    setMessages(prev => [...prev, userMessage]);
-    setInput('');
+    setMessages((prev) => [...prev, userMessage]);
+    setInput("");
     setIsLoading(true);
 
     try {
-      let fileId = [];
-      if (selectedDocs.length == 0) {
+      let fileId: number[] = [];
+      if (selectedDocs.length === 0) {
         fileId.push(0);
       }
-
       if (selectedDocs.length > 0) {
-
         for (const doc of selectedDocs) {
           const docName = doc.label;
           const idRes = await axios.get<{ file_id: number }>(
-            `${config?.base_url}/datastores/${chatbot.datastoreId}/files/${encodeURIComponent(docName)}/id`
+            `${config?.base_url}/datastores/${chatbot.datastoreId
+            }/files/${encodeURIComponent(docName)}/id`
           );
           fileId.push(idRes.data.file_id);
         }
       }
 
-
-
-      // ✅ Step 2: Call main retriever API using file ID and other query params
-      const response = await onSendMessage({
+      const response: any = await onSendMessage({
         question: input.trim(),
         fileId,
         optimizer: tempSettings.optimizer,
@@ -344,47 +410,46 @@ export const ChatInterface = ({ chatbot, chatbotName, onSendMessage }: ChatInter
         rerankerOption: tempSettings.rerankerOption,
       });
 
-
       const botMessage: ChatMessage = {
         id: crypto.randomUUID(),
-        content: response,
+        content: response["answer"] || response,
         isUser: false,
         timestamp: new Date(),
+        traceId: response["traceId"],
+        Citation: response["citations"] || [],
       };
-
-      setMessages(prev => [...prev, botMessage]);
-    } catch (error) {
+      console.log("Bot message with citations:", botMessage.Citation);
+      setMessages((prev) => [...prev, botMessage]);
+    } catch (error: any) {
       console.error("handleSend error:", error);
-
       const errorMessage: ChatMessage = {
         id: crypto.randomUUID(),
-        content: error?.message || String(error) || "Failed to send message or fetch file ID.",
+        content:
+          error?.message ||
+          String(error) ||
+          "Failed to send message or fetch file ID.",
         isUser: false,
         timestamp: new Date(),
+        traceId: "",
+        Citation: [],
       };
-
-      setMessages(prev => [...prev, errorMessage]);
+      setMessages((prev) => [...prev, errorMessage]);
     } finally {
       setIsLoading(false);
     }
   };
 
-
-
-
   const handleKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
+    if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
       handleSend();
     }
   };
 
-
   const toggleListening = () => {
     const SpeechRecognition =
       typeof window !== "undefined" &&
       (window.SpeechRecognition || window.webkitSpeechRecognition);
-
     if (!SpeechRecognition) {
       toast({
         title: "Not Supported",
@@ -393,12 +458,10 @@ export const ChatInterface = ({ chatbot, chatbotName, onSendMessage }: ChatInter
       });
       return;
     }
-
     const recognition = new SpeechRecognition();
     recognition.continuous = false;
     recognition.interimResults = false;
     recognition.lang = "en-US";
-
     if (isListening) {
       recognition.stop();
       setIsListening(false);
@@ -408,15 +471,12 @@ export const ChatInterface = ({ chatbot, chatbotName, onSendMessage }: ChatInter
         title: "Listening...",
         description: "Speak your question now.",
       });
-
       recognition.start();
-
       recognition.onresult = (event: SpeechRecognitionEvent) => {
         const transcript = event.results[0][0].transcript;
-        setInput(transcript); // 👈 Store final transcript into inputText or your message state
+        setInput(transcript);
         setIsListening(false);
       };
-
       recognition.onerror = (event: any) => {
         console.error("Speech recognition error:", event.error);
         toast({
@@ -426,17 +486,14 @@ export const ChatInterface = ({ chatbot, chatbotName, onSendMessage }: ChatInter
         });
         setIsListening(false);
       };
-
       recognition.onend = () => {
         setIsListening(false);
       };
     }
   };
 
-
-
   const toggleSpeech = (message: string) => {
-    if ('speechSynthesis' in window) {
+    if ("speechSynthesis" in window) {
       if (isSpeaking) {
         window.speechSynthesis.cancel();
         setIsSpeaking(false);
@@ -457,25 +514,13 @@ export const ChatInterface = ({ chatbot, chatbotName, onSendMessage }: ChatInter
   };
 
   const formatTime = (date: Date) => {
-    return new Intl.DateTimeFormat('en-US', {
-      hour: '2-digit',
-      minute: '2-digit',
+    return new Intl.DateTimeFormat("en-US", {
+      hour: "2-digit",
+      minute: "2-digit",
     }).format(date);
   };
 
   const [open, setOpen] = useState(false);
-  // const [optimizer, setOptimizer] = useState("");
-  // const [embeddingModel, setEmbeddingModel] = useState("");
-  // const [llmModel, setLlmModel] = useState("");
-  // const [vectorDb, setVectorDb] = useState("");
-  // const [guardrailOption, setGuardrailOption] = useState("");
-  // const [temperature, setTemperature] = useState(0);
-  // const [rerankerOption, setRerankerOption] = useState<string>("none")
-  // const handleRerankerChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-  //   setRerankerOption(e.target.value)
-  // }
-
-  // Keep everything in one object
   const [tempSettings, setTempSettings] = useState({
     optimizer: "",
     embeddingModel: "",
@@ -488,33 +533,28 @@ export const ChatInterface = ({ chatbot, chatbotName, onSendMessage }: ChatInter
     rerankerOption: "none",
   });
 
-  // Load settings from localStorage on mount
   useEffect(() => {
     if (!chatbot?.id) return;
-
     const saved = localStorage.getItem(`model-settings-${chatbot.id}`);
     if (saved) {
       setTempSettings(JSON.parse(saved));
     }
   }, [chatbot?.id]);
 
-  // Save → commit changes
   const handleSave = (overrides: Partial<typeof tempSettings> = {}) => {
     const settings = { ...tempSettings, ...overrides };
-
     try {
       localStorage.setItem(
         `model-settings-${chatbot.id}`,
         JSON.stringify(settings)
       );
-      setTempSettings(settings); // keep UI in sync
+      setTempSettings(settings);
       setOpen(false);
     } catch (err) {
       console.error("Error saving settings:", err);
     }
   };
 
-  // Cancel → restore last saved
   const handleCancel = () => {
     const saved = localStorage.getItem(`model-settings-${chatbot.id}`);
     if (saved) {
@@ -523,69 +563,98 @@ export const ChatInterface = ({ chatbot, chatbotName, onSendMessage }: ChatInter
     setOpen(false);
   };
 
-
-
-
-
   const customMultiStyles = {
-    control: (base) => ({
+    control: (base: any) => ({
       ...base,
       minHeight: 40,
       borderRadius: 8,
       fontSize: 14,
       paddingLeft: 2,
-      borderColor: '#d1d5db', // Tailwind gray-300
-      boxShadow: 'none',
-      '&:hover': {
-        borderColor: '#9ca3af', // Tailwind gray-400
-      },
+      borderColor: "#d1d5db",
+      boxShadow: "none",
+      "&:hover": { borderColor: "#9ca3af" },
     }),
-    menu: (base) => ({
+    menu: (base: any) => ({ ...base, zIndex: 50, fontSize: 14 }),
+    option: (base: any, { isFocused }: any) => ({
       ...base,
-      zIndex: 50,
-      fontSize: 14,
+      backgroundColor: isFocused ? "#f3f4f6" : "white",
+      color: "#111827",
+      cursor: "pointer",
     }),
-    option: (base, { isFocused }) => ({
+    multiValue: (base: any) => ({
       ...base,
-      backgroundColor: isFocused ? '#f3f4f6' : 'white', // Tailwind gray-100
-      color: '#111827', // Tailwind gray-900
-      cursor: 'pointer',
-    }),
-    multiValue: (base) => ({
-      ...base,
-      backgroundColor: '#e5e7eb', // Tailwind gray-200
+      backgroundColor: "#e5e7eb",
       borderRadius: 4,
-      padding: '2px 6px',
+      padding: "2px 6px",
     }),
-    multiValueLabel: (base) => ({
+    multiValueLabel: (base: any) => ({
       ...base,
-      color: '#111827',
+      color: "#111827",
       fontWeight: 500,
     }),
-    multiValueRemove: (base) => ({
+    multiValueRemove: (base: any) => ({
       ...base,
-      color: '#6b7280',
-      ':hover': {
-        backgroundColor: '#d1d5db',
-        color: '#111827',
-      },
+      color: "#6b7280",
+      ":hover": { backgroundColor: "#d1d5db", color: "#111827" },
     }),
   };
+
   const languages = config?.languages || [];
 
+  const onFeedback = async (messageId: string, feedback: string) => {
+    if (!config?.base_url) return;
+    const message = messages.find((m) => m.id === messageId);
+    if (!message || !message.traceId) {
+      toast({
+        title: "Cannot Submit Feedback",
+        description: "A unique trace ID was not found for this message.",
+        variant: "destructive",
+      });
+      return;
+    }
+    try {
+      await axios.post(`${config.base_url}/feedback`, {
+        trace_id: message.traceId,
+        feedback: feedback,
+      });
+      toast({
+        title: "Success",
+        description: "Thank you for your feedback!",
+      });
+    } catch (error) {
+      console.error("Failed to send feedback:", error);
+      toast({
+        title: "Feedback Error",
+        description: "There was a problem submitting your feedback.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const [comment, setComment] = React.useState("");
+  const handleCommentSubmit = (messageId: string) => {
+    if (!comment.trim()) {
+      return;
+    }
+    onFeedback(messageId, comment);
+    setComment("");
+    setOpenPopoverId(null);
+  };
 
   return (
     <div className="flex flex-col h-[470px] bg-gradient-surface rounded-lg border border-chatbot-primary/20">
-
-      {/* Chat Messages */}
       <ScrollArea ref={scrollAreaRef} className="flex-1 p-4">
         <div className="space-y-4">
           {messages.map((message) => (
             <div
               key={message.id}
-              className={`flex ${message.isUser ? "justify-end" : "justify-start"}`}
+              className={`flex ${message.isUser ? "justify-end" : "justify-start"
+                }`}
             >
-              <div className={`max-w-[80%] ${message.isUser ? "order-2" : "order-1"}`}>
+              <div
+                className={`max-w-[80%] ${message.isUser ? "order-2" : "order-1"
+                  }`}
+              >
                 <Card
                   className={`${message.isUser
                     ? "bg-chatbot-primary text-primary-foreground"
@@ -593,59 +662,179 @@ export const ChatInterface = ({ chatbot, chatbotName, onSendMessage }: ChatInter
                     }`}
                 >
                   <CardContent className="p-3">
-                    <p className="text-sm whitespace-pre-wrap">{message.content}</p>
+                    <p className="text-sm whitespace-pre-wrap">
+                      {message.content}
+                    </p>
 
-                    <div className="flex flex-col gap-2 mt-2">
-                      {/* Time + Actions */}
-                      <div className="flex items-center justify-between">
-                        <span className="text-xs opacity-70">
-                          {formatTime(message.timestamp)}
-                        </span>
+                    {!message.isUser && (
+                      <div className="mt-3 flex flex-col gap-2">
+                        {/* SOURCES BOX */}
 
+                        {Array.isArray(message.Citation) && message.Citation.length > 0 && (
+                          <div className="w-full mt-3 rounded-xl bg-gradiant-surface shadow-sm">
+                            <span className="block mb-3 font-semibold text-gray-100 text-sm">
+                              Sources:
+                            </span>
 
-                      </div>
-                      {/* Translate Button + Dropdown */}
-                      {!message.isUser && (
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <div className="flex justify-end mt-1">
-                              <Button
-                                size="icon"
-                                variant="ghost"
-                                className="h-6 w-6 rounded-full text-[11px] border border-border/40 text-muted-foreground hover:bg-muted/70 transition-colors flex items-center justify-center"
-                              >
-                                🌐
-                              </Button>
+                            <div className="flex flex-col gap-3">
+                              {message.Citation.map((citation, index) => {
+                                const filename = getFilenameFromPath(citation.source);
+                                const pages =
+                                  citation.pages && citation.pages.length > 0
+                                    ? `(${citation.pages.join(", ")})`
+                                    : "";
+
+                                return (
+                                  <div
+                                    key={citation.source || index}
+                                    className="flex items-center px-4 py-2 rounded-lg bg-gradiant-surface-100 hover:bg-gray-300 transition-all shadow-sm"
+                                  >
+                                    <span className="font-medium mr-3 text-blue-600">[{index + 1}]</span>
+                                    <a
+                                      href="#"
+                                      onClick={(e) =>
+                                        handleFileClick(
+                                          e,
+                                          chatbot.datastoreId,
+                                          filename,
+                                          citation.pages?.at(0)
+                                        )
+                                      }
+                                      className="flex-1 font-sm hover:underline truncate text-gray-900"
+                                    >
+                                      {filename}
+                                    </a>
+                                    {pages && (
+                                      <span className="ml-3 text-gray-800 opacity-100 whitespace-nowrap">
+                                        {pages}
+                                      </span>
+                                    )}
+                                  </div>
+                                );
+                              })}
                             </div>
+                          </div>
+                        )}
 
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent
-                            align="end"
-                            side="top"
-                            className="w-32 max-h-60 overflow-y-auto rounded-lg shadow-md border border-border/40 bg-background p-1 text-sm"
 
-                          >
-                            {languages.map((lang) => (
-                              <DropdownMenuItem
-                                key={lang.code}
-                                onClick={() => handleTranslate(message.id, message.content, lang.code)}
-                                className="cursor-pointer hover:bg-muted rounded-md px-2 py-1"
+                        {/* FOOTER ACTIONS */}
+                        <div className="flex items-center justify-between mt-1">
+                          <span className="text-xs opacity-70">
+                            {formatTime(message.timestamp)}
+                          </span>
+
+                          <div className="flex items-center gap-2">
+                            <Button
+                              size="icon"
+                              variant="ghost"
+                              className="h-6 w-6 rounded-full text-[11px] border border-border/40 text-muted-foreground hover:bg-muted/70 transition-colors"
+                              onClick={() => toggleSpeech(message.content)}
+                            >
+                              {isSpeaking ? (
+                                <VolumeX size={14} />
+                              ) : (
+                                <Volume2 size={14} />
+                              )}
+                            </Button>
+
+                            <Button
+                              size="icon"
+                              variant="ghost"
+                              className="h-6 w-6 rounded-full text-[11px] border border-border/40 text-green-500 hover:bg-muted/70 transition-colors"
+                              onClick={() => onFeedback(message.id, "Positive")}
+                            >
+                              <ThumbsUp size={14} />
+                            </Button>
+
+                            <Button
+                              size="icon"
+                              variant="ghost"
+                              className="h-6 w-6 rounded-full text-[11px] border border-border/40 text-red-500 hover:bg-muted/70 transition-colors"
+                              onClick={() => onFeedback(message.id, "Negative")}
+                            >
+                              <ThumbsDown size={14} />
+                            </Button>
+
+                            <Popover
+                              open={openPopoverId === message.id}
+                              onOpenChange={(isOpen) =>
+                                setOpenPopoverId(isOpen ? message.id : null)
+                              }
+                            >
+                              <PopoverTrigger asChild>
+                                <Button
+                                  size="icon"
+                                  variant="ghost"
+                                  className="h-6 w-6 rounded-full text-[11px] border border-border/40 text-blue-500 hover:bg-muted/70 transition-colors"
+                                >
+                                  <Info size={14} />
+                                </Button>
+                              </PopoverTrigger>
+                              <PopoverContent className="w-64">
+                                <div className="space-y-2">
+                                  <Label htmlFor={`comment-${message.id}`}>
+                                    Comment
+                                  </Label>
+                                  <Input
+                                    id={`comment-${message.id}`}
+                                    placeholder="Enter your feedback"
+                                    value={comment}
+                                    onChange={(e) => setComment(e.target.value)}
+                                  />
+                                  <Button
+                                    size="sm"
+                                    className="w-full"
+                                    onClick={() =>
+                                      handleCommentSubmit(message.id)
+                                    }
+                                  >
+                                    Submit
+                                  </Button>
+                                </div>
+                              </PopoverContent>
+                            </Popover>
+
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <Button
+                                  size="icon"
+                                  variant="ghost"
+                                  className="h-6 w-6 rounded-full text-[11px] border border-border/40 text-muted-foreground hover:bg-muted/70 transition-colors"
+                                >
+                                  🌐
+                                </Button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent
+                                align="end"
+                                side="top"
+                                className="w-32 max-h-60 overflow-y-auto rounded-lg shadow-md border border-border/40 bg-background p-1 text-sm"
                               >
-                                {lang.name}
-                              </DropdownMenuItem>
-                            ))}
-                          </DropdownMenuContent>
-
-                        </DropdownMenu>
-
-                      )}
-                    </div>
+                                {languages.map((lang) => (
+                                  <DropdownMenuItem
+                                    key={lang.code}
+                                    onClick={() =>
+                                      handleTranslate(
+                                        message.id,
+                                        message.content,
+                                        lang.code
+                                      )
+                                    }
+                                    className="cursor-pointer hover:bg-muted rounded-md px-2 py-1"
+                                  >
+                                    {lang.name}
+                                  </DropdownMenuItem>
+                                ))}
+                              </DropdownMenuContent>
+                            </DropdownMenu>
+                          </div>
+                        </div>
+                      </div>
+                    )}
                   </CardContent>
                 </Card>
               </div>
-            </div >
+            </div>
           ))}
-
           {isLoading && (
             <div className="flex justify-start">
               <Card className="bg-chatbot-secondary border-chatbot-primary/20">
@@ -653,22 +842,26 @@ export const ChatInterface = ({ chatbot, chatbotName, onSendMessage }: ChatInter
                   <div className="flex items-center gap-2">
                     <div className="flex gap-1">
                       <div className="w-2 h-2 bg-chatbot-primary rounded-full animate-bounce" />
-                      <div className="w-2 h-2 bg-chatbot-primary rounded-full animate-bounce" style={{ animationDelay: '0.1s' }} />
-                      <div className="w-2 h-2 bg-chatbot-primary rounded-full animate-bounce" style={{ animationDelay: '0.2s' }} />
+                      <div
+                        className="w-2 h-2 bg-chatbot-primary rounded-full animate-bounce"
+                        style={{ animationDelay: "0.1s" }}
+                      />
+                      <div
+                        className="w-2 h-2 bg-chatbot-primary rounded-full animate-bounce"
+                        style={{ animationDelay: "0.2s" }}
+                      />
                     </div>
-                    <span className="text-xs text-muted-foreground">Thinking...</span>
+                    <span className="text-xs text-muted-foreground">
+                      Thinking...
+                    </span>
                   </div>
                 </CardContent>
               </Card>
             </div>
           )}
-        </div >
-      </ScrollArea >
-
-
-
+        </div>
+      </ScrollArea>
       <div>
-        {/* Original Input Section */}
         <div className="flex gap-4 ml-4 mb-2 ">
           <Button
             variant={isListening ? "destructive" : "chatbot-secondary"}
@@ -676,9 +869,12 @@ export const ChatInterface = ({ chatbot, chatbotName, onSendMessage }: ChatInter
             onClick={toggleListening}
             disabled={isLoading}
           >
-            {isListening ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
+            {isListening ? (
+              <MicOff className="h-4 w-4" />
+            ) : (
+              <Mic className="h-4 w-4" />
+            )}
           </Button>
-
           <Input
             value={input}
             onChange={(e) => setInput(e.target.value)}
@@ -687,7 +883,6 @@ export const ChatInterface = ({ chatbot, chatbotName, onSendMessage }: ChatInter
             disabled={isLoading}
             className="flex-1 border border-chatbot-primary/40"
           />
-
           <Button
             variant="chatbot"
             className="flex gap-4 mr-4"
@@ -700,8 +895,6 @@ export const ChatInterface = ({ chatbot, chatbotName, onSendMessage }: ChatInter
         </div>
         <div className="max-h-[150px] overflow-y-auto px-4 py-2 border-t border-chatbot-primary/20 space-y-2">
           <div className="flex items-center flex-wrap gap-5 px-4 py-2 border-t border-chatbot-primary/20">
-
-            {/* Button 1: Document Selector */}
             <Popover>
               <PopoverTrigger asChild>
                 <Button variant="outline" size="default">
@@ -715,15 +908,13 @@ export const ChatInterface = ({ chatbot, chatbotName, onSendMessage }: ChatInter
                     isMulti={true}
                     styles={customMultiStyles}
                     options={getChatbotDocumentOptions(chatbot)}
-                    value={selectedDocs}  // Only the first selected item
-                    onChange={(selected: DocumentOption[] | null) =>
+                    value={selectedDocs}
+                    onChange={(selected: any) =>
                       setSelectedDocs(selected || [])
                     }
                     isDisabled={isLoading}
                     placeholder="Choose document"
                   />
-
-                  {/* Enter URL */}
                   <div className="space-y-2">
                     <Label>Enter Website URL</Label>
                     <div className="flex gap-2">
@@ -738,7 +929,7 @@ export const ChatInterface = ({ chatbot, chatbotName, onSendMessage }: ChatInter
                         variant="chatbot"
                         size="sm"
                         onClick={handleUrlSubmit}
-                        disabled={!urlInput.trim() || isSubmitting} // ✅ disable while submitting
+                        disabled={!urlInput.trim() || isSubmitting}
                       >
                         {isSubmitting ? (
                           <Loader2 className="h-4 w-4 animate-spin" />
@@ -746,69 +937,63 @@ export const ChatInterface = ({ chatbot, chatbotName, onSendMessage }: ChatInter
                           "Add"
                         )}
                       </Button>
-
                     </div>
                   </div>
-
-
-
-
                 </div>
               </PopoverContent>
             </Popover>
-
-            {/* Button 2: Model Settings */}
-
             <Dialog open={open} onOpenChange={setOpen}>
               <DialogTrigger asChild>
-                <Button variant="outline" size="default">Model Settings</Button>
+                <Button variant="outline" size="default">
+                  Model Settings
+                </Button>
               </DialogTrigger>
-
               <DialogContent className="max-w-4xl h-[90vh] flex flex-col rounded-2xl p-0 overflow-hidden">
-                {/* Header */}
                 <DialogHeader className="px-6 py-4 border-b bg-muted/40">
-                  <DialogTitle className="text-xl font-semibold">Model Settings</DialogTitle>
+                  <DialogTitle className="text-xl font-semibold">
+                    Model Settings
+                  </DialogTitle>
                   <DialogDescription>
-                    Configure optimizer, embeddings, LLM, safety filters, and output preferences.
+                    Configure optimizer, embeddings, LLM, safety filters, and
+                    output preferences.
                   </DialogDescription>
                 </DialogHeader>
-
-                {/* Body */}
                 <div className="flex-1 overflow-y-auto px-6 py-4 space-y-8">
-
-                  {/* Query & Models Section */}
                   <div>
-                    <h3 className="text-lg font-medium mb-2">Response Control</h3>
+                    <h3 className="text-lg font-medium mb-2">
+                      Response Control
+                    </h3>
                     <Separator className="mb-4" />
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                      {/* LLM Model */}
                       <div className="space-y-1">
                         <Label>LLM Model</Label>
                         <Select
                           onValueChange={(value) =>
-                            setTempSettings({ ...tempSettings, llmModel: value })
+                            setTempSettings({
+                              ...tempSettings,
+                              llmModel: value,
+                            })
                           }
                           disabled={isLoading}
                         >
                           <SelectTrigger>
                             <SelectValue
                               placeholder={
-                                tempSettings.llmModel !== "" ? tempSettings.llmModel : "Select LLM"
+                                tempSettings.llmModel !== ""
+                                  ? tempSettings.llmModel
+                                  : "Select LLM"
                               }
                             />
                           </SelectTrigger>
                           <SelectContent>
-                            {config?.llm_models.map(model => (
+                            {config?.llm_models.map((model) => (
                               <SelectItem key={model} value={model}>
                                 {model}
                               </SelectItem>
                             ))}
                           </SelectContent>
-
                         </Select>
-
                       </div>
-                      {/* Token Size */}
                       <div className="space-y-1">
                         <Label>Token Size</Label>
                         <Input
@@ -816,7 +1001,8 @@ export const ChatInterface = ({ chatbot, chatbotName, onSendMessage }: ChatInter
                           min={config?.token_size_options?.min ?? 256}
                           max={config?.token_size_options?.max ?? 2048}
                           step={config?.token_size_options?.step ?? 128}
-                          placeholder={`Default: ${config?.token_size_options?.default ?? 512}`}
+                          placeholder={`Default: ${config?.token_size_options?.default ?? 512
+                            }`}
                           value={tempSettings.tokenSize}
                           onChange={(e) =>
                             setTempSettings({
@@ -826,19 +1012,18 @@ export const ChatInterface = ({ chatbot, chatbotName, onSendMessage }: ChatInter
                           }
                           disabled={isLoading}
                         />
-
-
                         <p className="text-xs text-muted-foreground">
                           Must be between 256 and 2048 tokens (step 128).
                         </p>
                       </div>
-
-                      {/* Guardrails */}
                       <div className="space-y-1">
                         <Label>Guardrails</Label>
                         <Select
                           onValueChange={(value) =>
-                            setTempSettings({ ...tempSettings, guardrailOption: value })
+                            setTempSettings({
+                              ...tempSettings,
+                              guardrailOption: value,
+                            })
                           }
                           disabled={isLoading}
                         >
@@ -852,17 +1037,17 @@ export const ChatInterface = ({ chatbot, chatbotName, onSendMessage }: ChatInter
                             />
                           </SelectTrigger>
                           <SelectContent>
-                            {config?.guardrail_options.map(option => (
-                              <SelectItem key={option.value} value={option.value}>
+                            {config?.guardrail_options.map((option) => (
+                              <SelectItem
+                                key={option.value}
+                                value={option.value}
+                              >
                                 {option.label}
                               </SelectItem>
                             ))}
                           </SelectContent>
-
                         </Select>
                       </div>
-
-                      {/* Temperature */}
                       <div className="space-y-2">
                         <Label>Creativity</Label>
                         <Slider
@@ -871,7 +1056,10 @@ export const ChatInterface = ({ chatbot, chatbotName, onSendMessage }: ChatInter
                           step={0.1}
                           value={[tempSettings.temperature]}
                           onValueChange={(val) =>
-                            setTempSettings({ ...tempSettings, temperature: val[0] })
+                            setTempSettings({
+                              ...tempSettings,
+                              temperature: val[0],
+                            })
                           }
                           disabled={isLoading}
                         />
@@ -881,18 +1069,20 @@ export const ChatInterface = ({ chatbot, chatbotName, onSendMessage }: ChatInter
                       </div>
                     </div>
                   </div>
-
-                  {/* Advanced Section */}
                   <div>
-                    <h3 className="text-lg font-medium mb-2">Advanced Settings</h3>
+                    <h3 className="text-lg font-medium mb-2">
+                      Advanced Settings
+                    </h3>
                     <Separator className="mb-4" />
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                      {/* Query Optimizer */}
                       <div className="space-y-1">
                         <Label>Query Optimizer</Label>
                         <Select
                           onValueChange={(value) =>
-                            setTempSettings({ ...tempSettings, optimizer: value })
+                            setTempSettings({
+                              ...tempSettings,
+                              optimizer: value,
+                            })
                           }
                           disabled={isLoading}
                         >
@@ -906,7 +1096,7 @@ export const ChatInterface = ({ chatbot, chatbotName, onSendMessage }: ChatInter
                             />
                           </SelectTrigger>
                           <SelectContent>
-                            {config?.optimizer.map(opt => (
+                            {config?.optimizer.map((opt) => (
                               <SelectItem key={opt.value} value={opt.value}>
                                 {opt.label}
                               </SelectItem>
@@ -914,13 +1104,14 @@ export const ChatInterface = ({ chatbot, chatbotName, onSendMessage }: ChatInter
                           </SelectContent>
                         </Select>
                       </div>
-
-                      {/* Embedding Model */}
                       <div className="space-y-1">
                         <Label>Embedding Model</Label>
                         <Select
                           onValueChange={(value) =>
-                            setTempSettings({ ...tempSettings, embeddingModel: value })
+                            setTempSettings({
+                              ...tempSettings,
+                              embeddingModel: value,
+                            })
                           }
                           disabled
                         >
@@ -934,27 +1125,32 @@ export const ChatInterface = ({ chatbot, chatbotName, onSendMessage }: ChatInter
                             />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="all-MiniLM-L6-v2">all-MiniLM-L6-v2</SelectItem>
+                            <SelectItem value="all-MiniLM-L6-v2">
+                              all-MiniLM-L6-v2
+                            </SelectItem>
                             <SelectItem value="sentence-transformers/all-mpnet-base-v2">
                               sentence-transformers
                             </SelectItem>
                           </SelectContent>
                         </Select>
                       </div>
-
-                      {/* Vector DB */}
                       <div className="space-y-1">
                         <Label>Vector DB</Label>
                         <Select
                           onValueChange={(value) =>
-                            setTempSettings({ ...tempSettings, vectorDb: value })
+                            setTempSettings({
+                              ...tempSettings,
+                              vectorDb: value,
+                            })
                           }
                           disabled
                         >
                           <SelectTrigger>
                             <SelectValue
                               placeholder={
-                                tempSettings.vectorDb !== "" ? tempSettings.vectorDb : "FAISS"
+                                tempSettings.vectorDb !== ""
+                                  ? tempSettings.vectorDb
+                                  : "FAISS"
                               }
                             />
                           </SelectTrigger>
@@ -964,262 +1160,208 @@ export const ChatInterface = ({ chatbot, chatbotName, onSendMessage }: ChatInter
                           </SelectContent>
                         </Select>
                       </div>
-
-                      {/* Sources Toggle
-                      <div className="flex items-center justify-between border rounded-lg p-3">
-                        <Label htmlFor="sources-toggle">Include Sources in Output</Label>
-                        <Switch
-                          id="sources-toggle"
-                          checked={tempSettings.showSources}
-                          onCheckedChange={(checked) =>
-                            setTempSettings({ ...tempSettings, showSources: checked })
-                          }
-                          disabled={isLoading}
-                        />
-                      </div> */}
-
-                      {/* Re-ranker Option */}
                       <div className="space-y-1">
                         <Label>Re-ranker</Label>
                         <select
                           className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-ring"
                           value={tempSettings.rerankerOption}
                           onChange={(e) =>
-                            setTempSettings({ ...tempSettings, rerankerOption: e.target.value })
+                            setTempSettings({
+                              ...tempSettings,
+                              rerankerOption: e.target.value,
+                            })
                           }
                           disabled={isLoading}
                         >
-                          <option value="none">None – Use retriever results directly</option>
+                          <option value="none">
+                            None – Use retriever results directly
+                          </option>
                           <option value="cross-encoder">
-                            Cross-encoder – Most accurate, but slower (fine-grained relevance)
+                            Cross-encoder – Most accurate, but slower
                           </option>
                           <option value="bi-encoder">
-                            Bi-encoder – Faster, less accurate (lightweight ranking)
+                            Bi-encoder – Faster, less accurate
                           </option>
                           <option value="llm-reranker">
-                            LLM-based – Uses a language model to judge document relevance
+                            LLM-based – Uses a language model
                           </option>
                         </select>
                         <p className="text-xs text-muted-foreground">
-                          Choose a re-ranking method to reorder retrieved documents before passing
-                          them to the LLM.
+                          Choose a re-ranking method to reorder retrieved
+                          documents.
                         </p>
                       </div>
+                      {/* Sources Toggle */}
+                      <div className="flex items-center justify-between border rounded-lg p-3">
+                        <Label htmlFor="sources-toggle">Include Sources in Output</Label>
+                        <Switch
+                          id="sources-toggle"
+                          checked={tempSettings.showSources}
+                          onCheckedChange={(value: boolean) =>
+                            setTempSettings(prev => ({ ...prev, showSources: value }))
+                          }
+                          disabled={isLoading}
+                        />
+                      </div>
+
                     </div>
                   </div>
                 </div>
-
-                {/* Footer */}
-                {/* Footer */}
                 <DialogFooter className="px-6 py-4 border-t bg-muted/40 flex justify-end gap-3">
-                  <Button variant="outline" onClick={handleCancel}>Cancel</Button>
+                  <Button variant="outline" onClick={handleCancel}>
+                    Cancel
+                  </Button>
                   <Button onClick={() => handleSave()}>Save Settings</Button>
                 </DialogFooter>
               </DialogContent>
             </Dialog>
-
           </div>
-          {
-            selectedDocs.length > 0 && (
-              <div className="flex flex-wrap gap-1 mt-2 items-center">
-                <Label className="text-sm text-muted-foreground">Selected:</Label>
-                {selectedDocs.map((doc) => (
-                  <span
-                    key={doc.value}
-                    className="flex items-center gap-1 text-xs bg-chatbot-secondary text-foreground border border-chatbot-primary/20 rounded-md px-2 py-1"
+          {selectedDocs.length > 0 && (
+            <div className="flex flex-wrap gap-1 mt-2 items-center">
+              <Label className="text-sm text-muted-foreground">Selected:</Label>
+              {selectedDocs.map((doc) => (
+                <span
+                  key={doc.value}
+                  className="flex items-center gap-1 text-xs bg-chatbot-secondary text-foreground border border-chatbot-primary/20 rounded-md px-2 py-1"
+                >
+                  {doc.label}
+                  <button
+                    type="button"
+                    className="flex items-center justify-center w-4 h-4 rounded-full hover:bg-destructive hover:text-destructive-foreground transition-colors duration-150"
+                    onClick={() => handleRemove(doc.value)}
                   >
-                    {doc.label}
-                    <button
-                      type="button"
-                      className="flex items-center justify-center w-4 h-4 rounded-full hover:bg-destructive hover:text-destructive-foreground transition-colors duration-150"
-                      onClick={() => handleRemove(doc.value)}
-                    >
-                      <X size={10} strokeWidth={2} />
-                    </button>
-                  </span>
-                ))}
-              </div>
-
-            )
-          }
-          {
-            (
-              tempSettings.optimizer ||
-              tempSettings.embeddingModel ||
-              tempSettings.llmModel ||
-              tempSettings.vectorDb ||
-              typeof tempSettings.temperature === "number" ||
-              tempSettings.guardrailOption ||
-              tempSettings.tokenSize ||
-              tempSettings.rerankerOption !== "none" ||
-              typeof tempSettings.showSources === "boolean"
-            ) && (
+                    <X size={10} strokeWidth={2} />
+                  </button>
+                </span>
+              ))}
+            </div>
+          )}
+          {(tempSettings.optimizer ||
+            tempSettings.embeddingModel ||
+            tempSettings.llmModel ||
+            tempSettings.vectorDb ||
+            typeof tempSettings.temperature === "number" ||
+            tempSettings.guardrailOption ||
+            tempSettings.tokenSize ||
+            tempSettings.rerankerOption !== "none" ||
+            typeof tempSettings.showSources === "boolean") && (
               <div className="flex flex-wrap gap-2 mt-2 items-center">
                 <Label className="text-sm text-muted-foreground">Settings:</Label>
-
                 {tempSettings.optimizer && (
                   <span className="flex items-center gap-1 text-xs bg-chatbot-secondary text-foreground border border-chatbot-primary/20 rounded-md px-2 py-1">
                     Optimizer: {tempSettings.optimizer}
                     <button
                       type="button"
                       className="flex items-center justify-center w-4 h-4 rounded-full hover:bg-destructive hover:text-destructive-foreground transition-colors duration-150"
-                      onClick={() => {
-                        const updated = { ...tempSettings, optimizer: "" };
-                        setTempSettings(updated);
-                        handleSave({ optimizer: "" });
-                      }}
+                      onClick={() => handleSave({ optimizer: "" })}
                     >
                       <X size={10} strokeWidth={2} />
                     </button>
                   </span>
                 )}
-
                 {tempSettings.embeddingModel && (
                   <span className="flex items-center gap-1 text-xs bg-chatbot-secondary text-foreground border border-chatbot-primary/20 rounded-md px-2 py-1">
                     Embedding: {tempSettings.embeddingModel}
                     <button
                       type="button"
                       className="flex items-center justify-center w-4 h-4 rounded-full hover:bg-destructive hover:text-destructive-foreground transition-colors duration-150"
-                      onClick={() => {
-                        const updated = { ...tempSettings, embeddingModel: "" };
-                        setTempSettings(updated);
-                        handleSave({ embeddingModel: "" });
-                      }}
+                      onClick={() => handleSave({ embeddingModel: "" })}
                     >
                       <X size={10} strokeWidth={2} />
                     </button>
                   </span>
                 )}
-
                 {tempSettings.llmModel && (
                   <span className="flex items-center gap-1 text-xs bg-chatbot-secondary text-foreground border border-chatbot-primary/20 rounded-md px-2 py-1">
                     LLM: {tempSettings.llmModel}
                     <button
                       type="button"
                       className="flex items-center justify-center w-4 h-4 rounded-full hover:bg-destructive hover:text-destructive-foreground transition-colors duration-150"
-                      onClick={() => {
-                        const updated = { ...tempSettings, llmModel: "" };
-                        setTempSettings(updated);
-                        handleSave({ llmModel: "" });
-                      }}
+                      onClick={() => handleSave({ llmModel: "" })}
                     >
                       <X size={10} strokeWidth={2} />
                     </button>
                   </span>
                 )}
-
                 {tempSettings.vectorDb && (
                   <span className="flex items-center gap-1 text-xs bg-chatbot-secondary text-foreground border border-chatbot-primary/20 rounded-md px-2 py-1">
                     Vector DB: {tempSettings.vectorDb}
                     <button
                       type="button"
                       className="flex items-center justify-center w-4 h-4 rounded-full hover:bg-destructive hover:text-destructive-foreground transition-colors duration-150"
-                      onClick={() => {
-                        const updated = { ...tempSettings, vectorDb: "" };
-                        setTempSettings(updated);
-                        handleSave({ vectorDb: "" });
-                      }}
+                      onClick={() => handleSave({ vectorDb: "" })}
                     >
                       <X size={10} strokeWidth={2} />
                     </button>
                   </span>
                 )}
-
                 {typeof tempSettings.temperature === "number" && (
                   <span className="flex items-center gap-1 text-xs bg-chatbot-secondary text-foreground border border-chatbot-primary/20 rounded-md px-2 py-1">
                     Temperature: {tempSettings.temperature}
                     <button
                       type="button"
                       className="flex items-center justify-center w-4 h-4 rounded-full hover:bg-destructive hover:text-destructive-foreground transition-colors duration-150"
-                      onClick={() => {
-                        const updated = { ...tempSettings, temperature: 0.0 };
-                        setTempSettings(updated);
-                        handleSave({ temperature: 0.0 });
-                      }}
+                      onClick={() => handleSave({ temperature: 0.0 })}
                     >
                       <X size={10} strokeWidth={2} />
                     </button>
                   </span>
                 )}
-
                 {tempSettings.guardrailOption && (
                   <span className="flex items-center gap-1 text-xs bg-chatbot-secondary text-foreground border border-chatbot-primary/20 rounded-md px-2 py-1">
                     Guardrails: {tempSettings.guardrailOption}
                     <button
                       type="button"
                       className="flex items-center justify-center w-4 h-4 rounded-full hover:bg-destructive hover:text-destructive-foreground transition-colors duration-150"
-                      onClick={() => {
-                        const updated = { ...tempSettings, guardrailOption: "" };
-                        setTempSettings(updated);
-                        handleSave({ guardrailOption: "" });
-                      }}
+                      onClick={() => handleSave({ guardrailOption: "" })}
                     >
                       <X size={10} strokeWidth={2} />
                     </button>
                   </span>
                 )}
-
                 {tempSettings.tokenSize && (
                   <span className="flex items-center gap-1 text-xs bg-chatbot-secondary text-foreground border border-chatbot-primary/20 rounded-md px-2 py-1">
                     Token Size: {tempSettings.tokenSize}
                     <button
                       type="button"
                       className="flex items-center justify-center w-4 h-4 rounded-full hover:bg-destructive hover:text-destructive-foreground transition-colors duration-150"
-                      onClick={() => {
-                        const updated = { ...tempSettings, tokenSize: 256 };
-                        setTempSettings(updated);
-                        handleSave({ tokenSize: 256 });
-                      }}
+                      onClick={() => handleSave({ tokenSize: 256 })}
                     >
                       <X size={10} strokeWidth={2} />
                     </button>
                   </span>
                 )}
-
                 {tempSettings.rerankerOption !== "none" && (
                   <span className="flex items-center gap-1 text-xs bg-chatbot-secondary text-foreground border border-chatbot-primary/20 rounded-md px-2 py-1">
                     Re-ranker: {tempSettings.rerankerOption}
                     <button
                       type="button"
                       className="flex items-center justify-center w-4 h-4 rounded-full hover:bg-destructive hover:text-destructive-foreground transition-colors duration-150"
-                      onClick={() => {
-                        const updated = { ...tempSettings, rerankerOption: "none" };
-                        setTempSettings(updated);
-                        handleSave({ rerankerOption: "none" });
-                      }}
+                      onClick={() => handleSave({ rerankerOption: "none" })}
                     >
                       <X size={10} strokeWidth={2} />
                     </button>
                   </span>
                 )}
-
-
-                {/* Include Sources */}
-                {/* {typeof showSources === "boolean" && (
+                {/* Show Sources Badge */}
+                {typeof tempSettings.showSources === "boolean" && tempSettings.showSources && (
                   <span className="flex items-center gap-1 text-xs bg-chatbot-secondary text-foreground border border-chatbot-primary/20 rounded-md px-2 py-1">
-                    Sources: {showSources ? "Yes" : "No"}
+                    Sources: {tempSettings.showSources ? "Yes" : "No"}
                     <button
                       type="button"
                       className="flex items-center justify-center w-4 h-4 rounded-full hover:bg-destructive hover:text-destructive-foreground transition-colors duration-150"
-                      onClick={() => {setShowSources(false);
-                        handleSave({ showSources: false });
-                      }} // reset to "No"
+                      onClick={() =>
+                        setTempSettings(prev => ({ ...prev, showSources: false }))
+                      }
                     >
                       <X size={10} strokeWidth={2} />
                     </button>
-                  </span> */}
-                {/* )} */}
-
+                  </span>
+                )}
               </div>
-            )
-          }
-
-
-
-
-        </div >
-
-      </div >
-    </div >
+            )}
+        </div>
+      </div>
+    </div>
   );
 };

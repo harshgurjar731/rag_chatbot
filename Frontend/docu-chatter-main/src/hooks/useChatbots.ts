@@ -114,23 +114,29 @@ export const useChatbots = () => {
   };
 
   const createChatbot = (data: CreateChatbotData): Chatbot => {
-    const newBot: Chatbot = {
-      id: crypto.randomUUID(),
-      name: data.name,
-      topic: data.topic,
-      documents: data.document ? [data.document.name] : [],
-      qna: [],
-      createdAt: new Date(),
-      updatedAt: new Date(),
-      icon: getRandomIcon(),
-      datastoreId: data.id
-    };
-
-    updateChatbotIdApiCall(newBot.datastoreId, newBot.id);
-    const updated = [...chatbots, newBot];
-    saveChatbots(updated);
-    return newBot;
+  const newBot: Chatbot = {
+    id: crypto.randomUUID(),
+    name: data.name,
+    topic: data.topic,
+    // ✅ Handle multiple documents
+    documents: data.documents
+      ? data.documents.map((file) => file.name)
+      : [],
+    qna: [],
+    createdAt: new Date(),
+    updatedAt: new Date(),
+    icon: getRandomIcon(),
+    datastoreId: data.id,
   };
+
+  updateChatbotIdApiCall(newBot.datastoreId, newBot.id);
+
+  const updated = [...chatbots, newBot];
+  saveChatbots(updated);
+
+  return newBot;
+};
+
 
   const deleteChatbot = (id: string) => {
     const updated = chatbots.filter(bot => bot.id !== id);

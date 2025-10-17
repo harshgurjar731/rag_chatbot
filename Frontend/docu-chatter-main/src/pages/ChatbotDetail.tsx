@@ -362,8 +362,9 @@ const ChatbotDetail = () => {
               onSendMessage={async (payload) => {
                 const { question, fileId, optimizer, embeddingModel, llmModel, vectorDb, temperature, guardrailOption, tokenSize, showSources, rerankerOption } = payload;
 
-                const response = await axios.get("http://localhost:8000/retriever/query", {
+                const response = await axios.get(`http://localhost:8000/retriever/query/${chatbot.name}`, {
                   params: {
+                    chatbot_id: chatbot.name,
                     query: question,
                     query_optimizer: optimizer || "Multi Query",
                     embedding_model_name: embeddingModel || "all-MiniLM-L6-v2",
@@ -382,7 +383,7 @@ const ChatbotDetail = () => {
                     qs.stringify(params, { arrayFormat: "repeat" }),
                 });
 
-                return response.data.results || "No results found.";
+                return response.data || "No results found.";
               }}
             />
           </TabsContent>
@@ -455,8 +456,8 @@ const ChatbotDetail = () => {
                   <div className="space-y-4">
                     <div
                       className={`border-2 border-dashed rounded-lg p-6 text-center transition-colors duration-200 ${isDragging
-                          ? "border-chatbot-primary bg-chatbot-primary/5 animate-pulse"
-                          : "border-muted-foreground/25 hover:border-chatbot-primary/50"
+                        ? "border-chatbot-primary bg-chatbot-primary/5 animate-pulse"
+                        : "border-muted-foreground/25 hover:border-chatbot-primary/50"
                         }`}
                       onDragOver={(e) => {
                         e.preventDefault()

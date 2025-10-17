@@ -30,6 +30,13 @@ export const CreateChatbotDialog = ({ onCreateChatbot, children }: CreateChatbot
     topic: '',
   });
   const [file, setFile] = useState<File | null>(null);
+  const [files, setFiles] = useState([]);
+
+  // const handleFileInput = (e) => {
+  //   const selectedFiles = Array.from(e.target.files);
+  //   setFiles((prev) => [...prev, ...selectedFiles]);
+  // };
+
   const [dragActive, setDragActive] = useState(false);
   const { toast } = useToast();
   const { addDocument } = useChatbots();
@@ -65,24 +72,24 @@ export const CreateChatbotDialog = ({ onCreateChatbot, children }: CreateChatbot
   };
 
   interface ScrapeResponse {
-  url: string;
-  file_path: string;
-  message: string;
-}
-
-const scrapeWebsite = async (datastoreId: number, url: string) => {
-  try {
-    const { data } = await axios.post(
-       `http://127.0.0.1:8000/urlscraper/${datastoreId}`,
-    {}, // empty body
-    { params: { url } } // URL as query param
-  );
-    return data; // { url, file_path, message }
-  } catch (err: any) {
-    console.error("Error scraping website:", err.response?.data || err.message);
-    throw err;
+    url: string;
+    file_path: string;
+    message: string;
   }
-};
+
+  const scrapeWebsite = async (datastoreId: number, url: string) => {
+    try {
+      const { data } = await axios.post(
+        `http://127.0.0.1:8000/urlscraper/${datastoreId}`,
+        {}, // empty body
+        { params: { url } } // URL as query param
+      );
+      return data; // { url, file_path, message }
+    } catch (err: any) {
+      console.error("Error scraping website:", err.response?.data || err.message);
+      throw err;
+    }
+  };
 
 
 
@@ -103,38 +110,35 @@ const scrapeWebsite = async (datastoreId: number, url: string) => {
       name: formData.name.trim(),
       topic: formData.topic.trim(),
     };
+
     setLoading(true); // ✅ START LOADING
 
     try {
       const created = await createDatastoreApiCall(chatbotData);
 
-      if (file) {
-        await uploadFileToDatastore(created.id, file);
+      // ✅ Upload all selected files, if any
+      if (files && files.length > 0) {
+        for (const file of files) {
+          await uploadFileToDatastore(created.id, file);
+        }
       }
+
+      // ✅ Scrape website if provided
       if (url) {
         await scrapeWebsite(created.id, url);
       }
 
-      // onCreateChatbot(created);
-      console.log(created.id)
       const x = onCreateChatbot({
         id: created.id,
         name: created.name,
         topic: created.description,
-        document: file || undefined,
+        documents: files || undefined,
       });
 
-      // console.log(x.id)
-      // await updateChatbotIdApiCall(created.id,x.id);
-
-
-
-
-
-      setFormData({ name: '', topic: '' });
-      setFile(null);
+      // Reset form and state
+      setFormData({ name: "", topic: "" });
+      setFiles([]);
       setOpen(false);
-
 
       // ✅ Redirect to chatbot detail page
       navigate(`/`);
@@ -148,11 +152,11 @@ const scrapeWebsite = async (datastoreId: number, url: string) => {
         description: error?.response?.data?.detail || "Something went wrong.",
         variant: "destructive",
       });
-    }
-    finally {
+    } finally {
       setLoading(false); // ✅ END LOADING
     }
   };
+
 
   const handleDrag = (e: React.DragEvent) => {
     e.preventDefault();
@@ -164,68 +168,101 @@ const scrapeWebsite = async (datastoreId: number, url: string) => {
     }
   };
 
-const handleDrop = (e: React.DragEvent) => {
+  const handleDrop = (e: React.DragEvent) => {
   e.preventDefault();
   e.stopPropagation();
   setDragActive(false);
 
-  if (e.dataTransfer.files && e.dataTransfer.files[0]) {
-    const droppedFile = e.dataTransfer.files[0];
-    if (isValidFileType(droppedFile)) {
-      setFile(droppedFile);
-    } else {
+  if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+    const droppedFiles = Array.from(e.dataTransfer.files);
+    const validFiles: File[] = [];
+    const invalidFiles: string[] = [];
+
+    droppedFiles.forEach((file) => {
+      if (isValidFileType(file)) {
+        validFiles.push(file);
+      } else {
+        invalidFiles.push(file.name);
+      }
+    });
+
+    if (validFiles.length > 0) {
+      setFiles((prev) => [...prev, ...validFiles]);
+    }
+
+    if (invalidFiles.length > 0) {
       toast({
         title: "Invalid File Type",
-        description: "Please upload a PDF, DOCX, TXT, or Image file (JPG, JPEG, PNG, WEBP).",
+        description: `The following files are not supported: ${invalidFiles.join(", ")}. 
+          Please upload PDF, DOCX, TXT, or image files (JPG, JPEG, PNG, WEBP).`,
         variant: "destructive",
       });
     }
   }
 };
 
-const handleFileInput = (e: React.ChangeEvent<HTMLInputElement>) => {
-  if (e.target.files && e.target.files[0]) {
-    const selectedFile = e.target.files[0];
-    if (isValidFileType(selectedFile)) {
-      setFile(selectedFile);
-    } else {
-      toast({
-        title: "Invalid File Type",
-        description: "Please upload a PDF, DOCX, TXT, or Image file (JPG, JPEG, PNG, WEBP).",
-        variant: "destructive",
+
+  const handleFileInput = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files.length > 0) {
+      const selectedFiles = Array.from(e.target.files);
+      const validFiles: File[] = [];
+      const invalidFiles: string[] = [];
+
+      selectedFiles.forEach((file) => {
+        if (isValidFileType(file)) {
+          validFiles.push(file);
+        } else {
+          invalidFiles.push(file.name);
+        }
       });
+
+      if (validFiles.length > 0) {
+        setFiles((prev) => [...prev, ...validFiles]);
+      }
+
+      if (invalidFiles.length > 0) {
+        toast({
+          title: "Invalid File Type",
+          description: `The following files are not supported: ${invalidFiles.join(", ")}. 
+          Please upload PDF, DOCX, TXT, or image files (JPG, JPEG, PNG, WEBP).`,
+          variant: "destructive",
+        });
+      }
+
+      // Clear the input value so selecting the same file again triggers onChange
+      e.target.value = "";
     }
-  }
-};
+  };
+
 
   const isValidFileType = (file: File) => {
-  const validTypes = [
-    'application/pdf',
-    'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-    'text/plain',
-    'image/jpeg',
-    'image/png',
-    'image/webp'
-  ];
-  
-  return (
-    validTypes.includes(file.type) ||
-    file.name.toLowerCase().endsWith('.txt') ||
-    file.name.toLowerCase().endsWith('.pdf') ||
-    file.name.toLowerCase().endsWith('.docx') ||
-    file.name.toLowerCase().endsWith('.jpg') ||
-    file.name.toLowerCase().endsWith('.jpeg') ||
-    file.name.toLowerCase().endsWith('.png') ||
-    file.name.toLowerCase().endsWith('.webp')
-  );
-};
+    const validTypes = [
+      'application/pdf',
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+      'text/plain',
+      'image/jpeg',
+      'image/png',
+      'image/webp'
+    ];
+
+    return (
+      validTypes.includes(file.type) ||
+      file.name.toLowerCase().endsWith('.txt') ||
+      file.name.toLowerCase().endsWith('.pdf') ||
+      file.name.toLowerCase().endsWith('.docx') ||
+      file.name.toLowerCase().endsWith('.jpg') ||
+      file.name.toLowerCase().endsWith('.jpeg') ||
+      file.name.toLowerCase().endsWith('.png') ||
+      file.name.toLowerCase().endsWith('.webp')
+    );
+  };
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         {children}
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[500px] bg-gradient-card border-chatbot-primary/20">
+      <DialogContent className="sm:max-w-[500px] bg-gradient-card border-chatbot-primary/20 overflow-y-auto max-h-[100vh]">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-xl">
             <Bot className="h-6 w-6 text-chatbot-primary" />
@@ -278,36 +315,56 @@ const handleFileInput = (e: React.ChangeEvent<HTMLInputElement>) => {
                 onDragOver={handleDrag}
                 onDrop={handleDrop}
               >
-                <CardContent className="p-6">
-                  {file ? (
-                    <div className="flex items-center gap-3">
-                      <FileText className="h-8 w-8 text-chatbot-primary" />
-                      <div>
-                        <p className="font-medium">{file.name}</p>
-                        <p className="text-sm text-muted-foreground">
-                          {(file.size / 1024 / 1024).toFixed(2)} MB
-                        </p>
+                <CardContent className="p-6 overflow-y-auto max-h-60">
+                  {files && files.length > 0 ? (
+                    <div className="space-y-3">
+                      {files.map((file, index) => (
+                        <div key={index} className="flex items-center gap-3 border p-2 rounded-lg">
+                          <FileText className="h-8 w-8 text-chatbot-primary" />
+                          <div className="flex-1">
+                            <p className="font-medium">{file.name}</p>
+                            <p className="text-sm text-muted-foreground">
+                              {(file.size / 1024 / 1024).toFixed(2)} MB
+                            </p>
+                          </div>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => {
+                              const updatedFiles = files.filter((_, i) => i !== index);
+                              setFiles(updatedFiles);
+                            }}
+                          >
+                            Remove
+                          </Button>
+                        </div>
+                      ))}
+
+                      <div className="text-center">
+                        <label className="text-chatbot-primary cursor-pointer hover:underline">
+                          + Add more files
+                          <input
+                            type="file"
+                            multiple
+                            className="hidden"
+                            accept=".pdf,.docx,.txt,.jpg,.jpeg,.png,.webp"
+                            onChange={handleFileInput}
+                          />
+                        </label>
                       </div>
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => setFile(null)}
-                        className="ml-auto"
-                      >
-                        Remove
-                      </Button>
                     </div>
                   ) : (
                     <div className="text-center">
                       <Upload className="h-10 w-10 mx-auto text-muted-foreground mb-3" />
                       <div className="space-y-2">
                         <p className="text-sm font-medium">
-                          Drop your document here, or{' '}
+                          Drop your documents here, or{' '}
                           <label className="text-chatbot-primary cursor-pointer hover:underline">
                             browse files
                             <input
                               type="file"
+                              multiple
                               className="hidden"
                               accept=".pdf,.docx,.txt,.jpg,.jpeg,.png,.webp"
                               onChange={handleFileInput}
@@ -315,12 +372,13 @@ const handleFileInput = (e: React.ChangeEvent<HTMLInputElement>) => {
                           </label>
                         </p>
                         <p className="text-xs text-muted-foreground">
-                          Supports PDF, DOCX, TXT, and Image files (JPG, JPEG, PNG, WEBP)
+                          Supports multiple PDF, DOCX, TXT, and Image files (JPG, JPEG, PNG, WEBP)
                         </p>
                       </div>
                     </div>
                   )}
                 </CardContent>
+
               </Card>
             </div>
             <div>

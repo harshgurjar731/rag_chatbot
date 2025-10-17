@@ -10,14 +10,26 @@ export interface QnAPair {
 //   isUser: boolean;
 //   timestamp: Date;
 // }
+// export interface ChatMessage {
+//   id: string;
+//   content: string;
+//   isUser: boolean;
+//   timestamp: Date;         // ✅ use Date instead of number
+//   originalContent?: string; // ✅ optional for storing un-translated text
+// };
+
 export interface ChatMessage {
   id: string;
   content: string;
   isUser: boolean;
   timestamp: Date;         // ✅ use Date instead of number
-  originalContent?: string; // ✅ optional for storing un-translated text
+  originalContent?: string;
+  traceId:string;
+  Citation?: { 
+    source: string; // Corresponds to the 'source' key in the Python dict
+    pages: (string | number)[]; // Corresponds to the 'pages' key (list of pages)
+  }[]; 
 };
-
 
 export interface Chatbot {
   id: string;
@@ -35,7 +47,7 @@ export interface CreateChatbotData {
   id:number,
   name: string;
   topic: string;
-  document?: File;
+  documents?: File[];
 }
 
 
