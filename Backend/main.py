@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from database import init_db, list_tables, list_tables_content, list_file_content
-from routes import datastore, upload, preview, chunking, embedding, retriever, delete, url_scraper, translate, frontend_config , feedback,eva
+from routes import datastore, upload, preview, chunking, embedding, retriever, delete, url_scraper, translate, frontend_config,evaluation
 from fastapi.middleware.cors import CORSMiddleware
 # You no longer need to import threading here for phoenix
 import phoenix as px
@@ -61,7 +61,7 @@ app.include_router(delete.router, prefix="/datastore")
 app.include_router(url_scraper.router, prefix="/urlscraper")
 app.include_router(translate.router, prefix="/translate")
 app.include_router(frontend_config.router, prefix="/frontend")
-app.include_router(feedback.router)
+app.include_router(evaluation.router, prefix="/evaluation")
 
 
 # Initialize database and list contents on startup
