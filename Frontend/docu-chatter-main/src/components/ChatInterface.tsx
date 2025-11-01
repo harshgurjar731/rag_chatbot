@@ -58,6 +58,10 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useConfigOptions } from "@/hooks/useConfigOptions";
+import { Citation } from "../../../../../../rag-main/frontend/src/types/chat";
+import Index from "../../../../../../../Downloads/nexus-assist-forge-main (2)/nexus-assist-forge-main/src/pages/Index";
+
+
 interface QueryPayload {
   question: string;
   fileId: number[];
@@ -72,16 +76,19 @@ interface QueryPayload {
   rerankerOption: string;
 }
 
+
 interface ChatInterfaceProps {
   chatbot: Chatbot;
   chatbotName: string;
   onSendMessage: (payload: QueryPayload) => Promise<string>;
 }
 
+
 type DocumentOption = {
   label: string;
   value: string;
 };
+
 
 declare global {
   interface Window {
@@ -93,6 +100,7 @@ declare global {
   }
 }
 
+
 export const ChatInterface = ({
   chatbot,
   chatbotName,
@@ -103,6 +111,7 @@ export const ChatInterface = ({
   type StoredChatMessage = Omit<ChatMessage, "timestamp"> & {
     timestamp: string;
   };
+
 
   const [messages, setMessages] = useState<ChatMessage[]>(() => {
     const saved = localStorage.getItem(storageKey);
@@ -132,21 +141,26 @@ export const ChatInterface = ({
     ];
   });
 
+
   function getFilenameFromPath(fullPath: string): string {
     if (!fullPath) {
       return "";
     }
 
+
     // 1. Normalize slashes: Replace all backslashes (\) with forward slashes (/).
     const normalizedPath = fullPath.replace(/\\/g, "/");
 
+
     // 2. Find the last index of the forward slash.
     const lastSlashIndex = normalizedPath.lastIndexOf("/");
+
 
     // 3. Extract the substring starting right after the last slash.
     // If no slash is found (e.g., just "file.txt"), slice returns the whole string.
     return normalizedPath.substring(lastSlashIndex + 1);
   }
+
 
   useEffect(() => {
     const toStore: StoredChatMessage[] = messages.map((msg) => ({
@@ -156,11 +170,14 @@ export const ChatInterface = ({
     localStorage.setItem(storageKey, JSON.stringify(toStore));
   }, [messages]);
 
+
   const [openDropdownId, setOpenDropdownId] = useState<string | null>(null);
+
 
   const toggleLanguageDropdown = (id: string) => {
     setOpenDropdownId(openDropdownId === id ? null : id);
   };
+
 
   const handleTranslate = async (
     id: string,
@@ -179,17 +196,19 @@ export const ChatInterface = ({
         }),
       });
 
+
       if (!res.ok) throw new Error("Translation API failed");
       const data: { translatedText: string } = await res.json();
+
 
       setMessages((prev) =>
         prev.map((msg) =>
           msg.id === id
             ? {
-              ...msg,
-              originalContent: msg.originalContent || msg.content,
-              content: data.translatedText,
-            }
+                ...msg,
+                originalContent: msg.originalContent || msg.content,
+                content: data.translatedText,
+              }
             : msg
         )
       );
@@ -198,6 +217,7 @@ export const ChatInterface = ({
       console.error("Translation failed:", err);
     }
   };
+
 
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -212,6 +232,7 @@ export const ChatInterface = ({
   const [error, setError] = useState<string | null>(null);
   const [openPopoverId, setOpenPopoverId] = useState<string | null>(null);
 
+
   const getChatbotDocumentOptions = (chatbot: {
     documents?: string[];
   }): DocumentOption[] => {
@@ -221,6 +242,7 @@ export const ChatInterface = ({
       value: doc,
     }));
   };
+
 
   const scrapeWebsite = async (datastoreId: number, url: string) => {
     try {
@@ -238,6 +260,7 @@ export const ChatInterface = ({
       throw err;
     }
   };
+
 
   const handleUrlSubmit = async () => {
     if (!urlInput.trim()) return;
@@ -261,6 +284,7 @@ export const ChatInterface = ({
     }
   };
 
+
   const getFormattedLabel = (filename: string): string => {
     const nameWithoutExt = filename.replace(/\.[^/.]+$/, "");
     return nameWithoutExt
@@ -268,8 +292,10 @@ export const ChatInterface = ({
       .replace(/\b\w/g, (char) => char.toUpperCase());
   };
 
+
   const [selectedDocs, setSelectedDocs] = useState<DocumentOption[]>([]);
   const [documentOptions, setDocumentOptions] = useState<DocumentOption[]>([]);
+
 
   const handleRemove = (value: string) => {
     setSelectedDocs((prevDocs) =>
@@ -277,10 +303,12 @@ export const ChatInterface = ({
     );
   };
 
+
   useEffect(() => {
     const newOptions = getChatbotDocumentOptions(chatbot);
     setDocumentOptions(newOptions);
   }, [chatbot.documents]);
+
 
   useEffect(() => {
     const updatedOptions = getChatbotDocumentOptions(chatbot);
@@ -291,6 +319,7 @@ export const ChatInterface = ({
       setSelectedDocs(updatedSelected);
     }
   }, [chatbot?.documents]);
+
 
   useEffect(() => {
     if (scrollAreaRef.current) {
@@ -303,6 +332,7 @@ export const ChatInterface = ({
     }
   }, [messages]);
 
+
   // Define this function inside your ChatInterface component
   const handleFileClick = async (
     e: React.MouseEvent<HTMLAnchorElement>,
@@ -314,6 +344,7 @@ export const ChatInterface = ({
     // Prevent the default navigation of the anchor tag (href="#")
     e.preventDefault();
 
+
     try {
       // 1. Fetch the file content as a blob
       const response = await axios.get(
@@ -324,10 +355,12 @@ export const ChatInterface = ({
         }
       );
 
+
       // 2. Create a Blob URL
       const contentType = response.headers["content-type"];
       const blob = new Blob([response.data], { type: contentType });
       let blobUrl = window.URL.createObjectURL(blob);
+
 
       // 3. ✅ DEEP LINK LOGIC: Redirect to a specific page if pageNumber is provided
       if (pageNumber && contentType === "application/pdf") {
@@ -339,8 +372,10 @@ export const ChatInterface = ({
         }
       }
 
+
       // 4. Open in a new window
       window.open(blobUrl, "_blank");
+
 
       // Clean up the URL object after opening (optional but good practice)
       window.URL.revokeObjectURL(blobUrl);
@@ -356,6 +391,7 @@ export const ChatInterface = ({
     }
   };
 
+
   const handleTokenSizeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = parseInt(e.target.value, 10);
     if (!isNaN(value)) {
@@ -365,6 +401,7 @@ export const ChatInterface = ({
       setTokenSize(256);
     }
   };
+
 
   const handleSend = async () => {
     if (!input.trim() || isLoading) return;
@@ -380,6 +417,7 @@ export const ChatInterface = ({
     setInput("");
     setIsLoading(true);
 
+
     try {
       let fileId: number[] = [];
       if (selectedDocs.length === 0) {
@@ -389,12 +427,14 @@ export const ChatInterface = ({
         for (const doc of selectedDocs) {
           const docName = doc.label;
           const idRes = await axios.get<{ file_id: number }>(
-            `${config?.base_url}/datastores/${chatbot.datastoreId
+            `${config?.base_url}/datastores/${
+              chatbot.datastoreId
             }/files/${encodeURIComponent(docName)}/id`
           );
           fileId.push(idRes.data.file_id);
         }
       }
+
 
       const response: any = await onSendMessage({
         question: input.trim(),
@@ -409,6 +449,7 @@ export const ChatInterface = ({
         showSources: tempSettings.showSources,
         rerankerOption: tempSettings.rerankerOption,
       });
+
 
       const botMessage: ChatMessage = {
         id: crypto.randomUUID(),
@@ -439,12 +480,14 @@ export const ChatInterface = ({
     }
   };
 
+
   const handleKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
       handleSend();
     }
   };
+
 
   const toggleListening = () => {
     const SpeechRecognition =
@@ -492,6 +535,7 @@ export const ChatInterface = ({
     }
   };
 
+
   const toggleSpeech = (message: string) => {
     if ("speechSynthesis" in window) {
       if (isSpeaking) {
@@ -513,12 +557,14 @@ export const ChatInterface = ({
     }
   };
 
+
   const formatTime = (date: Date) => {
     return new Intl.DateTimeFormat("en-US", {
       hour: "2-digit",
       minute: "2-digit",
     }).format(date);
   };
+
 
   const [open, setOpen] = useState(false);
   const [tempSettings, setTempSettings] = useState({
@@ -533,6 +579,7 @@ export const ChatInterface = ({
     rerankerOption: "none",
   });
 
+
   useEffect(() => {
     if (!chatbot?.id) return;
     const saved = localStorage.getItem(`model-settings-${chatbot.id}`);
@@ -540,6 +587,7 @@ export const ChatInterface = ({
       setTempSettings(JSON.parse(saved));
     }
   }, [chatbot?.id]);
+
 
   const handleSave = (overrides: Partial<typeof tempSettings> = {}) => {
     const settings = { ...tempSettings, ...overrides };
@@ -555,6 +603,7 @@ export const ChatInterface = ({
     }
   };
 
+
   const handleCancel = () => {
     const saved = localStorage.getItem(`model-settings-${chatbot.id}`);
     if (saved) {
@@ -562,6 +611,7 @@ export const ChatInterface = ({
     }
     setOpen(false);
   };
+
 
   const customMultiStyles = {
     control: (base: any) => ({
@@ -599,7 +649,9 @@ export const ChatInterface = ({
     }),
   };
 
+
   const languages = config?.languages || [];
+
 
   const onFeedback = async (messageId: string, feedback: string) => {
     if (!config?.base_url) return;
@@ -631,6 +683,7 @@ export const ChatInterface = ({
     }
   };
 
+
   const [comment, setComment] = React.useState("");
   const handleCommentSubmit = (messageId: string) => {
     if (!comment.trim()) {
@@ -641,6 +694,7 @@ export const ChatInterface = ({
     setOpenPopoverId(null);
   };
 
+
   return (
     <div className="flex flex-col h-[470px] bg-gradient-surface rounded-lg border border-chatbot-primary/20">
       <ScrollArea ref={scrollAreaRef} className="flex-1 p-4">
@@ -648,48 +702,58 @@ export const ChatInterface = ({
           {messages.map((message) => (
             <div
               key={message.id}
-              className={`flex ${message.isUser ? "justify-end" : "justify-start"
-                }`}
+              className={`flex ${
+                message.isUser ? "justify-end" : "justify-start"
+              }`}
             >
               <div
-                className={`max-w-[80%] ${message.isUser ? "order-2" : "order-1"
-                  }`}
+                className={`max-w-[80%] ${
+                  message.isUser ? "order-2" : "order-1"
+                }`}
               >
                 <Card
-                  className={`${message.isUser
-                    ? "bg-chatbot-primary text-primary-foreground"
-                    : "bg-chatbot-secondary border-chatbot-primary/20"
-                    }`}
+                  className={`${
+                    message.isUser
+                      ? "bg-chatbot-primary text-primary-foreground"
+                      : "bg-chatbot-secondary border-chatbot-primary/20"
+                  }`}
                 >
                   <CardContent className="p-3">
                     <p className="text-sm whitespace-pre-wrap">
                       {message.content}
                     </p>
 
+
                     {!message.isUser && (
                       <div className="mt-3 flex flex-col gap-2">
                         {/* SOURCES BOX */}
 
-                        {Array.isArray(message.Citation) && message.Citation.length > 0 && (
-                          <div className="w-full mt-3 rounded-xl bg-gradiant-surface shadow-sm">
-                            <span className="block mb-3 font-semibold text-gray-100 text-sm">
+
+                        {Array.isArray(message.Citation) &&
+                        message.Citation.length > 0 ? (
+                          <div className="w-full rounded-lg border border-border/40 bg-muted/10 p-2">
+                            <span className="font-medium text-sm text-gray-700 mb-1 block">
                               Sources:
                             </span>
-
-                            <div className="flex flex-col gap-3">
+                            <div className="flex flex-col gap-1">
                               {message.Citation.map((citation, index) => {
-                                const filename = getFilenameFromPath(citation.source);
+                                const filename = getFilenameFromPath(
+                                  citation.source
+                                );
                                 const pages =
                                   citation.pages && citation.pages.length > 0
                                     ? `(${citation.pages.join(", ")})`
                                     : "";
 
+
                                 return (
                                   <div
                                     key={citation.source || index}
-                                    className="flex items-center px-4 py-2 rounded-lg bg-gradiant-surface-100 hover:bg-gray-300 transition-all shadow-sm"
+                                    className="flex items-center text-xs bg-blue-50 rounded-md px-2 py-1"
                                   >
-                                    <span className="font-medium mr-3 text-blue-600">[{index + 1}]</span>
+                                    <span className="text-blue-800 mr-1">
+                                      [{index + 1}]
+                                    </span>
                                     <a
                                       href="#"
                                       onClick={(e) =>
@@ -700,12 +764,12 @@ export const ChatInterface = ({
                                           citation.pages?.at(0)
                                         )
                                       }
-                                      className="flex-1 font-sm hover:underline truncate text-gray-900"
+                                      className="font-medium text-blue-600 hover:underline truncate"
                                     >
                                       {filename}
                                     </a>
                                     {pages && (
-                                      <span className="ml-3 text-gray-800 opacity-100 whitespace-nowrap">
+                                      <span className="ml-1 text-blue-600 opacity-90 whitespace-nowrap">
                                         {pages}
                                       </span>
                                     )}
@@ -713,6 +777,10 @@ export const ChatInterface = ({
                                 );
                               })}
                             </div>
+                          </div>
+                        ) : (
+                          <div className="w-full rounded-lg border border-border/40 bg-muted/10 p-2 text-sm text-muted-foreground">
+                            No sources provided.
                           </div>
                         )}
 
@@ -723,7 +791,9 @@ export const ChatInterface = ({
                             {formatTime(message.timestamp)}
                           </span>
 
+
                           <div className="flex items-center gap-2">
+                            {/*
                             <Button
                               size="icon"
                               variant="ghost"
@@ -736,7 +806,7 @@ export const ChatInterface = ({
                                 <Volume2 size={14} />
                               )}
                             </Button>
-
+                           
                             <Button
                               size="icon"
                               variant="ghost"
@@ -746,6 +816,7 @@ export const ChatInterface = ({
                               <ThumbsUp size={14} />
                             </Button>
 
+
                             <Button
                               size="icon"
                               variant="ghost"
@@ -754,6 +825,7 @@ export const ChatInterface = ({
                             >
                               <ThumbsDown size={14} />
                             </Button>
+
 
                             <Popover
                               open={openPopoverId === message.id}
@@ -769,6 +841,7 @@ export const ChatInterface = ({
                                 >
                                   <Info size={14} />
                                 </Button>
+                               
                               </PopoverTrigger>
                               <PopoverContent className="w-64">
                                 <div className="space-y-2">
@@ -790,10 +863,11 @@ export const ChatInterface = ({
                                   >
                                     Submit
                                   </Button>
+                                 
                                 </div>
                               </PopoverContent>
                             </Popover>
-
+                              */}
                             <DropdownMenu>
                               <DropdownMenuTrigger asChild>
                                 <Button
@@ -948,7 +1022,7 @@ export const ChatInterface = ({
                   Model Settings
                 </Button>
               </DialogTrigger>
-              <DialogContent className="max-w-4xl h-[90vh] flex flex-col rounded-2xl p-0 overflow-hidden">
+              <DialogContent className="max-w-4xl h-[90vh] flex flex-col rounded-2xl p-0 overflow-hidden border-2">
                 <DialogHeader className="px-6 py-4 border-b bg-muted/40">
                   <DialogTitle className="text-xl font-semibold">
                     Model Settings
@@ -976,7 +1050,7 @@ export const ChatInterface = ({
                           }
                           disabled={isLoading}
                         >
-                          <SelectTrigger>
+                          <SelectTrigger className="border-2 border-gray-500" >
                             <SelectValue
                               placeholder={
                                 tempSettings.llmModel !== ""
@@ -984,7 +1058,7 @@ export const ChatInterface = ({
                                   : "Select LLM"
                               }
                             />
-                          </SelectTrigger>
+                          </SelectTrigger >
                           <SelectContent>
                             {config?.llm_models.map((model) => (
                               <SelectItem key={model} value={model}>
@@ -998,11 +1072,13 @@ export const ChatInterface = ({
                         <Label>Token Size</Label>
                         <Input
                           type="number"
+                          className="border-4 border-gray-200"
                           min={config?.token_size_options?.min ?? 256}
                           max={config?.token_size_options?.max ?? 2048}
                           step={config?.token_size_options?.step ?? 128}
-                          placeholder={`Default: ${config?.token_size_options?.default ?? 512
-                            }`}
+                          placeholder={`Default: ${
+                            config?.token_size_options?.default ?? 512
+                          }`}
                           value={tempSettings.tokenSize}
                           onChange={(e) =>
                             setTempSettings({
@@ -1027,7 +1103,7 @@ export const ChatInterface = ({
                           }
                           disabled={isLoading}
                         >
-                          <SelectTrigger>
+                          <SelectTrigger className="border-4 border-gray-200">
                             <SelectValue
                               placeholder={
                                 tempSettings.guardrailOption !== ""
@@ -1086,7 +1162,7 @@ export const ChatInterface = ({
                           }
                           disabled={isLoading}
                         >
-                          <SelectTrigger>
+                          <SelectTrigger className="border-4 border-gray-200">
                             <SelectValue
                               placeholder={
                                 tempSettings.optimizer !== ""
@@ -1115,7 +1191,7 @@ export const ChatInterface = ({
                           }
                           disabled
                         >
-                          <SelectTrigger>
+                          <SelectTrigger className="border-4 border-gray-200">
                             <SelectValue
                               placeholder={
                                 tempSettings.embeddingModel !== ""
@@ -1145,7 +1221,7 @@ export const ChatInterface = ({
                           }
                           disabled
                         >
-                          <SelectTrigger>
+                          <SelectTrigger className="border-4 border-gray-200">
                             <SelectValue
                               placeholder={
                                 tempSettings.vectorDb !== ""
@@ -1163,8 +1239,7 @@ export const ChatInterface = ({
                       <div className="space-y-1">
                         <Label>Re-ranker</Label>
                         <select
-                          className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-ring"
-                          value={tempSettings.rerankerOption}
+                          className="w-full rounded-lg border-4 border-gray-200 border-input bg-background px-3 py-2 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-ring"                          value={tempSettings.rerankerOption}
                           onChange={(e) =>
                             setTempSettings({
                               ...tempSettings,
@@ -1191,19 +1266,6 @@ export const ChatInterface = ({
                           documents.
                         </p>
                       </div>
-                      {/* Sources Toggle */}
-                      <div className="flex items-center justify-between border rounded-lg p-3">
-                        <Label htmlFor="sources-toggle">Include Sources in Output</Label>
-                        <Switch
-                          id="sources-toggle"
-                          checked={tempSettings.showSources}
-                          onCheckedChange={(value: boolean) =>
-                            setTempSettings(prev => ({ ...prev, showSources: value }))
-                          }
-                          disabled={isLoading}
-                        />
-                      </div>
-
                     </div>
                   </div>
                 </div>
@@ -1245,123 +1307,113 @@ export const ChatInterface = ({
             tempSettings.tokenSize ||
             tempSettings.rerankerOption !== "none" ||
             typeof tempSettings.showSources === "boolean") && (
-              <div className="flex flex-wrap gap-2 mt-2 items-center">
-                <Label className="text-sm text-muted-foreground">Settings:</Label>
-                {tempSettings.optimizer && (
-                  <span className="flex items-center gap-1 text-xs bg-chatbot-secondary text-foreground border border-chatbot-primary/20 rounded-md px-2 py-1">
-                    Optimizer: {tempSettings.optimizer}
-                    <button
-                      type="button"
-                      className="flex items-center justify-center w-4 h-4 rounded-full hover:bg-destructive hover:text-destructive-foreground transition-colors duration-150"
-                      onClick={() => handleSave({ optimizer: "" })}
-                    >
-                      <X size={10} strokeWidth={2} />
-                    </button>
-                  </span>
-                )}
-                {tempSettings.embeddingModel && (
-                  <span className="flex items-center gap-1 text-xs bg-chatbot-secondary text-foreground border border-chatbot-primary/20 rounded-md px-2 py-1">
-                    Embedding: {tempSettings.embeddingModel}
-                    <button
-                      type="button"
-                      className="flex items-center justify-center w-4 h-4 rounded-full hover:bg-destructive hover:text-destructive-foreground transition-colors duration-150"
-                      onClick={() => handleSave({ embeddingModel: "" })}
-                    >
-                      <X size={10} strokeWidth={2} />
-                    </button>
-                  </span>
-                )}
-                {tempSettings.llmModel && (
-                  <span className="flex items-center gap-1 text-xs bg-chatbot-secondary text-foreground border border-chatbot-primary/20 rounded-md px-2 py-1">
-                    LLM: {tempSettings.llmModel}
-                    <button
-                      type="button"
-                      className="flex items-center justify-center w-4 h-4 rounded-full hover:bg-destructive hover:text-destructive-foreground transition-colors duration-150"
-                      onClick={() => handleSave({ llmModel: "" })}
-                    >
-                      <X size={10} strokeWidth={2} />
-                    </button>
-                  </span>
-                )}
-                {tempSettings.vectorDb && (
-                  <span className="flex items-center gap-1 text-xs bg-chatbot-secondary text-foreground border border-chatbot-primary/20 rounded-md px-2 py-1">
-                    Vector DB: {tempSettings.vectorDb}
-                    <button
-                      type="button"
-                      className="flex items-center justify-center w-4 h-4 rounded-full hover:bg-destructive hover:text-destructive-foreground transition-colors duration-150"
-                      onClick={() => handleSave({ vectorDb: "" })}
-                    >
-                      <X size={10} strokeWidth={2} />
-                    </button>
-                  </span>
-                )}
-                {typeof tempSettings.temperature === "number" && (
-                  <span className="flex items-center gap-1 text-xs bg-chatbot-secondary text-foreground border border-chatbot-primary/20 rounded-md px-2 py-1">
-                    Temperature: {tempSettings.temperature}
-                    <button
-                      type="button"
-                      className="flex items-center justify-center w-4 h-4 rounded-full hover:bg-destructive hover:text-destructive-foreground transition-colors duration-150"
-                      onClick={() => handleSave({ temperature: 0.0 })}
-                    >
-                      <X size={10} strokeWidth={2} />
-                    </button>
-                  </span>
-                )}
-                {tempSettings.guardrailOption && (
-                  <span className="flex items-center gap-1 text-xs bg-chatbot-secondary text-foreground border border-chatbot-primary/20 rounded-md px-2 py-1">
-                    Guardrails: {tempSettings.guardrailOption}
-                    <button
-                      type="button"
-                      className="flex items-center justify-center w-4 h-4 rounded-full hover:bg-destructive hover:text-destructive-foreground transition-colors duration-150"
-                      onClick={() => handleSave({ guardrailOption: "" })}
-                    >
-                      <X size={10} strokeWidth={2} />
-                    </button>
-                  </span>
-                )}
-                {tempSettings.tokenSize && (
-                  <span className="flex items-center gap-1 text-xs bg-chatbot-secondary text-foreground border border-chatbot-primary/20 rounded-md px-2 py-1">
-                    Token Size: {tempSettings.tokenSize}
-                    <button
-                      type="button"
-                      className="flex items-center justify-center w-4 h-4 rounded-full hover:bg-destructive hover:text-destructive-foreground transition-colors duration-150"
-                      onClick={() => handleSave({ tokenSize: 256 })}
-                    >
-                      <X size={10} strokeWidth={2} />
-                    </button>
-                  </span>
-                )}
-                {tempSettings.rerankerOption !== "none" && (
-                  <span className="flex items-center gap-1 text-xs bg-chatbot-secondary text-foreground border border-chatbot-primary/20 rounded-md px-2 py-1">
-                    Re-ranker: {tempSettings.rerankerOption}
-                    <button
-                      type="button"
-                      className="flex items-center justify-center w-4 h-4 rounded-full hover:bg-destructive hover:text-destructive-foreground transition-colors duration-150"
-                      onClick={() => handleSave({ rerankerOption: "none" })}
-                    >
-                      <X size={10} strokeWidth={2} />
-                    </button>
-                  </span>
-                )}
-                {/* Show Sources Badge */}
-                {typeof tempSettings.showSources === "boolean" && tempSettings.showSources && (
-                  <span className="flex items-center gap-1 text-xs bg-chatbot-secondary text-foreground border border-chatbot-primary/20 rounded-md px-2 py-1">
-                    Sources: {tempSettings.showSources ? "Yes" : "No"}
-                    <button
-                      type="button"
-                      className="flex items-center justify-center w-4 h-4 rounded-full hover:bg-destructive hover:text-destructive-foreground transition-colors duration-150"
-                      onClick={() =>
-                        setTempSettings(prev => ({ ...prev, showSources: false }))
-                      }
-                    >
-                      <X size={10} strokeWidth={2} />
-                    </button>
-                  </span>
-                )}
-              </div>
-            )}
+            <div className="flex flex-wrap gap-2 mt-2 items-center">
+              <Label className="text-sm text-muted-foreground">Settings:</Label>
+              {tempSettings.optimizer && (
+                <span className="flex items-center gap-1 text-xs bg-chatbot-secondary text-foreground border border-chatbot-primary/20 rounded-md px-2 py-1">
+                  Optimizer: {tempSettings.optimizer}
+                  <button
+                    type="button"
+                    className="flex items-center justify-center w-4 h-4 rounded-full hover:bg-destructive hover:text-destructive-foreground transition-colors duration-150"
+                    onClick={() => handleSave({ optimizer: "" })}
+                  >
+                    <X size={10} strokeWidth={2} />
+                  </button>
+                </span>
+              )}
+              {tempSettings.embeddingModel && (
+                <span className="flex items-center gap-1 text-xs bg-chatbot-secondary text-foreground border border-chatbot-primary/20 rounded-md px-2 py-1">
+                  Embedding: {tempSettings.embeddingModel}
+                  <button
+                    type="button"
+                    className="flex items-center justify-center w-4 h-4 rounded-full hover:bg-destructive hover:text-destructive-foreground transition-colors duration-150"
+                    onClick={() => handleSave({ embeddingModel: "" })}
+                  >
+                    <X size={10} strokeWidth={2} />
+                  </button>
+                </span>
+              )}
+              {tempSettings.llmModel && (
+                <span className="flex items-center gap-1 text-xs bg-chatbot-secondary text-foreground border border-chatbot-primary/20 rounded-md px-2 py-1">
+                  LLM: {tempSettings.llmModel}
+                  <button
+                    type="button"
+                    className="flex items-center justify-center w-4 h-4 rounded-full hover:bg-destructive hover:text-destructive-foreground transition-colors duration-150"
+                    onClick={() => handleSave({ llmModel: "" })}
+                  >
+                    <X size={10} strokeWidth={2} />
+                  </button>
+                </span>
+              )}
+              {tempSettings.vectorDb && (
+                <span className="flex items-center gap-1 text-xs bg-chatbot-secondary text-foreground border border-chatbot-primary/20 rounded-md px-2 py-1">
+                  Vector DB: {tempSettings.vectorDb}
+                  <button
+                    type="button"
+                    className="flex items-center justify-center w-4 h-4 rounded-full hover:bg-destructive hover:text-destructive-foreground transition-colors duration-150"
+                    onClick={() => handleSave({ vectorDb: "" })}
+                  >
+                    <X size={10} strokeWidth={2} />
+                  </button>
+                </span>
+              )}
+              {typeof tempSettings.temperature === "number" && (
+                <span className="flex items-center gap-1 text-xs bg-chatbot-secondary text-foreground border border-chatbot-primary/20 rounded-md px-2 py-1">
+                  Temperature: {tempSettings.temperature}
+                  <button
+                    type="button"
+                    className="flex items-center justify-center w-4 h-4 rounded-full hover:bg-destructive hover:text-destructive-foreground transition-colors duration-150"
+                    onClick={() => handleSave({ temperature: 0.0 })}
+                  >
+                    <X size={10} strokeWidth={2} />
+                  </button>
+                </span>
+              )}
+              {tempSettings.guardrailOption && (
+                <span className="flex items-center gap-1 text-xs bg-chatbot-secondary text-foreground border border-chatbot-primary/20 rounded-md px-2 py-1">
+                  Guardrails: {tempSettings.guardrailOption}
+                  <button
+                    type="button"
+                    className="flex items-center justify-center w-4 h-4 rounded-full hover:bg-destructive hover:text-destructive-foreground transition-colors duration-150"
+                    onClick={() => handleSave({ guardrailOption: "" })}
+                  >
+                    <X size={10} strokeWidth={2} />
+                  </button>
+                </span>
+              )}
+              {tempSettings.tokenSize && (
+                <span className="flex items-center gap-1 text-xs bg-chatbot-secondary text-foreground border border-chatbot-primary/20 rounded-md px-2 py-1">
+                  Token Size: {tempSettings.tokenSize}
+                  <button
+                    type="button"
+                    className="flex items-center justify-center  w-4 h-4 rounded-full hover:bg-destructive hover:text-destructive-foreground transition-colors duration-150"
+                    onClick={() => handleSave({ tokenSize: 256 })}
+                  >
+                    <X size={10} strokeWidth={2} />
+                  </button>
+                </span>
+              )}
+              {tempSettings.rerankerOption !== "none" && (
+                <span className="flex items-center gap-1 text-xs bg-chatbot-secondary text-foreground border border-chatbot-primary/20 rounded-md px-2 py-1">
+                  Re-ranker: {tempSettings.rerankerOption}
+                  <button
+                    type="button"
+                    className="flex items-center justify-center w-4 h-4 rounded-full hover:bg-destructive hover:text-destructive-foreground transition-colors duration-150"
+                    onClick={() => handleSave({ rerankerOption: "none" })}
+                  >
+                    <X size={10} strokeWidth={2} />
+                  </button>
+                </span>
+              )}
+            </div>
+          )}
         </div>
       </div>
     </div>
   );
 };
+
+
+
+
+

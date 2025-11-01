@@ -67,12 +67,12 @@ def retrieve(
     # current_span = trace.get_current_span()
     # current_span.set_attribute("chatbot.id", chatbot_id)
 
-    tracer_provider = register(
-        # project_name="testing1",
-        project_name=chatbot_id,
-        endpoint="http://localhost:6006/v1/traces",
-        auto_instrument=True  # Automatically instruments supported libraries
-    )
+    # tracer_provider = register(
+    #     # project_name="testing1",
+    #     project_name=chatbot_id,
+    #     endpoint="http://localhost:6006/v1/traces",
+    #     auto_instrument=True  # Automatically instruments supported libraries
+    # )
 
     # Call your existing service logic.
     results_object = retrieve_documents(

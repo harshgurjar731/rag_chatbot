@@ -1,6 +1,6 @@
 // src/components/SidebarLayout.tsx
 import { useState } from "react"
-import { Menu, X, Home, Settings, Info } from "lucide-react"
+import { Menu, X, Home, Settings, Info, Database } from "lucide-react"
 import { Outlet, Link, useLocation } from "react-router-dom"
 
 export default function SidebarLayout() {
@@ -11,6 +11,7 @@ export default function SidebarLayout() {
     const navItems = [
         { to: "/", label: "Dashboard", icon: <Home size={18} /> },
         { to: "/evaluation", label: "Evaluation", icon: <Settings size={18} /> },
+        { to: "/datastore", label: "Datastore", icon: <Database size={18} /> },
         { to: "/about", label: "About", icon: <Info size={18} /> },
     ]
 
