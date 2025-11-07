@@ -1,11 +1,15 @@
 from fastapi import FastAPI
 from database import init_db, list_tables, list_tables_content, list_file_content
-from routes import datastore, upload, preview, chunking, embedding, retriever, delete, url_scraper, translate, frontend_config , feedback,eva
+from routes import datastore, upload, preview, chunking, embedding, retriever, delete, url_scraper, translate, frontend_config, evaluation
 from fastapi.middleware.cors import CORSMiddleware
 # You no longer need to import threading here for phoenix
 import phoenix as px
 from phoenix.otel import register
 import requests
+from ingestion_pipleline.ingestion_datastore_router import router as ingestion_datastore_router
+from ingestion_pipleline.ingestion_document_loader_router import router as ingestion_document_router
+from ingestion_pipleline.ingestion_chunks_router import router as ingestion_chunking_router
+
 # ================= PHOENIX SETUP START =================
 
 
@@ -61,7 +65,16 @@ app.include_router(delete.router, prefix="/datastore")
 app.include_router(url_scraper.router, prefix="/urlscraper")
 app.include_router(translate.router, prefix="/translate")
 app.include_router(frontend_config.router, prefix="/frontend")
-app.include_router(feedback.router)
+app.include_router(evaluation.router, prefix="/evaluation")
+
+
+
+
+app.include_router(ingestion_datastore_router, prefix="/ingestion")
+app.include_router(ingestion_document_router, prefix="/ingestion")
+app.include_router(ingestion_chunking_router, prefix="/ingestion")
+
+
 
 
 # Initialize database and list contents on startup

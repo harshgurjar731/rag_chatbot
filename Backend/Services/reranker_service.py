@@ -89,16 +89,22 @@ class LLMReranker:
 # -----------------------------
 # Factory Function
 # -----------------------------
-def get_reranker(reranker_type: str):
+def get_reranker(reranker_type: str, model_name: str = ""):
     """
     Factory to load the desired re-ranker.
     reranker_type: "cross-encoder" | "bi-encoder" | "llm-reranker"
     """
     if reranker_type == "cross-encoder":
+        if (model_name != ""): 
+            return CrossEncoderReranker(model_name=model_name)
         return CrossEncoderReranker()
     elif reranker_type == "bi-encoder":
+        if (model_name != ""): 
+            return BiEncoderReranker(model_name=model_name)
         return BiEncoderReranker()
     elif reranker_type == "llm-reranker":
+        if (model_name != ""): 
+            return LLMReranker(model_name=model_name)
         return LLMReranker()
     else:
         return None

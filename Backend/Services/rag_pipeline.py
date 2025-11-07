@@ -3,13 +3,13 @@
 from typing import List
 from operator import itemgetter
 from collections import defaultdict
-from langchain.prompts import ChatPromptTemplate
+from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.output_parsers import StrOutputParser
 from langchain_community.chat_models import ChatOpenAI
-from langchain.retrievers import ContextualCompressionRetriever
-from langchain.schema import Document
+from langchain_classic.retrievers.contextual_compression import ContextualCompressionRetriever
+from langchain_core.documents import Document
 from langchain_community.vectorstores import FAISS, Chroma
-from langchain.load import dumps, loads
+from langchain_core.load import dumps, loads
 
 from Services.guardrail import validate_output
 from Services.reranker_service import get_reranker
@@ -111,13 +111,35 @@ class UnifiedRAGPipeline:
 
         return result
 
+    # # ------------------ PRIVATE HELPERS ------------------ #
+    # def _none_query_retrieval(self, query: str):
+    #     base_retriever = self.db.as_retriever(search_kwargs={"k": CONFIG.get("default_none_query_top_k", 10)})
+    #     retriever_chain = (
+    #         ContextualCompressionRetriever(base_compressor=get_reranker(self.rerankerOption), base_retriever=base_retriever)
+    #         if self.rerankerOption != "none" else base_retriever
+    #     )
+    #     docs = retriever_chain.invoke(query)
+    #     return docs
+
     # ------------------ PRIVATE HELPERS ------------------ #
     def _none_query_retrieval(self, query: str):
-        base_retriever = self.db.as_retriever(search_kwargs={"k": CONFIG.get("default_none_query_top_k", 10)})
-        retriever_chain = (
-            ContextualCompressionRetriever(base_compressor=get_reranker(self.rerankerOption), base_retriever=base_retriever)
-            if self.rerankerOption != "none" else base_retriever
+        # Base retriever from vector database
+        base_retriever = self.db.as_retriever(
+            search_kwargs={"k": CONFIG.get("default_none_query_top_k", 10)}
         )
+
+        # If reranker option is disabled, use direct retriever
+        if self.rerankerOption == "none":
+            return base_retriever.invoke(query)
+
+        # Otherwise wrap retriever in a compression pipeline
+        compressor = ContextualCompressionRetriever(
+            transformers=[get_reranker(self.rerankerOption)]
+        )
+
+        # Pipe compressor → retriever using LCEL syntax
+        retriever_chain = compressor | base_retriever
+
         docs = retriever_chain.invoke(query)
         return docs
 

@@ -12,6 +12,7 @@ export default function SidebarLayout() {
         { to: "/", label: "Dashboard", icon: <Home size={18} /> },
         { to: "/evaluation", label: "Evaluation", icon: <Settings size={18} /> },
         { to: "/datastore", label: "Datastore", icon: <Database size={18} /> },
+        { to: "/datastore2", label: "Datastore2", icon: <Database size={18} /> },
         { to: "/about", label: "About", icon: <Info size={18} /> },
     ]
 

@@ -50,6 +50,18 @@ export interface CreateChatbotData {
   documents?: File[];
 }
 
+export interface CreateDatastoreData {
+  id:number,
+  name: string;
+  description: string;
+  documents?: File[];
+  updatedAt?: string;
+  embeddingModel?: string;
+  embeddingProvider?: string;
+  vectorStoreProvider?: string;
+  similarityMetric?: string;
+  documentCount?: number;
+}
 
 export interface RawDatastore {
   id: number;
@@ -74,3 +86,4 @@ export interface FileRecord {
   datastore_id: number;
   uploaded_at: string;
 }
+

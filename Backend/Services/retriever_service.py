@@ -143,8 +143,8 @@
 # services/retriever_service.py
 
 from fastapi import HTTPException
-from langchain.vectorstores import FAISS, Chroma
-from langchain.embeddings import HuggingFaceEmbeddings
+from langchain_community.vectorstores import FAISS, Chroma
+from langchain_community.embeddings import HuggingFaceEmbeddings
 from config import CONFIG
 from Services.general_retriever import get_llm_answer
 from Services.rag_pipeline import UnifiedRAGPipeline  # ✅ Unified RAG Pipeline

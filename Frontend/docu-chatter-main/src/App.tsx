@@ -13,7 +13,8 @@ import NotFound from "./pages/NotFound";
 import SidebarLayout from "./components/SidebarLayout";
 import EvaluationDashboard from "./pages/EvaluationDashboard";
 import RAGASEvaluationOutput from "./pages/RagaasOutput";
-import { DatastoreDashboard } from "./pages/DatastoreDashboard";
+import { DatastoreConfigDetail } from "./pages/DatastoreConfigDetail";
+import DatastoreDashboard from "./pages/DatastoreDashboard";
 const queryClient = new QueryClient();
 
 const App = () => (
@@ -26,7 +27,8 @@ const App = () => (
           <Route path="/" element={<SidebarLayout />}>
             <Route index element={<Dashboard />} />
             <Route path="evaluation" element={<EvaluationDashboard />} />
-            <Route path="datastore" element={<DatastoreDashboard/>}/>
+            <Route path="datastore" element={<DatastoreConfigDetail />} />
+            <Route path="datastore2" element={<DatastoreDashboard />} />
             <Route path="*" element={<NotFound />} />
           </Route>
           <Route path="evaluation-selection/:id" element={<EvaluationSelection />} />
@@ -34,6 +36,7 @@ const App = () => (
           <Route path="rag-output/:id" element={<RAGOutput />} />
           <Route path="ragaas-output/:id" element={<RAGASEvaluationOutput/>} />
           <Route path="chatbot/:id" element={<ChatbotDetail />} />
+          <Route path="datastore/:id" element={<DatastoreConfigDetail />} />
         </Routes>
       </BrowserRouter>
     </TooltipProvider>

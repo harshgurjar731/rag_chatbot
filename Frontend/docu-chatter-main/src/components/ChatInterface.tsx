@@ -58,8 +58,12 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useConfigOptions } from "@/hooks/useConfigOptions";
-import { Citation } from "../../../../../../rag-main/frontend/src/types/chat";
-import Index from "../../../../../../../Downloads/nexus-assist-forge-main (2)/nexus-assist-forge-main/src/pages/Index";
+
+interface Citation {
+  source: string;
+  page?: string | number;
+  content?: string;
+}
 
 
 interface QueryPayload {

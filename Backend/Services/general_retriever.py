@@ -80,7 +80,7 @@
 #     return {"answer": final_answer.strip()}
 
 
-from langchain.prompts import ChatPromptTemplate
+from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.output_parsers import StrOutputParser
 from Services.guardrail import validate_output  
 from config import CONFIG
