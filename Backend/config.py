@@ -48,6 +48,7 @@ CONFIG = {
 
     # API Keys
     "mistral_api_key": os.getenv("MISTRAL_API_KEY", ""),
+    "mistral_api_key_visrag": os.getenv("MISTRAL_API_KEY_VISRAG", ""),
     "groq_api_key": os.getenv("GROQ_API_KEY", ""),
     "groq_api_base": os.getenv("GROQ_API_BASE", "https://api.groq.com/openai/v1"),
 

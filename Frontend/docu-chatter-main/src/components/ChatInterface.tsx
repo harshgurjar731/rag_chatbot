@@ -70,6 +70,7 @@ interface QueryPayload {
   tokenSize: number;
   showSources: boolean;
   rerankerOption: string;
+  useVRAG: boolean;
 }
 
 interface ChatInterfaceProps {
@@ -365,6 +366,7 @@ export const ChatInterface = ({
       setTokenSize(256);
     }
   };
+  const [useVRAG, setUseVRAG] = useState(false);
 
   const handleSend = async () => {
     if (!input.trim() || isLoading) return;
@@ -408,6 +410,7 @@ export const ChatInterface = ({
         tokenSize: tempSettings.tokenSize,
         showSources: tempSettings.showSources,
         rerankerOption: tempSettings.rerankerOption,
+        useVRAG: useVRAG,
       });
 
       const botMessage: ChatMessage = {
@@ -1215,6 +1218,30 @@ export const ChatInterface = ({
                 </DialogFooter>
               </DialogContent>
             </Dialog>
+            <div className="inline-flex items-center justify-between gap-3 whitespace-nowrap rounded-md border border-input bg-background px-4 py-2 text-sm font-medium text-foreground shadow-sm transition-all duration-200 hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50">
+  <Label
+    htmlFor="use-vrag-toggle"
+    className="cursor-pointer select-none text-sm font-medium"
+  >
+    Use VisRAG (Multimodal)
+  </Label>
+  <Switch
+    id="use-vrag-toggle"
+    checked={useVRAG}
+    onCheckedChange={setUseVRAG}
+    disabled={isLoading}
+    className="
+      relative ml-2 h-5 w-9 shrink-0 cursor-pointer rounded-full 
+      border border-input bg-gray-300 shadow-inner transition-all duration-200
+      data-[state=checked]:bg-primary data-[state=checked]:border-primary
+      data-[state=unchecked]:bg-gray-300 data-[state=unchecked]:border-gray-400
+      focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2
+    "
+  />
+</div>
+
+
+
           </div>
           {selectedDocs.length > 0 && (
             <div className="flex flex-wrap gap-1 mt-2 items-center">

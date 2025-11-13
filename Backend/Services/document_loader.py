@@ -4,7 +4,7 @@ from langchain_core.documents import Document
 import json
 import os
 from mistralai import Mistral
-import fitz  # PyMuPDF
+import pymupdf  # PyMuPDF
 import pytesseract
 pytesseract.pytesseract.tesseract_cmd = r'C:\Program Files\Tesseract-OCR\tesseract.exe'  # Update this path as needed
 import camelot
@@ -326,7 +326,7 @@ import json
 import os
 import pytesseract
 from PIL import Image
-import fitz  # PyMuPDF
+import pymupdf  # PyMuPDF
 import camelot
 import csv
 import io
@@ -399,7 +399,7 @@ def load_file_with_loader(file_path: str, loader_type: str = None) -> List[Docum
     # --- PDF Documents (using PyMuPDF and Camelot) ---
     elif loader_type.lower() == "pdf":
         try:
-            pdf_document = fitz.open(file_path)
+            pdf_document = pymupdf.open(file_path)
             
             # Extract file-level metadata once
             file_metadata = {

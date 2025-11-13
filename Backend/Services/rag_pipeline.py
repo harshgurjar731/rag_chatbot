@@ -1,5 +1,6 @@
 # services/unified_rag_pipeline.py
 
+import re
 from typing import List
 from operator import itemgetter
 from collections import defaultdict
@@ -37,7 +38,6 @@ class UnifiedRAGPipeline:
         if not self.llm_model_name:
             raise ValueError("LLM model name must be provided")
 
-        # Initialize LLM via factory
         llm_factory = LLMFactory(
             model_name=self.llm_model_name,
             temperature=self.temperature,
@@ -50,7 +50,7 @@ class UnifiedRAGPipeline:
         self,
         query: str,
         include_sources: bool = True,
-        mode: str = "multiquery",  # Options: multiquery | ragfusion | stepback | none
+        mode: str = "multiquery",
         top_k: int = None,
         rrf_k: int = None,
     ):
@@ -61,20 +61,22 @@ class UnifiedRAGPipeline:
             docs = self._ragfusion_retrieval(query, top_k=top_k, rrf_k=rrf_k)
         elif mode == "none":
             docs = self._none_query_retrieval(query)
-        else:  # default multiquery
+        else:
             docs = self._multiquery_retrieval(query)
 
         # Apply reranker if enabled
         docs = self._apply_reranker(query, docs)
 
-        # Format documents for context and citation
+        # Prepare context with chunk citations
         context_string, citation_map, document_pages_list, source_links = self._format_docs_for_citations(
             docs, include_sources
         )
 
         # ------------------ RAG Prompt ------------------ #
         rag_template = (
-            "Answer the following question based on this context.\n\n{context}\n\nQuestion: {question}. Don't include chunk references in your answer. Strictly remove the bracketed chunk citations and chunk word and chunk no."
+            "Answer the following question based on this context.\n\n{context}\n\n"
+            "Question: {question}. Cite sources using [Chunk n] after each factual statement, "
+            "but do not mention context, page, or file names directly."
         )
 
         prompt = ChatPromptTemplate.from_template(rag_template)
@@ -86,23 +88,28 @@ class UnifiedRAGPipeline:
         )
         final_answer = final_rag_chain.invoke({"question": query})
 
-        # Apply guardrails
+        # 🧠 Apply guardrails
         validated = validate_output(final_answer, self.guardrail_level)
         if "⚠️ Response blocked" in validated["answer"]:
             return validated
 
-        # Prepare final response based on include_sources
+        # 🧩 Parse citations and clean final answer
+        filtered_citation_map = self._parse_citations_from_answer(validated["answer"], citation_map)
+        document_pages_list, source_links = self._extract_sources_and_pages_from_citations(filtered_citation_map)
+        clean_answer = self._remove_chunk_references(validated["answer"])
+
+        # ------------------ FINAL OUTPUT ------------------ #
         if include_sources:
             result = {
-                "answer": validated["answer"],
+                "answer": clean_answer,
                 "sources": source_links,
                 "document_pages_dict": document_pages_list,
-                "citation_map": citation_map,
+                "citation_map": filtered_citation_map,
                 "chunks_used": docs,
             }
         else:
             result = {
-                "answer": validated["answer"],
+                "answer": clean_answer,
                 "sources": [],
                 "document_pages_dict": [],
                 "citation_map": {},
@@ -233,3 +240,36 @@ class UnifiedRAGPipeline:
                 source_links.append(src)
 
         return context_string, citation_map, document_pages_list, source_links
+
+    # ------------------ CITATION UTILITIES ------------------ #
+    @staticmethod
+    def _parse_citations_from_answer(answer: str, citation_map: dict) -> dict:
+        chunk_ids_found = re.findall(r"\[Chunk (\d+)\]", answer)
+        unique_chunk_ids = sorted(list(set(chunk_ids_found)))
+        filtered_map = {cid: citation_map[cid] for cid in unique_chunk_ids if cid in citation_map}
+        if not filtered_map:
+            return citation_map
+        return filtered_map
+
+    @staticmethod
+    def _remove_chunk_references(answer: str) -> str:
+        cleaned = re.sub(r"\[ *[Cc]hunk *\d+ *\]", "", answer)
+        cleaned = re.sub(r"\s{2,}", " ", cleaned).strip()
+        return cleaned
+
+    @staticmethod
+    def _extract_sources_and_pages_from_citations(citation_map: dict):
+        document_pages = {}
+        for citation_metadata in citation_map.values():
+            source = citation_metadata.get("source")
+            page_number = citation_metadata.get("page_number")
+            if source and page_number is not None:
+                if source not in document_pages:
+                    document_pages[source] = set()
+                document_pages[source].add(page_number)
+        document_pages_list = [
+            {"source": src, "pages": sorted(list(pages))} for src, pages in document_pages.items()
+        ]
+        document_pages_list.sort(key=lambda x: x["source"])
+        source_links = sorted(list({doc["source"] for doc in document_pages_list}))
+        return document_pages_list, source_links

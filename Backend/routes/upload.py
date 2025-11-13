@@ -13,7 +13,8 @@ from Services.chunking_service import chunk_documents, save_chunks_to_json, load
 from config import CONFIG  # ✅ centralized env-driven config
 import os
 from Evaluation.delete_qna import delete_qna_by_file,delete_generated_files  # ✅ centralized deletion of QA pairs
-
+from Services.VisRag.file_processing_pipeline import process_file_pipeline
+from Services.VisRag.file_processing_pipeline import delete_file_pipeline_outputs
 router = APIRouter()
 
 
@@ -78,6 +79,19 @@ def upload_file_to_datastore(
         result = embed_and_store(chunks_file_path, file_record.id, model_name, vector_db)
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Embedding failed: {str(e)}")
+    
+     # === 8️⃣ VISRAG Multimodal Processing ===
+    try:
+        # Only run if PDF or supported file type
+        if file.filename.lower().endswith(".pdf"):
+            print(f"🚀 Running VisRAG multimodal pipeline for file: {file.filename}")
+            # file_id used for FAISS index naming
+            visrag_file_id = f"file_{file_record.id}"
+            process_file_pipeline(str(file_path), visrag_file_id)
+        else:
+            print(f"⚠️ Skipped VisRAG pipeline for non-PDF file: {file.filename}")
+    except Exception as e:
+        print(f"⚠️ VisRAG multimodal processing failed: {e}")
 
     return {
         "message": "File uploaded, previewed, chunked, and embeddings stored",
@@ -142,7 +156,17 @@ def delete_file_from_datastore(
         print(f"[INFO] Deleted {deleted_count} QA pairs for file_id {file_id}")
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to delete QA pairs: {str(e)}")
-    
+     # 7️⃣ Delete VisRAG-generated files (images, FAISS, metadata)
+
+    try:
+        visrag_file_id = f"file_{file_id}"
+        print(f"[INFO] Deleting VisRAG artifacts for file_id={visrag_file_id}")
+        visrag_result = delete_file_pipeline_outputs(visrag_file_id)
+        print(f"[INFO] Deleted {visrag_result['deleted_count']} VisRAG files "
+              f"({visrag_result['missing_count']} missing)")
+    except Exception as e:
+        print(f"[ERROR] Failed to delete VisRAG artifacts: {e}")
+
     try:
         delete_generated_files(original_file_path)   
     except FileNotFoundError as fnf_error:
@@ -153,13 +177,14 @@ def delete_file_from_datastore(
         print(f"[ERROR] Failed to delete files: {e}")
 
     json_file=Path(CONFIG["project_root"] / "Data" / datastore.name / f"{datastore.name}_evaluation_qa.json")
-    json_file1=Path(CONFIG["project_root"] / "Data" / datastore.name / f"{file_record.filename}_qa_pairs_cleaned.json")
+    json_file1=Path(CONFIG["project_root"] / "Data" / datastore.name / f"{file_record.filename.split(".")[0]}_qa_pairs_cleaned.json")
 
     try:
-        if json_file.exists() and json_file1.exists():
+        if json_file.exists():
             json_file.unlink()
-            json_file1.unlink()
             print(f"[INFO] Deleted: {json_file}")
+        if  json_file1.exists():
+            json_file1.unlink()
             print(f"[INFO] Deleted: {json_file1}")
     except Exception as e:
         print(f"[ERROR] Failed to delete {json_file}: {e}")

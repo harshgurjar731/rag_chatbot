@@ -148,7 +148,7 @@ from langchain.embeddings import HuggingFaceEmbeddings
 from config import CONFIG
 from Services.general_retriever import get_llm_answer
 from Services.rag_pipeline import UnifiedRAGPipeline  # ✅ Unified RAG Pipeline
-
+from Services.VisRag.visrag_pipeline_impl import run_pipeline
 
 # -----------------------------
 # Load embeddings
@@ -178,6 +178,44 @@ def load_embeddings(file_id: int, vector_db: str = None, model_name: str = None)
     else:
         raise HTTPException(status_code=400, detail="Unsupported vector DB")
 
+from fastapi import HTTPException
+from sqlmodel import Session, select
+from typing import Tuple
+from datetime import datetime
+
+from models.FileRecord import FileRecord
+from models.datastore import DataStore
+from database import get_session
+
+
+
+
+
+def get_datastore_and_filename_by_file_id(file_id: int) -> Tuple[str, str]:
+    """
+    Retrieve datastore name and filename by file_id.
+    Works as a standalone Python function using SQLModel session.
+    """
+    # ✅ Manually get session from generator
+    session = next(get_session())
+
+    try:
+        # 1️⃣ Fetch the file record
+        statement = select(FileRecord).where(FileRecord.id == file_id)
+        file_record = session.exec(statement).first()
+
+        if not file_record:
+            raise HTTPException(status_code=404, detail="File record not found")
+
+        # 2️⃣ Fetch its datastore
+        datastore = session.get(DataStore, file_record.datastore_id)
+        if not datastore:
+            raise HTTPException(status_code=404, detail="Datastore not found")
+
+        return datastore.name, file_record.filename
+
+    finally:
+        session.close()
 
 # -----------------------------
 # Document Retrieval
@@ -260,10 +298,12 @@ def retrieve_documents(
         rerankerOption=rerankerOption
     )
 
-    result = rag_pipeline.run(
-        query=query,
-        include_sources=sources,
-        mode=mode
-    )
+    result = rag_pipeline.run(query=query,include_sources=sources,mode=mode)
+
+    # datastoreName, filename = get_datastore_and_filename_by_file_id(file_id[0])
+    # file_path = CONFIG["project_root"]/ CONFIG["datastore_data_folder"] / str(datastoreName) / filename
+    
+
+    # result=run_pipeline(file_path, query, rebuild_index=True)
 
     return result

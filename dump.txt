@@ -1,0 +1,123 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
+All colors MUST be HSL.
+*/
+
+@layer base {
+  :root {
+    --background: 222 47% 11%;
+    --foreground: 180 100% 95%;
+
+    --card: 222 47% 11%;
+    --card-foreground: 180 100% 95%;
+
+    --popover: 222 47% 11%;
+    --popover-foreground: 180 100% 95%;
+
+    --primary: 195 100% 50%;
+    --primary-foreground: 222 47% 11%;
+
+    --secondary: 240 21% 15%;
+    --secondary-foreground: 180 100% 95%;
+
+    --muted: 240 21% 15%;
+    --muted-foreground: 180 30% 70%;
+
+    --accent: 285 100% 65%;
+    --accent-foreground: 222 47% 11%;
+
+    --destructive: 0 91% 71%;
+    --destructive-foreground: 222 47% 11%;
+
+    --border: 240 21% 15%;
+    --input: 240 21% 15%;
+    --ring: 195 100% 50%;
+
+    /* Custom chatbot theme colors */
+    --chatbot-primary: 195 100% 50%;
+    --chatbot-secondary: 285 100% 65%;
+    --chatbot-accent: 165 100% 50%;
+    --chatbot-surface: 222 47% 11%;
+    --chatbot-surface-variant: 240 21% 15%;
+
+    /* Gradients */
+    --gradient-primary: linear-gradient(135deg, hsl(195 100% 50%), hsl(285 100% 65%));
+    --gradient-card: linear-gradient(145deg, hsl(240 21% 15%), hsl(222 47% 11%));
+    --gradient-surface: linear-gradient(180deg, hsl(222 47% 11%), hsl(240 21% 15%));
+
+    /* Shadows */
+    --shadow-chatbot: 0 10px 40px -10px hsl(195 100% 50% / 0.4);
+    --shadow-card: 0 8px 32px -8px hsl(195 100% 50% / 0.15);
+    --shadow-glow: 0 0 40px hsl(195 100% 50% / 0.6);
+
+    --radius: 0.5rem;
+
+    --sidebar-background: 0 0% 98%;
+
+    --sidebar-foreground: 240 5.3% 26.1%;
+
+    --sidebar-primary: 240 5.9% 10%;
+
+    --sidebar-primary-foreground: 0 0% 98%;
+
+    --sidebar-accent: 240 4.8% 95.9%;
+
+    --sidebar-accent-foreground: 240 5.9% 10%;
+
+    --sidebar-border: 220 13% 91%;
+
+    --sidebar-ring: 217.2 91.2% 59.8%;
+  }
+
+  .dark {
+    --background: 210 50% 3%;
+    --foreground: 180 100% 95%;
+
+    --card: 210 50% 3%;
+    --card-foreground: 180 100% 95%;
+
+    --popover: 210 50% 3%;
+    --popover-foreground: 180 100% 95%;
+
+    --primary: 165 100% 50%;
+    --primary-foreground: 210 50% 3%;
+
+    --secondary: 220 30% 8%;
+    --secondary-foreground: 180 100% 95%;
+
+    --muted: 220 30% 8%;
+    --muted-foreground: 180 30% 70%;
+
+    --accent: 300 100% 70%;
+    --accent-foreground: 210 50% 3%;
+
+    --destructive: 0 91% 71%;
+    --destructive-foreground: 210 50% 3%;
+
+    --border: 220 30% 8%;
+    --input: 220 30% 8%;
+    --ring: 165 100% 50%;
+    --sidebar-background: 210 50% 3%;
+    --sidebar-foreground: 180 100% 95%;
+    --sidebar-primary: 195 100% 50%;
+    --sidebar-primary-foreground: 210 50% 3%;
+    --sidebar-accent: 220 30% 8%;
+    --sidebar-accent-foreground: 180 100% 95%;
+    --sidebar-border: 220 30% 8%;
+    --sidebar-ring: 195 100% 50%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+  }
+}
+
