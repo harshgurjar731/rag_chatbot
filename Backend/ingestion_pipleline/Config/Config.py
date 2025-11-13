@@ -22,6 +22,13 @@ INGESTION_CONFIG = {
     "ingestion_reranker_topk": 5,
     "ingestion_reranker_model_name": "cross-encoder/ms-marco-MiniLM-L-6-v2",
 
+
+    #Azure Open AI configs
+    "AZURE_OPENAI_ENDPOINT": "https://rupalitest.openai.azure.com/",
+    "AZURE_OPENAI_API_KEY": "GHjMpAUMjqSYSuVPp4oHkI1bhAAsWQlihigch0uTWxoCI0kdRhQdJQQJ99BKACYeBjFXJ3w3AAABACOGu0tn",
+    "AZURE_OPENAI_API_VERSION": "2024-02-01",
+
+
     # Models
     "default_embedding_model": os.getenv("DEFAULT_EMBEDDING_MODEL", "all-MiniLM-L6-v2"),
     "default_llm_model": os.getenv("DEFAULT_LLM_MODEL", "llama-3.3-70b-versatile"),

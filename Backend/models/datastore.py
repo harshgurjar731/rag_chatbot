@@ -11,7 +11,6 @@ class DataStore(SQLModel, table=True):
     description: Optional[str] = ""
     #storage_path: Optional[str] = None
     created_at: datetime = Field(default_factory=datetime.utcnow)
-    chatbotId: Optional[str]= ""
     embedding_model: Optional[str] = None
     embedding_provider: Optional[str] = None
     vector_store_provider: Optional[str] = None
@@ -40,3 +39,11 @@ def update_datastore(session: Session, store_id: int, update_data: dict):
     session.refresh(store)
 
     return store
+
+class KnowledgeAssistant(SQLModel, table=True):
+    id: Optional[int] = Field(default=None, primary_key=True)
+    name: str
+    description: Optional[str] = ""
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+    datastore_id:Optional[int]
+

@@ -13,7 +13,7 @@ def setup_guard(guardrail_level: str = None):
 
     guard = None
 
-    if guardrail_level == "none":
+    if guardrail_level.lower() == "none":
         guard = None
 
     elif guardrail_level == "basic":

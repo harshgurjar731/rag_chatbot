@@ -1,9 +1,10 @@
 from typing import Protocol
 from typing import List
 from langchain_core.documents import Document
+from ingestion_pipleline.Config.Config import INGESTION_CONFIG
 
 class EmbeddingModelsProtocol(Protocol):
-    def configureModel(self):
+    def configureModel(self, model_name: str):
         ...
 
 def create_embedding_model(provider: str, model_name: str):
@@ -23,18 +24,14 @@ class HuggingFaceModel(EmbeddingModelsProtocol):
     def configureModel(self, model_name: str):
         return HuggingFaceEmbeddings(model_name=model_name)
 
-AZURE_OPENAI_ENDPOINT = "https://rupalitest.openai.azure.com/"
-AZURE_OPENAI_API_KEY = "GHjMpAUMjqSYSuVPp4oHkI1bhAAsWQlihigch0uTWxoCI0kdRhQdJQQJ99BKACYeBjFXJ3w3AAABACOGu0tn"
-
 from langchain_community.embeddings import OpenAIEmbeddings
 from langchain_openai import AzureOpenAIEmbeddings
 class OpenAIModel(EmbeddingModelsProtocol):
     def configureModel(self, model_name: str):
-        print("Model Name: ", model_name)
         return AzureOpenAIEmbeddings(
             model=model_name,
-            azure_endpoint=AZURE_OPENAI_ENDPOINT,
-            api_key=AZURE_OPENAI_API_KEY,
-            api_version="2024-02-01",
+            azure_endpoint=INGESTION_CONFIG["AZURE_OPENAI_ENDPOINT"],
+            api_key=INGESTION_CONFIG["AZURE_OPENAI_API_KEY"],
+            api_version=INGESTION_CONFIG["AZURE_OPENAI_API_VERSION"],
             azure_deployment=model_name
         )

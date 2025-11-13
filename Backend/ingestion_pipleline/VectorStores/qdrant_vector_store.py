@@ -1,5 +1,5 @@
 from ingestion_pipleline.VectorStores.vector_store_protocol import VectorStoreProtocol
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Optional
 from PIL import Image
 from langchain_core.documents import Document
 from langchain_core.embeddings import Embeddings
@@ -13,8 +13,9 @@ import camelot
 import csv
 import io
 import uuid
-from qdrant_client import QdrantClient
+from qdrant_client import QdrantClient, models
 from qdrant_client.models import VectorParams, Distance, PointStruct, Filter, FieldCondition, MatchValue
+import concurrent.futures
 
 QDRANT_API_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhY2Nlc3MiOiJtIn0.stqye0XmMsoZUJ-oXkhD8a8UmlibnKSa_JfrRKWAll0"
 QDRANT_CLUSTER_URL = "https://6c504361-ebbd-4169-ac71-56b10bc167d0.us-east4-0.gcp.cloud.qdrant.io:6333"
@@ -24,12 +25,38 @@ class QDrantVectorDB(VectorStoreProtocol):
     def __init__(self):
         self.client = QdrantClient(url=QDRANT_CLUSTER_URL, api_key=QDRANT_API_KEY, timeout=QDRANT_TIMEOUT)
 
+    def build_qdrant_filter(self, selected_files: List[str]) -> Optional[models.Filter]:
+        """
+        Build a Qdrant filter for a list of selected source files.
+        If all files are selected, returns None (no filter needed).
+        """
+        # Skip filtering if all files are selected
+        if not selected_files or len(selected_files) == 0:
+            return None
+
+        # Otherwise, build OR-style filter
+        should_conditions = [
+            models.FieldCondition(
+                key="metadata.source",  # or "source_file" if not nested
+                match=models.MatchValue(value=file_name)
+            )
+            for file_name in selected_files
+        ]
+
+        return models.Filter(should=should_conditions)
+    
+
     def create_collection(self, name: str, dimension: int) -> None:
         if (self.client.collection_exists(collection_name=name)):
             return
         result = self.client.create_collection(
             collection_name=name,
             vectors_config=VectorParams(size=dimension, distance=Distance.COSINE)
+        )
+        self.client.create_payload_index(
+            collection_name=name,
+            field_name="metadata.source",
+            field_schema=models.PayloadSchemaType.KEYWORD
         )
         print("Results create collection: ", result)
 
@@ -48,7 +75,7 @@ class QDrantVectorDB(VectorStoreProtocol):
             embedding=embedding,
         )
         added_ids = vector_store.add_documents(documents=documents, ids= chunkids)
-        print("******************************8added ids******************************\n", added_ids)
+        return len(added_ids) > 0
    
     # def insert_vectors(self, collection: str, vectors, metadata):
     #     ids = [str(uuid.uuid4()) for _ in vectors]
@@ -82,23 +109,40 @@ class QDrantVectorDB(VectorStoreProtocol):
         result = self.client.retrieve(collection_name=collection, ids=[id])
         return result[0].dict() if result else None
 
-    def test_retrieval(self, collection: str, embedding: Embeddings, query: str, topk: int) -> List[Document]:
-        print("Inside Retrieval", collection, embedding)
+    def test_retrieval(self, collection: str, embedding: Embeddings, queryList: List[str], topk: int, selected_docs: List[str] = []) -> List[List[Document]]:
         vector_store = QdrantVectorStore(
             client=self.client,
             collection_name=collection,
             embedding=embedding,
         )
+
+        filter = self.build_qdrant_filter(
+            selected_files=selected_docs
+        )
+
+        search_kwargs = {"k": topk}
+        if filter:
+            search_kwargs["filter"] = filter
+
         # vector_store already initialized earlier (same collection & embedding)
         retriever = vector_store.as_retriever(
-            search_kwargs={"k": topk}  # return top 3 most relevant chunks
+            search_kwargs=search_kwargs
+                # return top 3 most relevant chunks
         )
-        print("Inside Retrieval", retriever)
-        results = retriever.invoke(query)
 
-        for i, doc in enumerate(results):
-            print(f"\n--- Result {i+1} ---")
-            print("Content:", doc.page_content)
-            print("Metadata:", doc.metadata)
+        def invoke_fetch_for_query(retriever, query):
+            return retriever.invoke(query)
+
+        with concurrent.futures.ThreadPoolExecutor() as executor:
+            futures = [executor.submit(invoke_fetch_for_query, retriever, q) for q in queryList]
+            results = [f.result() for f in futures]
+
+
+        # results = retriever.invoke(query)
+        print("Vector DB retrieved query count - ", len(results))
+        print("First query chunk count", len(results[0]))
         
         return results
+    
+
+    

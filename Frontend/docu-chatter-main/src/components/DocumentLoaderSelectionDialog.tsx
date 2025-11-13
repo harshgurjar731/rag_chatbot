@@ -64,7 +64,13 @@ export const DocumentLoaderSelectionDialog = ({
     return (
       <DocumentLoaderConfigForm
         open={open}
-        onOpenChange={onOpenChange}
+         onOpenChange={async(open) => {
+          if(!open){
+            setSelectedLoader(null)
+          }  
+          onOpenChange(open)
+        }}
+        // onOpenChange={onOpenChange}
         loaderType={selectedLoader}
         datastoreId={datastoreId}
         onBack={handleBack}

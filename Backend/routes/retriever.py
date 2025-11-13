@@ -1,5 +1,5 @@
 # rag_app/backend/routes/query.py
-from fastapi import APIRouter, Query
+from fastapi import APIRouter, Query, Depends
 from Services.retriever_service import retrieve_documents
 from typing import List
 from config import CONFIG  # 🔹 centralized env-driven config
@@ -7,12 +7,15 @@ import uuid
 from fastapi import Path
 from phoenix import trace
 from phoenix.otel import register
+from rag_pipeline.Config.rag_config import RAG_CONFIG
+from models.datastore import DataStore
+from sqlmodel import Session, select
+from database import get_session
 
 
 
 
 router = APIRouter()
-
 
 @router.get("/query/{chatbot_id}", response_model=dict)
 def retrieve(

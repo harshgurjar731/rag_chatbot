@@ -224,6 +224,7 @@ def delete_file(datastore_id: int, filename: str, session: Session = Depends(get
 
 @router.get("/datastores/{datastore_id}/files/{filename}/id")
 def get_file_id(datastore_id: int, filename: str, session: Session = Depends(get_session)):
+    print("In the API")
     datastore = session.get(DataStore, datastore_id)
     if not datastore:
         raise HTTPException(status_code=404, detail="Datastore not found")

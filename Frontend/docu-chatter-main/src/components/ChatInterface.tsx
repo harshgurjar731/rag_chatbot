@@ -7,12 +7,13 @@ import {
   VolumeX,
   ThumbsUp,
   ThumbsDown,
+  Eye,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Chatbot, ChatMessage } from "@/types/chatbot";
+import { Chatbot, ChatMessage, Citation, getMimeTypeFromName } from "@/types/chatbot";
 import { useToast } from "@/hooks/use-toast";
 import { Label } from "@/components/ui/label";
 import {
@@ -58,21 +59,28 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useConfigOptions } from "@/hooks/useConfigOptions";
+import {
+  Tabs,
+  TabsList,
+  TabsTrigger,
+  TabsContent,
+} from "@/components/ui/tabs"
 
-interface Citation {
-  source: string;
-  page?: string | number;
-  content?: string;
-}
+// interface Citation {
+//   source: string;
+//   page?: string | number;
+//   content?: string;
+// }
 
 
 interface QueryPayload {
+  messages: ChatMessage[];
+  useKnowledgeBase: boolean;
+  selectedDocuments: string[];
   question: string;
-  fileId: number[];
   optimizer: string;
-  embeddingModel: string;
+  llmProvider: string;
   llmModel: string;
-  vectorDb: string;
   temperature: number;
   guardrailOption: string;
   tokenSize: number;
@@ -311,6 +319,7 @@ export const ChatInterface = ({
   useEffect(() => {
     const newOptions = getChatbotDocumentOptions(chatbot);
     setDocumentOptions(newOptions);
+    setSelectedDocs(newOptions)
   }, [chatbot.documents]);
 
 
@@ -423,45 +432,64 @@ export const ChatInterface = ({
 
 
     try {
-      let fileId: number[] = [];
-      if (selectedDocs.length === 0) {
-        fileId.push(0);
-      }
-      if (selectedDocs.length > 0) {
-        for (const doc of selectedDocs) {
-          const docName = doc.label;
-          const idRes = await axios.get<{ file_id: number }>(
-            `${config?.base_url}/datastores/${
-              chatbot.datastoreId
-            }/files/${encodeURIComponent(docName)}/id`
-          );
-          fileId.push(idRes.data.file_id);
-        }
-      }
+      // let fileId: number[] = [];
+      // if (selectedDocs.length === 0) {
+      //   fileId.push(0);
+      // }
+      // if (selectedDocs.length > 0) {
+      //   for (const doc of selectedDocs) {
+      //     const docName = doc.label;
+      //     const idRes = await axios.get<{ file_id: number }>(
+      //       `${config?.base_url}/datastores/${
+      //         chatbot.datastoreId
+      //       }/files/${encodeURIComponent(docName)}/id`
+      //     );
+      //     fileId.push(idRes.data.file_id);
+      //   }
+      // }
 
+      //Get Datastore for Embedding / Vector Store --->
+      var selectedDocsParam = []
+      if (selectedDocs.length != chatbot.documents.length) {
+        selectedDocsParam = selectedDocs.map((doc) => doc.value)
+      }
+      console.log("selectedDocsParam", selectedDocsParam)
 
       const response: any = await onSendMessage({
+        messages: messages,
         question: input.trim(),
-        fileId,
+        selectedDocuments: selectedDocsParam,
+        useKnowledgeBase: selectedDocs.length != 0,
+        llmProvider: tempSettings.llmProvider, 
         optimizer: tempSettings.optimizer,
-        embeddingModel: tempSettings.embeddingModel,
         llmModel: tempSettings.llmModel,
-        vectorDb: tempSettings.vectorDb,
         temperature: tempSettings.temperature,
         guardrailOption: tempSettings.guardrailOption,
         tokenSize: tempSettings.tokenSize,
         showSources: tempSettings.showSources,
         rerankerOption: tempSettings.rerankerOption,
       });
+      console.log("Response Citations JSON:", JSON.parse(response.citations));
 
+      const grouped_citations: Citation[] = Object.values(
+        JSON.parse(response["citations"]).reduce((acc, { source, page_number }) => {
+          if (!acc[source]) {
+            acc[source] = { source, pages: [] };
+          }
+          acc[source].pages.push(page_number);
+          return acc;
+        }, {} as Record<string, Citation>)
+      );
+
+      console.log(grouped_citations)
 
       const botMessage: ChatMessage = {
         id: crypto.randomUUID(),
-        content: response["answer"] || response,
+        content: response["answer"] || "",
         isUser: false,
         timestamp: new Date(),
         traceId: response["traceId"],
-        Citation: response["citations"] || [],
+        Citation: grouped_citations || [],
       };
       console.log("Bot message with citations:", botMessage.Citation);
       setMessages((prev) => [...prev, botMessage]);
@@ -575,6 +603,7 @@ export const ChatInterface = ({
     optimizer: "",
     embeddingModel: "",
     llmModel: "",
+    llmProvider: "",
     vectorDb: "",
     guardrailOption: "",
     temperature: 0.7,
@@ -592,6 +621,29 @@ export const ChatInterface = ({
     }
   }, [chatbot?.id]);
 
+  const viewDocument = async(doc_name: string) => {
+  try {
+    const encodedName = encodeURIComponent(doc_name)
+    const response = await axios.get(`http://localhost:8000/ingestion/download/${chatbot.datastoreId}/${encodedName}`, {
+      responseType: "blob", // important: we want the file bytes
+    });
+
+
+    console.log("response.data.type", response.data.type)
+    const mimeType = getMimeTypeFromName(doc_name);
+    // Create a blob and object URL for the file
+    const fileBlob = new Blob([response.data], { type: mimeType });
+    const fileUrl = window.URL.createObjectURL(fileBlob);
+
+    // Open the file in a new tab
+    window.open(fileUrl, "_blank");
+
+    // Optional cleanup after a short delay
+    setTimeout(() => window.URL.revokeObjectURL(fileUrl), 5000);
+  } catch (error) {
+    console.error("Error viewing file:", error);
+  }
+};
 
   const handleSave = (overrides: Partial<typeof tempSettings> = {}) => {
     const settings = { ...tempSettings, ...overrides };
@@ -700,104 +752,103 @@ export const ChatInterface = ({
 
 
   return (
-    <div className="flex flex-col h-[470px] bg-gradient-surface rounded-lg border border-chatbot-primary/20">
-      <ScrollArea ref={scrollAreaRef} className="flex-1 p-4">
-        <div className="space-y-4">
-          {messages.map((message) => (
-            <div
-              key={message.id}
-              className={`flex ${
-                message.isUser ? "justify-end" : "justify-start"
-              }`}
-            >
-              <div
-                className={`max-w-[80%] ${
-                  message.isUser ? "order-2" : "order-1"
-                }`}
-              >
-                <Card
-                  className={`${
-                    message.isUser
-                      ? "bg-chatbot-primary text-primary-foreground"
-                      : "bg-chatbot-secondary border-chatbot-primary/20"
+    <>
+      <div className="flex flex-row gap-4 h-[calc(100vh-190px)]">
+        <div className="flex flex-col w-[70%] bg-gradient-surface rounded-lg border border-chatbot-primary/20">
+          <ScrollArea ref={scrollAreaRef} className="flex-1 p-4">
+            <div className="space-y-4 h-full">
+              {messages.map((message) => (
+                <div
+                  key={message.id}
+                  className={`flex ${
+                    message.isUser ? "justify-end" : "justify-start"
                   }`}
                 >
-                  <CardContent className="p-3">
-                    <p className="text-sm whitespace-pre-wrap">
-                      {message.content}
-                    </p>
+                  <div
+                    className={`max-w-[80%] ${
+                      message.isUser ? "order-2" : "order-1"
+                    }`}
+                  >
+                    <Card
+                      className={`${
+                        message.isUser
+                          ? "border-chatbot-primary/20"
+                          : "border-chatbot-primary/20"
+                      }`}
+                    >
+                      <CardContent className="p-3">
+                        <p className="text-sm whitespace-pre-wrap">
+                          {message.content}
+                        </p>
 
+                        {!message.isUser && (
+                          <div className="mt-3 flex flex-col gap-2">
+                            {/* SOURCES BOX */}
 
-                    {!message.isUser && (
-                      <div className="mt-3 flex flex-col gap-2">
-                        {/* SOURCES BOX */}
+                            {Array.isArray(message.Citation) &&
+                            message.Citation.length > 0 ? (
+                              <div className="w-full rounded-lg border border-border/40 bg-muted/10 p-2">
+                                <span className="font-medium text-sm text-gray-700 mb-1 block">
+                                  Sources:
+                                </span>
+                                <div className="flex flex-col gap-1">
+                                  {message.Citation.map((citation, index) => {
+                                    const filename = getFilenameFromPath(
+                                      citation.source
+                                    );
+                                    const pages =
+                                      citation.pages &&
+                                      citation.pages.length > 0
+                                        ? `(${citation.pages.join(", ")})`
+                                        : "";
 
+                                    return (
+                                      <div
+                                        key={citation.source || index}
+                                        className="flex items-center text-xs bg-blue-50 rounded-md px-2 py-1"
+                                      >
+                                        <span className="text-blue-800 mr-1">
+                                          [{index + 1}]
+                                        </span>
+                                        <a
+                                          href="#"
+                                          onClick={(e) =>
+                                            viewDocument(filename)
+                                            // handleFileClick(
+                                            //   e,
+                                            //   chatbot.datastoreId,
+                                            //   filename,
+                                            //   citation.pages?.at(0)
+                                            // )
+                                          }
+                                          className="font-medium text-blue-600 hover:underline truncate"
+                                        >
+                                          {filename}
+                                        </a>
+                                        {pages && (
+                                          <span className="ml-1 text-blue-600 opacity-90 whitespace-nowrap">
+                                            {pages}
+                                          </span>
+                                        )}
+                                      </div>
+                                    );
+                                  })}
+                                </div>
+                              </div>
+                            ) : (
+                              <div className="w-full rounded-lg border border-border/40 bg-muted/10 p-2 text-sm text-muted-foreground">
+                                No sources provided.
+                              </div>
+                            )}
 
-                        {Array.isArray(message.Citation) &&
-                        message.Citation.length > 0 ? (
-                          <div className="w-full rounded-lg border border-border/40 bg-muted/10 p-2">
-                            <span className="font-medium text-sm text-gray-700 mb-1 block">
-                              Sources:
-                            </span>
-                            <div className="flex flex-col gap-1">
-                              {message.Citation.map((citation, index) => {
-                                const filename = getFilenameFromPath(
-                                  citation.source
-                                );
-                                const pages =
-                                  citation.pages && citation.pages.length > 0
-                                    ? `(${citation.pages.join(", ")})`
-                                    : "";
+                            {/* FOOTER ACTIONS */}
+                            <div className="flex items-center justify-between mt-1">
+                              <span className="text-xs opacity-70">
+                                {formatTime(message.timestamp)}
+                              </span>
 
-
-                                return (
-                                  <div
-                                    key={citation.source || index}
-                                    className="flex items-center text-xs bg-blue-50 rounded-md px-2 py-1"
-                                  >
-                                    <span className="text-blue-800 mr-1">
-                                      [{index + 1}]
-                                    </span>
-                                    <a
-                                      href="#"
-                                      onClick={(e) =>
-                                        handleFileClick(
-                                          e,
-                                          chatbot.datastoreId,
-                                          filename,
-                                          citation.pages?.at(0)
-                                        )
-                                      }
-                                      className="font-medium text-blue-600 hover:underline truncate"
-                                    >
-                                      {filename}
-                                    </a>
-                                    {pages && (
-                                      <span className="ml-1 text-blue-600 opacity-90 whitespace-nowrap">
-                                        {pages}
-                                      </span>
-                                    )}
-                                  </div>
-                                );
-                              })}
-                            </div>
-                          </div>
-                        ) : (
-                          <div className="w-full rounded-lg border border-border/40 bg-muted/10 p-2 text-sm text-muted-foreground">
-                            No sources provided.
-                          </div>
-                        )}
-
-
-                        {/* FOOTER ACTIONS */}
-                        <div className="flex items-center justify-between mt-1">
-                          <span className="text-xs opacity-70">
-                            {formatTime(message.timestamp)}
-                          </span>
-
-
-                          <div className="flex items-center gap-2">
-                            {/*
+                              <div className="flex items-center gap-2">
+                                {/*
                             <Button
                               size="icon"
                               variant="ghost"
@@ -872,107 +923,386 @@ export const ChatInterface = ({
                               </PopoverContent>
                             </Popover>
                               */}
-                            <DropdownMenu>
-                              <DropdownMenuTrigger asChild>
-                                <Button
-                                  size="icon"
-                                  variant="ghost"
-                                  className="h-6 w-6 rounded-full text-[11px] border border-border/40 text-muted-foreground hover:bg-muted/70 transition-colors"
-                                >
-                                  🌐
-                                </Button>
-                              </DropdownMenuTrigger>
-                              <DropdownMenuContent
-                                align="end"
-                                side="top"
-                                className="w-32 max-h-60 overflow-y-auto rounded-lg shadow-md border border-border/40 bg-background p-1 text-sm"
-                              >
-                                {languages.map((lang) => (
-                                  <DropdownMenuItem
-                                    key={lang.code}
-                                    onClick={() =>
-                                      handleTranslate(
-                                        message.id,
-                                        message.content,
-                                        lang.code
-                                      )
-                                    }
-                                    className="cursor-pointer hover:bg-muted rounded-md px-2 py-1"
+                                <DropdownMenu>
+                                  <DropdownMenuTrigger asChild>
+                                    <Button
+                                      size="icon"
+                                      variant="ghost"
+                                      className="h-6 w-6 rounded-full text-[11px] border border-border/40 text-muted-foreground hover:bg-muted/70 transition-colors"
+                                    >
+                                      🌐
+                                    </Button>
+                                  </DropdownMenuTrigger>
+                                  <DropdownMenuContent
+                                    align="end"
+                                    side="top"
+                                    className="w-32 max-h-60 overflow-y-auto rounded-lg shadow-md border border-border/40 bg-background p-1 text-sm"
                                   >
-                                    {lang.name}
-                                  </DropdownMenuItem>
-                                ))}
-                              </DropdownMenuContent>
-                            </DropdownMenu>
+                                    {languages.map((lang) => (
+                                      <DropdownMenuItem
+                                        key={lang.code}
+                                        onClick={() =>
+                                          handleTranslate(
+                                            message.id,
+                                            message.content,
+                                            lang.code
+                                          )
+                                        }
+                                        className="cursor-pointer hover:bg-muted rounded-md px-2 py-1"
+                                      >
+                                        {lang.name}
+                                      </DropdownMenuItem>
+                                    ))}
+                                  </DropdownMenuContent>
+                                </DropdownMenu>
+                              </div>
+                            </div>
                           </div>
+                        )}
+                      </CardContent>
+                    </Card>
+                  </div>
+                </div>
+              ))}
+              {isLoading && (
+                <div className="flex justify-start">
+                  <Card className="bg-chatbot-secondary border-chatbot-primary/20">
+                    <CardContent className="p-3">
+                      <div className="flex items-center gap-2">
+                        <div className="flex gap-1">
+                          <div className="w-2 h-2 bg-chatbot-primary rounded-full animate-bounce" />
+                          <div
+                            className="w-2 h-2 bg-chatbot-primary rounded-full animate-bounce"
+                            style={{ animationDelay: "0.1s" }}
+                          />
+                          <div
+                            className="w-2 h-2 bg-chatbot-primary rounded-full animate-bounce"
+                            style={{ animationDelay: "0.2s" }}
+                          />
+                        </div>
+                        <span className="text-xs text-muted-foreground">
+                          Thinking...
+                        </span>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
+              )}
+            </div>
+          </ScrollArea>
+          <div>
+            <div className="flex gap-4 ml-4 mb-2 ">
+              <Button
+                variant={isListening ? "destructive" : "chatbot-secondary"}
+                size="icon"
+                onClick={toggleListening}
+                disabled={isLoading}
+              >
+                {isListening ? (
+                  <MicOff className="h-4 w-4" />
+                ) : (
+                  <Mic className="h-4 w-4" />
+                )}
+              </Button>
+              <Input
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                onKeyPress={handleKeyPress}
+                placeholder="Ask me anything..."
+                disabled={isLoading}
+                className="flex-1 border border-chatbot-primary/40"
+              />
+              <Button
+                variant="chatbot"
+                className="flex gap-4 mr-4"
+                size="icon"
+                onClick={handleSend}
+                disabled={!input.trim() || isLoading}
+              >
+                <Send className="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
+        </div>
+        <div className="flex flex-col w-[30%] justify-between px-4 py-2 bg-gradient-surface rounded-lg border border-chatbot-primary/20">
+          <Tabs defaultValue="documents" className="w-full">
+            {/* Tab Buttons */}
+            <TabsList className="flex gap-2">
+              <TabsTrigger value="documents" className="flex-1">
+                Documents
+              </TabsTrigger>
+              <TabsTrigger value="settings" className="flex-1">
+                Model Settings
+              </TabsTrigger>
+            </TabsList>
+
+            {/* ---------- Documents Tab ---------- */}
+            <TabsContent value="documents" className="space-y-4 mt-4">
+              {/* <div className="space-y-2">
+                <Label>Select Documents</Label>
+                <SelectMulti
+                  isMulti={true}
+                  styles={customMultiStyles}
+                  options={getChatbotDocumentOptions(chatbot)}
+                  value={selectedDocs}
+                  onChange={(selected: any) => setSelectedDocs(selected || [])}
+                  isDisabled={isLoading}
+                  placeholder="Choose document"
+                />
+              </div> */}
+              <div className="space-y-3">
+                <Label className="text-sm font-medium">Select Documents</Label>
+
+                <div className="max-h-64 overflow-y-auto rounded-md border border-chatbot-primary/20  p-3 space-y-2">
+                  {getChatbotDocumentOptions(chatbot).map((doc: any) => {
+                    const isSelected = selectedDocs.some(
+                      (d) => d.value === doc.value
+                    );
+                    return (
+                      <div
+                        key={doc.value}
+                        className="flex items-center justify-between px-2 py-1 rounded-md hover:bg-muted/50 cursor-pointer"
+                        onClick={() => {
+                          if (isSelected) {
+                            setSelectedDocs(
+                              selectedDocs.filter((d) => d.value !== doc.value)
+                            );
+                          } else {
+                            setSelectedDocs([...selectedDocs, doc]);
+                          }
+                        }}
+                      >
+                        <div className="flex items-center gap-2">
+                          <input
+                            type="checkbox"
+                            checked={isSelected}
+                            onChange={() => {}}
+                            className="accent-primary"
+                          />
+                          <span className="text-sm">{doc.label}</span>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              viewDocument(doc.label);
+                            }}
+                                className="top-2 right-2 z-20 p-1 rounded-md
+                                transition-all
+                                hover:bg-chatbot-primary/15 hover:scale-110"
+                          >
+                            <Eye className="w-4 h-4 text-chatbot-secondary" />
+                          </button>
                         </div>
                       </div>
-                    )}
-                  </CardContent>
-                </Card>
+                    );
+                  })}
+                </div>
               </div>
-            </div>
-          ))}
-          {isLoading && (
-            <div className="flex justify-start">
-              <Card className="bg-chatbot-secondary border-chatbot-primary/20">
-                <CardContent className="p-3">
-                  <div className="flex items-center gap-2">
-                    <div className="flex gap-1">
-                      <div className="w-2 h-2 bg-chatbot-primary rounded-full animate-bounce" />
-                      <div
-                        className="w-2 h-2 bg-chatbot-primary rounded-full animate-bounce"
-                        style={{ animationDelay: "0.1s" }}
-                      />
-                      <div
-                        className="w-2 h-2 bg-chatbot-primary rounded-full animate-bounce"
-                        style={{ animationDelay: "0.2s" }}
-                      />
-                    </div>
-                    <span className="text-xs text-muted-foreground">
-                      Thinking...
-                    </span>
+            </TabsContent>
+
+            {/* ---------- Model Settings Tab ---------- */}
+            <TabsContent value="settings" className="space-y-8 mt-4">
+              <div>
+                <div className="grid grid-cols-1 md:grid-cols-1 gap-2">
+                  {/* LLM Provider */}
+                  <div className="space-y-1">
+                    <Label>LLM Provider</Label>
+                    <Select
+                      onValueChange={(value) =>
+                        setTempSettings({ ...tempSettings, llmProvider: value })
+                      }
+                      disabled={isLoading}
+                    >
+                      <SelectTrigger className="border border-chatbot-primary/20">
+                        <SelectValue
+                          placeholder={tempSettings.llmProvider || "Select LLM Provider"}
+                        />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {config?.llm_providers.map((model) => (
+                          <SelectItem key={model} value={model}>
+                            {model}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   </div>
-                </CardContent>
-              </Card>
-            </div>
-          )}
+                  
+                  {/* LLM Model */}
+                  <div className="space-y-1">
+                    <Label>LLM Model</Label>
+                    <Select
+                      onValueChange={(value) =>
+                        setTempSettings({ ...tempSettings, llmModel: value })
+                      }
+                      disabled={isLoading}
+                    >
+                      <SelectTrigger className="border border-chatbot-primary/20">
+                        <SelectValue
+                          placeholder={tempSettings.llmModel || "Select LLM"}
+                        />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {config?.llm_models.map((model) => (
+                          <SelectItem key={model} value={model}>
+                            {model}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  {/* Token Size */}
+                  <div className="space-y-1">
+                    <Label>Token Size</Label>
+                    <Input
+                      type="number"
+                      className="border border-chatbot-primary/20"
+                      min={config?.token_size_options?.min ?? 256}
+                      max={config?.token_size_options?.max ?? 2048}
+                      step={config?.token_size_options?.step ?? 128}
+                      placeholder={`Default: ${
+                        config?.token_size_options?.default ?? 512
+                      }`}
+                      value={tempSettings.tokenSize}
+                      onChange={(e) =>
+                        setTempSettings({
+                          ...tempSettings,
+                          tokenSize: Number(e.target.value),
+                        })
+                      }
+                      disabled={isLoading}
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <Label>Guardrails</Label>
+                    <Select
+                      onValueChange={(value) =>
+                        setTempSettings({
+                          ...tempSettings,
+                          guardrailOption: value,
+                        })
+                      }
+                      disabled={isLoading}
+                    >
+                      <SelectTrigger className="border border-chatbot-primary/20">
+                        <SelectValue
+                          placeholder={
+                            tempSettings.guardrailOption !== ""
+                              ? tempSettings.guardrailOption
+                              : "Select Guardrail Level"
+                          }
+                        />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {config?.guardrail_options.map((option) => (
+                          <SelectItem key={option.value} value={option.value}>
+                            {option.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-1">
+                    <Label>Creativity</Label>
+                    <Slider
+                      min={0}
+                      max={1}
+                      step={0.1}
+                      value={[tempSettings.temperature]}
+                      onValueChange={(val) =>
+                        setTempSettings({
+                          ...tempSettings,
+                          temperature: val[0],
+                        })
+                      }
+                      disabled={isLoading}
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      Temperature: {tempSettings.temperature.toFixed(1)}
+                    </p>
+                  </div>
+                  <div className="space-y-1">
+                    <Label>Query Optimizer</Label>
+                    <Select
+                      onValueChange={(value) =>
+                        setTempSettings({
+                          ...tempSettings,
+                          optimizer: value,
+                        })
+                      }
+                      disabled={isLoading}
+                    >
+                      <SelectTrigger className="border border-chatbot-primary/20">
+                        <SelectValue
+                          placeholder={
+                            tempSettings.optimizer !== ""
+                              ? tempSettings.optimizer
+                              : "Select Optimizer"
+                          }
+                        />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {config?.optimizer.map((opt) => (
+                          <SelectItem key={opt.value} value={opt.value}>
+                            {opt.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-1">
+                    <Label>Re-ranker</Label>
+                    <Select
+                      onValueChange={(value) =>
+                        setTempSettings({
+                          ...tempSettings,
+                          rerankerOption: value,
+                        })
+                      }
+                      disabled={isLoading}
+                    >
+                      <SelectTrigger className="border border-chatbot-primary/20">
+                        <SelectValue
+                          placeholder={
+                            tempSettings.rerankerOption !== ""
+                              ? tempSettings.rerankerOption
+                              : "Select Reranker"
+                          }
+                        />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem key={"none"} value={"none"}>
+                          {"None – Use retriever results directly"}
+                        </SelectItem>
+                        <SelectItem
+                          key={"cross-encoder"}
+                          value={"cross-encoder"}
+                        >
+                          {"Cross-encoder – Most accurate, but slower"}
+                        </SelectItem>
+                        <SelectItem key={"bi-encoder"} value={"bi-encoder"}>
+                          {"Bi-encoder – Faster, less accurate"}
+                        </SelectItem>
+                        <SelectItem key={"llm-reranker"} value={"llm-reranker"}>
+                          {"LLM-based – Uses a language model"}
+                        </SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+              </div>
+              <div className="flex justify-end gap-3">
+                <Button variant="outline" onClick={handleCancel}>
+                  Cancel
+                </Button>
+                <Button onClick={handleSave}>Save Settings</Button>
+              </div>
+            </TabsContent>
+          </Tabs>
         </div>
-      </ScrollArea>
-      <div>
-        <div className="flex gap-4 ml-4 mb-2 ">
-          <Button
-            variant={isListening ? "destructive" : "chatbot-secondary"}
-            size="icon"
-            onClick={toggleListening}
-            disabled={isLoading}
-          >
-            {isListening ? (
-              <MicOff className="h-4 w-4" />
-            ) : (
-              <Mic className="h-4 w-4" />
-            )}
-          </Button>
-          <Input
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            onKeyPress={handleKeyPress}
-            placeholder="Ask me anything..."
-            disabled={isLoading}
-            className="flex-1 border border-chatbot-primary/40"
-          />
-          <Button
-            variant="chatbot"
-            className="flex gap-4 mr-4"
-            size="icon"
-            onClick={handleSend}
-            disabled={!input.trim() || isLoading}
-          >
-            <Send className="h-4 w-4" />
-          </Button>
-        </div>
-        <div className="max-h-[150px] overflow-y-auto px-4 py-2 border-t border-chatbot-primary/20 space-y-2">
-          <div className="flex items-center flex-wrap gap-5 px-4 py-2 border-t border-chatbot-primary/20">
+
+        {/* <div className="flex flex-col justify-between overflow-y-auto px-4 py-2 bg-gradient-surface rounded-lg border border-chatbot-primary/20 space-y-2">
+          <div className="flex items-center flex-wrap gap-5 px-4 py-2 border-chatbot-primary/20">
             <Popover>
               <PopoverTrigger asChild>
                 <Button variant="outline" size="default">
@@ -1054,7 +1384,7 @@ export const ChatInterface = ({
                           }
                           disabled={isLoading}
                         >
-                          <SelectTrigger className="border-2 border-gray-500" >
+                          <SelectTrigger className="border-2 border-gray-500">
                             <SelectValue
                               placeholder={
                                 tempSettings.llmModel !== ""
@@ -1062,7 +1392,7 @@ export const ChatInterface = ({
                                   : "Select LLM"
                               }
                             />
-                          </SelectTrigger >
+                          </SelectTrigger>
                           <SelectContent>
                             {config?.llm_models.map((model) => (
                               <SelectItem key={model} value={model}>
@@ -1243,7 +1573,8 @@ export const ChatInterface = ({
                       <div className="space-y-1">
                         <Label>Re-ranker</Label>
                         <select
-                          className="w-full rounded-lg border-4 border-gray-200 border-input bg-background px-3 py-2 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-ring"                          value={tempSettings.rerankerOption}
+                          className="w-full rounded-lg border-4 border-gray-200 border-input bg-background px-3 py-2 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                          value={tempSettings.rerankerOption}
                           onChange={(e) =>
                             setTempSettings({
                               ...tempSettings,
@@ -1282,138 +1613,140 @@ export const ChatInterface = ({
               </DialogContent>
             </Dialog>
           </div>
-          {selectedDocs.length > 0 && (
-            <div className="flex flex-wrap gap-1 mt-2 items-center">
-              <Label className="text-sm text-muted-foreground">Selected:</Label>
-              {selectedDocs.map((doc) => (
-                <span
-                  key={doc.value}
-                  className="flex items-center gap-1 text-xs bg-chatbot-secondary text-foreground border border-chatbot-primary/20 rounded-md px-2 py-1"
-                >
-                  {doc.label}
-                  <button
-                    type="button"
-                    className="flex items-center justify-center w-4 h-4 rounded-full hover:bg-destructive hover:text-destructive-foreground transition-colors duration-150"
-                    onClick={() => handleRemove(doc.value)}
-                  >
-                    <X size={10} strokeWidth={2} />
-                  </button>
-                </span>
-              ))}
-            </div>
-          )}
-          {(tempSettings.optimizer ||
-            tempSettings.embeddingModel ||
-            tempSettings.llmModel ||
-            tempSettings.vectorDb ||
-            typeof tempSettings.temperature === "number" ||
-            tempSettings.guardrailOption ||
-            tempSettings.tokenSize ||
-            tempSettings.rerankerOption !== "none" ||
-            typeof tempSettings.showSources === "boolean") && (
-            <div className="flex flex-wrap gap-2 mt-2 items-center">
-              <Label className="text-sm text-muted-foreground">Settings:</Label>
-              {tempSettings.optimizer && (
-                <span className="flex items-center gap-1 text-xs bg-chatbot-secondary text-foreground border border-chatbot-primary/20 rounded-md px-2 py-1">
-                  Optimizer: {tempSettings.optimizer}
-                  <button
-                    type="button"
-                    className="flex items-center justify-center w-4 h-4 rounded-full hover:bg-destructive hover:text-destructive-foreground transition-colors duration-150"
-                    onClick={() => handleSave({ optimizer: "" })}
-                  >
-                    <X size={10} strokeWidth={2} />
-                  </button>
-                </span>
-              )}
-              {tempSettings.embeddingModel && (
-                <span className="flex items-center gap-1 text-xs bg-chatbot-secondary text-foreground border border-chatbot-primary/20 rounded-md px-2 py-1">
-                  Embedding: {tempSettings.embeddingModel}
-                  <button
-                    type="button"
-                    className="flex items-center justify-center w-4 h-4 rounded-full hover:bg-destructive hover:text-destructive-foreground transition-colors duration-150"
-                    onClick={() => handleSave({ embeddingModel: "" })}
-                  >
-                    <X size={10} strokeWidth={2} />
-                  </button>
-                </span>
-              )}
-              {tempSettings.llmModel && (
-                <span className="flex items-center gap-1 text-xs bg-chatbot-secondary text-foreground border border-chatbot-primary/20 rounded-md px-2 py-1">
-                  LLM: {tempSettings.llmModel}
-                  <button
-                    type="button"
-                    className="flex items-center justify-center w-4 h-4 rounded-full hover:bg-destructive hover:text-destructive-foreground transition-colors duration-150"
-                    onClick={() => handleSave({ llmModel: "" })}
-                  >
-                    <X size={10} strokeWidth={2} />
-                  </button>
-                </span>
-              )}
-              {tempSettings.vectorDb && (
-                <span className="flex items-center gap-1 text-xs bg-chatbot-secondary text-foreground border border-chatbot-primary/20 rounded-md px-2 py-1">
-                  Vector DB: {tempSettings.vectorDb}
-                  <button
-                    type="button"
-                    className="flex items-center justify-center w-4 h-4 rounded-full hover:bg-destructive hover:text-destructive-foreground transition-colors duration-150"
-                    onClick={() => handleSave({ vectorDb: "" })}
-                  >
-                    <X size={10} strokeWidth={2} />
-                  </button>
-                </span>
-              )}
-              {typeof tempSettings.temperature === "number" && (
-                <span className="flex items-center gap-1 text-xs bg-chatbot-secondary text-foreground border border-chatbot-primary/20 rounded-md px-2 py-1">
-                  Temperature: {tempSettings.temperature}
-                  <button
-                    type="button"
-                    className="flex items-center justify-center w-4 h-4 rounded-full hover:bg-destructive hover:text-destructive-foreground transition-colors duration-150"
-                    onClick={() => handleSave({ temperature: 0.0 })}
-                  >
-                    <X size={10} strokeWidth={2} />
-                  </button>
-                </span>
-              )}
-              {tempSettings.guardrailOption && (
-                <span className="flex items-center gap-1 text-xs bg-chatbot-secondary text-foreground border border-chatbot-primary/20 rounded-md px-2 py-1">
-                  Guardrails: {tempSettings.guardrailOption}
-                  <button
-                    type="button"
-                    className="flex items-center justify-center w-4 h-4 rounded-full hover:bg-destructive hover:text-destructive-foreground transition-colors duration-150"
-                    onClick={() => handleSave({ guardrailOption: "" })}
-                  >
-                    <X size={10} strokeWidth={2} />
-                  </button>
-                </span>
-              )}
-              {tempSettings.tokenSize && (
-                <span className="flex items-center gap-1 text-xs bg-chatbot-secondary text-foreground border border-chatbot-primary/20 rounded-md px-2 py-1">
-                  Token Size: {tempSettings.tokenSize}
-                  <button
-                    type="button"
-                    className="flex items-center justify-center  w-4 h-4 rounded-full hover:bg-destructive hover:text-destructive-foreground transition-colors duration-150"
-                    onClick={() => handleSave({ tokenSize: 256 })}
-                  >
-                    <X size={10} strokeWidth={2} />
-                  </button>
-                </span>
-              )}
-              {tempSettings.rerankerOption !== "none" && (
-                <span className="flex items-center gap-1 text-xs bg-chatbot-secondary text-foreground border border-chatbot-primary/20 rounded-md px-2 py-1">
-                  Re-ranker: {tempSettings.rerankerOption}
-                  <button
-                    type="button"
-                    className="flex items-center justify-center w-4 h-4 rounded-full hover:bg-destructive hover:text-destructive-foreground transition-colors duration-150"
-                    onClick={() => handleSave({ rerankerOption: "none" })}
-                  >
-                    <X size={10} strokeWidth={2} />
-                  </button>
-                </span>
-              )}
-            </div>
-          )}
-        </div>
+        </div> */}
       </div>
-    </div>
+      <div className="flex flex-col gap-4">
+        {selectedDocs.length > 0 && (
+          <div className="flex flex-wrap gap-1 mt-2 items-center">
+            <Label className="text-sm text-muted-foreground">Selected:</Label>
+            {selectedDocs.map((doc) => (
+              <span
+                key={doc.value}
+                className="flex items-center gap-1 text-xs bg-chatbot-secondary text-foreground border border-chatbot-primary/20 rounded-md px-2 py-1"
+              >
+                {doc.label}
+                <button
+                  type="button"
+                  className="flex items-center justify-center w-4 h-4 rounded-full hover:bg-destructive hover:text-destructive-foreground transition-colors duration-150"
+                  onClick={() => handleRemove(doc.value)}
+                >
+                  <X size={10} strokeWidth={2} />
+                </button>
+              </span>
+            ))}
+          </div>
+        )}
+        {(tempSettings.optimizer ||
+          tempSettings.embeddingModel ||
+          tempSettings.llmModel ||
+          tempSettings.vectorDb ||
+          typeof tempSettings.temperature === "number" ||
+          tempSettings.guardrailOption ||
+          tempSettings.tokenSize ||
+          tempSettings.rerankerOption !== "none" ||
+          typeof tempSettings.showSources === "boolean") && (
+          <div className="flex flex-wrap gap-2 mt-2 items-center">
+            <Label className="text-sm text-muted-foreground">Settings:</Label>
+            {tempSettings.optimizer && (
+              <span className="flex items-center gap-1 text-xs bg-chatbot-secondary text-foreground border border-chatbot-primary/20 rounded-md px-2 py-1">
+                Optimizer: {tempSettings.optimizer}
+                <button
+                  type="button"
+                  className="flex items-center justify-center w-4 h-4 rounded-full hover:bg-destructive hover:text-destructive-foreground transition-colors duration-150"
+                  onClick={() => handleSave({ optimizer: "" })}
+                >
+                  <X size={10} strokeWidth={2} />
+                </button>
+              </span>
+            )}
+            {tempSettings.embeddingModel && (
+              <span className="flex items-center gap-1 text-xs bg-chatbot-secondary text-foreground border border-chatbot-primary/20 rounded-md px-2 py-1">
+                Embedding: {tempSettings.embeddingModel}
+                <button
+                  type="button"
+                  className="flex items-center justify-center w-4 h-4 rounded-full hover:bg-destructive hover:text-destructive-foreground transition-colors duration-150"
+                  onClick={() => handleSave({ embeddingModel: "" })}
+                >
+                  <X size={10} strokeWidth={2} />
+                </button>
+              </span>
+            )}
+            {tempSettings.llmModel && (
+              <span className="flex items-center gap-1 text-xs bg-chatbot-secondary text-foreground border border-chatbot-primary/20 rounded-md px-2 py-1">
+                LLM: {tempSettings.llmModel}
+                <button
+                  type="button"
+                  className="flex items-center justify-center w-4 h-4 rounded-full hover:bg-destructive hover:text-destructive-foreground transition-colors duration-150"
+                  onClick={() => handleSave({ llmModel: "" })}
+                >
+                  <X size={10} strokeWidth={2} />
+                </button>
+              </span>
+            )}
+            {tempSettings.vectorDb && (
+              <span className="flex items-center gap-1 text-xs bg-chatbot-secondary text-foreground border border-chatbot-primary/20 rounded-md px-2 py-1">
+                Vector DB: {tempSettings.vectorDb}
+                <button
+                  type="button"
+                  className="flex items-center justify-center w-4 h-4 rounded-full hover:bg-destructive hover:text-destructive-foreground transition-colors duration-150"
+                  onClick={() => handleSave({ vectorDb: "" })}
+                >
+                  <X size={10} strokeWidth={2} />
+                </button>
+              </span>
+            )}
+            {typeof tempSettings.temperature === "number" && (
+              <span className="flex items-center gap-1 text-xs bg-chatbot-secondary text-foreground border border-chatbot-primary/20 rounded-md px-2 py-1">
+                Temperature: {tempSettings.temperature}
+                <button
+                  type="button"
+                  className="flex items-center justify-center w-4 h-4 rounded-full hover:bg-destructive hover:text-destructive-foreground transition-colors duration-150"
+                  onClick={() => handleSave({ temperature: 0.0 })}
+                >
+                  <X size={10} strokeWidth={2} />
+                </button>
+              </span>
+            )}
+            {tempSettings.guardrailOption && (
+              <span className="flex items-center gap-1 text-xs bg-chatbot-secondary text-foreground border border-chatbot-primary/20 rounded-md px-2 py-1">
+                Guardrails: {tempSettings.guardrailOption}
+                <button
+                  type="button"
+                  className="flex items-center justify-center w-4 h-4 rounded-full hover:bg-destructive hover:text-destructive-foreground transition-colors duration-150"
+                  onClick={() => handleSave({ guardrailOption: "" })}
+                >
+                  <X size={10} strokeWidth={2} />
+                </button>
+              </span>
+            )}
+            {tempSettings.tokenSize && (
+              <span className="flex items-center gap-1 text-xs bg-chatbot-secondary text-foreground border border-chatbot-primary/20 rounded-md px-2 py-1">
+                Token Size: {tempSettings.tokenSize}
+                <button
+                  type="button"
+                  className="flex items-center justify-center  w-4 h-4 rounded-full hover:bg-destructive hover:text-destructive-foreground transition-colors duration-150"
+                  onClick={() => handleSave({ tokenSize: 256 })}
+                >
+                  <X size={10} strokeWidth={2} />
+                </button>
+              </span>
+            )}
+            {tempSettings.rerankerOption !== "none" && (
+              <span className="flex items-center gap-1 text-xs bg-chatbot-secondary text-foreground border border-chatbot-primary/20 rounded-md px-2 py-1">
+                Re-ranker: {tempSettings.rerankerOption}
+                <button
+                  type="button"
+                  className="flex items-center justify-center w-4 h-4 rounded-full hover:bg-destructive hover:text-destructive-foreground transition-colors duration-150"
+                  onClick={() => handleSave({ rerankerOption: "none" })}
+                >
+                  <X size={10} strokeWidth={2} />
+                </button>
+              </span>
+            )}
+          </div>
+        )}
+      </div>
+    </>
   );
 };
 

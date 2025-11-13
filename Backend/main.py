@@ -9,6 +9,7 @@ import requests
 from ingestion_pipleline.ingestion_datastore_router import router as ingestion_datastore_router
 from ingestion_pipleline.ingestion_document_loader_router import router as ingestion_document_router
 from ingestion_pipleline.ingestion_chunks_router import router as ingestion_chunking_router
+from rag_pipeline.rag_router import router as rag_knowledge_asst_router
 
 # ================= PHOENIX SETUP START =================
 
@@ -73,6 +74,8 @@ app.include_router(evaluation.router, prefix="/evaluation")
 app.include_router(ingestion_datastore_router, prefix="/ingestion")
 app.include_router(ingestion_document_router, prefix="/ingestion")
 app.include_router(ingestion_chunking_router, prefix="/ingestion")
+
+app.include_router(rag_knowledge_asst_router, prefix="/rag")
 
 
 

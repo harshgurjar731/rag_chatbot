@@ -4,6 +4,7 @@ from frontend_config import (
     get_config,
     get_optimizer,
     get_embedding_models,
+    get_llm_providers,
     get_llm_models,
     get_vector_dbs,
     get_reranker_options,
@@ -36,6 +37,10 @@ def fetch_optimizer():
 @router.get("/config/embedding-models")
 def fetch_embedding_models():
     return get_embedding_models()
+
+@router.get("/config/llm-providers")
+def fetch_llm_providers():
+    return get_llm_providers()
 
 @router.get("/config/llm-models")
 def fetch_llm_models():

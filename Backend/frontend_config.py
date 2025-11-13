@@ -14,6 +14,7 @@ class ModelConfig(BaseModel):
     base_url:str
     optimizer: List[Dict[str, str]] 
     embedding_models: List[str]
+    llm_providers: List[str]
     llm_models: List[str]
     vector_dbs: List[str]
     reranker_options: List[str]
@@ -41,10 +42,10 @@ def get_optimizer() -> List[Dict[str, str]]:
     Returns available optimizer options with machine-friendly values and user-friendly labels.
     """
     return [
-        {"value": "None", "label": "None"},
-        {"value": "Multi Query", "label": "Multi Query"},
-        {"value": "Step Back", "label": "Step Back"},
-        {"value": "Rag Fusion", "label": "RAG Fusion"},
+        {"value": "none", "label": "None"},
+        {"value": "multiquery", "label": "Multi Query"},
+        {"value": "stepback", "label": "Step Back"},
+        {"value": "ragfusion", "label": "RAG Fusion"},
     ]
 
 def get_embedding_models() -> List[str]:
@@ -53,6 +54,12 @@ def get_embedding_models() -> List[str]:
         "bge-base-en",
         "bge-large-en",
         "e5-large-v2",
+    ]
+
+def get_llm_providers() -> List[str]:
+    return [
+        "groq",
+        "azureopenai"
     ]
 
 def get_llm_models() -> List[str]:
@@ -153,6 +160,7 @@ def get_config() -> ModelConfig:
         base_url=get_api_base_url(),
         optimizer=get_optimizer(),
         embedding_models=get_embedding_models(),
+        llm_providers=get_llm_providers(),
         llm_models=get_llm_models(),
         vector_dbs=get_vector_dbs(),
         reranker_options=get_reranker_options(),

@@ -70,6 +70,17 @@ export const DocumentLoaderConfigForm = ({
     }
   }, [selectedDocument])
 
+  useEffect(() => {
+    if (!open) {
+      setEditMode(false)
+      setSelectedFileName(null)
+      setSelectedSplitter(null)
+      setSplitterConfig(null)
+      setChunks([])
+      setShowChunkPreview(false)
+      setMetadata("{}")
+    }
+  }, [open])
 
   const handleExistingFilePreviewChunks = async() => {
     const requestData = {
@@ -128,9 +139,9 @@ export const DocumentLoaderConfigForm = ({
         <DialogContent className="max-w-6xl max-h-[90vh] overflow-hidden flex flex-col">
           <DialogHeader>
             <div className="flex items-center gap-3">
-              <Button variant="ghost" size="icon" onClick={onBack}>
+             {!selectedDocument && <Button variant="ghost" size="icon" onClick={onBack}>
                 <ArrowLeft className="h-5 w-5" />
-              </Button>
+              </Button> }
               <div className="flex items-center gap-3">
                 <DialogTitle className="text-2xl">{loaderNames[loaderType] || "Document Loader"}</DialogTitle>
                 <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center">

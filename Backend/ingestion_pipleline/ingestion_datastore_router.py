@@ -10,6 +10,7 @@ from ingestion_pipleline.VectorStores.vector_store_generator import create_vecto
 from models.datastore import DataStore
 import os
 import shutil
+import time
 from typing import List
 from config import CONFIG  # Load .env variables
 from ingestion_pipleline.ingestion_models import DataStoreCreate, DataStoreResponse
@@ -19,9 +20,7 @@ router = APIRouter()
 
 @router.post("/createDatastore" , response_model=DataStore)
 async def create_new_datastore(data: DataStoreCreate, session: Session = Depends(get_session)):
-
     print("Creating new datastore with name:", data.name)
-    print(INGESTION_CONFIG["ingestion_root"])
     # 1️⃣ Check for duplicate name
     existing = session.exec(select(DataStore).where(DataStore.name == data.name)).first()
     if existing:

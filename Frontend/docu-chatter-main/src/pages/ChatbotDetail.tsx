@@ -31,7 +31,7 @@ const ChatbotDetail = () => {
   const { config, loading } = useConfigOptions()
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { getChatbot, deleteChatbot, addDocument, addQnA } = useChatbots();
+  const { getChatbot, deleteChatbot } = useChatbots();
   const { toast } = useToast();
 
   const [newQuestion, setNewQuestion] = useState('');
@@ -259,10 +259,10 @@ const ChatbotDetail = () => {
 
     // Generate a contextual response based on the chatbot's topic
     const responses = [
-      `Based on my knowledge of ${chatbot.topic}, I can help you with that. However, this is a demo response. In a real implementation, I would analyze your uploaded documents to provide accurate information.`,
-      `That's an interesting question about ${chatbot.topic}. In a production version, I would search through your uploaded documents to find the most relevant information.`,
-      `I understand you're asking about ${chatbot.topic}. This demo shows the interface - the actual AI would process your documents and provide detailed, accurate responses.`,
-      `Great question! I'm designed to assist with ${chatbot.topic}. In the full version, I would use advanced AI to analyze your documents and provide precise answers.`,
+      `Based on my knowledge of ${chatbot.description}, I can help you with that. However, this is a demo response. In a real implementation, I would analyze your uploaded documents to provide accurate information.`,
+      `That's an interesting question about ${chatbot.description}. In a production version, I would search through your uploaded documents to find the most relevant information.`,
+      `I understand you're asking about ${chatbot.description}. This demo shows the interface - the actual AI would process your documents and provide detailed, accurate responses.`,
+      `Great question! I'm designed to assist with ${chatbot.description}. In the full version, I would use advanced AI to analyze your documents and provide precise answers.`,
     ];
 
     return responses[Math.floor(Math.random() * responses.length)];
@@ -284,16 +284,11 @@ const ChatbotDetail = () => {
               </Button>
 
               <div className="flex items-center gap-3">
-                <div className="text-2xl">{chatbot.icon}</div>
                 <div>
                   <h1 className="text-2xl font-bold text-foreground">{chatbot.name}</h1>
-                  <p className="text-muted-foreground">{chatbot.topic}</p>
+                  <p className="text-muted-foreground">{chatbot.description}</p>
                 </div>
               </div>
-
-              <Badge variant="secondary" className="ml-4">
-                Active
-              </Badge>
             </div>
 
             <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
@@ -333,9 +328,9 @@ const ChatbotDetail = () => {
       </div>
 
       {/* Main Content */}
-      <div className="container mx-auto px-4 py-6">
-        <Tabs defaultValue="chat" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-2">
+      <div className="container mx-auto px-4 py-6 h-[calc(100vh-220px)]">
+        {/* <Tabs defaultValue="chat" className="space-y-6"> */}
+          {/* <TabsList className="grid w-full grid-cols-2">
             <TabsTrigger value="chat" className="flex items-center gap-2">
               <MessageSquarePlus className="h-4 w-4" />
               Chat
@@ -344,9 +339,9 @@ const ChatbotDetail = () => {
               <FileText className="h-4 w-4" />
               Documents
             </TabsTrigger>
-          </TabsList>
+          </TabsList> */}
 
-          <TabsContent value="chat" className="space-y-4">
+          {/* <TabsContent value="chat" className="space-y-4"> */}
             {/* <ChatInterface
               chatbot={chatbot}
               chatbotName={chatbot.name}
@@ -360,37 +355,44 @@ const ChatbotDetail = () => {
               chatbot={chatbot}
               chatbotName="MyBot"
               onSendMessage={async (payload) => {
-                const { question, fileId, optimizer, embeddingModel, llmModel, vectorDb, temperature, guardrailOption, tokenSize, showSources, rerankerOption } = payload;
-
-                const response = await axios.get(`http://localhost:8000/retriever/query/${chatbot.name}`, {
+                const { question, messages, useKnowledgeBase, selectedDocuments, optimizer, llmProvider, llmModel, temperature, guardrailOption, tokenSize, showSources, rerankerOption } = payload;
+                console.log("LLM Provider:", llmProvider, useKnowledgeBase)
+                const data = { 
+                                messages: messages.map((msg) => ({
+                                    role: msg.isUser ? "user" : "assistant",
+                                    content: msg.content,
+                                  })),
+                                selectedDocuments: selectedDocuments
+                              }
+                const response = await axios.post(`http://localhost:8000/rag/query/${chatbot.id}`, data, {
+                // const response = await axios.get(`http://localhost:8000/retriever/query/${chatbot.name}`, {
                   params: {
-                    chatbot_id: chatbot.name,
-                    query: question,
-                    query_optimizer: optimizer || "Multi Query",
-                    embedding_model_name: embeddingModel || "all-MiniLM-L6-v2",
+                    chatbot_id: chatbot.id,
+                    use_knowledge_base: useKnowledgeBase,
+                    llm_model_provider: llmProvider || "groq",
                     llm_model_name: llmModel || "llama-3.3-70b-versatile",
-                    vector_db: vectorDb || "faiss",
-                    file_id: fileId,
-                    temperature: temperature || 0.0,
-                    guardrailOption: guardrailOption,
-                    token_size: tokenSize || 256,
-                    sources: showSources || false,
-                    rerankerOption: rerankerOption || "none" // Include sources if requested
+                    temperature:  temperature || 0.0,
+                    max_token: tokenSize || 256,
+                    reranker_type: rerankerOption || "None",
+                    query_rewriting_type: optimizer || "None",
+                    guardrail_type: guardrailOption || "None",
+                    use_citation: showSources || false,
+                    datastore_id: chatbot.datastoreId,
+                    query: question,
                   },
 
                   // ✅ ensure arrays become file_id=12&file_id=16 instead of file_id[]=...
-                  paramsSerializer: params =>
-                    qs.stringify(params, { arrayFormat: "repeat" }),
+                  // paramsSerializer: params =>
+                  //   qs.stringify(params, { arrayFormat: "repeat" }),
                 });
-
+                console.log("response", response)
                 return response.data || "No results found.";
               }}
             />
-          </TabsContent>
+          {/* </TabsContent> */}
 
-          <TabsContent value="documents" className="space-y-6">
+          {/* <TabsContent value="documents" className="space-y-6">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {/* Current Documents */}
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
@@ -414,15 +416,12 @@ const ChatbotDetail = () => {
                           onClick={() => handleFileClick(chatbot.datastoreId, doc)}
                           className="flex items-start gap-3 p-3 rounded-lg bg-chatbot-surface-variant hover:bg-chatbot-surface transition cursor-pointer"
                         >
-                          {/* File Icon */}
                           <FileText className="h-5 w-5 text-chatbot-primary shrink-0 mt-1" />
 
-                          {/* File Name */}
                           <span className="flex-1 text-sm font-medium break-all leading-snug">
                             {doc}
                           </span>
 
-                          {/* Delete Button */}
                           <button
                             onClick={(e) => {
                               e.stopPropagation(); // Prevent file click
@@ -441,7 +440,6 @@ const ChatbotDetail = () => {
                 </CardContent>
               </Card>
 
-              {/* Add New Document */}
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
@@ -517,8 +515,8 @@ const ChatbotDetail = () => {
 
               </Card>
             </div>
-          </TabsContent>
-        </Tabs>
+          </TabsContent> */}
+        {/* </Tabs> */}
       </div>
     </div>
   );

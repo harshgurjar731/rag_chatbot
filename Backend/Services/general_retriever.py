@@ -90,6 +90,7 @@ from utils.llm_factory import LLMFactory  # ✅ Import our dynamic LLMFactory
 def get_llm_answer(
     query: str,
     llm_model_name: str = None,
+    llm_model_provider: str = None,
     temperature: float = None,
     token_size: int = 256,
     include_sources: bool = False,

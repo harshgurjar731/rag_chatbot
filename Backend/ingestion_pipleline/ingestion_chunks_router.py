@@ -2,7 +2,7 @@
 from fastapi import APIRouter, HTTPException, Depends, Query, UploadFile, File, Form
 from pathlib import Path
 from sqlmodel import Session, select
-from models.FileRecord import FileRecord
+from models.FileRecord import FileRecord, update_document_record
 from database import get_session
 from Services.chunking_service import chunk_documents, save_chunks_to_json, load_docs_from_json
 from models.datastore import DataStore, update_datastore
@@ -26,6 +26,8 @@ from ingestion_pipleline.Embeddings.embedding_models import create_embedding_mod
 from ingestion_pipleline.VectorStores.vector_store_generator import create_vector_store
 from ingestion_pipleline.Config.Config import INGESTION_CONFIG
 from ingestion_pipleline.Reranker.reranking_helper import apply_reranker
+from sqlmodel import Session, select
+
 
 @router.post("/datastore/{datastore_id}/upsertDocs")
 async def upsertDocs(
@@ -35,6 +37,8 @@ async def upsertDocs(
     ):
 
     pending_document_ids = session.exec(select(DocumentRecord.id).where((DocumentRecord.datastore_id == datastore_id) & (DocumentRecord.insert_vector_status != True))).all()
+    if (len(pending_document_ids) == 0):
+        raise HTTPException(status_code=400, detail="No Files pending for upsert")
     chunks_to_be_uploaded = session.exec(select(ChunkRecord).where((ChunkRecord.datastore_id == datastore_id) & (ChunkRecord.document_id.in_(pending_document_ids)))).all()
     list_of_documents: List[Document] = []
     chunk_ids: List[str] = []
@@ -58,21 +62,30 @@ async def upsertDocs(
         dimension=384
     )
     print("After Create Collection")
-    vectordb.insert_docs(
+    insert_success = vectordb.insert_docs(
         collection=str(datastore_id),
         documents=list_of_documents,
         chunkids=chunk_ids,
         embedding=embeddingModel
     )
-    print("After Insert Collection")
-    updateData = {
+
+    if (insert_success):
+        updateData = {
         "embedding_model": data.embedding_model,
         "embedding_provider": data.embedding_provider,
         "vector_store_provider": data.vector_store_provider,
         "similarity_metric": data.similarity_metric,
-    }
-    print("Updating DataStore", updateData)
-    update_datastore(session=session, store_id=datastore_id, update_data=updateData)
+        }
+        print("Updating DataStore", updateData)
+        update_datastore(session=session, store_id=datastore_id, update_data=updateData)
+        for doc_id in pending_document_ids:
+            updateDocData = {
+                "insert_vector_status": True,
+            }
+            update_document_record(session=session, doc_id=doc_id, update_data=updateDocData)
+
+    print("After Insert Collection")
+    
     return True
 
 @router.post("/datastore/{datastore_id}/testRetrieval")
@@ -90,10 +103,9 @@ async def test_retrieval(
 
     vectordb = create_vector_store(provider=data.vector_store_provider)
     # vector_store already initialized earlier (same collection & embedding)
-    results = vectordb.test_retrieval(collection=str(datastore_id), embedding=embeddingModel, query= data.query_str, topk= data.top_k)
-
+    results = vectordb.test_retrieval(collection=str(datastore_id), embedding=embeddingModel, queryList= [data.query_str], topk= data.top_k)
     if(data.rerank_enabled): 
-        results = apply_reranker(INGESTION_CONFIG["ingestion_reranker_type"], INGESTION_CONFIG["ingestion_reranker_model_name"], data.query_str, results, INGESTION_CONFIG["ingestion_reranker_topk"])
+        results = apply_reranker(INGESTION_CONFIG["ingestion_reranker_type"], INGESTION_CONFIG["ingestion_reranker_model_name"], data.query_str, results[0], INGESTION_CONFIG["ingestion_reranker_topk"])
 
     return results
 

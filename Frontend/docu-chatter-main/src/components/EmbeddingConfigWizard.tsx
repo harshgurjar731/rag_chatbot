@@ -4,12 +4,13 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ArrowLeft, RefreshCw, Save, Search, Upload } from "lucide-react";
+import { ArrowLeft, Loader, Loader2, LoaderIcon, LoaderPinwheel, RefreshCw, Save, Search, Upload } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Switch } from "./ui/switch";
 import axios from "axios";
 import { fetchDatastores } from "@/pages/DatastoreDashboard";
 import { CreateDatastoreData } from "@/types/chatbot";
+import { ChunkPreviewDialog } from "./ChunkPreviewDialog";
 
 interface EmbeddingConfigWizardProps {
   open: boolean;
@@ -37,6 +38,8 @@ export const EmbeddingConfigWizard = ({
   const [loading, setLoading] = useState(false)
   const [datastore, setDatastore] = useState<CreateDatastoreData|null>(null)
   const [upsertPending, setUpsertPending] = useState(shouldUpsert)
+  const [showChunkPreview, setShowChunkPreview] = useState(false)
+  const [previewChunks, setPreviewChunks] = useState([])
 
   const steps = [
     { number: 1, label: "Embeddings", active: step >= 1 },
@@ -91,8 +94,11 @@ export const EmbeddingConfigWizard = ({
     try {
       setLoading(true)
       const testRetreiverResponse = await axios.post(`http://127.0.0.1:8000/ingestion/datastore/${datastoreId}/testRetrieval`, retrieverRequest);
-      console.log("Test Resp:", testRetreiverResponse)
+      const chunkTexts = testRetreiverResponse.data.map(chunk => chunk.page_content);
+      console.log("Test Resp:", chunkTexts)
+      setPreviewChunks(chunkTexts)
       setLoading(false)
+      setShowChunkPreview(true)
     } catch {
       console.log("Error calling Upsert Operation");
     }    
@@ -116,8 +122,6 @@ export const EmbeddingConfigWizard = ({
       } else {
         setStep(1)
       }
-      console.log("ShortUpsert", shouldUpsert)
-      console.log("UpsertPending", upsertPending)
   }, [open])
 
   useEffect(() => {
@@ -152,16 +156,17 @@ export const EmbeddingConfigWizard = ({
   };
 
   return (
+    <>
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-6xl max-h-[90vh] overflow-hidden flex flex-col">
         <DialogHeader>
           <div className="flex items-center gap-3">
-            <Button variant="ghost" size="icon" onClick={handleBack} className="rounded-full">
+            {/* <Button variant="ghost" size="icon" onClick={handleBack} className="rounded-full">
               <ArrowLeft className="h-5 w-5" />
-            </Button>
+            </Button> */}
             <div>
-              <DialogTitle className="text-2xl">Oak & Barrel</DialogTitle>
-              <p className="text-sm text-muted-foreground">Configure Embeddings, Vector Store and Record Manager</p>
+              <DialogTitle className="text-2xl">{datastore?.name || ""}</DialogTitle>
+              <p className="text-sm text-muted-foreground">Configure Embeddings, Vector Store and Test Document Retreiver</p>
             </div>
           </div>
         </DialogHeader>
@@ -189,7 +194,7 @@ export const EmbeddingConfigWizard = ({
         <div className="flex-1 overflow-y-auto">
           <div className="grid grid-cols-3 gap-6">
             {/* Step 1: Embeddings */}
-            <Card className={`p-6 bg-gradient-to-br ${getStepColor(1)} ${step !== 1 && 'opacity-50'}`}>
+            <Card className={`p-6 bg-gradient-to-br ${getStepColor(1)} ${step !== 1 && 'pointer-events-none opacity-50'}`}>
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-lg font-semibold text-white">
                   {step >= 1 ? 'Selected Embeddings' : 'Select Embedding'}
@@ -244,7 +249,7 @@ export const EmbeddingConfigWizard = ({
             </Card>
 
             {/* Step 2: Vector Store */}
-            <Card className={`p-6 bg-gradient-to-br ${getStepColor(2)} ${step !== 2 && 'opacity-50'}`}>
+            <Card className={`p-6 bg-gradient-to-br ${getStepColor(2)} ${step !== 2 && 'pointer-events-none opacity-50'}`}>
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-lg font-semibold text-white">
                   {step >= 2 ? 'Select Vector Store' : 'Selected Vector Store'}
@@ -273,10 +278,10 @@ export const EmbeddingConfigWizard = ({
             </Card>
 
             {/* Step 3: Record Manager */}
-            <Card className={`p-6 bg-gradient-to-br ${getStepColor(3)} ${(step !== 3 || upsertPending) && 'opacity-50'}`}>
+            <Card className={`p-6 bg-gradient-to-br ${getStepColor(3)} ${(step !== 3 || upsertPending) && 'pointer-events-none opacity-50'}`}>
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-lg font-semibold text-white">
-                  {'Test Retrieval'}
+                  {'Test Retriever'}
                 </h3>
                 <div className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center">
                   📋
@@ -340,7 +345,8 @@ export const EmbeddingConfigWizard = ({
                   }}
                   disabled = {(step == 3 && !upsertPending && retrievalQuery == "") || loading}
                   >
-                  {(step == 2 || upsertPending) ? <Upload className="h-4 w-4 mr-2" /> : <Search className="h-4 w-4 mr-2" />}
+                  {loading && <LoaderIcon className="w-4 h-4 mr-2 animate-spin" />}
+                  {!loading && ((step == 2 || upsertPending) ? <Upload className="h-4 w-4 mr-2" /> : <Search className="h-4 w-4 mr-2" />)}
                   
                   {(step == 2 || upsertPending) ? 'Upsert' : 'Test Retriever'}
                 </Button>
@@ -350,5 +356,11 @@ export const EmbeddingConfigWizard = ({
         </div>
       </DialogContent>
     </Dialog>
+     <ChunkPreviewDialog
+        open={showChunkPreview}
+        onOpenChange={setShowChunkPreview}
+        chunks={previewChunks}
+      />
+    </>
   );
 };

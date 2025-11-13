@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Plus, Bot, Sparkles, FileText } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ChatbotCard } from '@/components/ChatbotCard';
@@ -10,17 +10,25 @@ import axios from 'axios';
 
 
 export const Dashboard = () => {
-  const { chatbots, createChatbot } = useChatbots();
+  const { chatbots, createChatbot, refetchChatbots } = useChatbots();
   const navigate = useNavigate();
 
   const handleCreateChatbot = (data: any) => {
-    const newBot = createChatbot(data);
-    navigate(`/chatbot/${newBot.id}`);
+    refetchChatbots()
   };
 
   const handleChatbotClick = (id: string) => {
     navigate(`/chatbot/${id}`);
   };
+
+  const refreshDashboard=async()=>{
+      setDatastores(await fetchDatastores());
+    };
+  
+  
+  useEffect(()=> {
+    console.log("Chatbots in Dashboard", chatbots)
+  }, [chatbots])
 
   return (
     <div className="min-h-screen bg-gradient-surface">
@@ -113,6 +121,7 @@ export const Dashboard = () => {
                   key={chatbot.id}
                   chatbot={chatbot}
                   onClick={() => handleChatbotClick(chatbot.id)}
+                  onDelete={refetchChatbots}
                 />
               ))}
             </div>

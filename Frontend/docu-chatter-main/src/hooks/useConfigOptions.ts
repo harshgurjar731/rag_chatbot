@@ -4,6 +4,7 @@ export interface ConfigOptions {
   base_url: string
   optimizer: { value: string; label: string }[]
   embedding_models: string[]
+  llm_providers: string[]
   llm_models: string[]
   vector_dbs: string[]
   reranker_options: string[]

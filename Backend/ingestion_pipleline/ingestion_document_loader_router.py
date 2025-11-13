@@ -2,7 +2,7 @@
 from fastapi import APIRouter, HTTPException, Depends, Query, UploadFile, File, Form
 from fastapi.responses import FileResponse
 from pathlib import Path
-from sqlmodel import Session, select
+from sqlmodel import Session, select, func
 from models.FileRecord import FileRecord
 from database import get_session
 from Services.chunking_service import chunk_documents, save_chunks_to_json, load_docs_from_json
@@ -11,10 +11,13 @@ from models.FileRecord import DocumentRecord, ChunkRecord
 import os
 from typing import List
 from config import CONFIG  # Load .env variables
-from ingestion_pipleline.ingestion_models import DataStoreCreate
+from ingestion_pipleline.ingestion_models import DataStoreCreate, DocumentRecordResponse
 from ingestion_pipleline.Config.Config import INGESTION_CONFIG
 from ingestion_pipleline.VectorStores.vector_store_generator import create_vector_store
 import shutil
+import urllib.parse
+
+
 
 router = APIRouter()
 
@@ -57,25 +60,39 @@ async def upload_file_to_datastore(
 
     return documentDetailsObj
 
-@router.get("/datastore/{datastore_id}/documents" , response_model=List[DocumentRecord])
+@router.get("/datastore/{datastore_id}/documents" , response_model=List[DocumentRecordResponse])
 async def get_documents(
     datastore_id: int,
     session: Session = Depends(get_session)):
     
+    return_documents: List[DocumentRecordResponse] = []
     documents = session.exec(select(DocumentRecord).where(DocumentRecord.datastore_id == datastore_id)).all()
+    for document in documents:
+        statement = (
+            select(func.count(ChunkRecord.id))
+            .where(ChunkRecord.document_id == document.id)
+        )
+        chunkCount = session.exec(statement).one()
+        # datastore["documentCount"] = len(docs)
+        return_documents.append(DocumentRecordResponse(
+            **document.model_dump(),
+            chunk_count = chunkCount
+        ))
     print(f"Found {len(documents)} documents.")
-    return documents
+    return return_documents
 
-@router.get("/download/{doc_id}")
+@router.get("/download/{datastore_id}/{doc_name}")
 async def download_file(
-    doc_id: int,
+    datastore_id: int,
+    doc_name: str,
     session: Session = Depends(get_session)):
 
-    document = session.exec(select(DocumentRecord).where(DocumentRecord.id == doc_id)).first()
+    safe_filename = urllib.parse.unquote(doc_name)
+    document = session.exec(select(DocumentRecord).where((DocumentRecord.filename == doc_name) & (DocumentRecord.datastore_id == datastore_id))).first()
     datastore = session.exec(select(DataStore.name).where(DataStore.id == document.datastore_id)).first()
 
     datastore_root = INGESTION_CONFIG["ingestion_root"] / INGESTION_CONFIG["ingestion_data_folder_name"]
-    file_path = datastore_root / datastore.name / document.filename
+    file_path = datastore_root / datastore / document.filename
 
     if not os.path.exists(file_path):
         raise HTTPException(status_code=404, detail="File not found")

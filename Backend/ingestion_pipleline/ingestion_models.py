@@ -51,3 +51,16 @@ class DataStoreResponse(BaseModel):
     vector_store_provider: Optional[str] = None
     similarity_metric: Optional[str] = None
     document_count: Optional[int]
+
+class DocumentRecordResponse(BaseModel):
+    id: int
+    filename: str
+    loaderType: str
+    textSplitMethod: str
+    chunkSize: int
+    chunkOverlap: int
+    filePath: str|None = None
+    uploaded_at: Any
+    datastore_id: int
+    insert_vector_status: bool = False
+    chunk_count: int

@@ -28,6 +28,7 @@ export interface DocumentObj {
   textSplitMethod: string;
   uploaded_at: string;
   insert_vector_status: boolean;
+  chunkCount: number
 }
 
 export const DatastoreConfigDetail = () => {
@@ -57,7 +58,8 @@ export const DatastoreConfigDetail = () => {
             loaderType: doc.loaderType,
             textSplitMethod: doc.textSplitMethod,
             uploaded_at: doc.uploaded_at,
-            insert_vector_status: doc.insert_vector_status
+            insert_vector_status: doc.insert_vector_status,
+            chunkCount: doc.chunk_count ?? 0
           };
           documentFromApi.push(document)
         });
@@ -81,8 +83,6 @@ export const DatastoreConfigDetail = () => {
     const fetchedDatastore = fetchedDatastores.find((ds: CreateDatastoreData) => ds.id === Number(id))
     setDatastore(fetchedDatastore)
     fetchDocuments(fetchedDatastore.id)
-    console.log("Datastore fetched for ID", id, ":", fetchedDatastore);
-    console.log("Datastore ID ", fetchedDatastore.id );
   }, [id]);
 
   const rowSelected = (id: string) => {
@@ -233,8 +233,9 @@ export const DatastoreConfigDetail = () => {
                 <div className="col-span-4">File</div>
                 <div className="col-span-1">Loader </div>
                 <div className="col-span-3">Splitter</div>
-                <div className="col-span-1">Chunk Size</div>
-                <div className="col-span-2">Chunk Overlap</div>
+                <div className="col-span-1 text-center">Chunk Count</div>
+                <div className="col-span-1 text-center">Chunk Size</div>
+                <div className="col-span-1 text-center">Chunk Overlap</div>
                 <div className="col-span-1 text-center"></div>
               </div>
               {documents.map((doc) => (
@@ -247,14 +248,17 @@ export const DatastoreConfigDetail = () => {
                     <div className={`w-2 h-2 rounded-full ${
                         doc.insert_vector_status ? "bg-green-500" : "bg-gray-500"
                       }`} />
-                    <span className="text-sm">{doc.filename}</span>
+                    <span className="text-sm overflow-hidden text-ellipsis whitespace-nowrap">{doc.filename}</span>
                   </div>
                   <div className="col-span-1 text-sm">{doc.loaderType}</div>
                   <div className="col-span-3 text-sm">{doc.textSplitMethod}</div>
-                  <div className="col-span-1">
+                  <div className="col-span-1 flex justify-center">
+                    <Badge variant="outline">{doc.chunkCount}</Badge>
+                  </div>
+                  <div className="col-span-1 flex justify-center ">
                     <Badge variant="outline">{doc.chunkSize}</Badge>
                   </div>
-                  <div className="col-span-2">
+                  <div className="col-span-1 flex justify-center ">
                     <Badge variant="outline">{doc.chunkOverlap}</Badge>
                   </div>
                   <div className="col-span-1 flex justify-center">
@@ -341,14 +345,24 @@ export const DatastoreConfigDetail = () => {
       {/* Dialogs */}
       <DocumentLoaderSelectionDialog
         open={showLoaderDialog}
-        onOpenChange={handleLoaderOpenChange}
+        onOpenChange={async(open) => {
+          if(!open){
+            setSelectedDocument(null)
+          }  
+          handleLoaderOpenChange(open)
+        }}
         datastoreId={datastore?.id}
         selectedDocument={selectedDocument}
       />
 
       <EmbeddingConfigWizard
         open={showEmbeddingWizard}
-        onOpenChange={setShowEmbeddingWizard}
+        onOpenChange={async(open) => {
+          if(!open){
+            await fetchDocuments(datastore.id);
+          }  
+          setShowEmbeddingWizard(open)
+        }}
         datastoreId={datastore?.id}
         startingStep={datastore?.embeddingModel ? 3 : 1}
         shouldUpsert={shouldUpsert}

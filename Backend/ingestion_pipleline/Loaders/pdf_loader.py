@@ -14,7 +14,6 @@ import io
 
 class PDFLoader(LoaderProtocol):
     def load(self, path: str) -> List[Document]:
-        print("In PDF Loader:", path)
         file_path = Path(path)
         document_list:List[Document] = []
         try:
@@ -22,7 +21,7 @@ class PDFLoader(LoaderProtocol):
             
             # Extract file-level metadata once
             file_metadata = {
-                "source": str(file_path),
+                "source": file_path,
                 "file_size_kb": file_path.stat().st_size / 1024,
                 "total_pages": pdf_document.page_count
             }

@@ -3,7 +3,7 @@ from sqlmodel import SQLModel, Field, Column, JSON
 from typing import Optional, Dict
 from datetime import datetime
 from typing import List, Any
-from sqlmodel import Relationship, ForeignKey
+from sqlmodel import Relationship, ForeignKey, select, Session
 from models.datastore import DataStore
 
 class DocumentRecord(SQLModel, table=True):
@@ -29,6 +29,25 @@ class DocumentRecord(SQLModel, table=True):
     chunks: List["ChunkRecord"] = Relationship(
         back_populates="document", sa_relationship_kwargs={"cascade": "all, delete-orphan"}
     )
+
+def update_document_record(session: Session, doc_id: int, update_data: dict):
+    statement = select(DocumentRecord).where(DocumentRecord.id == doc_id)
+    result = session.exec(statement)
+    doc = result.one_or_none()
+    print("updating values", doc_id, update_data)
+    if not doc:
+        print("Store not found")
+
+    for key, value in update_data.items():
+        if hasattr(doc, key):
+            print("updating values")
+            setattr(doc, key, value)
+
+    session.add(doc)
+    session.commit()
+    session.refresh(doc)
+
+    return doc
 
 class ChunkRecord(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)

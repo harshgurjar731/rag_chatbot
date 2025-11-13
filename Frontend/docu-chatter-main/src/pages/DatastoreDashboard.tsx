@@ -17,7 +17,6 @@ export async function fetchDatastores(): Promise<CreateDatastoreData[]> {
         const response = await axios.get('http://127.0.0.1:8000/ingestion/getDatastores');
         var datastoresFromApi: CreateDatastoreData[] = [];
         response.data.forEach((ds: any) => {
-          console.log("Datastore fetched:", ds);
           const dataStore = {
             id: ds.id, 
             name: ds.name, 
@@ -32,7 +31,6 @@ export async function fetchDatastores(): Promise<CreateDatastoreData[]> {
           datastoresFromApi.push(dataStore);
         });
         localStorage.setItem("createdDataStores", JSON.stringify(datastoresFromApi || []));
-        console.log("Datastores set:", datastoresFromApi);
         return datastoresFromApi || [];
 
       } catch (error) {
