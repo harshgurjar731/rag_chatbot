@@ -1,0 +1,108 @@
+{
+  "summary": "The document lists professional details for a group of employees, including their IDs, names, job titles, departments, years of experience, and salaries. Employees span a range of roles such as Software Engineer, HR Executive, Team Lead, Business Analyst, Data Scientist, Marketing Manager, Project Manager, UI/UX Designer, QA Engineer, and Content Writer. Their departments cover IT, HR, Finance, Operations, Design, and Marketing, with experience ranging from 2 to 10 years and salaries from 4\u202fLPA to 15\u202fLPA. The table highlights the diversity of expertise and compensation within the organization, though some entries appear incomplete or misaligned.",
+  "qa_pairs": [
+    {
+      "question": "How many years of experience does Neha Gupta have?",
+      "answer": "5 years",
+      "rating": 10
+    },
+    {
+      "question": "What is the salary of Vikram Rathore?",
+      "answer": "15 LPA",
+      "rating": 10
+    },
+    {
+      "question": "Which employee has the highest salary among the listed employees?",
+      "answer": "Vikram Rathore with 15 LPA",
+      "rating": 10
+    },
+    {
+      "question": "Which employees are in the Marketing department?",
+      "answer": "Neha Gupta and Kavya Iyer",
+      "rating": 10
+    },
+    {
+      "question": "What is the designation of the employee who works in the Design department?",
+      "answer": "UI/UX Designer",
+      "rating": 10
+    }
+  ],
+  "conversations": [
+    [
+      {
+        "role": "system",
+        "content": "You are a helpful AI assistant that provides accurate, detailed responses."
+      },
+      {
+        "role": "user",
+        "content": "How many years of experience does Neha Gupta have?"
+      },
+      {
+        "role": "assistant",
+        "content": "5 years"
+      }
+    ],
+    [
+      {
+        "role": "system",
+        "content": "You are a helpful AI assistant that provides accurate, detailed responses."
+      },
+      {
+        "role": "user",
+        "content": "What is the salary of Vikram Rathore?"
+      },
+      {
+        "role": "assistant",
+        "content": "15 LPA"
+      }
+    ],
+    [
+      {
+        "role": "system",
+        "content": "You are a helpful AI assistant that provides accurate, detailed responses."
+      },
+      {
+        "role": "user",
+        "content": "Which employee has the highest salary among the listed employees?"
+      },
+      {
+        "role": "assistant",
+        "content": "Vikram Rathore with 15 LPA"
+      }
+    ],
+    [
+      {
+        "role": "system",
+        "content": "You are a helpful AI assistant that provides accurate, detailed responses."
+      },
+      {
+        "role": "user",
+        "content": "Which employees are in the Marketing department?"
+      },
+      {
+        "role": "assistant",
+        "content": "Neha Gupta and Kavya Iyer"
+      }
+    ],
+    [
+      {
+        "role": "system",
+        "content": "You are a helpful AI assistant that provides accurate, detailed responses."
+      },
+      {
+        "role": "user",
+        "content": "What is the designation of the employee who works in the Design department?"
+      },
+      {
+        "role": "assistant",
+        "content": "UI/UX Designer"
+      }
+    ]
+  ],
+  "metrics": {
+    "total": 10,
+    "filtered": 5,
+    "retention_rate": 0.5,
+    "avg_score": 6.5
+  }
+}

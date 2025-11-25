@@ -11,11 +11,14 @@ from pathlib import Path
 # List of fallback LLMs
 FALLBACK_LLMS = [
     "llama-3.3-70b-versatile",
-    "deepseek-r1-distill-llama-70b",
-    "gemma2-9b-it",
     "llama-3.1-8b-instant",
-    "openai/gpt-oss-20b",
+    "gemma2-9b-it",
+    "deepseek-r1-distill-llama-70b",
+    "openai/gpt-oss-120b"
 ]
+# FALLBACK_LLMS = [
+#    "gpt-4o-mini"
+# ]
 
 
 
@@ -83,7 +86,7 @@ def generate_qna_with_retrieval(datastore_id: int, session: Session, output_file
             reference_text = ""
             retrieved_answer = ""
         else:
-            reference_text = retriever_output.get("context", "")
+            reference_text = retriever_output.get("chunks_used", "")
             retrieved_answer = retriever_output.get("answer", "")
 
         json_output.append({

@@ -1,0 +1,105 @@
+{
+  "summary": "TCS released its Q1 FY\u202f2025\u201126 financial results, reporting a modest 1.3\u202f% year\u2011over\u2011year rise in INR revenue to \u20b9634\u202f370\u202fmillion (USD\u202f$7\u202f421\u202fmillion) while constant\u2011currency revenue fell 3.1\u202f%. Operating and net margins held steady at 24.5\u202f% and 20.1\u202f% respectively, with cash flow from operations exceeding net profit by 100.3\u202f%. Demand remained strong, with the order book totaling $9.4\u202fbillion and a notable increase in mid\u2011tier clients (US$10\u202fM+ up 9\u202f% and US$1\u202fM+ up 26\u202f%). The company\u2019s workforce reached 613,069 employees, with a 13.8\u202f% attrition rate in IT services, and it maintained a diverse talent pool of 35.1\u202f% women and 151 nationalities. Overall, TCS delivered solid profitability, healthy cash generation, and continued growth across its key geographies and verticals.",
+  "qa_pairs": [
+    {
+      "question": "What was the INR revenue for Q1 FY26?",
+      "answer": "\u20b9634,370 Mn."
+    },
+    {
+      "question": "What was the USD revenue for Q1 FY26?",
+      "answer": "$7,421 Mn."
+    },
+    {
+      "question": "By how much did constant currency revenue change YoY?",
+      "answer": "Down 3.1% YoY."
+    },
+    {
+      "question": "What was the operating margin for Q1 FY26?",
+      "answer": "24.5%."
+    },
+    {
+      "question": "What was the net margin for Q1 FY26?",
+      "answer": "20.1%."
+    },
+    {
+      "question": "What was the cash flow from operations as a percentage of net profit?",
+      "answer": "100.3%."
+    },
+    {
+      "question": "How many clients with spend greater than $100M were down YoY?",
+      "answer": "Down by 1."
+    },
+    {
+      "question": "How many clients with spend $10M+ were up YoY?",
+      "answer": "Up by 9."
+    },
+    {
+      "question": "How many clients with spend $1M+ were up YoY?",
+      "answer": "Up by 26."
+    },
+    {
+      "question": "What was the total order book TCV?",
+      "answer": "$9.4 Bn."
+    },
+    {
+      "question": "What was the North America TCV?",
+      "answer": "$4.4 Bn."
+    },
+    {
+      "question": "What was the BFSI TCV?",
+      "answer": "$2.5 Bn."
+    },
+    {
+      "question": "What was the Consumer Business TCV?",
+      "answer": "$1.6 Bn."
+    },
+    {
+      "question": "What was the closing headcount?",
+      "answer": "613,069."
+    },
+    {
+      "question": "What was the LTM attrition in IT Services?",
+      "answer": "13.8%."
+    },
+    {
+      "question": "What was the INR revenue for Q1 FY26 and its YoY change?",
+      "answer": "\u20b9634,370 Mn, up 1.3% YoY."
+    },
+    {
+      "question": "What was the USD revenue for Q1 FY26 and its YoY change?",
+      "answer": "$7,421 Mn, down 1.1% YoY."
+    },
+    {
+      "question": "What was the constant currency revenue YoY change for Q1 FY26?",
+      "answer": "down 3.1% YoY."
+    },
+    {
+      "question": "What were the operating margin and net margin percentages for Q1 FY26?",
+      "answer": "Operating margin 24.5%; Net margin 20.1%."
+    },
+    {
+      "question": "What was the cash flow from operations as a percentage of net profit for Q1 FY26?",
+      "answer": "100.3%."
+    },
+    {
+      "question": "How many US$ 1m+ clients were there in Q1 FY26?",
+      "answer": "136."
+    },
+    {
+      "question": "What was the total order book TCV in Q1 FY26?",
+      "answer": "$9.4 Bn."
+    },
+    {
+      "question": "What was the closing headcount for Q1 FY26?",
+      "answer": "613,069."
+    },
+    {
+      "question": "What was the LTM attrition rate in IT Services for Q1 FY26?",
+      "answer": "13.8%."
+    },
+    {
+      "question": "How many nationalities were represented in the workforce in Q1 FY26?",
+      "answer": "151."
+    }
+  ]
+}

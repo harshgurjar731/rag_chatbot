@@ -90,12 +90,12 @@ CONFIG = {
     # -----------------------------
     "groq_supported_models": os.getenv(
         "GROQ_SUPPORTED_MODELS",
-        "llama-3.3-70b-versatile,deepseek-r1-distill-llama-70b,gemma2-9b-it,llama-3.1-8b-instant,openai/gpt-oss-20b"
+        "llama-3.3-70b-versatile,qwen/qwen3-32b,llama-3.1-8b-instant,meta-llama/llama-4-maverick-17b-128e-instruct,openai/gpt-oss-120b"
     ).split(","),
 
     "azure_supported_models": os.getenv(
         "AZURE_SUPPORTED_MODELS",
-        "gpt-4o-mini"
+        "gpt-4o-mini",
     ).split(","),
 
 
