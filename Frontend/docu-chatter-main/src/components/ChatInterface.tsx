@@ -738,6 +738,7 @@ export const ChatInterface = ({
                           </span>
 
                           <div className="flex items-center gap-2">
+                            {/*
                             <Button
                               size="icon"
                               variant="ghost"
@@ -750,7 +751,7 @@ export const ChatInterface = ({
                                 <Volume2 size={14} />
                               )}
                             </Button>
-
+                            
                             <Button
                               size="icon"
                               variant="ghost"
@@ -783,6 +784,7 @@ export const ChatInterface = ({
                                 >
                                   <Info size={14} />
                                 </Button>
+                                
                               </PopoverTrigger>
                               <PopoverContent className="w-64">
                                 <div className="space-y-2">
@@ -804,10 +806,11 @@ export const ChatInterface = ({
                                   >
                                     Submit
                                   </Button>
+                                  
                                 </div>
                               </PopoverContent>
                             </Popover>
-
+                              */}
                             <DropdownMenu>
                               <DropdownMenuTrigger asChild>
                                 <Button
@@ -962,7 +965,7 @@ export const ChatInterface = ({
                   Model Settings
                 </Button>
               </DialogTrigger>
-              <DialogContent className="max-w-4xl h-[90vh] flex flex-col rounded-2xl p-0 overflow-hidden">
+              <DialogContent className="max-w-4xl h-[90vh] flex flex-col rounded-2xl p-0 overflow-hidden border-2">
                 <DialogHeader className="px-6 py-4 border-b bg-muted/40">
                   <DialogTitle className="text-xl font-semibold">
                     Model Settings
@@ -990,7 +993,7 @@ export const ChatInterface = ({
                           }
                           disabled={isLoading}
                         >
-                          <SelectTrigger>
+                          <SelectTrigger className="border-2 border-gray-500" >
                             <SelectValue
                               placeholder={
                                 tempSettings.llmModel !== ""
@@ -998,7 +1001,7 @@ export const ChatInterface = ({
                                   : "Select LLM"
                               }
                             />
-                          </SelectTrigger>
+                          </SelectTrigger >
                           <SelectContent>
                             {config?.llm_models.map((model) => (
                               <SelectItem key={model} value={model}>
@@ -1012,6 +1015,7 @@ export const ChatInterface = ({
                         <Label>Token Size</Label>
                         <Input
                           type="number"
+                          className="border-2 border-gray-500"
                           min={config?.token_size_options?.min ?? 256}
                           max={config?.token_size_options?.max ?? 2048}
                           step={config?.token_size_options?.step ?? 128}
@@ -1042,7 +1046,7 @@ export const ChatInterface = ({
                           }
                           disabled={isLoading}
                         >
-                          <SelectTrigger>
+                          <SelectTrigger className="border-2 border-gray-500">
                             <SelectValue
                               placeholder={
                                 tempSettings.guardrailOption !== ""
@@ -1101,7 +1105,7 @@ export const ChatInterface = ({
                           }
                           disabled={isLoading}
                         >
-                          <SelectTrigger>
+                          <SelectTrigger className="border-2 border-gray-500">
                             <SelectValue
                               placeholder={
                                 tempSettings.optimizer !== ""
@@ -1130,7 +1134,7 @@ export const ChatInterface = ({
                           }
                           disabled
                         >
-                          <SelectTrigger>
+                          <SelectTrigger className="border-2 border-gray-500">
                             <SelectValue
                               placeholder={
                                 tempSettings.embeddingModel !== ""
@@ -1158,9 +1162,9 @@ export const ChatInterface = ({
                               vectorDb: value,
                             })
                           }
-                          disabled
+                          // disabled
                         >
-                          <SelectTrigger>
+                          <SelectTrigger className="border-2 border-gray-500">
                             <SelectValue
                               placeholder={
                                 tempSettings.vectorDb !== ""
@@ -1178,8 +1182,7 @@ export const ChatInterface = ({
                       <div className="space-y-1">
                         <Label>Re-ranker</Label>
                         <select
-                          className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-ring"
-                          value={tempSettings.rerankerOption}
+                          className="w-full rounded-lg border-2 border-gray-500 border-input bg-background px-3 py-2 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-ring"                          value={tempSettings.rerankerOption}
                           onChange={(e) =>
                             setTempSettings({
                               ...tempSettings,
@@ -1326,7 +1329,7 @@ export const ChatInterface = ({
                   Token Size: {tempSettings.tokenSize}
                   <button
                     type="button"
-                    className="flex items-center justify-center w-4 h-4 rounded-full hover:bg-destructive hover:text-destructive-foreground transition-colors duration-150"
+                    className="flex items-center justify-center  w-4 h-4 rounded-full hover:bg-destructive hover:text-destructive-foreground transition-colors duration-150"
                     onClick={() => handleSave({ tokenSize: 256 })}
                   >
                     <X size={10} strokeWidth={2} />

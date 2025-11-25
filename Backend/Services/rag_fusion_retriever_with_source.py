@@ -1,3 +1,4 @@
+import re  # ❇️ 1. NEW IMPORT
 from typing import List
 from operator import itemgetter
 from collections import defaultdict
@@ -57,7 +58,7 @@ def get_ragfusion_retriever_with_sources(
             fused_docs = reranked_docs
             print(f"Applied Re-ranker: {reranker_option}, Final Docs: {len(fused_docs)}")
 
-    # --- 4. Context Formatting & Citation Mapping (ADDED LOGIC) ---
+    # --- 4. Context Formatting & Citation Mapping ---
     def format_docs_for_context(docs: List[Document]):
         """Formats docs and creates a map for citations."""
         context_string = ""
@@ -73,8 +74,14 @@ def get_ragfusion_retriever_with_sources(
     context_string, citation_map = format_docs_for_context(fused_docs)
 
     # --- 5. Generate Final Answer ---
+    # ❇️ 2. UPDATED PROMPT
     rag_prompt = ChatPromptTemplate.from_template(
-        "Answer the following question using the provided context:\n\n"
+        "You are an AI assistant. Answer the user's question based *only* on the context provided.\n"
+        "Follow these rules:\n"
+        "1. State the answer clearly.\n"
+        "2. After the answer, cite the specific [Chunk ID] you used. For example: 'The sky is blue [Chunk 1].'\n"
+        "3. If you use information from multiple chunks, cite all of them. For example: 'The sky is blue [Chunk 1] and the grass is green [Chunk 3].'\n"
+        "4. If no chunk provides the answer, say 'I cannot answer this question based on the provided context.'\n\n"
         "Context:\n{context}\n\nQuestion: {question}"
     )
 
@@ -86,20 +93,28 @@ def get_ragfusion_retriever_with_sources(
 
     final_answer = final_rag_chain.invoke({"context": context_string, "question": query})
 
-    # --- 6. Post-processing (Guardrails and Source Extraction) (UPDATED LOGIC) ---
+    # --- 6. Post-processing (Guardrails and Source Extraction) ---
+    # ❇️ 4. UPDATED POST-PROCESSING LOGIC
     validated = validate_output(final_answer, guardrail_level)
     if "⚠️ Response blocked" in validated["answer"]:
         return validated
 
-    document_pages_list = extract_sources_and_pages(citation_map)
+    # Parse the answer to find *only* the cited chunks
+    filtered_citation_map = parse_citations_from_answer(
+        validated["answer"],
+        citation_map
+    )
+
+    # Pass the *filtered* map to your existing function
+    document_pages_list = extract_sources_and_pages(filtered_citation_map)
     source_links = list({doc["source"] for doc in document_pages_list})
 
     return {
         "answer": validated["answer"],
         "sources": source_links,
         "document_pages_dict": document_pages_list,
-        "citation_map": citation_map,
-        "chunks_used": fused_docs,
+        "citation_map": filtered_citation_map, # Return the filtered map
+        "chunks_used": fused_docs, # Note: This still shows all *retrieved* docs
     }
 
 def reciprocal_rank_fusion(all_docs: list[list], k: int = 60):
@@ -113,7 +128,34 @@ def reciprocal_rank_fusion(all_docs: list[list], k: int = 60):
     ranked = sorted(scores.items(), key=lambda x: x[1], reverse=True)
     return [loads(doc_id) for doc_id, _ in ranked]
 
-# Helper function for citation processing (ADDED)
+
+# ❇️ 3. NEW HELPER FUNCTION
+def parse_citations_from_answer(answer: str, citation_map: dict) -> dict:
+    """
+    Parses [Chunk ID] tags from the LLM's answer and creates a
+    new, filtered citation_map containing only the cited sources.
+    """
+    # Find all unique chunk IDs cited in the answer
+    chunk_ids_found = re.findall(r"\[Chunk (\d+)\]", answer)
+    unique_chunk_ids = sorted(list(set(chunk_ids_found)))
+
+    # Build the filtered map
+    filtered_map = {}
+    for chunk_id in unique_chunk_ids:
+        if chunk_id in citation_map:
+            filtered_map[chunk_id] = citation_map[chunk_id]
+        else:
+            # This case should rarely happen if the prompt is good
+            print(f"Warning: LLM cited a chunk ID ({chunk_id}) not in the citation_map.")
+
+    # If no citations were found, return the full map as a fallback
+    if not filtered_map:
+        return citation_map
+
+    return filtered_map
+
+
+# Helper function for citation processing
 def extract_sources_and_pages(citation_map: dict) -> list[dict]:
     """
     Prepares a list of dictionaries, mapping unique documents to a list of unique pages.

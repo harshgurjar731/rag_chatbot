@@ -1,5 +1,4 @@
-# services/None_query.py (or your equivalent file)
-
+import re  # ❇️ 1. NEW IMPORT
 from typing import List
 from operator import itemgetter
 
@@ -13,11 +12,10 @@ from langchain_community.document_compressors import FlashrankRerank
 
 # Assuming these imports exist from your project structure
 from Services.guardrail import validate_output
-from Services.reranker_service import get_reranker # You may need to create this helper
+from Services.reranker_service import get_reranker
 from config import CONFIG
 
 
-# Renamed function to reflect that it's no longer using multi-query
 def get_rag_response(
     query: str,
     db: FAISS | Chroma,
@@ -49,6 +47,7 @@ def get_rag_response(
 
     # --- 2. Format Context and Create Citation Map ---
     def format_docs_for_context(docs: List[Document]):
+        """Formats docs and creates a map for citations."""
         context_string = ""
         citation_map = {}
         for i, doc in enumerate(docs):
@@ -62,33 +61,46 @@ def get_rag_response(
     context_string, citation_map = format_docs_for_context(docs)
 
     # --- 3. Generate Final Answer ---
+    # ❇️ 2. UPDATED PROMPT
     rag_prompt = ChatPromptTemplate.from_template(
-        "Answer the following question based on this context.\n\n"
+        "You are an AI assistant. Answer the user's question based *only* on the context provided.\n"
+        "Follow these rules:\n"
+        "1. State the answer clearly.\n"
+        "2. After the answer, cite the specific [Chunk ID] you used. For example: 'The sky is blue [Chunk 1].'\n"
+        "3. If you use information from multiple chunks, cite all of them. For example: 'The sky is blue [Chunk 1] and the grass is green [Chunk 3].'\n"
+        "4. If no chunk provides the answer, say 'I cannot answer this question based on the provided context.'\n\n"
         "Context:\n{context}\n\nQuestion: {question}"
     )
     final_rag_chain = (rag_prompt | llm | StrOutputParser())
     final_answer = final_rag_chain.invoke({"context": context_string, "question": query})
 
     # --- 4. Post-processing and Formatting Output ---
+    # ❇️ 4. UPDATED POST-PROCESSING LOGIC
     validated = validate_output(final_answer, guardrail_level)
     
-    # ✅ Ensure a dictionary is ALWAYS returned
     if "⚠️ Response blocked" in validated["answer"]:
-        return validated # This returns a dictionary like {"answer": "Blocked..."}
+        return validated
 
-    document_pages_list = extract_sources_and_pages(citation_map)
+    # Parse the answer to find *only* the cited chunks
+    filtered_citation_map = parse_citations_from_answer(
+        validated["answer"],
+        citation_map
+    )
+    
+    # Pass the *filtered* map to your existing function
+    document_pages_list = extract_sources_and_pages(filtered_citation_map)
     source_links = list({doc["source"] for doc in document_pages_list})
 
-    # The main success path also returns a dictionary
     return {
         "answer": validated["answer"],
         "sources": source_links,
-        "citation_map": citation_map,
+        "citation_map": filtered_citation_map, # Return the filtered map
         "chunks_used": docs,
         "document_pages_dict": document_pages_list,
     }
 
-# Ensure these helper functions are also in the file
+# --- Helper Functions ---
+
 def extract_sources_and_pages(citation_map: dict) -> list[dict]:
     """Prepares a list of dictionaries, mapping unique documents to a list of unique pages."""
     document_pages = {}
@@ -105,9 +117,39 @@ def extract_sources_and_pages(citation_map: dict) -> list[dict]:
         result_list.append({"source": source, "pages": sorted(list(pages))})
     return result_list
 
+
+# ❇️ 3. NEW HELPER FUNCTION
+def parse_citations_from_answer(answer: str, citation_map: dict) -> dict:
+    """
+    Parses [Chunk ID] tags from the LLM's answer and creates a
+    new, filtered_map containing only the cited sources.
+    """
+    # Find all unique chunk IDs cited in the answer
+    chunk_ids_found = re.findall(r"\[Chunk (\d+)\]", answer)
+    unique_chunk_ids = sorted(list(set(chunk_ids_found)))
+
+    # Build the filtered map
+    filtered_map = {}
+    for chunk_id in unique_chunk_ids:
+        if chunk_id in citation_map:
+            filtered_map[chunk_id] = citation_map[chunk_id]
+        else:
+            # This case should rarely happen if the prompt is good
+            print(f"Warning: LLM cited a chunk ID ({chunk_id}) not in the citation_map.")
+
+    # If no citations were found, return the full map as a fallback
+    if not filtered_map:
+        return citation_map
+
+    return filtered_map
+
+
 def get_reranker(reranker_option: str):
     """Factory function to get the correct reranker based on the option."""
     if reranker_option.lower() == "flashrank":
         from langchain_community.document_compressors import FlashrankRerank
         return FlashrankRerank()
+    # Add other rerankers here if needed, e.g.:
+    # elif reranker_option.lower() == "cohere":
+    #     return CohereRerank()
     return None
