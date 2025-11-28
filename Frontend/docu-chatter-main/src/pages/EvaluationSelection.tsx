@@ -592,11 +592,15 @@ const EvaluationSelection = () => {
     return (
       <div className="min-h-screen bg-gradient-surface flex items-center justify-center">
         <div className="text-center">
-          <h1 className="text-2xl font-bold text-foreground mb-4">Chatbot Not Found</h1>
-          <Button onClick={() => navigate('/')} variant="chatbot">
+          {/* <h1 className="text-2xl font-bold text-foreground mb-4">Chatbot Not Found</h1> */}
+          {/* <Button onClick={() => navigate('/')} variant="chatbot">
             <ArrowLeft className="h-4 w-4" />
             Back to Dashboard
-          </Button>
+          </Button> */}
+          <div className="animate-pulse space-y-4">
+            <div className="h-6 w-48 bg-muted rounded"></div>
+            <div className="h-10 w-40 bg-muted rounded"></div>
+          </div>
         </div>
       </div>
     );

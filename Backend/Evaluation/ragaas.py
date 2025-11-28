@@ -36,9 +36,9 @@ def perform_ragaas_evaluation(
 
         # azure_api_key =str("BCTqm4bq9ThjGQ1witJEJthrMp8UT321zttAcrkDMam3nROaJgd9JQQJ99BJACYeBjFXJ3w3AAABACOGIP1X")
 
-        azure_api_key =str("5ASoN0R85QzcLVPHJUTk5pYt8buPQg2EpFpGBl7szLqtwTSeWjKYJQQJ99BJACYeBjFXJ3w3AAABACOGVWfL")
-        azure_endpoint= str("https://knowledgebotkey.openai.azure.com")
-        azure_api_version= str("2024-12-01-preview")
+        azure_api_key =str("DwfHJZLpeTow2gr41penTNTdmQL4YVmaBIhxuQSEqFAjV2R3WbKRJQQJ99BKACYeBjFXJ3w3AAAAACOGNgkY")
+        azure_endpoint= str("https://rupali123.openai.azure.com/")
+        azure_api_version= str("2025-01-01-preview")
 
 
         # llm = ChatOpenAI(

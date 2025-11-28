@@ -87,13 +87,7 @@ const EvaluationTimeline = () => {
           <Card className="shadow-elegant">
             <CardContent className="pt-6">
               <Button
-                onClick={() => {
-                  if (selected === "ragaas") {
-                    navigate(`/ragaas-output/${id}`);
-                  } else {
-                    navigate(`/rag-output/${id}`);
-                  }
-                }}
+               
                 disabled={!isCompleted}
                 className="w-full bg-gradient-primary hover:opacity-90 transition-opacity disabled:opacity-50"
               >

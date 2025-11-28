@@ -45,15 +45,18 @@ const RAGASEvaluationOutput: React.FC = () => {
                     ? {
                         user_input: truncateText(entry.user_input),
                         response: truncateText(entry.response),
+
                         score:
-                            entry[key] !== undefined
-                                ? (entry[key]).toFixed(4)
+                            entry[key] != null && !isNaN(Number(entry[key]))
+                                ? Number(entry[key]).toFixed(4)
                                 : "N/A",
+
                         accuracy:
-                            entry[key] !== undefined
-                                ? ((entry[key] || 0) * 100).toFixed(2)
+                            entry[key] != null && !isNaN(Number(entry[key]))
+                                ? (Number(entry[key]) * 100).toFixed(2)
                                 : "N/A",
                     }
+
                     : { user_input: "N/A", response: "N/A", score: "N/A", accuracy: "N/A" };
             });
             rows.push(row);
@@ -141,10 +144,10 @@ const RAGASEvaluationOutput: React.FC = () => {
         return (
             <div className="min-h-screen flex items-center justify-center bg-[#0f0f10] text-gray-200">
                 <div className="text-center">
-                    <h1 className="text-2xl font-bold mb-4">Chatbot Not Found</h1>
+                    {/* <h1 className="text-2xl font-bold mb-4">Chatbot Not Found</h1>
                     <Button onClick={() => navigate("/")} variant="secondary">
                         <ArrowLeft className="h-4 w-4 mr-2" /> Back to Dashboard
-                    </Button>
+                    </Button> */}
                 </div>
             </div>
         );
@@ -194,8 +197,8 @@ const RAGASEvaluationOutput: React.FC = () => {
                                 key={metric}
                                 onClick={() => setSelectedMetric(metric)}
                                 className={`cursor-pointer rounded-lg px-4 py-3 border text-center flex-1 min-w-[150px] ${selectedMetric === metric
-                                        ? "bg-indigo-600 border-indigo-500 text-white"
-                                        : "bg-gradient-surface border-gray-700 hover:bg-gray-800"
+                                    ? "bg-indigo-600 border-indigo-500 text-white"
+                                    : "bg-gradient-surface border-gray-700 hover:bg-gray-800"
                                     }`}
                             >
                                 <div className="text-sm font-medium">{metric}</div>
@@ -207,8 +210,8 @@ const RAGASEvaluationOutput: React.FC = () => {
                         <div
                             onClick={() => setSelectedMetric("All")}
                             className={`cursor-pointer rounded-lg px-4 py-3 border text-center flex-1 min-w-[150px] ${selectedMetric === "All"
-                                    ? "bg-indigo-600 border-indigo-500 text-white"
-                                    : "bg-gradient-surface border-gray-700 hover:bg-gray-800"
+                                ? "bg-indigo-600 border-indigo-500 text-white"
+                                : "bg-gradient-surface border-gray-700 hover:bg-gray-800"
                                 }`}
                         >
                             <div className="text-sm font-medium">All</div>
@@ -228,16 +231,16 @@ const RAGASEvaluationOutput: React.FC = () => {
                     <CardContent>
                         <div className="max-h-[400px] overflow-y-auto rounded-xl border border-gray-700">
                             <table className="min-w-full text-sm text-left text-gray-300">
-                                <thead className="bg-gradient-surface text-gray-400 uppercase text-xs border-b border-gray-700">
+                                <thead className="bg-gradient-surface text-gray-400 uppercase text-xs border-b border-gray-700  sticky top-0 z-10">
                                     <tr>
-                                        <th className="px-4 py-3">#</th>
+                                        <th className="px-4 py-3">S.No.</th>
                                         {selectedMetric === "All" ? (
                                             <>
                                                 <th className="px-4 py-3">Input</th>
                                                 <th className="px-4 py-3">Response</th>
                                                 {metrics.map((metric) => (
                                                     <th key={metric} className="px-4 py-3">
-                                                        {metric} Score (%)
+                                                        {metric} Score
                                                     </th>
                                                 ))}
                                             </>
@@ -279,7 +282,7 @@ const RAGASEvaluationOutput: React.FC = () => {
                                                     {/* Show each metric's score */}
                                                     {metrics.map((metric) => (
                                                         <td key={`${idx}-${metric}`} className="px-4 py-3 text-center">
-                                                            {row[metric]?.score ?? "N/A"}
+                                                            {row[metric]?.score.slice(0, 4) ?? "N/A"}
                                                         </td>
                                                     ))}
                                                 </>
@@ -297,8 +300,11 @@ const RAGASEvaluationOutput: React.FC = () => {
                                                     >
                                                         {row[selectedMetric]?.response}
                                                     </td>
-                                                    <td className="px-4 py-3">{row[selectedMetric]?.score}</td>
-                                                    <td className="px-4 py-3">{row[selectedMetric]?.accuracy}</td>
+                                                    <td className="px-4 py-3">{row[selectedMetric]?.score.slice(0, 4)}</td>
+                                                    <td className="px-4 py-3">
+                                                        {Number(row[selectedMetric]?.accuracy).toString().replace(/\.0+$/, "")}%
+                                                    </td>
+
                                                 </>
                                             )}
                                         </tr>

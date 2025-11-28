@@ -1,0 +1,450 @@
+{
+  "summary": "The document is a paternity leave policy for a company, outlining the purpose of supporting employees who are fathers or partners during the birth of a child and ensuring compliance with statutory requirements. It specifies eligibility criteria\u2014such as being the biological father or partner, having worked at least 26 weeks before the 15th week before the due date, and providing a self\u2011certificate\u2014and details that employees may take up to two consecutive weeks of leave, starting from the birth or a set number of days after the expected date, and must finish within 56 days of birth. The policy explains the procedure for notifying management, the rights and protections employees retain while on leave (including job security and continued benefits), and the options for statutory or enhanced company pay. It also covers special provisions for stillbirths or infant death, and introduces Shared Parental Leave, which can be taken after paternity leave and must be requested at least eight weeks in advance.",
+  "qa_pairs": [
+    {
+      "question": "What is the purpose of the company's paternity leave policy?",
+      "answer": "To ensure that employees can combine their career and family responsibilities by providing time to care for a new-born child and support their partner.",
+      "rating": 9
+    },
+    {
+      "question": "Does the policy cover adoptive parents?",
+      "answer": "No, a separate policy is available for adoptive parents.",
+      "rating": 9
+    },
+    {
+      "question": "How many antenatal care appointments can an employee accompany a pregnant partner to?",
+      "answer": "Up to two antenatal care appointments.",
+      "rating": 9
+    },
+    {
+      "question": "Is there pay for the time off taken to attend antenatal appointments?",
+      "answer": "No, there is no right to be paid for this time off.",
+      "rating": 9
+    },
+    {
+      "question": "What is the maximum duration an employee can take for each antenatal appointment?",
+      "answer": "A maximum of six and a half hours for each appointment.",
+      "rating": 9
+    },
+    {
+      "question": "What is the maximum length of paternity leave an employee is entitled to?",
+      "answer": "A maximum of two consecutive weeks, or one week if the employee elects to take only one.",
+      "rating": 10
+    },
+    {
+      "question": "What are the eligibility criteria for paternity leave?",
+      "answer": "The employee must (i) have or expect to have responsibility for the child\u2019s upbringing; (ii) be the biological father or the mother\u2019s husband or partner; (iii) have worked continuously for the company for at least 26 weeks ending with the 15th week before the baby is due; and (iv) provide a self\u2011certificate as evidence.",
+      "rating": 10
+    },
+    {
+      "question": "When can paternity leave commence?",
+      "answer": "It can commence from the date of the baby\u2019s birth, or from a specified number of days or weeks after the expected birth date.",
+      "rating": 10
+    },
+    {
+      "question": "Within what time frame must paternity leave be completed?",
+      "answer": "It must be completed within 56 days of the actual birth date, or if the baby is born early, within 56 days after the first day of the expected week of birth.",
+      "rating": 10
+    },
+    {
+      "question": "Can an employee take multiple paternity leave periods for several children from the same pregnancy?",
+      "answer": "No, only one paternity leave period is available regardless of how many children are born from the same pregnancy.",
+      "rating": 10
+    },
+    {
+      "question": "If an employee wants to take both paternity leave and shared parental leave, which should they take first?",
+      "answer": "They must take paternity leave first.",
+      "rating": 9
+    },
+    {
+      "question": "Under what circumstances is an employee entitled to paternity leave if a stillborn occurs?",
+      "answer": "If the stillbirth happens after 24 weeks of pregnancy, the employee is entitled to paternity leave; if it happens before the 24th week, the employee may take sick or compassionate leave.",
+      "rating": 9
+    },
+    {
+      "question": "What notice must an employee give if they wish to change the start date of their paternity leave?",
+      "answer": "The employee must inform the relevant manager in writing at least 28 days in advance.",
+      "rating": 9
+    },
+    {
+      "question": "What information must an employee provide when notifying the company of their intention to take paternity leave?",
+      "answer": "The employee must provide the week the baby is due, whether they wish to take one or two weeks of leave, and when they want their leave to start.",
+      "rating": 9
+    },
+    {
+      "question": "What information must an employee provide regarding their paternity leave?",
+      "answer": "The week the baby is due; whether they wish to take one or two weeks leave; and when they want their leave to start.",
+      "rating": 8
+    },
+    {
+      "question": "How far in advance must an employee inform the manager about a change in the start date of their leave?",
+      "answer": "At least 28 days in writing.",
+      "rating": 9
+    },
+    {
+      "question": "What must an employee inform the manager about regarding paternity leave payments?",
+      "answer": "The date they expect Paternity Leave Payments to start, at least 28 days in advance.",
+      "rating": 8
+    },
+    {
+      "question": "Who confirms the details of an employee\u2019s paternity leave once received?",
+      "answer": "The person whose name and job title are inserted will write to the employee to confirm the details.",
+      "rating": 7
+    },
+    {
+      "question": "Does an employee need to give notice of their return to work after paternity leave?",
+      "answer": "No, unless they wish to return early; in that case they must give notice to the inserted name and job title.",
+      "rating": 8
+    },
+    {
+      "question": "How many weeks can Statutory Paternity Pay be paid for?",
+      "answer": "Up to 2 weeks.",
+      "rating": 10
+    },
+    {
+      "question": "At what rate is Statutory Paternity Pay paid?",
+      "answer": "At the Prescribed Weekly Rate or 90% of the employee\u2019s average weekly earnings if they are less than the Prescribed Weekly Rate.",
+      "rating": 10
+    },
+    {
+      "question": "Which employees are not eligible for Statutory Paternity Pay?",
+      "answer": "Employees who receive average weekly earnings below the lower earnings limit for National Insurance.",
+      "rating": 10
+    },
+    {
+      "question": "What rights do employees have while on paternity leave?",
+      "answer": "Their employment contract subsists, they benefit from terms and conditions except remuneration, they are informed of coverage arrangements, remain on circulation lists and invitations, are given opportunity for consultation on key decisions, key decisions may be deferred until return, and they are entitled to return to the same job on the same terms and conditions.",
+      "rating": 10
+    }
+  ],
+  "conversations": [
+    [
+      {
+        "role": "system",
+        "content": "You are a helpful AI assistant that provides accurate, detailed responses."
+      },
+      {
+        "role": "user",
+        "content": "What is the purpose of the company's paternity leave policy?"
+      },
+      {
+        "role": "assistant",
+        "content": "To ensure that employees can combine their career and family responsibilities by providing time to care for a new-born child and support their partner."
+      }
+    ],
+    [
+      {
+        "role": "system",
+        "content": "You are a helpful AI assistant that provides accurate, detailed responses."
+      },
+      {
+        "role": "user",
+        "content": "Does the policy cover adoptive parents?"
+      },
+      {
+        "role": "assistant",
+        "content": "No, a separate policy is available for adoptive parents."
+      }
+    ],
+    [
+      {
+        "role": "system",
+        "content": "You are a helpful AI assistant that provides accurate, detailed responses."
+      },
+      {
+        "role": "user",
+        "content": "How many antenatal care appointments can an employee accompany a pregnant partner to?"
+      },
+      {
+        "role": "assistant",
+        "content": "Up to two antenatal care appointments."
+      }
+    ],
+    [
+      {
+        "role": "system",
+        "content": "You are a helpful AI assistant that provides accurate, detailed responses."
+      },
+      {
+        "role": "user",
+        "content": "Is there pay for the time off taken to attend antenatal appointments?"
+      },
+      {
+        "role": "assistant",
+        "content": "No, there is no right to be paid for this time off."
+      }
+    ],
+    [
+      {
+        "role": "system",
+        "content": "You are a helpful AI assistant that provides accurate, detailed responses."
+      },
+      {
+        "role": "user",
+        "content": "What is the maximum duration an employee can take for each antenatal appointment?"
+      },
+      {
+        "role": "assistant",
+        "content": "A maximum of six and a half hours for each appointment."
+      }
+    ],
+    [
+      {
+        "role": "system",
+        "content": "You are a helpful AI assistant that provides accurate, detailed responses."
+      },
+      {
+        "role": "user",
+        "content": "What is the maximum length of paternity leave an employee is entitled to?"
+      },
+      {
+        "role": "assistant",
+        "content": "A maximum of two consecutive weeks, or one week if the employee elects to take only one."
+      }
+    ],
+    [
+      {
+        "role": "system",
+        "content": "You are a helpful AI assistant that provides accurate, detailed responses."
+      },
+      {
+        "role": "user",
+        "content": "What are the eligibility criteria for paternity leave?"
+      },
+      {
+        "role": "assistant",
+        "content": "The employee must (i) have or expect to have responsibility for the child\u2019s upbringing; (ii) be the biological father or the mother\u2019s husband or partner; (iii) have worked continuously for the company for at least 26 weeks ending with the 15th week before the baby is due; and (iv) provide a self\u2011certificate as evidence."
+      }
+    ],
+    [
+      {
+        "role": "system",
+        "content": "You are a helpful AI assistant that provides accurate, detailed responses."
+      },
+      {
+        "role": "user",
+        "content": "When can paternity leave commence?"
+      },
+      {
+        "role": "assistant",
+        "content": "It can commence from the date of the baby\u2019s birth, or from a specified number of days or weeks after the expected birth date."
+      }
+    ],
+    [
+      {
+        "role": "system",
+        "content": "You are a helpful AI assistant that provides accurate, detailed responses."
+      },
+      {
+        "role": "user",
+        "content": "Within what time frame must paternity leave be completed?"
+      },
+      {
+        "role": "assistant",
+        "content": "It must be completed within 56 days of the actual birth date, or if the baby is born early, within 56 days after the first day of the expected week of birth."
+      }
+    ],
+    [
+      {
+        "role": "system",
+        "content": "You are a helpful AI assistant that provides accurate, detailed responses."
+      },
+      {
+        "role": "user",
+        "content": "Can an employee take multiple paternity leave periods for several children from the same pregnancy?"
+      },
+      {
+        "role": "assistant",
+        "content": "No, only one paternity leave period is available regardless of how many children are born from the same pregnancy."
+      }
+    ],
+    [
+      {
+        "role": "system",
+        "content": "You are a helpful AI assistant that provides accurate, detailed responses."
+      },
+      {
+        "role": "user",
+        "content": "If an employee wants to take both paternity leave and shared parental leave, which should they take first?"
+      },
+      {
+        "role": "assistant",
+        "content": "They must take paternity leave first."
+      }
+    ],
+    [
+      {
+        "role": "system",
+        "content": "You are a helpful AI assistant that provides accurate, detailed responses."
+      },
+      {
+        "role": "user",
+        "content": "Under what circumstances is an employee entitled to paternity leave if a stillborn occurs?"
+      },
+      {
+        "role": "assistant",
+        "content": "If the stillbirth happens after 24 weeks of pregnancy, the employee is entitled to paternity leave; if it happens before the 24th week, the employee may take sick or compassionate leave."
+      }
+    ],
+    [
+      {
+        "role": "system",
+        "content": "You are a helpful AI assistant that provides accurate, detailed responses."
+      },
+      {
+        "role": "user",
+        "content": "What notice must an employee give if they wish to change the start date of their paternity leave?"
+      },
+      {
+        "role": "assistant",
+        "content": "The employee must inform the relevant manager in writing at least 28 days in advance."
+      }
+    ],
+    [
+      {
+        "role": "system",
+        "content": "You are a helpful AI assistant that provides accurate, detailed responses."
+      },
+      {
+        "role": "user",
+        "content": "What information must an employee provide when notifying the company of their intention to take paternity leave?"
+      },
+      {
+        "role": "assistant",
+        "content": "The employee must provide the week the baby is due, whether they wish to take one or two weeks of leave, and when they want their leave to start."
+      }
+    ],
+    [
+      {
+        "role": "system",
+        "content": "You are a helpful AI assistant that provides accurate, detailed responses."
+      },
+      {
+        "role": "user",
+        "content": "What information must an employee provide regarding their paternity leave?"
+      },
+      {
+        "role": "assistant",
+        "content": "The week the baby is due; whether they wish to take one or two weeks leave; and when they want their leave to start."
+      }
+    ],
+    [
+      {
+        "role": "system",
+        "content": "You are a helpful AI assistant that provides accurate, detailed responses."
+      },
+      {
+        "role": "user",
+        "content": "How far in advance must an employee inform the manager about a change in the start date of their leave?"
+      },
+      {
+        "role": "assistant",
+        "content": "At least 28 days in writing."
+      }
+    ],
+    [
+      {
+        "role": "system",
+        "content": "You are a helpful AI assistant that provides accurate, detailed responses."
+      },
+      {
+        "role": "user",
+        "content": "What must an employee inform the manager about regarding paternity leave payments?"
+      },
+      {
+        "role": "assistant",
+        "content": "The date they expect Paternity Leave Payments to start, at least 28 days in advance."
+      }
+    ],
+    [
+      {
+        "role": "system",
+        "content": "You are a helpful AI assistant that provides accurate, detailed responses."
+      },
+      {
+        "role": "user",
+        "content": "Who confirms the details of an employee\u2019s paternity leave once received?"
+      },
+      {
+        "role": "assistant",
+        "content": "The person whose name and job title are inserted will write to the employee to confirm the details."
+      }
+    ],
+    [
+      {
+        "role": "system",
+        "content": "You are a helpful AI assistant that provides accurate, detailed responses."
+      },
+      {
+        "role": "user",
+        "content": "Does an employee need to give notice of their return to work after paternity leave?"
+      },
+      {
+        "role": "assistant",
+        "content": "No, unless they wish to return early; in that case they must give notice to the inserted name and job title."
+      }
+    ],
+    [
+      {
+        "role": "system",
+        "content": "You are a helpful AI assistant that provides accurate, detailed responses."
+      },
+      {
+        "role": "user",
+        "content": "How many weeks can Statutory Paternity Pay be paid for?"
+      },
+      {
+        "role": "assistant",
+        "content": "Up to 2 weeks."
+      }
+    ],
+    [
+      {
+        "role": "system",
+        "content": "You are a helpful AI assistant that provides accurate, detailed responses."
+      },
+      {
+        "role": "user",
+        "content": "At what rate is Statutory Paternity Pay paid?"
+      },
+      {
+        "role": "assistant",
+        "content": "At the Prescribed Weekly Rate or 90% of the employee\u2019s average weekly earnings if they are less than the Prescribed Weekly Rate."
+      }
+    ],
+    [
+      {
+        "role": "system",
+        "content": "You are a helpful AI assistant that provides accurate, detailed responses."
+      },
+      {
+        "role": "user",
+        "content": "Which employees are not eligible for Statutory Paternity Pay?"
+      },
+      {
+        "role": "assistant",
+        "content": "Employees who receive average weekly earnings below the lower earnings limit for National Insurance."
+      }
+    ],
+    [
+      {
+        "role": "system",
+        "content": "You are a helpful AI assistant that provides accurate, detailed responses."
+      },
+      {
+        "role": "user",
+        "content": "What rights do employees have while on paternity leave?"
+      },
+      {
+        "role": "assistant",
+        "content": "Their employment contract subsists, they benefit from terms and conditions except remuneration, they are informed of coverage arrangements, remain on circulation lists and invitations, are given opportunity for consultation on key decisions, key decisions may be deferred until return, and they are entitled to return to the same job on the same terms and conditions."
+      }
+    ]
+  ],
+  "metrics": {
+    "total": 25,
+    "filtered": 23,
+    "retention_rate": 0.92,
+    "avg_score": 8.9
+  }
+}

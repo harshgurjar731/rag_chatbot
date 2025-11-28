@@ -1,0 +1,469 @@
+{
+  "summary": "The document is a company sickness and absence policy that outlines how employees should notify the company of illness, the certification requirements for short\u2011 and long\u2011term absences, and the procedures for managing ongoing or persistent sickness. Employees must inform their manager personally and provide a self\u2011certification form for absences up to a specified number of days, while longer absences require a medical certificate (fit note). For long\u2011term or repeated short\u2011term absences, the company may conduct return\u2011to\u2011work interviews, request medical reports, and consider job adjustments or disability provisions, always handling medical information confidentially. The policy also covers sickness that occurs during pre\u2011booked holidays, allowing employees to reschedule leave if properly certified. Overall, the policy aims to support employees\u2019 health, maintain workplace safety, and address absences in a lawful, consistent manner.",
+  "qa_pairs": [
+    {
+      "question": "What is the purpose of the Sickness and Absence Policy?",
+      "answer": "The policy is designed to assist the Company in effectively managing sickness-related and other staff absence, support employees through periods of absence and their subsequent return to work, and help the Company identify potentially unsafe work practices, issues affecting employee morale, and other underlying problems employees may be facing.",
+      "rating": 9
+    },
+    {
+      "question": "How will the Company handle employees\u2019 health information?",
+      "answer": "Any and all information provided by employees about their health will be collected, held, and processed lawfully and in accordance with the Company\u2019s Employee Data Protection Policy, recognising that such data is sensitive and will be handled accordingly and in accordance with employees\u2019 rights under the law.",
+      "rating": 9
+    },
+    {
+      "question": "Who should an employee contact if they are unable to come to work?",
+      "answer": "An employee must contact the designated job title at least the specified amount of time before the time they would normally be due to start work on the first day of absence.",
+      "rating": 8
+    },
+    {
+      "question": "What information must the employee provide when notifying of sickness?",
+      "answer": "The employee should indicate the reason for their absence, its likely duration, and when the illness started.",
+      "rating": 9
+    },
+    {
+      "question": "What should an employee do if their sickness continues for several days or weeks?",
+      "answer": "They must maintain regular contact with the Company to keep it informed of the reasons for their ongoing absence and the date when they expect to be able to return to work, and should specify how the Company can contact them, ideally leaving a landline number.",
+      "rating": 9
+    },
+    {
+      "question": "What forms must certify periods of sickness absence?",
+      "answer": "All periods of absence through sickness must be certified by the Company\u2019s sickness self-certification form or the statutory Form SC2.",
+      "rating": 9
+    },
+    {
+      "question": "What details must the certification form include?",
+      "answer": "The completed form should indicate actual days of sickness, even if they include days when the employee would not normally have worked (e.g., weekends and public holidays).",
+      "rating": 9
+    },
+    {
+      "question": "For sickness absences up to a certain number of calendar days, when should the self\u2011certification form be completed and submitted?",
+      "answer": "For sickness absences of up to the specified amount of calendar days, the self\u2011certification form should be completed by the employee upon their return to work and handed to the designated name and job title.",
+      "rating": 7
+    },
+    {
+      "question": "What additional documentation is required for sickness absence exceeding the specified amount of calendar days?",
+      "answer": "For sickness absence of more than the specified amount of calendar days, the employee must also provide a medical certificate (statutory Form Med 3), also referred to as a \u2018fit note\u2019.",
+      "rating": 9
+    },
+    {
+      "question": "How often should employees with medical certificates contact their manager?",
+      "answer": "As a minimum, employees should contact their manager on a weekly basis to provide an update on the injury or illness.",
+      "rating": 7
+    },
+    {
+      "question": "How does the Company define long\u2011term absence?",
+      "answer": "The Company will treat as long\u2011term any period of extensive absence due to serious or significant illness over a prolonged period.",
+      "rating": 7
+    },
+    {
+      "question": "What may constitute persistent absence?",
+      "answer": "Persistent absence may consist of a series of unconnected short\u2011term illnesses.",
+      "rating": 7
+    },
+    {
+      "question": "How does the Company define a long\u2011term absence?",
+      "answer": "The Company will treat as long\u2011term absence any period of extensive absence due to serious or significant illness over a prolonged period.",
+      "rating": 7
+    },
+    {
+      "question": "What constitutes a persistent absence according to the Company?",
+      "answer": "Persistent absence may consist of a series of unconnected short\u2011term illnesses.",
+      "rating": 7
+    },
+    {
+      "question": "What actions must the Company take when it deems an absence long\u2011term?",
+      "answer": "The Company will inform the employee of such and require that the employee keep in regular contact with the Company at agreed intervals, and ensure that the employee is kept informed as to any possible threat to their employment.",
+      "rating": 8
+    },
+    {
+      "question": "When is the Company allowed to request a home visit?",
+      "answer": "The Company reserves the right to request a home visit where the illness is long\u2011term.",
+      "rating": 8
+    },
+    {
+      "question": "What is the purpose of a home visit in cases of long\u2011term illness?",
+      "answer": "The purpose of the visit will be to discuss possibilities for a return to work and to discover whether the Company can assist in facilitating this.",
+      "rating": 8
+    },
+    {
+      "question": "What steps will the Company take if an absence is considered an issue of capability or conduct?",
+      "answer": "The Company will investigate the absence through Return to Work Interviews and the obtaining of medical reports, set time limits on the assessment of the employee and keep them informed, consider adjustments to the job or flexible working arrangements, consider whether the illness amounts to a disability and, if so, make reasonable adjustments under the Equal Opportunities and Diversity Policy, and keep the employee employment.",
+      "rating": 8
+    },
+    {
+      "question": "How can the Company obtain medical reports related to an absence?",
+      "answer": "The Company may either request that the employee undergo an independent medical examination with a representative such as a company doctor or occupational health service, or obtain a report from the employee\u2019s doctor and/or the Fit for Work assessment service, subject to employee consent.",
+      "rating": 8
+    },
+    {
+      "question": "What rights does an employee have regarding medical examinations or reports?",
+      "answer": "The employee may refuse to attend or refuse to consent to the release of a medical report, or request that corrections are made.",
+      "rating": 10
+    },
+    {
+      "question": "How will the Company handle medical reports and related information?",
+      "answer": "The Company will hold all medical reports and related information obtained under Clause 4.5 as private and confidential and will handle all such information in accordance with the Employee Data Protection Policy.",
+      "rating": 10
+    },
+    {
+      "question": "Under what circumstances will the Company consider dismissal?",
+      "answer": "The Company stresses that dismissal will only ever be taken as a last resort; however, if the absence is found to be a matter of misconduct, the employee will be subject to the Company\u2019s relevant policy.",
+      "rating": 10
+    },
+    {
+      "question": "What does the Company policy say about sickness occurring while an employee is on pre\u2011booked holiday?",
+      "answer": "If an employee is incapacitated through sickness or injury during any period of pre\u2011booked holiday, the Company will, subject to correct notification and certification, allow the employee to leave and take replacement holiday at a later date.",
+      "rating": 10
+    },
+    {
+      "question": "What certification requirement applies to incapacity periods exceeding 7 days during holiday?",
+      "answer": "The total period of incapacity must be fully certificated by a qualified medical practitioner where it exceeds 7 days.",
+      "rating": 10
+    }
+  ],
+  "conversations": [
+    [
+      {
+        "role": "system",
+        "content": "You are a helpful AI assistant that provides accurate, detailed responses."
+      },
+      {
+        "role": "user",
+        "content": "What is the purpose of the Sickness and Absence Policy?"
+      },
+      {
+        "role": "assistant",
+        "content": "The policy is designed to assist the Company in effectively managing sickness-related and other staff absence, support employees through periods of absence and their subsequent return to work, and help the Company identify potentially unsafe work practices, issues affecting employee morale, and other underlying problems employees may be facing."
+      }
+    ],
+    [
+      {
+        "role": "system",
+        "content": "You are a helpful AI assistant that provides accurate, detailed responses."
+      },
+      {
+        "role": "user",
+        "content": "How will the Company handle employees\u2019 health information?"
+      },
+      {
+        "role": "assistant",
+        "content": "Any and all information provided by employees about their health will be collected, held, and processed lawfully and in accordance with the Company\u2019s Employee Data Protection Policy, recognising that such data is sensitive and will be handled accordingly and in accordance with employees\u2019 rights under the law."
+      }
+    ],
+    [
+      {
+        "role": "system",
+        "content": "You are a helpful AI assistant that provides accurate, detailed responses."
+      },
+      {
+        "role": "user",
+        "content": "Who should an employee contact if they are unable to come to work?"
+      },
+      {
+        "role": "assistant",
+        "content": "An employee must contact the designated job title at least the specified amount of time before the time they would normally be due to start work on the first day of absence."
+      }
+    ],
+    [
+      {
+        "role": "system",
+        "content": "You are a helpful AI assistant that provides accurate, detailed responses."
+      },
+      {
+        "role": "user",
+        "content": "What information must the employee provide when notifying of sickness?"
+      },
+      {
+        "role": "assistant",
+        "content": "The employee should indicate the reason for their absence, its likely duration, and when the illness started."
+      }
+    ],
+    [
+      {
+        "role": "system",
+        "content": "You are a helpful AI assistant that provides accurate, detailed responses."
+      },
+      {
+        "role": "user",
+        "content": "What should an employee do if their sickness continues for several days or weeks?"
+      },
+      {
+        "role": "assistant",
+        "content": "They must maintain regular contact with the Company to keep it informed of the reasons for their ongoing absence and the date when they expect to be able to return to work, and should specify how the Company can contact them, ideally leaving a landline number."
+      }
+    ],
+    [
+      {
+        "role": "system",
+        "content": "You are a helpful AI assistant that provides accurate, detailed responses."
+      },
+      {
+        "role": "user",
+        "content": "What forms must certify periods of sickness absence?"
+      },
+      {
+        "role": "assistant",
+        "content": "All periods of absence through sickness must be certified by the Company\u2019s sickness self-certification form or the statutory Form SC2."
+      }
+    ],
+    [
+      {
+        "role": "system",
+        "content": "You are a helpful AI assistant that provides accurate, detailed responses."
+      },
+      {
+        "role": "user",
+        "content": "What details must the certification form include?"
+      },
+      {
+        "role": "assistant",
+        "content": "The completed form should indicate actual days of sickness, even if they include days when the employee would not normally have worked (e.g., weekends and public holidays)."
+      }
+    ],
+    [
+      {
+        "role": "system",
+        "content": "You are a helpful AI assistant that provides accurate, detailed responses."
+      },
+      {
+        "role": "user",
+        "content": "For sickness absences up to a certain number of calendar days, when should the self\u2011certification form be completed and submitted?"
+      },
+      {
+        "role": "assistant",
+        "content": "For sickness absences of up to the specified amount of calendar days, the self\u2011certification form should be completed by the employee upon their return to work and handed to the designated name and job title."
+      }
+    ],
+    [
+      {
+        "role": "system",
+        "content": "You are a helpful AI assistant that provides accurate, detailed responses."
+      },
+      {
+        "role": "user",
+        "content": "What additional documentation is required for sickness absence exceeding the specified amount of calendar days?"
+      },
+      {
+        "role": "assistant",
+        "content": "For sickness absence of more than the specified amount of calendar days, the employee must also provide a medical certificate (statutory Form Med 3), also referred to as a \u2018fit note\u2019."
+      }
+    ],
+    [
+      {
+        "role": "system",
+        "content": "You are a helpful AI assistant that provides accurate, detailed responses."
+      },
+      {
+        "role": "user",
+        "content": "How often should employees with medical certificates contact their manager?"
+      },
+      {
+        "role": "assistant",
+        "content": "As a minimum, employees should contact their manager on a weekly basis to provide an update on the injury or illness."
+      }
+    ],
+    [
+      {
+        "role": "system",
+        "content": "You are a helpful AI assistant that provides accurate, detailed responses."
+      },
+      {
+        "role": "user",
+        "content": "How does the Company define long\u2011term absence?"
+      },
+      {
+        "role": "assistant",
+        "content": "The Company will treat as long\u2011term any period of extensive absence due to serious or significant illness over a prolonged period."
+      }
+    ],
+    [
+      {
+        "role": "system",
+        "content": "You are a helpful AI assistant that provides accurate, detailed responses."
+      },
+      {
+        "role": "user",
+        "content": "What may constitute persistent absence?"
+      },
+      {
+        "role": "assistant",
+        "content": "Persistent absence may consist of a series of unconnected short\u2011term illnesses."
+      }
+    ],
+    [
+      {
+        "role": "system",
+        "content": "You are a helpful AI assistant that provides accurate, detailed responses."
+      },
+      {
+        "role": "user",
+        "content": "How does the Company define a long\u2011term absence?"
+      },
+      {
+        "role": "assistant",
+        "content": "The Company will treat as long\u2011term absence any period of extensive absence due to serious or significant illness over a prolonged period."
+      }
+    ],
+    [
+      {
+        "role": "system",
+        "content": "You are a helpful AI assistant that provides accurate, detailed responses."
+      },
+      {
+        "role": "user",
+        "content": "What constitutes a persistent absence according to the Company?"
+      },
+      {
+        "role": "assistant",
+        "content": "Persistent absence may consist of a series of unconnected short\u2011term illnesses."
+      }
+    ],
+    [
+      {
+        "role": "system",
+        "content": "You are a helpful AI assistant that provides accurate, detailed responses."
+      },
+      {
+        "role": "user",
+        "content": "What actions must the Company take when it deems an absence long\u2011term?"
+      },
+      {
+        "role": "assistant",
+        "content": "The Company will inform the employee of such and require that the employee keep in regular contact with the Company at agreed intervals, and ensure that the employee is kept informed as to any possible threat to their employment."
+      }
+    ],
+    [
+      {
+        "role": "system",
+        "content": "You are a helpful AI assistant that provides accurate, detailed responses."
+      },
+      {
+        "role": "user",
+        "content": "When is the Company allowed to request a home visit?"
+      },
+      {
+        "role": "assistant",
+        "content": "The Company reserves the right to request a home visit where the illness is long\u2011term."
+      }
+    ],
+    [
+      {
+        "role": "system",
+        "content": "You are a helpful AI assistant that provides accurate, detailed responses."
+      },
+      {
+        "role": "user",
+        "content": "What is the purpose of a home visit in cases of long\u2011term illness?"
+      },
+      {
+        "role": "assistant",
+        "content": "The purpose of the visit will be to discuss possibilities for a return to work and to discover whether the Company can assist in facilitating this."
+      }
+    ],
+    [
+      {
+        "role": "system",
+        "content": "You are a helpful AI assistant that provides accurate, detailed responses."
+      },
+      {
+        "role": "user",
+        "content": "What steps will the Company take if an absence is considered an issue of capability or conduct?"
+      },
+      {
+        "role": "assistant",
+        "content": "The Company will investigate the absence through Return to Work Interviews and the obtaining of medical reports, set time limits on the assessment of the employee and keep them informed, consider adjustments to the job or flexible working arrangements, consider whether the illness amounts to a disability and, if so, make reasonable adjustments under the Equal Opportunities and Diversity Policy, and keep the employee employment."
+      }
+    ],
+    [
+      {
+        "role": "system",
+        "content": "You are a helpful AI assistant that provides accurate, detailed responses."
+      },
+      {
+        "role": "user",
+        "content": "How can the Company obtain medical reports related to an absence?"
+      },
+      {
+        "role": "assistant",
+        "content": "The Company may either request that the employee undergo an independent medical examination with a representative such as a company doctor or occupational health service, or obtain a report from the employee\u2019s doctor and/or the Fit for Work assessment service, subject to employee consent."
+      }
+    ],
+    [
+      {
+        "role": "system",
+        "content": "You are a helpful AI assistant that provides accurate, detailed responses."
+      },
+      {
+        "role": "user",
+        "content": "What rights does an employee have regarding medical examinations or reports?"
+      },
+      {
+        "role": "assistant",
+        "content": "The employee may refuse to attend or refuse to consent to the release of a medical report, or request that corrections are made."
+      }
+    ],
+    [
+      {
+        "role": "system",
+        "content": "You are a helpful AI assistant that provides accurate, detailed responses."
+      },
+      {
+        "role": "user",
+        "content": "How will the Company handle medical reports and related information?"
+      },
+      {
+        "role": "assistant",
+        "content": "The Company will hold all medical reports and related information obtained under Clause 4.5 as private and confidential and will handle all such information in accordance with the Employee Data Protection Policy."
+      }
+    ],
+    [
+      {
+        "role": "system",
+        "content": "You are a helpful AI assistant that provides accurate, detailed responses."
+      },
+      {
+        "role": "user",
+        "content": "Under what circumstances will the Company consider dismissal?"
+      },
+      {
+        "role": "assistant",
+        "content": "The Company stresses that dismissal will only ever be taken as a last resort; however, if the absence is found to be a matter of misconduct, the employee will be subject to the Company\u2019s relevant policy."
+      }
+    ],
+    [
+      {
+        "role": "system",
+        "content": "You are a helpful AI assistant that provides accurate, detailed responses."
+      },
+      {
+        "role": "user",
+        "content": "What does the Company policy say about sickness occurring while an employee is on pre\u2011booked holiday?"
+      },
+      {
+        "role": "assistant",
+        "content": "If an employee is incapacitated through sickness or injury during any period of pre\u2011booked holiday, the Company will, subject to correct notification and certification, allow the employee to leave and take replacement holiday at a later date."
+      }
+    ],
+    [
+      {
+        "role": "system",
+        "content": "You are a helpful AI assistant that provides accurate, detailed responses."
+      },
+      {
+        "role": "user",
+        "content": "What certification requirement applies to incapacity periods exceeding 7 days during holiday?"
+      },
+      {
+        "role": "assistant",
+        "content": "The total period of incapacity must be fully certificated by a qualified medical practitioner where it exceeds 7 days."
+      }
+    ]
+  ],
+  "metrics": {
+    "total": 25,
+    "filtered": 24,
+    "retention_rate": 0.96,
+    "avg_score": 8.3
+  }
+}

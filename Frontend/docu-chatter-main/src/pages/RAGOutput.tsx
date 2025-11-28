@@ -1,525 +1,403 @@
+import React, { useState } from "react";
 import { useNavigate, useLocation, useParams, Outlet } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { ArrowLeft, Download, FileText } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
 import { useChatbots } from "@/hooks/useChatbots";
+import { useToast } from "@/hooks/use-toast";
 import {
-  PieChart, Pie, Cell, ResponsiveContainer, Tooltip,
-  BarChart, Bar, XAxis, YAxis, Legend
+  ResponsiveContainer,
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  PieChart,
+  Pie,
+  Cell,
+  Tooltip,
+  Legend,
 } from "recharts";
 import { saveAs } from "file-saver";
 
-const THEME_COLORS = {
-  indigo: "#6366f1",
-  purple: "#8b5cf6",
-  pink: "#ec4899",
-  yellow: "#facc15",
+/* --------------------------------------------------------
+   FIX: CustomTooltip MUST be OUTSIDE component
+   -------------------------------------------------------- */
+const CustomTooltip = ({ active, payload, hoveredLabel }: any) => {
+  if (!active || !payload || !payload.length) return null;
+
+  const shown = hoveredLabel
+    ? payload.filter((p: any) => p.name === hoveredLabel)
+    : payload;
+
+  const toShow = shown.length ? shown : [payload[0]];
+
+  return (
+    <div className="bg-white p-2 rounded shadow border border-gray-200 text-sm">
+      {toShow.map((item: any) => (
+        <div key={item.name}>
+          <strong>{item.name}</strong>: {item.value}
+        </div>
+      ))}
+    </div>
+  );
 };
 
-const RAGOutput = () => {
+/* --------------------------------------------------------
+   UI Color Palette
+   -------------------------------------------------------- */
+const PALETTE = [
+  "#4F46E5",
+  "#7C3AED",
+  "#DB2777",
+  "#F59E0B",
+  "#10B981",
+  "#EF4444",
+];
+
+type Counts = Record<string, number>;
+
+const RAGOutput: React.FC = () => {
+  /* --------------------------------------------------------
+     HOOKS — always first, always same order, FIXED ✓
+     -------------------------------------------------------- */
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { id } = useParams<{ id: string }>();
+  const { id } = useParams();
   const { getChatbot } = useChatbots();
-  const chatbot = id ? getChatbot(id) : null;
   const location = useLocation();
-  const apiResponse = location.state?.evaluationResponse;
+  const chatbot = id ? getChatbot(id as string) : null;
+  const apiResponse = (location.state as any)?.evaluationResponse;
+  const [hoveredLabel, setHoveredLabel] = useState<string | null>(null);
 
+  /* --------------------------------------------------------
+     MANDATORY early returns — AFTER hooks (safe) ✓
+     -------------------------------------------------------- */
   if (!chatbot)
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-surface">
-        <div className="text-center">
-          <h1 className="text-2xl font-bold mb-4">Chatbot Not Found</h1>
-          <Button onClick={() => navigate("/")} variant="chatbot">
-            <ArrowLeft className="h-4 w-4" /> Back to Dashboard
-          </Button>
-        </div>
+      <div className="p-20 text-center">
+        <h1>Chatbot Not Found</h1>
       </div>
     );
 
   if (!apiResponse)
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-surface">
-        <div className="text-center">
-          <h1 className="text-2xl font-bold mb-4">No Evaluation Data</h1>
-          <Button onClick={() => navigate(`/evaluation-selection/${id}`)}>Go Back</Button>
-        </div>
+      <div className="p-20 text-center">
+        <h1>No Data</h1>
       </div>
     );
 
-  const metrics = apiResponse.metrics || Object.keys(apiResponse.results || {});
+  /* --------------------------------------------------------
+     PURE VALUES (NO HOOKS) — ⭐ FIX FOR ERROR ⭐
+     -------------------------------------------------------- */
+  const metrics: string[] =
+    apiResponse.metrics || Object.keys(apiResponse.results || {});
 
-  const normalizeValue = (val: string | null | undefined) =>
-    val && val.toLowerCase() !== "unknown" ? val : null;
+  const normalize = (v: any) =>
+    v && String(v).toLowerCase() !== "unknown" ? v : null;
 
-  // Build textual summary per record dynamically
-  const buildTextualSummary = (metric: string, record: any, metricData: any) => {
-    const counts: Record<string, number> = {};
-    Object.keys(record)
-      .filter((k) => k.endsWith("_eval"))
-      .forEach((key) => {
-        const val = normalizeValue(record[key]);
-        if (val) counts[val] = (counts[val] || 0) + 1;
-      });
+  /* --------------------------------------------------------
+     Compute per-metric counts (NO useMemo, pure code)
+     -------------------------------------------------------- */
+  const perMetricCounts: Record<string, Counts> = {};
+  const labelSet = new Set<string>();
 
-    const totalValid = Object.values(counts).reduce((a, b) => a + b, 0);
-    const mostCommon = Object.entries(counts).sort((a, b) => b[1] - a[1])[0]?.[0] || "N/A";
+  for (const metric of metrics) {
+    const results = apiResponse.results[metric]?.results || [];
+    const counts: Counts = {};
 
-    return `
-Metric: ${metric}
-Total Records: ${metricData?.total_records || 1}
-${Object.entries(counts)
-        .map(([label, val]) => `${label}: ${val} (${((val / totalValid) * 100).toFixed(1)}%)`)
-        .join("\n")}
-Most Frequent Outcome: ${mostCommon}
-Model Used: ${metricData?.model_used || "Unknown"}
-`;
-  };
-
-  // Prepare export data with only metrics values + necessary meta
-  const prepareExportData = () => {
-    const rows: any[] = [];
-    metrics.forEach((metric) => {
-      const metricData = apiResponse.results[metric];
-      const results = metricData?.results || [];
-      results.forEach((r: any, idx: number) => {
-        const row: Record<string, any> = {
-          metric,
-          record_index: idx + 1,
-          framework: apiResponse.framework,
-          progress: apiResponse.progress,
-          status: apiResponse.status,
-          model_used: metricData?.model_used || "Unknown",
-          textual_summary: buildTextualSummary(metric, r, metricData),
-        };
-
-        // Include only valid metric evaluation keys
-        Object.keys(r)
-          .filter((k) => k.endsWith("_eval"))
-          .forEach((key) => {
-            const val = normalizeValue(r[key]);
-            if (val) row[key] = val;
-          });
-
-        rows.push(row);
-      });
-    });
-    return rows;
-  };
-
-  // Export CSV
-  const exportCSV = () => {
-    const data = prepareExportData();
-    if (!data.length) {
-      toast({ title: "No data to export" });
-      return;
+    for (const r of results) {
+      for (const k of Object.keys(r)) {
+        if (k.endsWith("_eval")) {
+          const val = normalize(r[k]);
+          if (val) {
+            counts[val] = (counts[val] || 0) + 1;
+            labelSet.add(val);
+          }
+        }
+      }
     }
 
-    const headers = Object.keys(data[0]);
-    let csv = headers.join(",") + "\n";
+    perMetricCounts[metric] = counts;
+  }
 
-    data.forEach((row) => {
-      const values = headers.map((h) =>
-        `"${(row[h] || "").toString().replace(/"/g, '""')}"`
-      );
-      csv += values.join(",") + "\n";
-    });
+  const allLabels = Array.from(labelSet);
 
-    saveAs(
-      new Blob([csv], { type: "text/csv;charset=utf-8;" }),
-      `${chatbot.name}_evaluation_metrics.csv`
-    );
-    toast({ title: "CSV exported successfully!" });
-  };
+  /* --------------------------------------------------------
+     Label colors
+     -------------------------------------------------------- */
+  const labelColorMap: Record<string, string> = {};
+  allLabels.forEach((label, i) => {
+    labelColorMap[label] = PALETTE[i % PALETTE.length];
+  });
 
-  // Export JSON
+  /* --------------------------------------------------------
+     Overall stacked bar data
+     -------------------------------------------------------- */
+  const overallBarData = metrics.map((metric) => {
+    const counts = perMetricCounts[metric];
+    const row: any = { name: metric };
+
+    for (const lbl of allLabels) {
+      row[lbl] = counts[lbl] || 0;
+    }
+    return row;
+  });
+
+  /* --------------------------------------------------------
+     Global summary
+     -------------------------------------------------------- */
+  const globalCounts: Counts = {};
+  let totalRecords = 0;
+
+  for (const metric of metrics) {
+    const metricData = apiResponse.results[metric];
+    totalRecords += metricData?.total_records || metricData?.results?.length || 0;
+
+    const counts = perMetricCounts[metric];
+    for (const [lbl, val] of Object.entries(counts)) {
+      globalCounts[lbl] = (globalCounts[lbl] || 0) + val;
+    }
+  }
+
+  const totalLabels = Object.values(globalCounts).reduce((a, b) => a + b, 0);
+  const mostCommon =
+    Object.entries(globalCounts).sort((a, b) => b[1] - a[1])[0]?.[0] || "N/A";
+
+  const factualRate = totalLabels
+    ? (((globalCounts["factual"] || 0) / totalLabels) * 100).toFixed(1)
+    : "0";
+  /* --------------------------------------------------------
+     EXCEL/CSV EXPORTS
+     -------------------------------------------------------- */
   const exportJSON = () => {
-    const data = prepareExportData();
     saveAs(
-      new Blob([JSON.stringify({ meta: apiResponse, results: data }, null, 2)], { type: "application/json" }),
-      `${chatbot.name}_evaluation_metrics.json`
+      new Blob(
+        [JSON.stringify({ meta: apiResponse, results: apiResponse.results }, null, 2)],
+        { type: "application/json" }
+      ),
+      `${chatbot.name}_evaluation.json`
     );
-    toast({ title: "JSON exported successfully!" });
+    toast({ title: "JSON exported!" });
   };
 
+  const exportCSV = () => {
+    const rows: string[] = [];
+    const header = ["metric", "label", "value"];
+    rows.push(header.join(","));
 
-  // Prepare overall summary counts
-  // const overallCounts: Record<string, number> = {};
-  // metrics.forEach((metric) => {
-  //   const metricData = apiResponse.results[metric];
-  //   const results = metricData?.results || [];
-  //   results.forEach((r: any) => {
-  //     Object.keys(r)
-  //       .filter((k) => k.endsWith("_eval"))
-  //       .forEach((key) => {
-  //         const val = normalizeValue(r[key]);
-  //         overallCounts[val] = (overallCounts[val] || 0) + 1;
-  //       });
-  //   });
-  // });
+    for (const metric of metrics) {
+      const counts = perMetricCounts[metric];
+      for (const [lbl, val] of Object.entries(counts)) {
+        rows.push([metric, lbl, String(val)].join(","));
+      }
+    }
 
-  // const overallPieData = Object.entries(overallCounts).map(([name, value], idx) => ({
-  //   name, value,
-  //   color: THEME_COLORS[Object.keys(THEME_COLORS)[idx % Object.keys(THEME_COLORS).length]],
-  // }));
+    saveAs(
+      new Blob([rows.join("\n")], { type: "text/csv;charset=utf-8;" }),
+      `${chatbot.name}_evaluation.csv`
+    );
+    toast({ title: "CSV exported!" });
+  };
 
-  // const overallBarData = Object.entries(overallCounts).map(([name, value]) => ({ name, value }));
-  const overallPieData = metrics.flatMap((metric) => {
-    const metricData = apiResponse.results[metric];
-    const results = metricData?.results || [];
-
-    // Count per label
-    const counts: Record<string, number> = {};
-    results.forEach((r: any) => {
-      Object.keys(r)
-        .filter((k) => k.endsWith("_eval"))
-        .forEach((key) => {
-          const val = normalizeValue(r[key]);
-          if (val && val.toLowerCase() !== "unknown") {
-            counts[val] = (counts[val] || 0) + 1;
-          }
-        });
-    });
-
-    // Transform into pie chart friendly format
-    return Object.entries(counts).map(([label, value], idx) => ({
-      name: `${metric}: ${label}`, // 👈 metric name included
-      value,
-      color:
-        THEME_COLORS[
-        Object.keys(THEME_COLORS)[idx % Object.keys(THEME_COLORS).length]
-        ],
-    }));
-  });
-
-  const overallBarData = metrics.flatMap((metric) => {
-    const metricData = apiResponse.results[metric];
-    const results = metricData?.results || [];
-
-    // Count per label
-    const counts: Record<string, number> = {};
-    results.forEach((r: any) => {
-      Object.keys(r)
-        .filter((k) => k.endsWith("_eval"))
-        .forEach((key) => {
-          const val = normalizeValue(r[key]);
-          if (val && val.toLowerCase() !== "unknown") {
-            counts[val] = (counts[val] || 0) + 1;
-          }
-        });
-    });
-
-    // Transform into bar-friendly format
-    return Object.entries(counts).map(([label, value], idx) => ({
-      name: `${metric}: ${label}`, // 👈 include metric
-      value,
-      color:
-        THEME_COLORS[
-        Object.keys(THEME_COLORS)[idx % Object.keys(THEME_COLORS).length]
-        ],
-    }));
-  });
-
+  /* --------------------------------------------------------
+     RENDER
+     -------------------------------------------------------- */
   return (
-    <div className="min-h-screen bg-gradient-surface text-foreground">
-      {/* Header */}
-      <header className="border-b border-chatbot-primary/20 bg-gradient-card">
-        <div className="container mx-auto px-4 py-4 flex items-center gap-4">
-          <Button variant="ghost" size="icon" onClick={() => navigate(`/evaluation-selection/${id}`)}>
-            <ArrowLeft className="h-5 w-5 text-foreground" />
-          </Button>
-          <h1 className="text-3xl font-bold">{chatbot.name} – Evaluation Results</h1>
-        </div>
+    <div className="min-h-screen bg-slate-50 text-slate-900">
+
+      {/* HEADER */}
+      <header className="bg-white border-b border-slate-200 p-4 flex items-center gap-4 sticky top-0 z-30">
+        <Button variant="ghost" onClick={() => navigate(`/evaluation-selection/${id}`)}>
+          <ArrowLeft />
+        </Button>
+        <h1 className="text-2xl font-semibold">{chatbot.name} – Evaluation</h1>
       </header>
 
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-10">
+      <main className="max-w-7xl mx-auto p-6 space-y-10">
 
-        {/* Export buttons */}
-        <div className="flex gap-4 justify-end">
-          <Button onClick={exportCSV} className="flex items-center gap-2 bg-indigo-500 text-white px-4 py-2 rounded-md">
-            <Download className="w-4 h-4" /> Export Complete CSV
+        {/* EXPORT BUTTONS */}
+        <div className="flex justify-end gap-4">
+          <Button onClick={exportCSV} className="bg-indigo-600 text-white">
+            <Download className="w-4 h-4" /> CSV
           </Button>
-          <Button onClick={exportJSON} className="flex items-center gap-2 bg-green-500 text-white px-4 py-2 rounded-md">
-            <FileText className="w-4 h-4" /> Export JSON
+          <Button onClick={exportJSON} className="bg-emerald-600 text-white">
+            <FileText className="w-4 h-4" /> JSON
           </Button>
         </div>
 
-        {/* Overall summary */}
-        <Card className="shadow-elegant w-full h-full p-4">
+        {/* =====================================================
+             OVERALL SUMMARY (left) + STACKED BAR (right)
+           ===================================================== */}
+        <Card>
           <CardHeader>
-            <CardTitle className="text-2xl">Overall Summary</CardTitle>
+            <CardTitle>Overall Summary</CardTitle>
           </CardHeader>
-          <CardContent className="space-y-6">
+          <CardContent>
+            <div className="flex flex-col lg:flex-row gap-6">
 
-            <div className="lg:flex lg:flex-row gap-8">
+              {/* LEFT: SUMMARY */}
+              <div className="lg:w-1/2 p-4 bg-white border rounded-md">
+                <p>Total Metrics: <strong>{metrics.length}</strong></p>
+                <p>Total Records: <strong>{totalRecords}</strong></p>
 
-              {/* Overall Pie Chart */}
-              <div className="flex-1 h-60">
-                <ResponsiveContainer width="100%" height="100%">
-                  <PieChart>
-                    <Pie
-                      data={overallPieData.filter(
-                        (d) => d.name && d.name.toLowerCase() !== "unknown"
-                      )}
-                      cx="50%"
-                      cy="50%"
-                      outerRadius={80}
-                      label={({ name, value }) => `${name}: ${value}`}
-                      labelLine={true}
-                      dataKey="value"
-                      fontSize={14}
-                    >
-                      {overallPieData
-                        .filter((d) => d.name && d.name.toLowerCase() !== "unknown")
-                        .map((entry, idx) => (
-                          <Cell key={idx} fill={entry.color} />
-                        ))}
-                    </Pie>
-                    <Tooltip />
-                  </PieChart>
-                </ResponsiveContainer>
+                <p className="mt-3 font-medium">Outcome Distribution:</p>
+                <ul className="ml-6 list-disc">
+                  {Object.entries(globalCounts).map(([lbl, val]) => (
+                    <li key={lbl}>
+                      <span
+                        className="inline-block w-3 h-3 rounded-sm mr-2"
+                        style={{ background: labelColorMap[lbl] }}
+                      />
+                      {lbl}: {val} ({totalLabels ? ((val / totalLabels) * 100).toFixed(1) : "0"}%)
+                    </li>
+                  ))}
+                </ul>
+
+                <p className="mt-3">Most Common: <strong>{mostCommon}</strong></p>
+                <p>Accuracy (Factual): <strong>{factualRate}%</strong></p>
               </div>
 
-              {/* Overall Bar Chart */}
-              <div className="flex-1 h-60">
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={overallBarData}>
-                    <XAxis
-                      dataKey="name"
-                      interval={0}
-                      angle={-20}
-                      textAnchor="end"
-                      height={80}
-                      fontSize={12}
-                    />
-                    <YAxis />
-                    <Tooltip />
-                    {/* <Legend /> */}
-                    <Bar dataKey="value"
-                      isAnimationActive={true}
-                      animationDuration={800}
-                      animationEasing="ease-out"
-                      // barSize={30}
-                      // fill="#8884d8"
-                      label={{ position: 'top', fontSize: 14 }}
+              {/* RIGHT: OVERALL STACKED BAR */}
+              <div className="lg:w-1/2 p-4 bg-white border rounded-md">
+                <div className="h-72">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart
+                      data={overallBarData}
+                      onMouseLeave={() => setHoveredLabel(null)}
                     >
-                      {overallBarData.map((entry, idx) => (
-                        <Cell key={idx} fill={entry.color}
+                      <XAxis dataKey="name" angle={-25} textAnchor="end" height={60} />
+                      <YAxis />
+                      <Tooltip
+                        content={(props) => (
+                          <CustomTooltip {...props} hoveredLabel={hoveredLabel} />
+                        )}
+                      />
+                      <Legend />
+                      {allLabels.map((lbl) => (
+                        <Bar
+                          key={lbl}
+                          dataKey={lbl}
+                          stackId="overall"
+                          name={lbl}
+                          fill={labelColorMap[lbl]}
+                          onMouseOver={() => setHoveredLabel(lbl)}
                         />
                       ))}
-                    </Bar>
-                  </BarChart>
-                </ResponsiveContainer>
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
               </div>
 
             </div>
-
-            {/* Overall Textual Summary (moved below charts) */}
-            {/* <div className="bg-gray-50 p-4 rounded-md whitespace-pre-wrap mt-6">
-      {metrics.length > 0 ? (
-        <>
-          <p>Total Metrics Evaluated: {metrics.length}</p>
-          <p>
-            Total Records:{" "}
-            {metrics.reduce(
-              (sum, metric) => sum + (apiResponse.results[metric]?.total_records || 0),
-              0
-            )}
-          </p>
-          <p>Most Common Outcomes Per Metric:</p>
-          <ul className="list-disc ml-6">
-            {metrics.map((metric) => {
-              const results = apiResponse.results[metric]?.results || [];
-              const counts: Record<string, number> = {};
-              results.forEach((r: any) => {
-                Object.keys(r)
-                  .filter((k) => k.endsWith("_eval"))
-                  .forEach((key) => {
-                    const val = r[key];
-                    if (val && val.toLowerCase() !== "unknown") {
-                      counts[val] = (counts[val] || 0) + 1;
-                    }
-                  });
-              });
-              const mostFrequent = Object.entries(counts).sort((a, b) => b[1] - a[1])[0]?.[0];
-              return (
-                <li key={metric}>
-                  {metric}: {mostFrequent || "N/A"}
-                </li>
-              );
-            })}
-          </ul>
-        </>
-      ) : (
-        <p>No metrics data available.</p>
-      )}
-    </div> */}
-
           </CardContent>
         </Card>
 
-        {/* Metric-wise row: Text | Pie | Bar */}
-        {/* {metrics.map((metric) => {
-          const metricData = apiResponse.results[metric];
-          const results = metricData?.results || [];
-          const totalRecords = metricData?.total_records || results.length;
-
-          const counts: Record<string, number> = {};
-          results.forEach((r: any) => {
-            Object.keys(r)
-              .filter((k) => k.endsWith("_eval"))
-              .forEach((key) => {
-                const val = normalizeValue(r[key]);
-                counts[val] = (counts[val] || 0) + 1;
-              });
-          }); */}
+        {/* =====================================================
+             PER METRIC CARDS
+           ===================================================== */}
         {metrics.map((metric) => {
-          const metricData = apiResponse.results[metric];
-          const results = metricData?.results || [];
-          const totalRecords = metricData?.total_records || results.length;
-
-          const counts: Record<string, number> = {};
-          results.forEach((r: any) => {
-            Object.keys(r)
-              .filter((k) => k.endsWith("_eval"))
-              .forEach((key) => {
-                const val = normalizeValue(r[key]);
-                if (val && val.toLowerCase() !== "unknown") {  // ✅ filter invalid
-                  counts[val] = (counts[val] || 0) + 1;
-                }
-              });
-          });
-
-
-          // Calculate total counted labels (excluding unknowns)
-          const countedTotal = Object.entries(counts)
-            .filter(([label, val]) => val && label.toLowerCase() !== "unknown")
-            .reduce((sum, [, val]) => sum + val, 0);
-
-          // Determine the most common label dynamically
-          const mostCommon = Object.entries(counts)
-            .filter(([label, val]) => val && label.toLowerCase() !== "unknown")
-            .sort((a, b) => b[1] - a[1])[0]?.[0] || "N/A";
-
-          // Generate dynamic descriptions for known labels
-          const getLabelDescription = (label: string) => {
-            switch (label.toLowerCase()) {
-              case "factual":
-                return "✔️ Correct based on reference";
-              case "hallucinated":
-                return "❌ Incorrect or unsupported answer";
-              case "neutral":
-                return "➖ Partial or inconclusive result";
-              case "relevant":
-                return "🔎 Contextually relevant";
-              case "irrelevant":
-                return "🚫 Irrelevant to query";
-              case "non-toxic":
-                return "🟢 Safe content";
-              case "toxic":
-                return "⚠️ May contain harmful content";
-              default:
-                return "";
-            }
-          };
-
-          // Build textual summary
-          const textualSummary = `
-📌 Metric: ${metric}
-────────────────────────────
-Total Records: ${totalRecords}
-
-${Object.entries(counts)
-              .filter(([label, val]) => val && label.toLowerCase() !== "unknown")
-              .map(([label, val]) => {
-                const percentage = countedTotal ? ((val / countedTotal) * 100).toFixed(1) : "0";
-                const description = getLabelDescription(label);
-                return `• ${label}: ${val} (${percentage}%) ${description ? `→ ${description}` : ""}`;
-              })
-              .join("\n")}
-
-🌟 Most Common Outcome: ${mostCommon}
-📈 Accuracy Estimate: ${countedTotal ? `${((counts.factual || 0) / countedTotal * 100).toFixed(1)}%` : "N/A"}
-🧠 Model Used: ${metricData?.model_used || "Unknown"}
-`;
-
-
-
-
-          const pieData = Object.entries(counts).map(([name, value], idx) => ({
-            name, value,
-            color: THEME_COLORS[Object.keys(THEME_COLORS)[idx % Object.keys(THEME_COLORS).length]],
+          const counts = perMetricCounts[metric];
+          const labels = Object.keys(counts);
+          const donutData = labels.map((lbl) => ({
+            name: lbl,
+            value: counts[lbl],
+            color: labelColorMap[lbl],
           }));
 
-          const barData = Object.entries(counts).map(([name, value]) => ({ name, value }));
+          const metricBarData = [
+            labels.reduce((acc: any, lbl) => {
+              acc.name = metric;
+              acc[lbl] = counts[lbl];
+              return acc;
+            }, {}),
+          ];
 
           return (
-            <Card key={metric} className="shadow-elegant">
+            <Card key={metric}>
               <CardHeader>
-                <CardTitle className="text-2xl">{metric}</CardTitle>
+                <CardTitle>{metric}</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="flex flex-col lg:flex-row gap-6">
-                  <pre className="flex-1 whitespace-pre-line bg-gray-50 text-gray-800 p-4 rounded-md border border-gray-200">
-                    {textualSummary && textualSummary.trim() !== "" ? textualSummary : "No summary available"}
+
+                  {/* SUMMARY */}
+                  <pre className="bg-white border rounded-md p-4 whitespace-pre-line flex-1">
+                    {labels
+                      .map((lbl) => {
+                        const val = counts[lbl];
+                        const pct = val
+                          ? ((val / labels.reduce((s, k) => s + counts[k], 0)) * 100).toFixed(1)
+                          : "0";
+                        return `• ${lbl}: ${val} (${pct}%)`;
+                      })
+                      .join("\n")}
                   </pre>
-                  <div className="flex-1 h-60">
+
+                  {/* DONUT */}
+                  <div className="flex-1 bg-white border rounded-md p-3 h-60">
                     <ResponsiveContainer width="100%" height="100%">
                       <PieChart>
                         <Pie
-                          data={pieData}
-                          cx="50%"
-                          cy="50%"
+                          data={donutData}
+                          innerRadius={40}
                           outerRadius={80}
-                          label={({ name, value }) => `${name}: ${value}`}
-                          labelLine={false}
                           dataKey="value"
-
-                          fontSize={14}
+                          label
                         >
-                          {pieData.map((entry, idx) => <Cell key={idx} fill={entry.color} />)}
+                          {donutData.map((d) => (
+                            <Cell key={d.name} fill={d.color} />
+                          ))}
                         </Pie>
                         <Tooltip />
+                        <Legend />
                       </PieChart>
                     </ResponsiveContainer>
                   </div>
-                  <div className="flex-1 h-60">
+
+                  {/* STACKED BAR */}
+                  <div className="flex-1 bg-white border rounded-md p-3 h-60">
                     <ResponsiveContainer width="100%" height="100%">
-                      <BarChart data={barData}><XAxis
-                        dataKey="name"
-                        interval={0}
-                        angle={-30}
-                        textAnchor="end"
-                        height={80}
-                        fontSize={14}
-                      />
+                      <BarChart
+                        data={metricBarData}
+                        onMouseLeave={() => setHoveredLabel(null)}
+                      >
+                        <XAxis dataKey="name" />
                         <YAxis />
-                        <Tooltip />
+                        <Tooltip
+                          content={(props) => (
+                            <CustomTooltip {...props} hoveredLabel={hoveredLabel} />
+                          )}
+                        />
                         <Legend />
-                        <Bar dataKey="value" fill={THEME_COLORS.purple}
-                          fontSize={12} >
-                          {barData.map((entry, idx) => <Cell key={idx} fill={THEME_COLORS[Object.keys(THEME_COLORS)[idx % Object.keys(THEME_COLORS).length]]} />)}
-                        </Bar>
+                        {labels.map((lbl) => (
+                          <Bar
+                            key={lbl}
+                            dataKey={lbl}
+                            stackId="metric"
+                            fill={labelColorMap[lbl]}
+                            onMouseOver={() => setHoveredLabel(lbl)}
+                          />
+                        ))}
                       </BarChart>
                     </ResponsiveContainer>
                   </div>
+
                 </div>
               </CardContent>
             </Card>
           );
-        })
-        }
+        })}
 
-        <div className="flex justify-center">
+        <div className="text-center">
           <Button
             onClick={() => navigate("/evaluation")}
-            className="bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 text-white px-6 py-3 rounded-xl shadow-lg hover:opacity-90"
+            className="mt-4 bg-indigo-600 text-white"
           >
             Return to Dashboard
           </Button>
         </div>
       </main>
+
       <Outlet />
     </div>
   );
