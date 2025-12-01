@@ -591,13 +591,13 @@ const EvaluationSelection = () => {
   if (!chatbot) {
     return (
       <div className="min-h-screen bg-gradient-surface flex items-center justify-center">
-        <div className="text-center">
+        {/* <div className="text-center">
           <h1 className="text-2xl font-bold text-foreground mb-4">Chatbot Not Found</h1>
           <Button onClick={() => navigate('/')} variant="chatbot">
             <ArrowLeft className="h-4 w-4" />
             Back to Dashboard
           </Button>
-        </div>
+        </div> */}
       </div>
     );
   }

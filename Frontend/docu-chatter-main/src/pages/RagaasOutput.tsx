@@ -140,12 +140,12 @@ const RAGASEvaluationOutput: React.FC = () => {
     if (!chatbot) {
         return (
             <div className="min-h-screen flex items-center justify-center bg-[#0f0f10] text-gray-200">
-                <div className="text-center">
+                {/* <div className="text-center">
                     <h1 className="text-2xl font-bold mb-4">Chatbot Not Found</h1>
                     <Button onClick={() => navigate("/")} variant="secondary">
                         <ArrowLeft className="h-4 w-4 mr-2" /> Back to Dashboard
                     </Button>
-                </div>
+                </div> */}
             </div>
         );
     }

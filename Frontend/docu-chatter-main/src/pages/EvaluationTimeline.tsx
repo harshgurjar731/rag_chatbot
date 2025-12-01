@@ -15,9 +15,12 @@ const timelineSteps = [
 
 const EvaluationTimeline = () => {
   const navigate = useNavigate();
+
   const [currentStep, setCurrentStep] = useState(0);
   const [isCompleted, setIsCompleted] = useState(false);
-  const { id } = useParams<{ id: string }>();
+
+  // FIXED: Added "selected"
+  const { id, selected } = useParams<{ id: string; selected: string }>();
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -42,6 +45,16 @@ const EvaluationTimeline = () => {
     return "clickable";
   };
 
+  const handleNavigation = () => {
+    if (!isCompleted) return;
+
+    if (selected === "ragaas") {
+      navigate(`/ragaas-output/${id}`);
+    } else {
+      navigate(`/rag-output/${id}`);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gradient-surface">
       <header className="border-b bg-card shadow-card">
@@ -58,7 +71,9 @@ const EvaluationTimeline = () => {
             </Button>
             <div>
               <h1 className="text-2xl font-bold">Evaluation Process</h1>
-              <p className="text-muted-foreground">Track the steps of document processing and evaluation</p>
+              <p className="text-muted-foreground">
+                Track the steps of document processing and evaluation
+              </p>
             </div>
           </div>
         </div>
@@ -87,24 +102,18 @@ const EvaluationTimeline = () => {
           <Card className="shadow-elegant">
             <CardContent className="pt-6">
               <Button
-                onClick={() => {
-                  if (selected === "ragaas") {
-                    navigate(`/ragaas-output/${id}`);
-                  } else {
-                    navigate(`/rag-output/${id}`);
-                  }
-                }}
+                onClick={handleNavigation}
                 disabled={!isCompleted}
                 className="w-full bg-gradient-primary hover:opacity-90 transition-opacity disabled:opacity-50"
               >
                 <Eye className="h-4 w-4 mr-2" />
                 Show Result
               </Button>
-
             </CardContent>
           </Card>
         </div>
       </main>
+
       <Outlet />
     </div>
   );
