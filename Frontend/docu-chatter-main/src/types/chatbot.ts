@@ -31,6 +31,7 @@ export interface ChatMessage {
   originalContent?: string;
   traceId:string;
   Citation?: Citation[]; 
+  images?: string[];
 };
 
 export interface Chatbot {

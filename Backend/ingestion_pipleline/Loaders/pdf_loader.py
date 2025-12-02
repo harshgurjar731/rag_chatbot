@@ -1,4 +1,5 @@
 from ingestion_pipleline.Loaders.loader_protocol import LoaderProtocol
+from langchain_community.document_loaders import UnstructuredImageLoader
 from pathlib import Path
 from typing import List
 from PIL import Image
@@ -21,7 +22,7 @@ class PDFLoader(LoaderProtocol):
             
             # Extract file-level metadata once
             file_metadata = {
-                "source": file_path,
+                "source": path,
                 "file_size_kb": file_path.stat().st_size / 1024,
                 "total_pages": pdf_document.page_count
             }
@@ -47,6 +48,26 @@ class PDFLoader(LoaderProtocol):
                     print(f"Warning: Failed to extract tables from page {page_num + 1}: {e}")
                 
                 # # 3. Extract and OCR images and store as separate documents
+                # for img_idx, img in enumerate(page.get_images(full=True)):
+                #     try:
+                #         image_meta = extract_and_save_image(
+                #             doc=pdf_document,
+                #             img_info=img,
+                #             page_num=page_num,
+                #             file_id=file_id,
+                #             text=text_content,
+                #             output_dir=output_dir,
+                #             stats=stats,
+                #             mode="embed",
+                #         )
+                #         if image_meta:
+                #             page_images_meta.append(image_meta)
+                #     except Exception as e:
+                #         print(f"⚠️ Embedded image error (page {page_num+1}): {e}")
+                #         stats["errors"] += 1
+                
+                
+                
                 # image_list = page.get_images(full=True)
                 # for img_index, img_info in enumerate(image_list):
                 #     xref = img_info[0]

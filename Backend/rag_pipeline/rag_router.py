@@ -123,6 +123,7 @@ def retrieve(
     use_citation: bool = False,
     datastore_id: str = "",
     query: str = "",
+    is_vision_search: bool = False,
     
 
     # use_VLM_inference: bool = False,
@@ -138,12 +139,13 @@ def retrieve(
     session: Session = Depends(get_session)
 ):
     # Call your existing service logic.
-    print("In rag router /query", data)
+    print("In rag router /query", data, is_vision_search)
     datastore = session.exec(select(DataStore).where(DataStore.id == datastore_id)).first()
     results_object = retrieve_documents(
         query,
+        search_image=data.search_image,
         message_history=data.messages,
-        selected_documents= data.selectedDocuments,
+        selected_documents= data.selected_documents,
         use_knowledge_base=use_knowledge_base,
         query_optimizer= query_rewriting_type,
         embedding_model_name= datastore.embedding_model,
@@ -156,7 +158,8 @@ def retrieve(
         sources= use_citation,
         guardrailOption= guardrail_type,
         rerankerOption= reranker_type,
-        datastore_id= datastore_id
+        datastore_id= datastore_id,
+        is_vision_search= is_vision_search,
     )
     
     # # Process the final answer.

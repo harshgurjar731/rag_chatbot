@@ -23,7 +23,8 @@ class Message(BaseModel):
 
 class ChatInterfaceDetails(BaseModel):
     messages: List[Message]
-    selectedDocuments: List[str]
+    selected_documents: List[str]
+    search_image: str
 
 class Prompt(BaseModel):
     use_knowledge_base: bool = True

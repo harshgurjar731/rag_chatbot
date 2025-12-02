@@ -355,14 +355,15 @@ const ChatbotDetail = () => {
               chatbot={chatbot}
               chatbotName="MyBot"
               onSendMessage={async (payload) => {
-                const { question, messages, useKnowledgeBase, selectedDocuments, optimizer, llmProvider, llmModel, temperature, guardrailOption, tokenSize, showSources, rerankerOption } = payload;
+                const { question, messages, searchImage, useKnowledgeBase, selectedDocuments, optimizer, llmProvider, llmModel, temperature, guardrailOption, tokenSize, showSources, rerankerOption } = payload;
                 console.log("LLM Provider:", llmProvider, useKnowledgeBase)
                 const data = { 
                                 messages: messages.map((msg) => ({
                                     role: msg.isUser ? "user" : "assistant",
                                     content: msg.content,
                                   })),
-                                selectedDocuments: selectedDocuments
+                                selected_documents: selectedDocuments,
+                                search_image: searchImage
                               }
                 const response = await axios.post(`http://localhost:8000/rag/query/${chatbot.id}`, data, {
                 // const response = await axios.get(`http://localhost:8000/retriever/query/${chatbot.name}`, {
@@ -379,6 +380,7 @@ const ChatbotDetail = () => {
                     use_citation: showSources || false,
                     datastore_id: chatbot.datastoreId,
                     query: question,
+                    is_vision_search: true,
                   },
 
                   // ✅ ensure arrays become file_id=12&file_id=16 instead of file_id[]=...

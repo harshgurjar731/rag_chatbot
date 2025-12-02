@@ -10,6 +10,7 @@ from ingestion_pipleline.ingestion_datastore_router import router as ingestion_d
 from ingestion_pipleline.ingestion_document_loader_router import router as ingestion_document_router
 from ingestion_pipleline.ingestion_chunks_router import router as ingestion_chunking_router
 from rag_pipeline.rag_router import router as rag_knowledge_asst_router
+# from rag_pipeline.image_reranker_router import router as image_reranking_router
 
 # ================= PHOENIX SETUP START =================
 
@@ -77,7 +78,7 @@ app.include_router(ingestion_chunking_router, prefix="/ingestion")
 
 app.include_router(rag_knowledge_asst_router, prefix="/rag")
 
-
+# app.include_router(image_reranking_router, prefix='/rag')
 
 
 # Initialize database and list contents on startup

@@ -20,8 +20,12 @@ def create_embedding_model(provider: str, model_name: str):
         ) 
     
 from langchain_community.embeddings import HuggingFaceEmbeddings
+from langchain_experimental.open_clip.open_clip import OpenCLIPEmbeddings
 class HuggingFaceModel(EmbeddingModelsProtocol):
     def configureModel(self, model_name: str):
+        if (model_name == "ViT-H-14"):
+            print("In clip embedding:", model_name) #TODOANKIT - See how to handle CLIP Model embedding
+            return OpenCLIPEmbeddings(model_name=model_name)
         return HuggingFaceEmbeddings(model_name=model_name)
 
 from langchain_community.embeddings import OpenAIEmbeddings

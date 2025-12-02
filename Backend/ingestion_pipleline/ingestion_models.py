@@ -29,13 +29,18 @@ class UpsertRequestData(BaseModel):
 
 class TestRetrievalRequestData(BaseModel):
     query_str: str
+    image_base64: str
     top_k: int
     rerank_enabled: bool
     embedding_provider: str
     embedding_model: str
     similarity_metric: str
     vector_store_provider: str
+    is_vision_search: bool
 
+class ProcessDocumentResponse(BaseModel):
+    success: bool
+    chunks: List[str]
 
 class ChunkTextResponse(BaseModel):
     chunks: List[str]

@@ -34,7 +34,7 @@ export const DocumentLoaderConfigForm = ({
   const [selectedFileName, setSelectedFileName] = useState<string|null>(null);
   const [metadata, setMetadata] = useState("{}");
   const [omitKeys, setOmitKeys] = useState("key1, key2, key3.nestedKey1");
-  const [selectedSplitter, setSelectedSplitter] = useState<string | null>(null);
+  const [selectedSplitter, setSelectedSplitter] = useState<string>("");
   const [splitterConfig, setSplitterConfig] = useState<any>(null);
   const [showSplitterDialog, setShowSplitterDialog] = useState(false);
   const [chunks, setChunks] = useState<any[]>([]);
@@ -53,6 +53,14 @@ export const DocumentLoaderConfigForm = ({
       setSelectedFiles((p) => p ? [...p, ...Array.from(e.target.files)] : Array.from(e.target.files));
       setSelectedFileName(e.target.files[0].name)
       setChunks([])
+      if (e.target.files[0]) {
+        const reader = new FileReader();
+        reader.readAsDataURL(e.target.files[0]);
+
+        reader.onload = () => {
+          console.log("Base64:", reader.result);
+        };
+      }
     }
   };
 
@@ -74,7 +82,7 @@ export const DocumentLoaderConfigForm = ({
     if (!open) {
       setEditMode(false)
       setSelectedFileName(null)
-      setSelectedSplitter(null)
+      setSelectedSplitter("")
       setSplitterConfig(null)
       setChunks([])
       setShowChunkPreview(false)
@@ -128,8 +136,8 @@ export const DocumentLoaderConfigForm = ({
       headers: { "Content-Type": "multipart/form-data" }
     });
 
-    const chunksResponse = await axios.post(`http://127.0.0.1:8000/ingestion/document/processChunks`, response.data);
-    console.log("chunks ", chunksResponse.data)
+    const processResponse = await axios.post(`http://127.0.0.1:8000/ingestion/document/process`, response.data);
+    console.log("chunks ", processResponse.data)
     onOpenChange(false)
   };
 
@@ -339,7 +347,7 @@ export const DocumentLoaderConfigForm = ({
             <Button
               variant="chatbot"
               onClick={handleProcess}
-              disabled={!selectedFiles || selectedFiles.length == 0 || !selectedSplitter || chunks.length === 0}
+              disabled={!selectedFiles || selectedFiles.length == 0 || (loaderType == "pdf" && !selectedSplitter && chunks.length === 0)}
             >
               <Database className="h-4 w-4 mr-2" />
               Process

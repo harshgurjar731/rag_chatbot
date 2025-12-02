@@ -12,10 +12,15 @@ import uuid
 from typing import List
 from config import CONFIG  # Load .env variables
 from langchain_core.documents import Document
-from ingestion_pipleline.ingestion_models import DataStoreCreate, ChunkTextResponse, GetDocumentDetailsRequest
+from ingestion_pipleline.ingestion_models import DataStoreCreate, ChunkTextResponse, GetDocumentDetailsRequest, ProcessDocumentResponse
 from ingestion_pipleline.Config.Config import INGESTION_CONFIG
 from ingestion_pipleline.Loaders.document_loader import load_document_with_metadata 
 from ingestion_pipleline.TextSplitters.document_splitter import split_document
+import base64
+from io import BytesIO
+from PIL import Image
+import tempfile
+
 
 router = APIRouter()
 
@@ -40,34 +45,71 @@ async def upsertDocs(
     if (len(pending_document_ids) == 0):
         raise HTTPException(status_code=400, detail="No Files pending for upsert")
     chunks_to_be_uploaded = session.exec(select(ChunkRecord).where((ChunkRecord.datastore_id == datastore_id) & (ChunkRecord.document_id.in_(pending_document_ids)))).all()
-    list_of_documents: List[Document] = []
-    chunk_ids: List[str] = []
+    list_of_text_documents: List[Document] = []
+    list_of_img_documents: List[Document] = []
+    text_chunk_ids: List[str] = []
+    img_chunk_ids: List[str] = []
     for idx, chunk in enumerate(chunks_to_be_uploaded):
-        list_of_documents.append(Document(
-            page_content=chunk.text,
-            metadata=chunk.metadatas
-        ))
-        chunk_ids.append(chunk.chunk_index)
+        if (chunk.metadatas["content_type"] == "image"):
+            list_of_img_documents.append(Document(
+                page_content=chunk.text,
+                metadata=chunk.metadatas
+            ))
+            img_chunk_ids.append(chunk.chunk_index)
+        else:
+            list_of_text_documents.append(Document(
+                page_content=chunk.text,
+                metadata=chunk.metadatas
+            ))
+            text_chunk_ids.append(chunk.chunk_index)
 
-    embeddingModel = create_embedding_model(
-        provider=data.embedding_provider,
-        model_name=data.embedding_model
-    )
-    print("Embedding Created")
+    if(len(list_of_text_documents) > 0):
+        embeddingModel = create_embedding_model(
+            provider=data.embedding_provider,
+            model_name=data.embedding_model
+        )
+        print("Embedding Created")
 
-    vectordb = create_vector_store(provider=data.vector_store_provider)
-    print("Before Create Collection")
-    vectordb.create_collection(
-        name=str(datastore_id),
-        dimension=384
-    )
-    print("After Create Collection")
-    insert_success = vectordb.insert_docs(
-        collection=str(datastore_id),
-        documents=list_of_documents,
-        chunkids=chunk_ids,
-        embedding=embeddingModel
-    )
+        vectordb = create_vector_store(provider=data.vector_store_provider)
+        print("Before Create Collection")
+        vectordb.create_collection(
+            name=str(datastore_id),
+            embedding=embeddingModel
+        )
+        print("After Create Collection")
+        insert_success = vectordb.insert_docs(
+            collection=str(datastore_id),
+            documents=list_of_text_documents,
+            chunkids=text_chunk_ids,
+            embedding=embeddingModel
+        )
+    if(len(list_of_img_documents) > 0):
+        embeddingModel = create_embedding_model(
+            provider=data.embedding_provider,
+            model_name=data.embedding_model  #TODOANKIT: Replace with image_embedding_model -> when supporting multiple models for text and image
+        )
+
+        print("Embedding Model Created", img_chunk_ids)
+        vectordb = create_vector_store(provider=data.vector_store_provider)
+        print("Before Create Collection")
+        vectordb.create_collection(
+            name=str(datastore_id) + "_image",
+            embedding=embeddingModel
+        )
+        list_img_uri: List[str] = []
+        list_metadata: List[dict] = []
+        for id, imageDoc in enumerate(list_of_img_documents):
+            list_img_uri.append(imageDoc.metadata["source"])
+            list_metadata.append({"page_content": imageDoc.page_content, "metadata": imageDoc.metadata})
+
+        embeddingVectors = embeddingModel.embed_image(uris=list_img_uri)
+        print("After Create Collection", embeddingVectors)
+        insert_success = vectordb.insert_vectors(
+            collection=str(datastore_id) + "_image",
+            vectors=embeddingVectors,
+            metadata=list_metadata,
+            chunk_ids=img_chunk_ids
+        )
 
     if (insert_success):
         updateData = {
@@ -95,34 +137,68 @@ async def test_retrieval(
     session: Session = Depends(get_session),
     ):
 
-    embeddingModel = create_embedding_model(
-        provider=data.embedding_provider,
-        model_name=data.embedding_model
-    )
-    print("Embedding Created")
+    if (data.is_vision_search == True):
+        embeddingModel = create_embedding_model(
+            provider=data.embedding_provider,
+            model_name=data.embedding_model, #TODOANKIT: Replace with image_embedding_model -> when supporting multiple models for text and image
+        )
+        if(data.image_base64 and len(data.image_base64)):
+            print("In Image embedding flow")
+            b64_string = data.image_base64.split(",", 1)[1]
+            image_bytes = base64.b64decode(b64_string)
+            temp_file = tempfile.NamedTemporaryFile(delete=False, suffix=".png")  
+            temp_file.write(image_bytes)
+            temp_file.close()
+            queries_embedded = embeddingModel.embed_image([temp_file.name])
+        else:
+            queries_embedded = embeddingModel.embed_documents([data.query_str])
+    else:
+        embeddingModel = create_embedding_model(
+            provider=data.embedding_provider,
+            model_name=data.embedding_model
+        )
+        queries_embedded = embeddingModel.embed_documents([data.query_str])
 
     vectordb = create_vector_store(provider=data.vector_store_provider)
+    collection_name = str(datastore_id) if data.is_vision_search == False else str(datastore_id) + "_image"
     # vector_store already initialized earlier (same collection & embedding)
-    results = vectordb.test_retrieval(collection=str(datastore_id), embedding=embeddingModel, queryList= [data.query_str], topk= data.top_k)
-    if(data.rerank_enabled): 
-        results = apply_reranker(INGESTION_CONFIG["ingestion_reranker_type"], INGESTION_CONFIG["ingestion_reranker_model_name"], data.query_str, results[0], INGESTION_CONFIG["ingestion_reranker_topk"])
+    print("Collection Name", collection_name)
+    results = vectordb.retrieve_docs_for_embeddings(collection=collection_name, embeddings=queries_embedded, topk= data.top_k)
+    print(results)
+    # if(data.rerank_enabled and data.is_vision_search):
+        
+    # else if(data.rerank_enabled):
+    results = apply_reranker(INGESTION_CONFIG["ingestion_reranker_type"], INGESTION_CONFIG["ingestion_reranker_model_name"], data.query_str, results[0], INGESTION_CONFIG["ingestion_reranker_topk"])
 
     return results
 
-    
-@router.post("/document/processChunks", response_model=ChunkTextResponse)
-async def process_chunks(
-    data: DocumentRecord,
-    session: Session = Depends(get_session)
-    ):
+#@router.post("/document/process", response_model=ProcessDocumentResponse)
+# async def process_document(
+#     data: DocumentRecord,
+#     session: Session = Depends(get_session)
+#     ):
+#     document = session.exec(select(DocumentRecord).where(DocumentRecord.id == data.id)).first()
 
-    document = session.exec(select(DocumentRecord).where(DocumentRecord.id == data.id)).first()
+#     file_extension = document.filename.lower().split('.')[-1]
+
+#     if (file_extension in ["jpg", "jpeg", "png", "bmp"]):
+#         return ProcessDocumentResponse(success=True, chunks=[])
+#     else:
+#         chunks = process_text_document(document=document, session=session)
+#         return ProcessDocumentResponse(success=True, chunks=chunks)
+
+    
+@router.post("/document/process", response_model=ProcessDocumentResponse)
+async def process_document(
+    documentRecord: DocumentRecord,
+    session: Session = Depends(get_session)
+    ) -> List[str]:
+
+    document = session.exec(select(DocumentRecord).where(DocumentRecord.id == documentRecord.id)).first()
     print("Received document details:", document)   
 
     list_of_documets = load_document_with_metadata(document)
-    print("Loaded Docs", list_of_documets.count)    
     splitted_chunks = split_document(document, list_of_documets)
-    print("Splitted Docs", splitted_chunks.count)    
     
 
     chunk_texts: List[str] = []
@@ -138,9 +214,10 @@ async def process_chunks(
             metadatas=chunk.metadata
         )
         chunk_texts.append(chunk.page_content)
+        print("CHUNK_RECORD", chunk_record)
         session.add(chunk_record)
     session.commit()
-    return ChunkTextResponse(chunks=chunk_texts)
+    return ProcessDocumentResponse(success=True, chunks=chunk_texts)
 
 
 @router.post("/document/getChunks")

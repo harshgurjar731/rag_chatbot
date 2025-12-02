@@ -6,11 +6,12 @@ from config import CONFIG
 from rag_pipeline.rag_models import Message
 from rag_pipeline.Config.rag_config import RAG_CONFIG
 from rag_pipeline.Services.chat_answer_retriever import get_llm_answer
-from rag_pipeline.Services.rag_retriever import get_llm_rag_answer  # ✅ Unified RAG Pipeline
+from rag_pipeline.Services.rag_retriever import get_rag_answer_text, get_rag_answer_image  # ✅ Unified RAG Pipeline
 from typing import List
 
 def retrieve_documents(
     query: str,
+    search_image: str,
     message_history: List[Message],
     selected_documents: List[str],
     query_optimizer: str = None,
@@ -27,6 +28,7 @@ def retrieve_documents(
     guardrailOption: str = None,
     rerankerOption: str = None,
     datastore_id: str = None,
+    is_vision_search: bool = False,
     # chatbot_id: str = "RAG_Document_Store"
 ):
     """Main entry for retrieving documents using unified RAG pipeline."""
@@ -63,6 +65,29 @@ def retrieve_documents(
         return result
     else:
         print("In knowledge base flow")
+        print("is_vision_search", is_vision_search)
+        if(is_vision_search):
+            result = get_rag_answer_image(
+                query=query,
+                search_image= search_image,
+                # message_history= past_messages,
+                # selected_documents=selected_documents,
+                # llm_model_name=llm_model_name,
+                # llm_model_provider=llm_model_provider,
+                # temperature=temperature,
+                # token_size=token_size,
+                include_sources=sources,
+                # guardrail_level=guardrailOption,
+                embedding_model_name= embedding_model_name,
+                embedding_model_provider = embedding_model_provider,
+                vector_store_provider= vector_db,
+                vector_store_collection_name= datastore_id,
+                vector_store_top_k= RAG_CONFIG["default_query_retrieval_top_k"],
+                reranker_type= rerankerOption,
+                reranker_top_k=RAG_CONFIG["default_rerank_top_k"],
+                # query_optimizer= query_optimizer,
+            )
+            return result
 
         user_message = [("user", "{question}")]
         # conversation is tuple so it should be multiple of two
@@ -79,8 +104,9 @@ def retrieve_documents(
 
         past_messages = conversation_history + user_message
 
-        result = get_llm_rag_answer(
+        result = get_rag_answer_text(
             query=query,
+            search_image= search_image,
             message_history= past_messages,
             selected_documents=selected_documents,
             llm_model_name=llm_model_name,

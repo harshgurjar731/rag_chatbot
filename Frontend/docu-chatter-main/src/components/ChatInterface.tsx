@@ -8,6 +8,16 @@ import {
   ThumbsUp,
   ThumbsDown,
   Eye,
+  Image,
+  Pin,
+  Upload,
+  FileImageIcon,
+  Paperclip,
+  Cross,
+  Delete,
+  CrossIcon,
+  RemoveFormatting,
+  XIcon,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -65,6 +75,7 @@ import {
   TabsTrigger,
   TabsContent,
 } from "@/components/ui/tabs"
+import { fileToBase64 } from "@/utilities/utils";
 
 // interface Citation {
 //   source: string;
@@ -75,6 +86,7 @@ import {
 
 interface QueryPayload {
   messages: ChatMessage[];
+  searchImage: string;
   useKnowledgeBase: boolean;
   selectedDocuments: string[];
   question: string;
@@ -86,6 +98,7 @@ interface QueryPayload {
   tokenSize: number;
   showSources: boolean;
   rerankerOption: string;
+  isVisionSearch: boolean;
 }
 
 
@@ -123,8 +136,8 @@ export const ChatInterface = ({
   type StoredChatMessage = Omit<ChatMessage, "timestamp"> & {
     timestamp: string;
   };
-
-
+  const [inputImageBase64, setInputImageBase64] = useState<string>("")
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [messages, setMessages] = useState<ChatMessage[]>(() => {
     const saved = localStorage.getItem(storageKey);
     if (saved) {
@@ -415,6 +428,18 @@ export const ChatInterface = ({
     }
   };
 
+   const handleSearchImageUpload = async (event) => {
+     try {
+       const file = event.target.files?.[0];
+       if (!file) return;
+       const base64 = await fileToBase64(file);
+       setInputImageBase64(base64);
+       setImagePreview(base64);
+     } catch (error) {
+       console.error("Failed to convert file to base64:", error);
+     }
+   };
+
 
   const handleSend = async () => {
     if (!input.trim() || isLoading) return;
@@ -458,6 +483,7 @@ export const ChatInterface = ({
       const response: any = await onSendMessage({
         messages: messages,
         question: input.trim(),
+        searchImage: inputImageBase64,
         selectedDocuments: selectedDocsParam,
         useKnowledgeBase: selectedDocs.length != 0,
         llmProvider: tempSettings.llmProvider, 
@@ -468,9 +494,10 @@ export const ChatInterface = ({
         tokenSize: tempSettings.tokenSize,
         showSources: tempSettings.showSources,
         rerankerOption: tempSettings.rerankerOption,
+        isVisionSearch: true,
       });
-      console.log("Response Citations JSON:", JSON.parse(response.citations));
-
+      // console.log("Response Citations JSON:", JSON.parse(response.citations));
+      console.log("Response ImagePaths JSON:",response.images)
       const grouped_citations: Citation[] = Object.values(
         JSON.parse(response["citations"]).reduce((acc, { source, page_number }) => {
           if (!acc[source]) {
@@ -490,6 +517,7 @@ export const ChatInterface = ({
         timestamp: new Date(),
         traceId: response["traceId"],
         Citation: grouped_citations || [],
+        images: response["images"],
       };
       console.log("Bot message with citations:", botMessage.Citation);
       setMessages((prev) => [...prev, botMessage]);
@@ -644,7 +672,6 @@ export const ChatInterface = ({
     console.error("Error viewing file:", error);
   }
 };
-
   const handleSave = (overrides: Partial<typeof tempSettings> = {}) => {
     const settings = { ...tempSettings, ...overrides };
     try {
@@ -784,6 +811,19 @@ export const ChatInterface = ({
                         {!message.isUser && (
                           <div className="mt-3 flex flex-col gap-2">
                             {/* SOURCES BOX */}
+                            {message.images && message.images.length > 0 && 
+                              <div className="flex gap-4">
+                                {message.images.map((item, index) => (
+                                    <div key={index}>
+                                      <img
+                                        src={`data:image/png;base64,${item}`}
+                                        alt={`img-${index}`}
+                                        style={{ width: "50px" }}
+                                      />
+                                    </div>
+                                  ))}
+                              </div>
+                            }
 
                             {Array.isArray(message.Citation) &&
                             message.Citation.length > 0 ? (
@@ -812,8 +852,8 @@ export const ChatInterface = ({
                                         </span>
                                         <a
                                           href="#"
-                                          onClick={(e) =>
-                                            viewDocument(filename)
+                                          onClick={
+                                            (e) => viewDocument(filename)
                                             // handleFileClick(
                                             //   e,
                                             //   chatbot.datastoreId,
@@ -1004,14 +1044,51 @@ export const ChatInterface = ({
                   <Mic className="h-4 w-4" />
                 )}
               </Button>
-              <Input
-                value={input}
-                onChange={(e) => setInput(e.target.value)}
-                onKeyPress={handleKeyPress}
-                placeholder="Ask me anything..."
-                disabled={isLoading}
-                className="flex-1 border border-chatbot-primary/40"
+              <div className="flex-1 flex gap-4">
+                <Input
+                  value={input}
+                  onChange={(e) => setInput(e.target.value)}
+                  onKeyPress={handleKeyPress}
+                  placeholder="Ask me anything..."
+                  disabled={isLoading}
+                  className="flex-1 border border-chatbot-primary/40"
+                />
+                {imagePreview && (
+                  <div className="relative inline-block">
+                    <img
+                      src={imagePreview}
+                      alt="Preview"
+                      className="w-10 h-10 object-cover rounded-lg border border-gray-300"
+                    />
+                    <button
+                      onClick={() => {
+                        setImagePreview(null)
+                        setInputImageBase64("")
+                      }}
+                      className="absolute -top-2 -right-2 bg-white text-gray-600 hover:text-red-600 
+                                border border-gray-300 rounded-full w-4 h-4 flex items-center justify-center 
+                                shadow-sm"
+                    >
+                      <XIcon className="h-4 w-4" />
+                    </button>
+                  </div>
+                )}
+              </div>
+              {/* --- IMAGE UPLOAD BUTTON (ADDED) --- */}
+              <label
+                htmlFor="imageUpload"
+                className="flex items-center justify-center w-10 h-10 rounded-md bg-chatbot-secondary hover:bg-chatbot-primary cursor-pointer" // ⬅️ ADDED
+              >
+                <Paperclip className="h-5 w-5 text-gray-700" /> {/* ⬅️ ADDED */}
+              </label>
+              <input
+                type="file"
+                id="imageUpload"
+                accept="image/*"
+                onChange={handleSearchImageUpload} // ⬅️ ADDED
+                className="hidden" // ⬅️ ADDED
               />
+
               <Button
                 variant="chatbot"
                 className="flex gap-4 mr-4"
@@ -1085,7 +1162,7 @@ export const ChatInterface = ({
                               e.stopPropagation();
                               viewDocument(doc.label);
                             }}
-                                className="top-2 right-2 z-20 p-1 rounded-md
+                            className="top-2 right-2 z-20 p-1 rounded-md
                                 transition-all
                                 hover:bg-chatbot-primary/15 hover:scale-110"
                           >
@@ -1114,7 +1191,9 @@ export const ChatInterface = ({
                     >
                       <SelectTrigger className="border border-chatbot-primary/20">
                         <SelectValue
-                          placeholder={tempSettings.llmProvider || "Select LLM Provider"}
+                          placeholder={
+                            tempSettings.llmProvider || "Select LLM Provider"
+                          }
                         />
                       </SelectTrigger>
                       <SelectContent>
@@ -1126,7 +1205,7 @@ export const ChatInterface = ({
                       </SelectContent>
                     </Select>
                   </div>
-                  
+
                   {/* LLM Model */}
                   <div className="space-y-1">
                     <Label>LLM Model</Label>

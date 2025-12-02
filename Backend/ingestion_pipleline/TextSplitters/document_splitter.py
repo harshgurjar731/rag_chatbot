@@ -19,13 +19,13 @@ from ingestion_pipleline.Config.Config import INGESTION_CONFIG
 def split_document(doc: DocumentRecord, loadedDocs: List[Document]) -> List[Document]:
     method = doc.textSplitMethod.lower()
     print("In Splitter")
-    if method == "Character Text Splitter".lower():
+    if method == "character".lower():
         print("In Character", doc.chunkSize, doc.chunkOverlap)
         splitter = CharacterTextSplitter(
             chunk_size=doc.chunkSize or INGESTION_CONFIG["default_chunk_size"],
             chunk_overlap=doc.chunkOverlap or INGESTION_CONFIG["default_chunk_overlap"]
         )
-    elif method == "Recursive Character Text Splitter".lower():
+    elif method == "recursive".lower():
         print("In Recursive", doc.chunkSize, doc.chunkOverlap)
         splitter = RecursiveCharacterTextSplitter(
             chunk_size=doc.chunkSize or INGESTION_CONFIG["default_chunk_size"],
@@ -41,7 +41,7 @@ def split_document(doc: DocumentRecord, loadedDocs: List[Document]) -> List[Docu
             chunk_overlap=doc.chunkOverlap or INGESTION_CONFIG["default_chunk_overlap"]
         )
     else:
-        raise ValueError(f"Unsupported chunking method: {method}")
+       return loadedDocs
 
     # ✅ Split documents
     document_chunks = splitter.split_documents(loadedDocs)

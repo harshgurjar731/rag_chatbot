@@ -38,7 +38,7 @@ export const TextSplitterSelectionDialog = ({
       chunkOverlap: parseInt(chunkOverlap),
       customSeparators,
     };
-    onSelect(splitterTypes.find(s => s.value === selectedSplitter)?.label || "Recursive Character Text Splitter", config);
+    onSelect(splitterTypes.find(s => s.value === selectedSplitter)?.value, config);
     onOpenChange(false);
   };
 

@@ -1,9 +1,10 @@
 from typing import Protocol
 from typing import List, Dict, Any
 from langchain_core.documents import Document
+from langchain_community.embeddings import HuggingFaceEmbeddings, OpenAIEmbeddings
 
 class VectorStoreProtocol(Protocol):
-    def create_collection(self, name: str, dimension: int) -> None:
+    def create_collection(self, name: str, embedding: HuggingFaceEmbeddings|OpenAIEmbeddings) -> None:
         ...
 
     def delete_collection(self, name: str) -> bool:

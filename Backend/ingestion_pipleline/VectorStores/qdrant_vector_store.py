@@ -4,6 +4,8 @@ from PIL import Image
 from langchain_core.documents import Document
 from langchain_core.embeddings import Embeddings
 from langchain_qdrant import QdrantVectorStore
+from langchain_experimental.open_clip.open_clip import OpenCLIPEmbeddings
+from langchain_community.embeddings import HuggingFaceEmbeddings, OpenAIEmbeddings
 import json
 import os
 import fitz  # PyMuPDF
@@ -17,8 +19,10 @@ from qdrant_client import QdrantClient, models
 from qdrant_client.models import VectorParams, Distance, PointStruct, Filter, FieldCondition, MatchValue
 import concurrent.futures
 
-QDRANT_API_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhY2Nlc3MiOiJtIn0.stqye0XmMsoZUJ-oXkhD8a8UmlibnKSa_JfrRKWAll0"
-QDRANT_CLUSTER_URL = "https://6c504361-ebbd-4169-ac71-56b10bc167d0.us-east4-0.gcp.cloud.qdrant.io:6333"
+QDRANT_API_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhY2Nlc3MiOiJtIn0.cxNfWC0cJ3ekgS6AgWfaIH68vRu0apXHCnnIw7FzgjA"
+#QDRANT_API_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhY2Nlc3MiOiJtIn0.stqye0XmMsoZUJ-oXkhD8a8UmlibnKSa_JfrRKWAll0"
+#QDRANT_CLUSTER_URL = "https://6c504361-ebbd-4169-ac71-56b10bc167d0.us-east4-0.gcp.cloud.qdrant.io:6333"
+QDRANT_CLUSTER_URL = "https://e53339bc-373e-425a-a9b2-fddccecdd40c.us-east-1-1.aws.cloud.qdrant.io:6333"
 QDRANT_TIMEOUT = 120
 
 class QDrantVectorDB(VectorStoreProtocol):
@@ -46,9 +50,10 @@ class QDrantVectorDB(VectorStoreProtocol):
         return models.Filter(should=should_conditions)
     
 
-    def create_collection(self, name: str, dimension: int) -> None:
+    def create_collection(self, name: str, embedding: HuggingFaceEmbeddings|OpenAIEmbeddings) -> None:
         if (self.client.collection_exists(collection_name=name)):
             return
+        dimension = len(embedding.embed_query("Test Query"))
         result = self.client.create_collection(
             collection_name=name,
             vectors_config=VectorParams(size=dimension, distance=Distance.COSINE)
@@ -77,14 +82,13 @@ class QDrantVectorDB(VectorStoreProtocol):
         added_ids = vector_store.add_documents(documents=documents, ids= chunkids)
         return len(added_ids) > 0
    
-    # def insert_vectors(self, collection: str, vectors, metadata):
-    #     ids = [str(uuid.uuid4()) for _ in vectors]
-    #     points = [
-    #         PointStruct(id=id_, vector=vec, payload=meta)
-    #         for id_, vec, meta in zip(ids, vectors, metadata)
-    #     ]
-    #     self.client.upsert(collection_name=collection, points=points)
-    #     return ids
+    def insert_vectors(self, collection: str, vectors: List[List[float]], metadata: List[dict], chunk_ids: List[str]):
+        points = [
+            PointStruct(id=id_, vector=vec, payload=meta)
+            for id_, vec, meta in zip(chunk_ids, vectors, metadata)
+        ]
+        result = self.client.upsert(collection_name=collection, points=points)
+        return result.status == models.UpdateStatus.COMPLETED
 
     # def query(self, collection, queryString, top_k=5, filters=None):
     #     qdrant_filters = None
@@ -110,11 +114,11 @@ class QDrantVectorDB(VectorStoreProtocol):
         return result[0].dict() if result else None
 
     def test_retrieval(self, collection: str, embedding: Embeddings, queryList: List[str], topk: int, selected_docs: List[str] = []) -> List[List[Document]]:
-        vector_store = QdrantVectorStore(
-            client=self.client,
-            collection_name=collection,
-            embedding=embedding,
-        )
+        # vector_store = QdrantVectorStore(
+        #     client=self.client,
+        #     collection_name=collection,
+        #     embedding=embedding,
+        # )
 
         filter = self.build_qdrant_filter(
             selected_files=selected_docs
@@ -124,25 +128,130 @@ class QDrantVectorDB(VectorStoreProtocol):
         if filter:
             search_kwargs["filter"] = filter
 
-        # vector_store already initialized earlier (same collection & embedding)
-        retriever = vector_store.as_retriever(
-            search_kwargs=search_kwargs
-                # return top 3 most relevant chunks
+        queries_embedded = embedding.embed_documents(queryList)
+
+        print("Embedded Queries: ", queries_embedded)
+
+        def search(q_emb):
+            return self.client.search(
+                collection_name=collection,
+                query_vector=q_emb,
+                limit=topk,
+                query_filter=filter
+            )
+        
+        def scored_point_to_document(point):
+            return Document(
+                page_content=point.payload["page_content"],
+                #metadata={k: v for k, v in point.payload.items() if k != "page_content"}
+                metadata=point.payload["metadata"]
+            )
+
+        with concurrent.futures.ThreadPoolExecutor() as ex:
+            all_results = list(ex.map(search, queries_embedded))
+
+        documents_for_query: List[List[Document]] = []
+        for i, result_set in enumerate(all_results):
+            print(f"\nResults for query: {queryList[i]}")
+            for point in result_set:
+                print(
+                    "ID:", point.id,
+                    "Score:", point.score,
+                    "Metadata:", point.payload    # <-- HERE
+                )
+            documents_for_query.append([scored_point_to_document(p) for p in result_set])
+
+
+        print("Outside For Loop", len(documents_for_query))
+        # # vector_store already initialized earlier (same collection & embedding)
+        # retriever = vector_store.as_retriever(
+        #     search_kwargs=search_kwargs
+        #         # return top 3 most relevant chunks
+        # )
+
+        # def invoke_fetch_for_query(retriever, query):
+        #     return retriever.invoke(query)
+
+        # with concurrent.futures.ThreadPoolExecutor() as executor:
+        #     futures = [executor.submit(invoke_fetch_for_query, retriever, q) for q in queryList]
+        #     results = [f.result() for f in futures]
+
+
+        # # results = retriever.invoke(query)
+        # print("Vector DB retrieved query count - ", len(results))
+        # print("First query chunk count", len(results[0]))
+        
+        return documents_for_query
+    
+    def retrieve_docs_for_embeddings(self, collection: str, embeddings:List[List[str]], topk: int, selected_docs: List[str] = []) -> List[List[Document]]:
+        # vector_store = QdrantVectorStore(
+        #     client=self.client,
+        #     collection_name=collection,
+        #     embedding=embedding,
+        # )
+
+        filter = self.build_qdrant_filter(
+            selected_files=selected_docs
         )
 
-        def invoke_fetch_for_query(retriever, query):
-            return retriever.invoke(query)
+        search_kwargs = {"k": topk}
+        if filter:
+            search_kwargs["filter"] = filter
 
-        with concurrent.futures.ThreadPoolExecutor() as executor:
-            futures = [executor.submit(invoke_fetch_for_query, retriever, q) for q in queryList]
-            results = [f.result() for f in futures]
+        queries_embedded = embeddings
 
+        print("Embedded Queries: ", queries_embedded)
 
-        # results = retriever.invoke(query)
-        print("Vector DB retrieved query count - ", len(results))
-        print("First query chunk count", len(results[0]))
+        def search(q_emb):
+            return self.client.search(
+                collection_name=collection,
+                query_vector=q_emb,
+                limit=topk,
+                query_filter=filter
+            )
         
-        return results
+        def scored_point_to_document(point):
+            return Document(
+                page_content=point.payload.get("page_content", ""),
+                #metadata={k: v for k, v in point.payload.items() if k != "page_content"}
+                metadata=point.payload["metadata"]
+            )
+
+        with concurrent.futures.ThreadPoolExecutor() as ex:
+            all_results = list(ex.map(search, queries_embedded))
+
+        documents_for_query: List[List[Document]] = []
+        for i, result_set in enumerate(all_results):
+            # print(f"\nResults for query: {queryList[i]}")
+            for point in result_set:
+                print(
+                    "ID:", point.id,
+                    "Score:", point.score,
+                    "Metadata:", point.payload    # <-- HERE
+                )
+            documents_for_query.append([scored_point_to_document(p) for p in result_set])
+
+
+        print("Outside For Loop", len(documents_for_query))
+        # # vector_store already initialized earlier (same collection & embedding)
+        # retriever = vector_store.as_retriever(
+        #     search_kwargs=search_kwargs
+        #         # return top 3 most relevant chunks
+        # )
+
+        # def invoke_fetch_for_query(retriever, query):
+        #     return retriever.invoke(query)
+
+        # with concurrent.futures.ThreadPoolExecutor() as executor:
+        #     futures = [executor.submit(invoke_fetch_for_query, retriever, q) for q in queryList]
+        #     results = [f.result() for f in futures]
+
+
+        # # results = retriever.invoke(query)
+        # print("Vector DB retrieved query count - ", len(results))
+        # print("First query chunk count", len(results[0]))
+        
+        return documents_for_query
     
 
     
