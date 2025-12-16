@@ -8,8 +8,9 @@ from rag_pipeline.Config.rag_config import RAG_CONFIG
 from rag_pipeline.Services.chat_answer_retriever import get_llm_answer
 from rag_pipeline.Services.rag_retriever import get_rag_answer_text, get_rag_answer_image  # ✅ Unified RAG Pipeline
 from typing import List
+from rag_pipeline.Services.nemo_service import nemo_service
 
-def retrieve_documents(
+async def retrieve_documents(
     query: str,
     search_image: str,
     message_history: List[Message],
@@ -47,6 +48,11 @@ def retrieve_documents(
 
     print("In retrieve service:",query, llm_model_name, temperature, token_size, sources, guardrailOption,  )
     print("Message_History", message_history)
+
+    answer = await nemo_service.generate_response(query)
+
+    print("Answer from Nemo Service", answer)
+    return 
     # -----------------------------
     # Case 1: No files -> plain LLM answer
     # -----------------------------

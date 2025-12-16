@@ -129,27 +129,23 @@ export const DatastoreConfigDetail = () => {
                 </h1>
               </div>
             </div>
-            <div className="flex items-center gap-3">
+            {documents.length !== 0 && (<div className="flex items-center gap-3">
               <Button
                 variant="chatbot"
                 onClick={() => setShowLoaderDialog(true)}
                 // className="bg-primary hover:bg-primary/90"
               >
                 <Plus className="h-4 w-4 mr-2" />
-                Add Document
+                Add document
               </Button>
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="outline">
-                    More Actions
+                    More actions
                     <MoreHorizontal className="h-4 w-4 ml-2" />
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-56">
-                  <DropdownMenuItem>
-                    <Settings className="h-4 w-4 mr-2" />
-                    View & Edit Chunks
-                  </DropdownMenuItem>
                   <DropdownMenuItem
                     onClick={() => {
                       setShouldUpsert(true);
@@ -168,17 +164,9 @@ export const DatastoreConfigDetail = () => {
                     <Search className="h-4 w-4 mr-2" />
                     Retrieval Query
                   </DropdownMenuItem>
-                  <DropdownMenuItem onClick={handleSync}>
-                    <RefreshCw className="h-4 w-4 mr-2" />
-                    Refresh
-                  </DropdownMenuItem>
-                  <DropdownMenuItem className="text-destructive">
-                    <Trash className="h-4 w-4 mr-2" />
-                    Delete
-                  </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
-            </div>
+            </div>) }
           </div>
         </div>
       </header>
@@ -207,7 +195,7 @@ export const DatastoreConfigDetail = () => {
               </div>
             </div>
             <h2 className="text-2xl font-semibold mb-3">
-              No Document Added Yet
+              No documents uploaded yet
             </h2>
             <Button
               variant="chatbot"
@@ -215,7 +203,7 @@ export const DatastoreConfigDetail = () => {
               // className="mt-4 bg-primary hover:bg-primary/90"
             >
               <Plus className="h-4 w-4 mr-2" />
-              Add Document
+              Add document
             </Button>
           </div>
         ) : (

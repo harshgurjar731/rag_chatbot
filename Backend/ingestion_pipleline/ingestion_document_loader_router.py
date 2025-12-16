@@ -21,44 +21,96 @@ import urllib.parse
 
 router = APIRouter()
 
-
-@router.post("/datastore/{datastore_id}/upload")
-async def upload_file_to_datastore(
+@router.post("/datastore/{datastore_id}/upload", response_model=List[DocumentRecord])
+async def upload_files_to_datastore(
     datastore_id: int,
-    file: UploadFile = File(...),
-    documentDetails: str = Form(...),
-    session: Session = Depends(get_session)):
+    files: List[UploadFile] = File(...),
+    documentDetails: List[str] = Form(...),
+    session: Session = Depends(get_session)
+):
+    # Ensure same number of metadata entries and files
+    if len(files) != len(documentDetails):
+        raise HTTPException(
+            status_code=400,
+            detail="Number of files and documentDetails entries must match"
+        )
 
-    print("Uploading file to datastore ID:", datastore_id)
-    print("Received document details:", documentDetails)    
+    # Fetch datastore
+    datastore = session.exec(
+        select(DataStore).where(DataStore.id == datastore_id)
+    ).first()
 
-    documentDetailsObj = DocumentRecord.model_validate_json(documentDetails)
-    documentDetailsObj.datastore_id = datastore_id
-    documentDetailsObj.insert_vector_status = False
-    print("Parsed document details:", documentDetailsObj)
+    if not datastore:
+        raise HTTPException(status_code=404, detail="Datastore not found")
 
-    datastore = session.exec(select(DataStore).where(DataStore.id == datastore_id)).first()
-    
-    existing = session.exec(select(DocumentRecord).where((DocumentRecord.datastore_id == datastore_id) & (DocumentRecord.filename == file.filename))).first()
-    if existing:
-        raise HTTPException(status_code=400, detail="Document already exists")
+    saved_files = []
 
-     # 3️⃣ Save file
-    datastore_root = INGESTION_CONFIG["ingestion_root"] / INGESTION_CONFIG["ingestion_data_folder_name"]
+    # Determine target root directory
+    datastore_root = (
+        INGESTION_CONFIG["ingestion_root"] /
+        INGESTION_CONFIG["ingestion_data_folder_name"] /
+        datastore.name
+    )
     os.makedirs(datastore_root, exist_ok=True)
 
-    file_path = datastore_root / datastore.name / file.filename
-    file_bytes = file.file.read()
-    with open(file_path, "wb") as f:
-        f.write(file_bytes)
-    print("File saved at: ", file_path)
-    documentDetailsObj.filePath = str(file_path)
+    for idx, file in enumerate(files):
+        # ----------- SAFETY: sanitize filenames --------------------
+        safe_filename = Path(file.filename).name  # Prevents directory traversal
+        # ------------------------------------------------------------
 
-    session.add(documentDetailsObj)
-    session.commit()
-    session.refresh(documentDetailsObj)
+        # Construct final file path
+        file_path = datastore_root / safe_filename
+        existing = session.exec(
+            select(DocumentRecord).where(
+                DocumentRecord.datastore_id == datastore_id,
+                DocumentRecord.filename == safe_filename
+            )
+        ).first()
 
-    return documentDetailsObj
+        if existing and file_path.exists():
+            print("Existing file: ", safe_filename)
+            continue
+
+        # Parse metadata
+        try:
+            meta = DocumentRecord.model_validate_json(documentDetails[idx])
+        except Exception as e:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Invalid metadata JSON at index {idx}: {str(e)}"
+            )
+        meta.datastore_id = datastore_id
+        meta.insert_vector_status = False
+        # Write file to disk in chunks (safe for large files)
+        try:
+            with open(file_path, "wb") as buffer:
+                while chunk := await file.read(1024 * 1024):  # 1MB chunks
+                    buffer.write(chunk)
+        except Exception as e:
+            raise HTTPException(
+                status_code=500,
+                detail=f"Failed to save file '{safe_filename}': {str(e)}"
+            )
+
+        meta.filePath = str(file_path)
+        # Save metadata to DB
+        try:
+            session.add(meta)
+            session.commit()
+            session.refresh(meta)
+        except Exception as e:
+            session.rollback()
+            # Clean up the file if DB write fails
+            if file_path.exists():
+                os.remove(file_path)
+            raise HTTPException(
+                status_code=500,
+                detail=f"Database error saving metadata for '{safe_filename}': {str(e)}"
+            )
+        print("model dump:", meta.model_dump())
+        saved_files.append(meta.model_copy(deep=True))
+        print("Saved Files: ", saved_files)
+    return saved_files
 
 @router.get("/datastore/{datastore_id}/documents" , response_model=List[DocumentRecordResponse])
 async def get_documents(

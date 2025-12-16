@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Plus, Bot, Sparkles, FileText, Database, DatabaseIcon } from 'lucide-react';
+import { Plus, Bot, Sparkles, FileText, Database, DatabaseIcon, Settings } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ChatbotCard } from '@/components/ChatbotCard';
 import { CreateChatbotDialog } from '@/components/CreateChatbotDialog';
@@ -80,13 +80,13 @@ export const DatastoreDashboard = () => {
               </div>
               <div>
                 <h1 className="text-3xl font-bold text-foreground">Datastore Hub</h1>
-                <p className="text-muted-foreground">Create and manage your Datastores</p>
+                <p className="text-muted-foreground">Create and manage your datastores</p>
               </div>
             </div>
             {datastores.length > 0 && <CreateDatastoreDialog onCreateDatastore={handleCreateDatastore}>
                 <Button variant="chatbot" size="lg">
                   <Plus className="h-5 w-5" />
-                  Create New Datastore
+                  Create new datastore
                 </Button>
               </CreateDatastoreDialog>}
           </div>
@@ -101,32 +101,32 @@ export const DatastoreDashboard = () => {
               <DatabaseIcon className="h-16 w-16 text-chatbot-primary" />
             </div>
             <h2 className="text-2xl font-semibold mb-3 text-foreground">
-              Welcome to Your Datastore Hub
+              Welcome to your Datastore Hub
             </h2>
             <p className="text-muted-foreground mb-8 max-w-md">
-              Create datastore for different topics and documents. 
+              Create dedicated datastores for each assistant so they can retrieve the right documents, stay organized by topic, and deliver more accurate answers.
             </p>
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8 max-w-2xl">
               <div className="flex flex-col items-center p-4 rounded-lg bg-chatbot-surface-variant/50">
                 <FileText className="h-8 w-8 text-chatbot-primary mb-2" />
-                <h3 className="font-medium text-sm">Upload Documents</h3>
+                <h3 className="font-medium text-sm">Upload documents</h3>
                 <p className="text-xs text-muted-foreground text-center">
-                   Upload PDFs, Word docs, and text files, images, etc.
+                   Add PDFs, Word files, spreadsheets, images, and more to index them for semantic search and retrieval within your assistants.
                 </p>
               </div>
               <div className="flex flex-col items-center p-4 rounded-lg bg-chatbot-surface-variant/50">
-                <Bot className="h-8 w-8 text-chatbot-primary mb-2" />
-                <h3 className="font-medium text-sm">Configure Store</h3>
+                <Settings className="h-8 w-8 text-chatbot-primary mb-2" />
+                <h3 className="font-medium text-sm">Configure store</h3>
                 <p className="text-xs text-muted-foreground text-center">
-                  Select processing details like embedding models, splitters, and more.
+                  Choose how your data is processed by selecting embedding models, chunking strategies, metadata, and other RAG settings for each datastore.
                 </p>
               </div>
             </div>
             <CreateDatastoreDialog onCreateDatastore={handleCreateDatastore}>
             <Button variant="chatbot" size="lg">
               <Plus className="h-5 w-5" />
-              Create New Datastore
+              Create new datastore
             </Button>
             </CreateDatastoreDialog>
           </div>

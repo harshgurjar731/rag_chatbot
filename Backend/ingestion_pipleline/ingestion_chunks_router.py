@@ -1,5 +1,6 @@
 
 from fastapi import APIRouter, HTTPException, Depends, Query, UploadFile, File, Form
+from fastapi.concurrency import run_in_threadpool
 from pathlib import Path
 from sqlmodel import Session, select
 from models.FileRecord import FileRecord, update_document_record
@@ -188,36 +189,89 @@ async def test_retrieval(
 #         return ProcessDocumentResponse(success=True, chunks=chunks)
 
     
-@router.post("/document/process", response_model=ProcessDocumentResponse)
+# @router.post("/document/process", response_model=List[ProcessDocumentResponse])
+# async def process_document(
+#     documentRecord: List[DocumentRecord],
+#     session: Session = Depends(get_session)
+#     ) -> List[str]:
+
+#     processed_doc_responses = []
+#     for idx, doc in enumerate(documentRecord):    
+#         document = session.exec(select(DocumentRecord).where(DocumentRecord.id == doc.id)).first()
+#         print("Received document details:", document)   
+
+#         list_of_documets = load_document_with_metadata(document)
+#         splitted_chunks = split_document(document, list_of_documets)
+        
+
+#         chunk_texts: List[str] = []
+#         chunk_ids = [str(uuid.uuid4()) for _ in range(len(splitted_chunks))]
+
+#         # 4️⃣ Store in SQL DB too
+#         for idx, chunk in enumerate(splitted_chunks):
+#             chunk_record = ChunkRecord(
+#                 datastore_id=document.datastore_id,
+#                 document_id=document.id,
+#                 chunk_index=chunk_ids[idx],
+#                 text=chunk.page_content,
+#                 metadatas=chunk.metadata
+#             )
+#             chunk_texts.append(chunk.page_content)
+#             print("CHUNK_RECORD", chunk_record)
+#             session.add(chunk_record)
+#         session.commit()
+#         processed_doc_responses.append(ProcessDocumentResponse(success=True, chunks=chunk_texts))
+#     return processed_doc_responses
+
+@router.post("/document/process", response_model=List[ProcessDocumentResponse])
 async def process_document(
-    documentRecord: DocumentRecord,
+    documentRecord: List[DocumentRecord],
     session: Session = Depends(get_session)
-    ) -> List[str]:
+):
 
-    document = session.exec(select(DocumentRecord).where(DocumentRecord.id == documentRecord.id)).first()
-    print("Received document details:", document)   
+    # 1️⃣ Batch fetch all docs
+    ids = [d.id for d in documentRecord]
+    db_docs = session.exec(
+        select(DocumentRecord).where(DocumentRecord.id.in_(ids))
+    ).all()
 
-    list_of_documets = load_document_with_metadata(document)
-    splitted_chunks = split_document(document, list_of_documets)
-    
+    responses = []
 
-    chunk_texts: List[str] = []
-    chunk_ids = [str(uuid.uuid4()) for _ in range(len(splitted_chunks))]
+    for document in db_docs:
 
-    # 4️⃣ Store in SQL DB too
-    for idx, chunk in enumerate(splitted_chunks):
-        chunk_record = ChunkRecord(
-            datastore_id=document.datastore_id,
-            document_id=document.id,
-            chunk_index=chunk_ids[idx],
-            text=chunk.page_content,
-            metadatas=chunk.metadata
+        # 2️⃣ Move CPU-heavy operations off event loop
+        list_of_documents = await run_in_threadpool(
+            load_document_with_metadata, document
         )
-        chunk_texts.append(chunk.page_content)
-        print("CHUNK_RECORD", chunk_record)
-        session.add(chunk_record)
-    session.commit()
-    return ProcessDocumentResponse(success=True, chunks=chunk_texts)
+        
+        splitted_chunks = await run_in_threadpool(
+            split_document, document, list_of_documents
+        )
+
+        # 3️⃣ Prepare bulk insert
+        chunk_records = [
+            ChunkRecord(
+                datastore_id=document.datastore_id,
+                document_id=document.id,
+                chunk_index=str(uuid.uuid4()),
+                text=chunk.page_content,
+                metadatas=chunk.metadata
+            )
+            for chunk in splitted_chunks
+        ]
+
+        # 4️⃣ Bulk insert
+        session.add_all(chunk_records)
+        session.commit()
+
+        responses.append(
+            ProcessDocumentResponse(
+                success=True,
+                chunks=[c.text for c in chunk_records]
+            )
+        )
+
+    return responses
 
 
 @router.post("/document/getChunks")

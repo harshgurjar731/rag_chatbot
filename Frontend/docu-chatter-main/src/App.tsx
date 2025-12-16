@@ -27,7 +27,7 @@ const App = () => (
           <Route path="/" element={<SidebarLayout />}>
             <Route index element={<Dashboard />} />
             <Route path="evaluation" element={<EvaluationDashboard />} />
-            <Route path="datastore" element={<DatastoreConfigDetail />} />
+            {/* <Route path="datastore" element={<DatastoreConfigDetail />} /> */}
             <Route path="datastore2" element={<DatastoreDashboard />} />
             <Route path="*" element={<NotFound />} />
           </Route>

@@ -362,8 +362,7 @@ export const CreateChatbotDialog = ({ onCreateChatbot, children }: CreateChatbot
               className="flex-1"
               disabled={loading}
             >
-              <Sparkles className="h-4 w-4" />
-              {loading ? "Creating..." : "Create Assistant"}
+              {loading ? "Creating..." : "Create assistant"}
               {/* Create Chatbot */}
             </Button>
           </div>

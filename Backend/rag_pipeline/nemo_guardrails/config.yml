@@ -1,0 +1,65 @@
+models:
+  - type: main
+    engine: nvidia_ai_endpoints
+    model: meta/llama-3.1-70b-instruct
+    # model: meta/llama-3.1-8b-instruct
+
+  - type: content_safety
+    engine: nvidia_ai_endpoints
+    model: nvidia/llama-3.1-nemoguard-8b-content-safety
+
+  - type: llm
+    name: topic_control_model
+    engine: nvidia_ai_endpoints
+    model: nvidia/llama-3.1-nemoguard-8b-topic-control
+
+  # - type: xxx
+  #   name: xxx
+  #   engine: nvidia_ai_endpoints
+  #   model: nvidia/nemoguard-jailbreak-detect
+
+  # GROQ MODELS (Using OpenAI Engine)
+  # - type: llm
+  #   name: groq_content_safety_model
+  #   engine: openai
+  #   model: meta-llama/llama-guard-4-12b
+  #   parameters:
+  #     base_url: "https://api.groq.com/openai/v1"
+  #     api_key: ${GROQ_API_KEY} 
+
+  - type: llm
+    name: groq_jailbreak_model
+    engine: openai
+    model: meta-llama/llama-prompt-guard-2-86m
+    parameters:
+      base_url: "https://api.groq.com/openai/v1"
+      api_key: "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"
+    
+  # # ADD THIS for jailbreak detection
+  # - type: llm
+  #   name: jailbreak_model
+  #   engine: nvidia_ai_endpoints
+  #   model: nvidia/nemoguard-jailbreak-detect  # or correct jailbreak model
+
+rails:
+  input:
+    flows:
+      - check jailbreak groq
+      # - jailbreak detection model
+      - content safety check input $model=content_safety
+      - topic control check
+      # - check jailbreak groq
+      # - self check input
+      # - check content safety groq
+
+  output:
+    flows:
+      - content safety check output $model=content_safety
+      # - self check output
+      # - check content safety output groq
+
+instructions:
+  - type: general
+    content: |
+      You are a regular helpful and friendly assistant that answers everything in a polite and professional manner.
+

@@ -123,21 +123,26 @@ export const DocumentLoaderConfigForm = ({
     });
 
     const formData = new FormData();
-    formData.append("file", selectedFiles?.[0]);
-    formData.append("documentDetails", JSON.stringify({ 
-        filename: selectedFiles?.[0].name || "",
+
+    selectedFiles?.forEach((file, index) => {
+      formData.append("files", file);
+
+      // FastAPI expects documentDetails[i] to be a JSON string
+      formData.append("documentDetails", JSON.stringify({ 
+        filename: file.name || "",
         loaderType: loaderType,
         textSplitMethod: selectedSplitter || "",
         chunkSize: splitterConfig?.chunkSize || 0,
         chunkOverlap: splitterConfig?.chunkOverlap || 0,
-    }));
+      }));
+    });
 
     const response = await axios.post(`http://127.0.0.1:8000/ingestion/datastore/${datastoreId}/upload`, formData, {
       headers: { "Content-Type": "multipart/form-data" }
     });
-
+    console.log("Starting processing after upload")
     const processResponse = await axios.post(`http://127.0.0.1:8000/ingestion/document/process`, response.data);
-    console.log("chunks ", processResponse.data)
+    console.log("Processed Docs ", processResponse.data)
     onOpenChange(false)
   };
 
@@ -147,11 +152,15 @@ export const DocumentLoaderConfigForm = ({
         <DialogContent className="max-w-6xl max-h-[90vh] overflow-hidden flex flex-col">
           <DialogHeader>
             <div className="flex items-center gap-3">
-             {!selectedDocument && <Button variant="ghost" size="icon" onClick={onBack}>
-                <ArrowLeft className="h-5 w-5" />
-              </Button> }
+              {!selectedDocument && (
+                <Button variant="ghost" size="icon" onClick={onBack}>
+                  <ArrowLeft className="h-5 w-5" />
+                </Button>
+              )}
               <div className="flex items-center gap-3">
-                <DialogTitle className="text-2xl">{loaderNames[loaderType] || "Document Loader"}</DialogTitle>
+                <DialogTitle className="text-2xl">
+                  {loaderNames[loaderType] || "Document Loader"}
+                </DialogTitle>
                 <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center">
                   📄
                 </div>
@@ -166,41 +175,53 @@ export const DocumentLoaderConfigForm = ({
                 {/* File Upload */}
                 <div className="space-y-2">
                   <Label htmlFor="file" className="text-base font-semibold">
-                    {loaderNames[loaderType] || "File"} <span className="text-destructive">*</span>
+                    {loaderNames[loaderType] || "File"}{" "}
+                    <span className="text-destructive">*</span>
                   </Label>
-                  {!editMode && <>
-                  <p className="text-sm text-muted-foreground">Choose a file to upload</p>
-                  <div className="border-2 border-dashed rounded-lg p-8 text-center hover:border-primary transition-colors cursor-pointer">
-                    <input
-                      id="file"
-                      multiple
-                      type="file"
-                      accept=".pdf,.docx,.txt,.jpg,.jpeg,.png,.webp,.csv"
-                      onChange={handleFileChange}
-                      className="hidden"
-                    />
-                    <label htmlFor="file" className="cursor-pointer">
-                      <Upload className="h-8 w-8 mx-auto mb-2 text-primary" />
-                      <p className="text-sm font-medium">
-                        {selectedFiles?.length > 0 ? "" : "Upload File"}
+                  {!editMode && (
+                    <>
+                      <p className="text-sm text-muted-foreground">
+                        Choose a file to upload
                       </p>
-                    </label>
-                  </div>
-                  </>}
+                      <div className="border-2 border-dashed rounded-lg p-8 text-center hover:border-primary transition-colors cursor-pointer">
+                        <input
+                          id="file"
+                          multiple
+                          type="file"
+                          accept=".pdf,.docx,.txt,.jpg,.jpeg,.png,.webp,.csv"
+                          onChange={handleFileChange}
+                          className="hidden"
+                        />
+                        <label htmlFor="file" className="cursor-pointer">
+                          <Upload className="h-8 w-8 mx-auto mb-2 text-primary" />
+                          <p className="text-sm font-medium">
+                            {selectedFiles?.length > 0 ? "" : "Upload File"}
+                          </p>
+                        </label>
+                      </div>
+                    </>
+                  )}
                   {/* {selectedFiles && (
                     selectedFiles.map((file, index) => (
                       <p key={index} className="text-xs text-muted-foreground italic">{file.name}</p>
                     ))
                   )} */}
-                  {selectedFileName && (
-                    <p className="text-xs text-muted-foreground italic">{selectedFileName}</p>
+                  {selectedFiles.length > 0 && (
+                    <ul className="text-xs text-muted-foreground italic mt-2">
+                      {selectedFiles.map((file, index) => (
+                        <li key={index}>{file.name}</li>
+                      ))}
+                    </ul>
                   )}
                 </div>
 
                 {/* Additional Metadata */}
                 <div className="space-y-2">
                   <div className="flex items-center gap-2">
-                    <Label htmlFor="metadata" className="text-base font-semibold">
+                    <Label
+                      htmlFor="metadata"
+                      className="text-base font-semibold"
+                    >
                       Additional Metadata
                     </Label>
                     <div className="w-4 h-4 rounded-full bg-muted flex items-center justify-center text-xs">
@@ -257,15 +278,17 @@ export const DocumentLoaderConfigForm = ({
                           {splitterConfig && (
                             <div className="space-y-1 text-sm text-muted-foreground">
                               <p>Chunk Size: {splitterConfig.chunkSize}</p>
-                              <p>Chunk Overlap: {splitterConfig.chunkOverlap}</p>
+                              <p>
+                                Chunk Overlap: {splitterConfig.chunkOverlap}
+                              </p>
                             </div>
                           )}
                         </div>
                         <Button
                           variant="outline"
                           onClick={() => {
-                            setShowSplitterDialog(true)
-                            setChunks([])
+                            setShowSplitterDialog(true);
+                            setChunks([]);
                           }}
                           className="w-full"
                         >
@@ -289,17 +312,21 @@ export const DocumentLoaderConfigForm = ({
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
                   <h3 className="text-lg font-semibold">
-                    {chunks.length > 0 ? `${chunks.length} of ${chunks.length} Chunks` : "Preview"}
+                    {chunks.length > 0
+                      ? `${chunks.length} of ${chunks.length} Chunks`
+                      : "Preview"}
                   </h3>
                   <div className="flex items-center gap-2">
-                    <Label htmlFor="showCount" className="text-sm">Show Chunks in Preview</Label>
+                    <Label htmlFor="showCount" className="text-sm">
+                      Show Chunks in Preview
+                    </Label>
                     <Input
                       id="showCount"
                       type="number"
                       value={showCount}
                       onChange={(e) => {
-                        setShowCount(Number(e.target.value))
-                        setChunks([])
+                        setShowCount(Number(e.target.value));
+                        setChunks([]);
                       }}
                       className="w-20"
                     />
@@ -310,10 +337,19 @@ export const DocumentLoaderConfigForm = ({
                   <div className="border-2 border-dashed rounded-lg p-12 text-center">
                     <Eye className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
                     <Button
-                      onClick={editMode ? handleExistingFilePreviewChunks  : handleNewFilePreviewChunks}
+                      onClick={
+                        editMode
+                          ? handleExistingFilePreviewChunks
+                          : handleNewFilePreviewChunks
+                      }
                       variant="chatbot"
                       size="lg"
-                      disabled={(!selectedFiles || selectedFiles.length == 0 || !selectedSplitter) && !editMode}
+                      disabled={
+                        (!selectedFiles ||
+                          selectedFiles.length == 0 ||
+                          !selectedSplitter) &&
+                        !editMode
+                      }
                     >
                       <Eye className="h-4 w-4 mr-2" />
                       Preview Chunks
@@ -322,11 +358,18 @@ export const DocumentLoaderConfigForm = ({
                 ) : (
                   <div className="space-y-3 max-h-[500px] overflow-y-auto">
                     {chunks.map((chunk, index) => (
-                      <div key={chunk.id} className="p-4 rounded-lg border bg-card">
+                      <div
+                        key={chunk.id}
+                        className="p-4 rounded-lg border bg-card"
+                      >
                         <div className="flex items-center justify-between mb-2">
-                          <span className="font-semibold">#{index+1}. Characters: {chunk.length}</span>
+                          <span className="font-semibold">
+                            #{index + 1}. Characters: {chunk.length}
+                          </span>
                         </div>
-                        <p className="text-sm text-muted-foreground line-clamp-3">{chunk}</p>
+                        <p className="text-sm text-muted-foreground line-clamp-3">
+                          {chunk}
+                        </p>
                       </div>
                     ))}
                     {/* <Button
@@ -347,7 +390,13 @@ export const DocumentLoaderConfigForm = ({
             <Button
               variant="chatbot"
               onClick={handleProcess}
-              disabled={!selectedFiles || selectedFiles.length == 0 || (loaderType == "pdf" && !selectedSplitter && chunks.length === 0)}
+              disabled={
+                !selectedFiles ||
+                selectedFiles.length == 0 ||
+                (loaderType == "pdf" &&
+                  !selectedSplitter &&
+                  chunks.length === 0)
+              }
             >
               <Database className="h-4 w-4 mr-2" />
               Process

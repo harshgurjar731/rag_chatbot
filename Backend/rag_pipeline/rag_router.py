@@ -66,7 +66,7 @@ async def delete_assistant(
 
 
 @router.post("/query/{chatbot_id}", response_model=dict)
-def retrieve(
+async def retrieve(
     chatbot_id: str,
     data: ChatInterfaceDetails,
     use_knowledge_base: bool = Query(True),
@@ -141,7 +141,7 @@ def retrieve(
     # Call your existing service logic.
     print("In rag router /query", data, is_vision_search)
     datastore = session.exec(select(DataStore).where(DataStore.id == datastore_id)).first()
-    results_object = retrieve_documents(
+    results_object = await retrieve_documents(
         query,
         search_image=data.search_image,
         message_history=data.messages,

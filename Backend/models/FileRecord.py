@@ -30,6 +30,10 @@ class DocumentRecord(SQLModel, table=True):
         back_populates="document", sa_relationship_kwargs={"cascade": "all, delete-orphan"}
     )
 
+    model_config = {
+        "from_attributes": True   # <- THIS IS REQUIRED
+    }
+
 def update_document_record(session: Session, doc_id: int, update_data: dict):
     statement = select(DocumentRecord).where(DocumentRecord.id == doc_id)
     result = session.exec(statement)

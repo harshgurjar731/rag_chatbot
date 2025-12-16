@@ -136,10 +136,12 @@ export const ChatInterface = ({
   type StoredChatMessage = Omit<ChatMessage, "timestamp"> & {
     timestamp: string;
   };
+  localStorage.setItem(storageKey, "")
   const [inputImageBase64, setInputImageBase64] = useState<string>("")
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [messages, setMessages] = useState<ChatMessage[]>(() => {
     const saved = localStorage.getItem(storageKey);
+    console.log("Saved", saved)
     if (saved) {
       try {
         const parsed: StoredChatMessage[] = JSON.parse(saved);
@@ -522,17 +524,21 @@ export const ChatInterface = ({
       console.log("Bot message with citations:", botMessage.Citation);
       setMessages((prev) => [...prev, botMessage]);
     } catch (error: any) {
-      console.error("handleSend error:", error);
+      var errorStr =  error?.message ||
+          String(error) ||
+          "Failed to send message or fetch file ID.";
+      if (error.response.data.detail && JSON.parse(error.response.data.detail).safe == false) {
+        errorStr = JSON.parse(error.response.data.detail).reason
+      } 
+      console.error("handleSend error:", error.response.data.detail);
+
       const errorMessage: ChatMessage = {
         id: crypto.randomUUID(),
-        content:
-          error?.message ||
-          String(error) ||
-          "Failed to send message or fetch file ID.",
+        content: errorStr,
         isUser: false,
         timestamp: new Date(),
         traceId: "",
-        Citation: [],
+        Citation: null,
       };
       setMessages((prev) => [...prev, errorMessage]);
     } finally {
@@ -630,11 +636,11 @@ export const ChatInterface = ({
   const [tempSettings, setTempSettings] = useState({
     optimizer: "",
     embeddingModel: "",
-    llmModel: "",
-    llmProvider: "",
+    llmModel: "llama-3.3-70b-versatile",
+    llmProvider: "groq",
     vectorDb: "",
     guardrailOption: "",
-    temperature: 0.7,
+    temperature: 0.4,
     tokenSize: 512,
     showSources: true,
     rerankerOption: "none",
@@ -811,19 +817,19 @@ export const ChatInterface = ({
                         {!message.isUser && (
                           <div className="mt-3 flex flex-col gap-2">
                             {/* SOURCES BOX */}
-                            {message.images && message.images.length > 0 && 
+                            {message.images && message.images.length > 0 && (
                               <div className="flex gap-4">
                                 {message.images.map((item, index) => (
-                                    <div key={index}>
-                                      <img
-                                        src={`data:image/png;base64,${item}`}
-                                        alt={`img-${index}`}
-                                        style={{ width: "50px" }}
-                                      />
-                                    </div>
-                                  ))}
+                                  <div key={index}>
+                                    <img
+                                      src={`data:image/png;base64,${item}`}
+                                      alt={`img-${index}`}
+                                      style={{ width: "50px" }}
+                                    />
+                                  </div>
+                                ))}
                               </div>
-                            }
+                            )}
 
                             {Array.isArray(message.Citation) &&
                             message.Citation.length > 0 ? (
@@ -875,10 +881,10 @@ export const ChatInterface = ({
                                   })}
                                 </div>
                               </div>
-                            ) : (
-                              <div className="w-full rounded-lg border border-border/40 bg-muted/10 p-2 text-sm text-muted-foreground">
-                                No sources provided.
-                              </div>
+                            ) : (<></>
+                              // <div className="w-full rounded-lg border border-border/40 bg-muted/10 p-2 text-sm text-muted-foreground">
+                              //   No sources provided.
+                              // </div>
                             )}
 
                             {/* FOOTER ACTIONS */}
@@ -1031,17 +1037,18 @@ export const ChatInterface = ({
             </div>
           </ScrollArea>
           <div>
-            <div className="flex gap-4 ml-4 mb-2 ">
+            <div className="flex gap-4 ml-4 mb-2">
               <Button
-                variant={isListening ? "destructive" : "chatbot-secondary"}
+                variant={isListening ? "destructive" : "chatbot-primary"}
+                className="hover:bg-chatbot-primary border border-chatbot-primary/40"
                 size="icon"
                 onClick={toggleListening}
                 disabled={isLoading}
               >
                 {isListening ? (
-                  <MicOff className="h-4 w-4" />
-                ) : (
                   <Mic className="h-4 w-4" />
+                ) : (
+                  <MicOff className="h-4 w-4" />
                 )}
               </Button>
               <div className="flex-1 flex gap-4">
@@ -1062,8 +1069,8 @@ export const ChatInterface = ({
                     />
                     <button
                       onClick={() => {
-                        setImagePreview(null)
-                        setInputImageBase64("")
+                        setImagePreview(null);
+                        setInputImageBase64("");
                       }}
                       className="absolute -top-2 -right-2 bg-white text-gray-600 hover:text-red-600 
                                 border border-gray-300 rounded-full w-4 h-4 flex items-center justify-center 
@@ -1077,9 +1084,9 @@ export const ChatInterface = ({
               {/* --- IMAGE UPLOAD BUTTON (ADDED) --- */}
               <label
                 htmlFor="imageUpload"
-                className="flex items-center justify-center w-10 h-10 rounded-md bg-chatbot-secondary hover:bg-chatbot-primary cursor-pointer" // ⬅️ ADDED
+                className="flex items-center justify-center w-10 h-10 rounded-md hover:bg-chatbot-primary border border-chatbot-primary/40" // ⬅️ ADDED
               >
-                <Paperclip className="h-5 w-5 text-gray-700" /> {/* ⬅️ ADDED */}
+                <Paperclip className="h-5 w-5" /> {/* ⬅️ ADDED */}
               </label>
               <input
                 type="file"
@@ -1252,7 +1259,28 @@ export const ChatInterface = ({
                       disabled={isLoading}
                     />
                   </div>
-                  <div className="space-y-1">
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="guardrails-switch">Guardrails</Label>
+                    <Switch
+                      id="guardrails-switch"
+                      className="
+                        border
+                        border-chatbot-primary
+                        data-[state=checked]:bg-chatbot-primary
+                        [&>span]:border
+                        [&>span]:bg-white
+                      "
+                      checked={tempSettings.guardrailOption === "on"}
+                      disabled={isLoading}
+                      onCheckedChange={(checked) =>
+                        setTempSettings({
+                          ...tempSettings,
+                          guardrailOption: checked ? "on" : "off",
+                        })
+                      }
+                    />
+                  </div>
+                  {/* <div className="space-y-1">
                     <Label>Guardrails</Label>
                     <Select
                       onValueChange={(value) =>
@@ -1280,13 +1308,18 @@ export const ChatInterface = ({
                         ))}
                       </SelectContent>
                     </Select>
-                  </div>
+                  </div> */}
                   <div className="space-y-1">
                     <Label>Creativity</Label>
                     <Slider
                       min={0}
                       max={1}
                       step={0.1}
+                      className="
+    [&_[role=slider]]:border-2
+    [&_[role=slider]]:border-chatbot-primary
+    [&_[role=slider]]:bg-white
+  "
                       value={[tempSettings.temperature]}
                       onValueChange={(val) =>
                         setTempSettings({
@@ -1701,7 +1734,7 @@ export const ChatInterface = ({
             {selectedDocs.map((doc) => (
               <span
                 key={doc.value}
-                className="flex items-center gap-1 text-xs bg-chatbot-secondary text-foreground border border-chatbot-primary/20 rounded-md px-2 py-1"
+                className="flex items-center gap-1 text-xs text-foreground border border-chatbot-primary/20 rounded-md px-2 py-1"
               >
                 {doc.label}
                 <button
@@ -1727,7 +1760,7 @@ export const ChatInterface = ({
           <div className="flex flex-wrap gap-2 mt-2 items-center">
             <Label className="text-sm text-muted-foreground">Settings:</Label>
             {tempSettings.optimizer && (
-              <span className="flex items-center gap-1 text-xs bg-chatbot-secondary text-foreground border border-chatbot-primary/20 rounded-md px-2 py-1">
+              <span className="flex items-center gap-1 text-xs text-foreground border border-chatbot-primary/20 rounded-md px-2 py-1">
                 Optimizer: {tempSettings.optimizer}
                 <button
                   type="button"
@@ -1739,7 +1772,7 @@ export const ChatInterface = ({
               </span>
             )}
             {tempSettings.embeddingModel && (
-              <span className="flex items-center gap-1 text-xs bg-chatbot-secondary text-foreground border border-chatbot-primary/20 rounded-md px-2 py-1">
+              <span className="flex items-center gap-1 text-xs text-foreground border border-chatbot-primary/20 rounded-md px-2 py-1">
                 Embedding: {tempSettings.embeddingModel}
                 <button
                   type="button"
@@ -1751,7 +1784,7 @@ export const ChatInterface = ({
               </span>
             )}
             {tempSettings.llmModel && (
-              <span className="flex items-center gap-1 text-xs bg-chatbot-secondary text-foreground border border-chatbot-primary/20 rounded-md px-2 py-1">
+              <span className="flex items-center gap-1 text-xs text-foreground border border-chatbot-primary/20 rounded-md px-2 py-1">
                 LLM: {tempSettings.llmModel}
                 <button
                   type="button"
@@ -1763,7 +1796,7 @@ export const ChatInterface = ({
               </span>
             )}
             {tempSettings.vectorDb && (
-              <span className="flex items-center gap-1 text-xs bg-chatbot-secondary text-foreground border border-chatbot-primary/20 rounded-md px-2 py-1">
+              <span className="flex items-center gap-1 text-xs text-foreground border border-chatbot-primary/20 rounded-md px-2 py-1">
                 Vector DB: {tempSettings.vectorDb}
                 <button
                   type="button"
@@ -1775,7 +1808,7 @@ export const ChatInterface = ({
               </span>
             )}
             {typeof tempSettings.temperature === "number" && (
-              <span className="flex items-center gap-1 text-xs bg-chatbot-secondary text-foreground border border-chatbot-primary/20 rounded-md px-2 py-1">
+              <span className="flex items-center gap-1 text-xs text-foreground border border-chatbot-primary/20 rounded-md px-2 py-1">
                 Temperature: {tempSettings.temperature}
                 <button
                   type="button"
@@ -1787,7 +1820,7 @@ export const ChatInterface = ({
               </span>
             )}
             {tempSettings.guardrailOption && (
-              <span className="flex items-center gap-1 text-xs bg-chatbot-secondary text-foreground border border-chatbot-primary/20 rounded-md px-2 py-1">
+              <span className="flex items-center gap-1 text-xs text-foreground border border-chatbot-primary/20 rounded-md px-2 py-1">
                 Guardrails: {tempSettings.guardrailOption}
                 <button
                   type="button"
@@ -1799,7 +1832,7 @@ export const ChatInterface = ({
               </span>
             )}
             {tempSettings.tokenSize && (
-              <span className="flex items-center gap-1 text-xs bg-chatbot-secondary text-foreground border border-chatbot-primary/20 rounded-md px-2 py-1">
+              <span className="flex items-center gap-1 text-xs text-foreground border border-chatbot-primary/20 rounded-md px-2 py-1">
                 Token Size: {tempSettings.tokenSize}
                 <button
                   type="button"
@@ -1811,7 +1844,7 @@ export const ChatInterface = ({
               </span>
             )}
             {tempSettings.rerankerOption !== "none" && (
-              <span className="flex items-center gap-1 text-xs bg-chatbot-secondary text-foreground border border-chatbot-primary/20 rounded-md px-2 py-1">
+              <span className="flex items-center gap-1 text-xs text-foreground border border-chatbot-primary/20 rounded-md px-2 py-1">
                 Re-ranker: {tempSettings.rerankerOption}
                 <button
                   type="button"

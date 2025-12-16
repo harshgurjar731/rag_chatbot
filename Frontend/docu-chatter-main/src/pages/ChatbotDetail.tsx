@@ -291,7 +291,7 @@ const ChatbotDetail = () => {
               </div>
             </div>
 
-            <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+            {/* <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
               <DialogTrigger asChild>
                 <Button variant="destructive" size="sm">
                   <Trash2 className="h-4 w-4" />
@@ -322,7 +322,7 @@ const ChatbotDetail = () => {
                   </Button>
                 </div>
               </DialogContent>
-            </Dialog>
+            </Dialog> */}
           </div>
         </div>
       </div>
@@ -380,7 +380,7 @@ const ChatbotDetail = () => {
                     use_citation: showSources || false,
                     datastore_id: chatbot.datastoreId,
                     query: question,
-                    is_vision_search: true,
+                    is_vision_search: false,
                   },
 
                   // ✅ ensure arrays become file_id=12&file_id=16 instead of file_id[]=...

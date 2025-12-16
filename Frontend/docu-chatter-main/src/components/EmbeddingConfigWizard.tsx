@@ -94,7 +94,7 @@ export const EmbeddingConfigWizard = ({
       embedding_model: embeddingModel,
       similarity_metric: similarityMetric,
       vector_store_provider: vectorStore,
-      is_vision_search: true
+      is_vision_search: false
     }
 
     try {

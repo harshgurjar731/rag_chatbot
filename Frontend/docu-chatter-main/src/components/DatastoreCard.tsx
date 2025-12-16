@@ -39,17 +39,18 @@ export const DatastoreCard = ({ data, onClick, onDelete }: DatastoreCardProps) =
       onClick={onClick}
     >
        {/* ✅ DELETE ICON */}
+      <div className='relative'>
       <button
         onClick={(e) => {
           e.stopPropagation(); // prevent card click
           deleteDatastore();
         }}
-            className="absolute top-2 right-2 z-20 p-1 rounded-md
-             transition-all
-             hover:bg-chatbot-primary/15 hover:scale-110"
+        className="absolute top-2 right-2 z-20 rounded-md opacity-0 group-hover:opacity-100
+              transition-opacity duration-300 ease-in-out hover:bg-chatbot-primary/15 hover:scale-110"
       >
         <Trash className="w-4 h-4 text-chatbot-primary" />
       </button>
+      </div>
       <CardHeader className="pb-3">
         <div className="flex items-start justify-between">
           <div className="flex items-center gap-3">

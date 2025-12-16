@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Bot, Upload, FileText, Sparkles } from 'lucide-react';
+import { Bot, Upload, FileText, Sparkles, DatabaseIcon } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -272,7 +272,7 @@ export const CreateDatastoreDialog = ({ onCreateDatastore, children }: CreateDat
       <DialogContent className="sm:max-w-[500px] bg-gradient-card border-chatbot-primary/20 overflow-y-auto max-h-[100vh]">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-xl">
-            <Bot className="h-6 w-6 text-chatbot-primary" />
+            <DatabaseIcon className="h-6 w-6 text-chatbot-primary" />
             Create New Datastore
           </DialogTitle>
           <DialogDescription>
@@ -327,8 +327,7 @@ export const CreateDatastoreDialog = ({ onCreateDatastore, children }: CreateDat
               className="flex-1"
               disabled={loading}
             >
-              <Sparkles className="h-4 w-4" />
-              {loading ? "Creating..." : "Create Datastore"}
+              {loading ? "Creating..." : "Create datastore"}
               {/* Create Chatbot */}
             </Button>
           </div>
