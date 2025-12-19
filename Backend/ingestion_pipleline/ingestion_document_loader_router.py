@@ -166,7 +166,7 @@ async def delete_document(
 
     if ((datastore.vector_store_provider != None) & (len(chunk_indexes) > 0)):
         vectorDB = create_vector_store(provider=datastore.vector_store_provider)
-        vectorDB.delete(collection=datastore.id, ids = chunk_indexes)
+        vectorDB.delete(collection=f"datastore_{datastore.id}", ids = chunk_indexes)
 
     if os.path.exists(document.filePath):
         os.remove(document.filePath)

@@ -74,12 +74,12 @@ async def upsertDocs(
         vectordb = create_vector_store(provider=data.vector_store_provider)
         print("Before Create Collection")
         vectordb.create_collection(
-            name=str(datastore_id),
+            name=f"datastore_{datastore_id}",
             embedding=embeddingModel
         )
         print("After Create Collection")
         insert_success = vectordb.insert_docs(
-            collection=str(datastore_id),
+            collection=f"datastore_{datastore_id}",
             documents=list_of_text_documents,
             chunkids=text_chunk_ids,
             embedding=embeddingModel
@@ -94,7 +94,7 @@ async def upsertDocs(
         vectordb = create_vector_store(provider=data.vector_store_provider)
         print("Before Create Collection")
         vectordb.create_collection(
-            name=str(datastore_id) + "_image",
+            name=f"datastore_{datastore_id}_image",
             embedding=embeddingModel
         )
         list_img_uri: List[str] = []

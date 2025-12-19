@@ -49,10 +49,6 @@ async def retrieve_documents(
     print("In retrieve service:",query, llm_model_name, temperature, token_size, sources, guardrailOption,  )
     print("Message_History", message_history)
 
-    answer = await nemo_service.generate_response(query)
-
-    print("Answer from Nemo Service", answer)
-    return 
     # -----------------------------
     # Case 1: No files -> plain LLM answer
     # -----------------------------
@@ -87,7 +83,7 @@ async def retrieve_documents(
                 embedding_model_name= embedding_model_name,
                 embedding_model_provider = embedding_model_provider,
                 vector_store_provider= vector_db,
-                vector_store_collection_name= datastore_id,
+                vector_store_collection_name= f"datastore_{datastore_id}",
                 vector_store_top_k= RAG_CONFIG["default_query_retrieval_top_k"],
                 reranker_type= rerankerOption,
                 reranker_top_k=RAG_CONFIG["default_rerank_top_k"],
@@ -124,7 +120,7 @@ async def retrieve_documents(
             embedding_model_name= embedding_model_name,
             embedding_model_provider = embedding_model_provider,
             vector_store_provider= vector_db,
-            vector_store_collection_name= datastore_id,
+            vector_store_collection_name= f"datastore_{datastore_id}",
             vector_store_top_k= RAG_CONFIG["default_query_retrieval_top_k"],
             reranker_type= rerankerOption,
             reranker_top_k=RAG_CONFIG["default_rerank_top_k"],
