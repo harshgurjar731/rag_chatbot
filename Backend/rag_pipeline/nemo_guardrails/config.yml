@@ -47,7 +47,7 @@ rails:
       - check jailbreak groq
       # - jailbreak detection model
       - content safety check input $model=content_safety
-      - topic control check
+      # - topic control check
       # - check jailbreak groq
       # - self check input
       # - check content safety groq
