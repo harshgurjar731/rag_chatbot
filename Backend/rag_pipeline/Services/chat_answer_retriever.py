@@ -140,4 +140,8 @@ def get_llm_answer(
             "answer": answer_text + "\n\nSources: " + str(sources_text.split("\n") if sources_text else [])
         }
 
-    return {"answer": final_answer.strip()}
+    return {
+        "answer": final_answer.strip(),
+        "images": [],
+        "citations": "[]"
+    }

@@ -7,6 +7,7 @@ import shutil
 import time
 from typing import List
 from models.datastore import KnowledgeAssistant, DataStore
+from models.FileRecord import DocumentRecord
 from rag_pipeline.rag_models import CreateAssitantRequest, KnowledgeAssistantResponse, ChatInterfaceDetails
 
 from rag_pipeline.Config.rag_config import RAG_CONFIG
@@ -140,12 +141,37 @@ async def retrieve(
 ):
     # Call your existing service logic.
     print("In rag router /query", data, is_vision_search)
+    
+    # Map selected filenames to full file paths
+    final_selected_documents = []
+    if data.selected_documents:
+        for doc_name in data.selected_documents:
+            # If it already looks like a path, keep it
+            if "/" in doc_name or "\\" in doc_name:
+                final_selected_documents.append(doc_name)
+                continue
+                
+            # Lookup the file path in the database
+            doc_record = session.exec(
+                select(DocumentRecord).where(
+                    (DocumentRecord.datastore_id == datastore_id) & 
+                    (DocumentRecord.filename == doc_name)
+                )
+            ).first()
+            
+            if doc_record and doc_record.filePath:
+                print(f"Mapped document '{doc_name}' to path: {doc_record.filePath}")
+                final_selected_documents.append(doc_record.filePath)
+            else:
+                print(f"Warning: Could not find file path for document '{doc_name}' in datastore {datastore_id}")
+                final_selected_documents.append(doc_name)
+
     datastore = session.exec(select(DataStore).where(DataStore.id == datastore_id)).first()
     results_object = await retrieve_documents(
         query,
         search_image=data.search_image,
         message_history=data.messages,
-        selected_documents= data.selected_documents,
+        selected_documents= final_selected_documents,
         use_knowledge_base=use_knowledge_base,
         query_optimizer= query_rewriting_type,
         embedding_model_name= datastore.embedding_model,
