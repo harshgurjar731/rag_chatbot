@@ -150,7 +150,12 @@ def get_rag_answer_text(
     )
 
     # Raw LLM output
-    final_response = chatbot_chain.invoke({"question": updated_query, "context": returned_chunks})
+    from opentelemetry import trace
+    tracer = trace.get_tracer(__name__)
+    with tracer.start_as_current_span("Unified_RAG_Chain") as span:
+        span.set_attribute("query", updated_query)
+        final_response = chatbot_chain.invoke({"question": updated_query, "context": returned_chunks})
+        span.set_attribute("response_length", len(final_response))
 
     # # ✅ Apply guardrails
     # validated = validate_output(final_answer, guardrail_level)
