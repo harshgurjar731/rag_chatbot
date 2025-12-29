@@ -1,46 +1,72 @@
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+from dotenv import load_dotenv
+
+# Load env file to pick up OTEL configs locally
+load_dotenv(override=True)
+
+# Standard OpenTelemetry Imports
+from opentelemetry import trace
+from opentelemetry.sdk.trace import TracerProvider
+from opentelemetry.sdk.trace.export import BatchSpanProcessor
+from opentelemetry.exporter.otlp.proto.http.trace_exporter import OTLPSpanExporter
+from opentelemetry.sdk.resources import Resource
+from openinference.instrumentation.langchain import LangChainInstrumentor
+from openinference.instrumentation.openai import OpenAIInstrumentor
+
+# ================= PHOENIX SETUP =================
+def configure_opentelemetry_for_phoenix():
+    """
+    Configures OpenTelemetry with a standard OTLP exporter pointing to Phoenix.
+    """
+    endpoint = "http://localhost:6006/v1/traces"
+    project_name = "RAGBOT"
+
+    print(f"📡 Configuring Phoenix Tracing to: {endpoint} (Project: {project_name})")
+
+    # 1. Define Resource
+    resource = Resource(attributes={
+        "service.name": "rag_backend",
+        "project_name": project_name 
+    })
+
+    # 2. Setup Provider
+    tracer_provider = TracerProvider(resource=resource)
+    
+    # 3. Setup OTLP Exporter with HEADERS
+    otlp_exporter = OTLPSpanExporter(
+        endpoint=endpoint,
+        headers={"project_name": project_name} 
+    )
+    
+    # 4. Use BatchSpanProcessor for production
+    tracer_provider.add_span_processor(BatchSpanProcessor(otlp_exporter))
+
+    # 5. Set as Global Provider
+    try:
+        trace.set_tracer_provider(tracer_provider)
+    except Exception as e:
+        print(f"⚠️ Failed to set tracer provider: {e}")
+    
+    # 6. Instrument Libraries
+    try:
+        LangChainInstrumentor().instrument(tracer_provider=tracer_provider)
+        OpenAIInstrumentor().instrument(tracer_provider=tracer_provider)
+        print("✅ Instrumentation Complete: LangChain & OpenAI")
+    except Exception as e:
+        print(f"⚠️ Instrumentation Error: {e}")
+
+# Execute instrumentation BEFORE anything else
+configure_opentelemetry_for_phoenix()
+# =================================================
+
 from database import init_db, list_tables, list_tables_content, list_file_content
 from routes import datastore, upload, preview, chunking, embedding, retriever, delete, url_scraper, translate, frontend_config, evaluation
-from fastapi.middleware.cors import CORSMiddleware
-# You no longer need to import threading here for phoenix
-import phoenix as px
-from phoenix.otel import register
 import requests
 from ingestion_pipleline.ingestion_datastore_router import router as ingestion_datastore_router
 from ingestion_pipleline.ingestion_document_loader_router import router as ingestion_document_router
 from ingestion_pipleline.ingestion_chunks_router import router as ingestion_chunking_router
 from rag_pipeline.rag_router import router as rag_knowledge_asst_router
-# from rag_pipeline.image_reranker_router import router as image_reranking_router
-
-# ================= PHOENIX SETUP START =================
-
-
-
-
-
-
-def configure_opentelemetry_for_phoenix():
-    """
-    Configures the OpenTelemetry tracer to send data to a running
-    Phoenix instance. It does NOT launch the Phoenix UI.
-    """
-    # Configure the OpenTelemetry tracer to send data to Phoenix
-    # This assumes Phoenix is running on its default endpoint.
-    tracer_provider = register(
-        project_name="citation2",
-        endpoint="http://localhost:6006/v1/traces",
-        auto_instrument=True  # Automatically instruments supported libraries
-    )
-    print("✅ OpenTelemetry tracer configured to send data to Phoenix.")
-
-
-# Call the setup function BEFORE creating the FastAPI app
-# configure_opentelemetry_for_phoenix()
-
-
-# ================= PHOENIX SETUP END =================
-
-
 
 
 app = FastAPI(title="RAG Document Store")

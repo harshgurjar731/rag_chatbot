@@ -142,31 +142,38 @@ async def retrieve(
     # Call your existing service logic.
     print("In rag router /query", data, is_vision_search)
     
+    datastore = session.exec(select(DataStore).where(DataStore.id == datastore_id)).first()
+
     # Map selected filenames to full file paths
     final_selected_documents = []
-    if data.selected_documents:
-        for doc_name in data.selected_documents:
-            # If it already looks like a path, keep it
-            if "/" in doc_name or "\\" in doc_name:
-                final_selected_documents.append(doc_name)
-                continue
+    
+    # Only perform file path resolution for ChromaDB
+    # For other vector stores (like PGVector, Milvus), we might use file IDs or plain text matching
+    if datastore and datastore.vector_store_provider == "ChromaDB":
+        if data.selected_documents:
+            for doc_name in data.selected_documents:
+                # If it already looks like a path, keep it
+                if "/" in doc_name or "\\" in doc_name:
+                    final_selected_documents.append(doc_name)
+                    continue
+                    
+                # Lookup the file path in the database
+                doc_record = session.exec(
+                    select(DocumentRecord).where(
+                        (DocumentRecord.datastore_id == datastore_id) & 
+                        (DocumentRecord.filename == doc_name)
+                    )
+                ).first()
                 
-            # Lookup the file path in the database
-            doc_record = session.exec(
-                select(DocumentRecord).where(
-                    (DocumentRecord.datastore_id == datastore_id) & 
-                    (DocumentRecord.filename == doc_name)
-                )
-            ).first()
-            
-            if doc_record and doc_record.filePath:
-                print(f"Mapped document '{doc_name}' to path: {doc_record.filePath}")
-                final_selected_documents.append(doc_record.filePath)
-            else:
-                print(f"Warning: Could not find file path for document '{doc_name}' in datastore {datastore_id}")
-                final_selected_documents.append(doc_name)
-
-    datastore = session.exec(select(DataStore).where(DataStore.id == datastore_id)).first()
+                if doc_record and doc_record.filePath:
+                    print(f"Mapped document '{doc_name}' to path: {doc_record.filePath}")
+                    final_selected_documents.append(doc_record.filePath)
+                else:
+                    print(f"Warning: Could not find file path for document '{doc_name}' in datastore {datastore_id}")
+                    final_selected_documents.append(doc_name)
+    else:
+        # For non-ChromaDB providers, pass the list as-is (or handle differently if needed)
+        final_selected_documents = data.selected_documents if data.selected_documents else []
     results_object = await retrieve_documents(
         query,
         search_image=data.search_image,
