@@ -29,6 +29,7 @@ from rag_pipeline.Services.query_rewriting_handler import handle_query_rewriting
 from ingestion_pipleline.Embeddings.embedding_models import create_embedding_model
 from ingestion_pipleline.VectorStores.vector_store_generator import create_vector_store
 from ingestion_pipleline.Reranker.reranking_helper import apply_reranker, get_reranker_model
+from rag_pipeline.Services.otel_tracer_singleton import OtelTracerSingleton
 
 def encode_image_to_base64(path: str) -> str:
     with open(path, "rb") as f:
@@ -52,7 +53,8 @@ def get_rag_answer_text(
     vector_store_top_k: int = 20,
     reranker_type: str = None,
     reranker_top_k: int = 5,
-    query_optimizer: str = "none"
+    query_optimizer: str = "none",
+    project_id: str = None
 ):
     """General purpose chatbot without using any file/vector store data."""
     if not llm_model_name or not llm_model_provider:
@@ -149,8 +151,21 @@ def get_rag_answer_text(
         | StrOutputParser()
     )
 
+    print(f"\n\nOTEL Project ID: {project_id}, type = {type(project_id)}")
     # Raw LLM output
-    final_response = chatbot_chain.invoke({"question": updated_query, "context": returned_chunks})
+    project_name = OtelTracerSingleton().otel_id_to_project_name.get(project_id, "default")
+    # project_name = "yash bot"
+    tracer_provider = OtelTracerSingleton().otel_tracers.get(project_name, None)
+    tracer = tracer_provider.get_tracer(__name__)
+    print(f"\n\nOTEL Using tracer = {tracer} for project = {project_name}, project_id = {project_id}")
+    if tracer is None:
+        from opentelemetry import trace
+        tracer = trace.get_tracer(__name__)
+    with tracer.start_as_current_span("Unified_RAG_Chain") as span:
+        # span.set_attribute("query", updated_query)
+        # span.set_attribute("project_name", project_name)
+        final_response = chatbot_chain.invoke({"question": updated_query, "context": returned_chunks})
+        span.set_attribute("response_length", len(final_response))
 
     # # ✅ Apply guardrails
     # validated = validate_output(final_answer, guardrail_level)

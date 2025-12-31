@@ -1,4 +1,5 @@
 
+
 def get_final_prompt(prompt: str, use_knowledge_base: bool, include_sources: bool) -> str:
     base_prompt = prompt
     sources_instruction = (

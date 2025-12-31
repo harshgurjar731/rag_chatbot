@@ -30,7 +30,7 @@ async def retrieve_documents(
     rerankerOption: str = None,
     datastore_id: str = None,
     is_vision_search: bool = False,
-    # chatbot_id: str = "RAG_Document_Store"
+    project_id: str = None,
 ):
     """Main entry for retrieving documents using unified RAG pipeline."""
     # -----------------------------
@@ -125,6 +125,7 @@ async def retrieve_documents(
             reranker_type= rerankerOption,
             reranker_top_k=RAG_CONFIG["default_rerank_top_k"],
             query_optimizer= query_optimizer,
+            project_id=project_id
         )
         return result
     # -----------------------------

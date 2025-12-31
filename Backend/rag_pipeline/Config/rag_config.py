@@ -23,7 +23,8 @@ RAG_CONFIG = {
     "AZURE_OPENAI_API_VERSION": "2024-02-01",
 
     #GROQ OPEN AI configs
-    "GROQ_API_KEY": "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",
+    # "GROQ_API_KEY": "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",
+    "GROQ_API_KEY": "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",
     "GROQ_API_BASE": "https://api.groq.com/openai/v1",
 
     "default_conversation_history_count": int(os.getenv("DEFAULT_CONVERSATION_HISTORY_COUNT", "10")),
