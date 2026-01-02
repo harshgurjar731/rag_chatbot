@@ -29,3 +29,8 @@ class ChatInterfaceDetails(BaseModel):
 class Prompt(BaseModel):
     use_knowledge_base: bool = True
     llm_temperature: float
+
+class FeedbackRequest(BaseModel):
+    trace_id: str
+    span_id: Optional[str] = ""
+    feedback: str

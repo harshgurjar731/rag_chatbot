@@ -8,12 +8,17 @@ import time
 from typing import List
 from models.datastore import KnowledgeAssistant, DataStore
 from models.FileRecord import DocumentRecord
-from rag_pipeline.rag_models import CreateAssitantRequest, KnowledgeAssistantResponse, ChatInterfaceDetails
+from rag_pipeline.rag_models import CreateAssitantRequest, KnowledgeAssistantResponse, ChatInterfaceDetails, FeedbackRequest
 
 from rag_pipeline.Config.rag_config import RAG_CONFIG
 from rag_pipeline.Services.retrieve_service import retrieve_documents
 
+from opentelemetry import trace
+import requests
+import datetime
+
 router = APIRouter()
+
 
 @router.post("/createAssistant/")
 async def createAssistant(
@@ -174,45 +179,105 @@ async def retrieve(
     else:
         # For non-ChromaDB providers, pass the list as-is (or handle differently if needed)
         final_selected_documents = data.selected_documents if data.selected_documents else []
-    results_object = await retrieve_documents(
-        query,
-        search_image=data.search_image,
-        message_history=data.messages,
-        selected_documents= final_selected_documents,
-        use_knowledge_base=use_knowledge_base,
-        query_optimizer= query_rewriting_type,
-        embedding_model_name= datastore.embedding_model,
-        embedding_model_provider= datastore.embedding_provider,
-        llm_model_name= llm_model_name,
-        llm_model_provider= llm_model_provider,
-        temperature = temperature,
-        vector_db = datastore.vector_store_provider,
-        token_size= max_token,
-        sources= use_citation,
-        guardrailOption= guardrail_type,
-        rerankerOption= reranker_type,
-        datastore_id= datastore_id,
-        is_vision_search= is_vision_search,
-    )
+
+    # Manually start a span since FastAPI instrumentation might be missing or incomplete
+    tracer = trace.get_tracer(__name__)
+    with tracer.start_as_current_span("rag_query_handler") as span:
+        results_object = await retrieve_documents(
+            query,
+            search_image=data.search_image,
+            message_history=data.messages,
+            selected_documents= final_selected_documents,
+            use_knowledge_base=use_knowledge_base,
+            query_optimizer= query_rewriting_type,
+            embedding_model_name= datastore.embedding_model,
+            embedding_model_provider= datastore.embedding_provider,
+            llm_model_name= llm_model_name,
+            llm_model_provider= llm_model_provider,
+            temperature = temperature,
+            vector_db = datastore.vector_store_provider,
+            token_size= max_token,
+            sources= use_citation,
+            guardrailOption= guardrail_type,
+            rerankerOption= reranker_type,
+            datastore_id= datastore_id,
+            is_vision_search= is_vision_search,
+        )
+        
+        # Set attributes for Phoenix to display Input/Output
+        span.set_attribute("input.value", query)
+        if isinstance(results_object, dict):
+            # Try to grab just the answer if possible, or dump the whole thing
+            answer_content = results_object.get("answer", str(results_object))
+            span.set_attribute("output.value", answer_content)
+        else:
+            span.set_attribute("output.value", str(results_object))
+
+        # Get the traceId to send back to the frontend for the feedback feature.
+        # current_span = trace.get_current_span() # Should be 'span'
+        span_context = span.get_span_context()
+        trace_id = ""
+        span_id = ""
+        if span_context.is_valid:
+            trace_id = format(span_context.trace_id, '032x')
+            span_id = format(span_context.span_id, '016x')
+            print(f"✅ Successfully captured Phoenix trace_id: {trace_id}, span_id: {span_id}")
+        else:
+            # trace_id = str(uuid.uuid4())
+            print(f"⚠️ WARNING: Could not find a valid span context. Using generated UUID as trace_id: {trace_id}")
+
+        # return {"answer": final_answer, "traceId": trace_id,"citations": results_object.get("document_pages_dict", [])}
+        if isinstance(results_object, dict):
+            results_object["traceId"] = trace_id
+            results_object["spanId"] = span_id # Sending spanId
+        elif isinstance(results_object, str):
+            # If it's just a string, we might need to change implementation of retrieve_documents or wrap it
+            pass
+
+        return results_object
+
+
+@router.post("/feedback")
+async def log_feedback(
+    feedback_data: FeedbackRequest,
+    session: Session = Depends(get_session)
+):
+    print(f"Received feedback: {feedback_data}")
     
-    # # Process the final answer.
-    # final_answer = ""
-    # if isinstance(results_object, dict):
-    #     final_answer = results_object.get("result") or results_object.get("answer", "No answer found in results.")
-    # elif isinstance(results_object, str):
-    #     final_answer = results_object
-    # else:
-    #     final_answer = "Could not process the response from the service."
+    # Use REST API to log annotation since phoenix client is not available in broken env
+    phoenix_url = "http://localhost:6006/v1/span_annotations" # or /v1/traces/{trace_id}/annotations?
+    # Correct endpoint for Arize Phoenix (local) from research seems to be /v1/span_annotations
+    
+    # Map feedback to score
+    score = 1.0 if feedback_data.feedback == "Positive" else 0.0
+    
+    # Phoenix /v1/span_annotations expects a list of annotations wrapped in "data"
+    payload = {
+        "data": [
+            {
+                "span_id": feedback_data.span_id,
+                "name": "feedback", # Evaluation name changed from thumbs_up
+                "annotator_kind": "HUMAN",
+                "result": {
+                    "label": feedback_data.feedback,
+                    "score": score,
+                    "explanation": "User feedback from chat interface"
+                }
+            }
+        ]
+    }
 
-    # Get the traceId to send back to the frontend for the feedback feature.
-    # span_context = current_span.get_span_context()
-    trace_id = ""
-    # if span_context.is_valid:
-    #     trace_id = format(span_context.trace_id, '032x')
-    #     print(f"✅ Successfully captured Phoenix trace_id: {trace_id}")
-    # else:
-    #     trace_id = str(uuid.uuid4())
-    #     print(f"⚠️ WARNING: Could not find a valid span context. Using generated UUID as trace_id: {trace_id}")
-
-    # return {"answer": final_answer, "traceId": trace_id,"citations": results_object.get("document_pages_dict", [])}
-    return results_object
+    try:
+        response = requests.post(phoenix_url, json=payload, params={"sync": "false"})
+        if response.status_code >= 200 and response.status_code < 300:
+             print("✅ Feedback logged to Phoenix via REST")
+             return {"status": "success"}
+        else:
+             print(f"⚠️ Failed to log feedback: {response.status_code} {response.text}")
+             # Try fallback to trace_id based endpoint if span_id fails? 
+             pass
+             
+    except Exception as e:
+        print(f"Error logging feedback: {e}")
+    
+    return {"status": "submitted"}

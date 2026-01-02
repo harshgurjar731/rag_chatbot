@@ -18,7 +18,7 @@ export interface QnAPair {
 //   originalContent?: string; // ✅ optional for storing un-translated text
 // };
 
-export interface Citation { 
+export interface Citation {
   source: string; // Corresponds to the 'source' key in the Python dict
   pages: (string | number)[]; // Corresponds to the 'pages' key (list of pages)
 };
@@ -29,8 +29,9 @@ export interface ChatMessage {
   isUser: boolean;
   timestamp: Date;         // ✅ use Date instead of number
   originalContent?: string;
-  traceId:string;
-  Citation?: Citation[]; 
+  traceId: string;
+  spanId?: string;
+  Citation?: Citation[];
   images?: string[];
 };
 
@@ -40,7 +41,7 @@ export interface Chatbot {
   description: string;
   documents: string[];
   createdAt: Date;
-  datastoreId:number;
+  datastoreId: number;
   datastoreName: string;
 }
 
@@ -53,7 +54,7 @@ export interface CreateChatbotDataResponse {
 }
 
 export interface CreateDatastoreData {
-  id:number,
+  id: number,
   name: string;
   description: string;
   documents?: File[];
