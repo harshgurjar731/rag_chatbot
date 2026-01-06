@@ -2,36 +2,41 @@ FROM python:3.12-alpine
 
 WORKDIR /app
 
-# Install system dependencies
-# build-base, openblas-dev, gfortran, etc. are for numpy/scipy/pandas compilation
-# libffi-dev, openssl-dev for general python libs
-# jpeg-dev, zlib-dev for Pillow
-# linux-headers for some compilations
+# Install system dependencies required for building Python packages
 RUN apk add --no-cache \
-    build-base \
+    gcc \
+    g++ \
+    musl-dev \
+    linux-headers \
+    cmake \
+    make \
     libffi-dev \
     openssl-dev \
-    openblas-dev \
+    postgresql-dev \
     gfortran \
-    python3-dev \
-    linux-headers \
+    openblas-dev \
+    lapack-dev \
+    tesseract-ocr \
+    ghostscript \
+    poppler-utils \
     jpeg-dev \
     zlib-dev \
-    cargo \
-    pkgconfig \
     freetype-dev \
-    libpng-dev \
-    g++ \
-    gcc \
-    make
+    lcms2-dev \
+    openjpeg-dev \
+    tiff-dev \
+    tk-dev \
+    tcl-dev
 
 # Copy requirements
 COPY requirements.txt .
 
-# Install python dependencies
-# Note: This might take a while due to compilation
-RUN pip install --no-cache-dir --upgrade pip && \
-    pip install --no-cache-dir -r requirements.txt
+# Install PyTorch CPU-only version first
+RUN pip install --upgrade pip setuptools wheel && \
+    pip install torch --index-url https://download.pytorch.org/whl/cpu
+
+# Install remaining packages via pip
+RUN pip install -r requirements.txt
 
 # Copy application code
 COPY . .
