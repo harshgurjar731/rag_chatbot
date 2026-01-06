@@ -10,7 +10,16 @@ CHROMA_PERSIST_DIRECTORY = "./chroma_db"
 
 class ChromaVectorDB(VectorStoreProtocol):
     def __init__(self, persist_directory: str = CHROMA_PERSIST_DIRECTORY):
-        self.client = chromadb.PersistentClient(path=persist_directory)
+        chroma_host = os.getenv("CHROMA_SERVER_HOST")
+        chroma_port = os.getenv("CHROMA_SERVER_PORT", "8000")
+        
+        if chroma_host:
+             # Use HTTP client for containerized ChromaDB
+            self.client = chromadb.HttpClient(host=chroma_host, port=int(chroma_port))
+            print(f"Connected to ChromaDB at {chroma_host}:{chroma_port}")
+        else:
+            # Fallback to local persistence
+            self.client = chromadb.PersistentClient(path=persist_directory)
 
     def create_collection(self, name: str, embedding: HuggingFaceEmbeddings | OpenAIEmbeddings) -> None:
         # Note: Chroma handles embeddings differently if using its built-in functions, 

@@ -1,0 +1,64 @@
+# version: '3.8'
+
+services:
+  backend:
+    build:
+      context: ./Backend
+      dockerfile: Dockerfile
+    container_name: rag_backend
+    ports:
+      - "8000:8000"
+    environment:
+      - CHROMA_SERVER_HOST=chromadb
+      - CHROMA_SERVER_PORT=8000
+      - DEFAULT_VECTOR_DB=Chroma
+      - PHOENIX_COLLECTOR_ENDPOINT=http://phoenix:6006
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://phoenix:6006/v1/traces
+    depends_on:
+      - chromadb
+      - phoenix
+    volumes:
+      - ./Backend:/app
+      - ./Data:/app/Data
+      - ./db:/app/db
+
+  frontend:
+    build:
+      context: ./Frontend/docu-chatter-main
+      dockerfile: Dockerfile
+    container_name: rag_frontend
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./Frontend/docu-chatter-main:/app
+      - /app/node_modules
+    environment:
+      - VITE_API_BASE_URL=http://localhost:8000
+
+  chromadb:
+    image: chromadb/chroma
+    container_name: rag_chromadb
+    ports:
+      - "8001:8000"
+    volumes:
+      - chroma_data:/chroma/chroma
+
+  phoenix:
+    image: arizephoenix/phoenix
+    container_name: rag_phoenix
+    ports:
+      - "6006:6006"
+    environment:
+      - PHOENIX_PORT=6006
+      - PHOENIX_GRPC_PORT=4317
+
+  sqlite:
+    image: alpine/sqlite
+    container_name: rag_sqlite
+    volumes:
+      - ./Backend/rag.db:/data/rag.db
+    command: [ "sh", "-c", "while true; do sleep 3600; done" ]
+    # Just a clear way to keep the container running so user can exec into it.
+
+volumes:
+  chroma_data:
