@@ -1,42 +1,27 @@
-FROM python:3.12-alpine
+FROM continuumio/miniconda3:latest
 
 WORKDIR /app
 
-# Install system dependencies required for building Python packages
-RUN apk add --no-cache \
-    gcc \
-    g++ \
-    musl-dev \
-    linux-headers \
-    cmake \
-    make \
-    libffi-dev \
-    openssl-dev \
-    postgresql-dev \
-    gfortran \
-    openblas-dev \
-    lapack-dev \
-    tesseract-ocr \
-    ghostscript \
-    poppler-utils \
-    jpeg-dev \
-    zlib-dev \
-    freetype-dev \
-    lcms2-dev \
-    openjpeg-dev \
-    tiff-dev \
-    tk-dev \
-    tcl-dev
+# Install system dependencies via conda (no apt needed)
+RUN conda install -y -c conda-forge \
+    gcc_linux-64 \
+    gxx_linux-64 \
+    tesseract \
+    poppler \
+    ghostscript && \
+    conda clean -a -y
+
+# Set compiler environment variables to use conda compilers
+ENV CC=/opt/conda/bin/x86_64-conda-linux-gnu-gcc \
+    CXX=/opt/conda/bin/x86_64-conda-linux-gnu-g++
 
 # Copy requirements
 COPY requirements.txt .
 
-# Install PyTorch CPU-only version first
-RUN pip install --upgrade pip setuptools wheel && \
-    pip install torch --index-url https://download.pytorch.org/whl/cpu
-
-# Install remaining packages via pip
-RUN pip install -r requirements.txt
+# Install uv and use it for package installation
+RUN pip install --upgrade pip uv && \
+    uv pip install --system torch --index-url https://download.pytorch.org/whl/cpu && \
+    uv pip install --system -r requirements.txt
 
 # Copy application code
 COPY . .

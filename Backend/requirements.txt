@@ -7,7 +7,6 @@ faiss_cpu
 fastapi
 fitz
 groq
-guardrails
 langchain_chroma
 langchain_classic
 langchain_community
@@ -31,6 +30,5 @@ qdrant_client
 Requests
 sentence_transformers
 sqlmodel
-torch
 tqdm
 transformers
