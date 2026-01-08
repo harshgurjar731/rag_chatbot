@@ -13,10 +13,10 @@ from database import get_session
 from models.datastore import DataStore
 from models.FileRecord import QuestionAnswer
 from config import CONFIG  # ✅ centralized config
-from Evaluation.add_qna_into_db import insert_qna_for_datastore, insert_qna
-from Evaluation.run_phoenix import generate_qna_with_retrieval
-from Evaluation.phoenix import evaluate_records
-from Evaluation.ragaas import perform_ragaas_evaluation  # If you have ragaas module
+# from Evaluation.add_qna_into_db import insert_qna_for_datastore, insert_qna
+# from Evaluation.run_phoenix import generate_qna_with_retrieval
+# from Evaluation.phoenix import evaluate_records
+# from Evaluation.ragaas import perform_ragaas_evaluation  # If you have ragaas module
 
 # If you have other framework modules (like ragas)
 # from Evaluation.run_ragaas import run_ragaas_evaluation  # placeholder for future

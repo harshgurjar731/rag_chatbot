@@ -17,13 +17,109 @@ ENV CC=/opt/conda/bin/x86_64-conda-linux-gnu-gcc \
     PYTHONDONTWRITEBYTECODE=1
 
 # Copy requirements first (better caching)
-COPY requirements.txt .
+# COPY requirements.txt .
 
 # Install uv and dependencies
 RUN pip install --no-cache-dir --upgrade pip uv && \
-    uv pip install --system torch --index-url https://download.pytorch.org/whl/cpu && \
-    uv pip install --system --no-cache -r requirements.txt
+    uv pip install --system torch --index-url https://download.pytorch.org/whl/cpu
 
+RUN uv pip install --system beautifulsoup4
+RUN uv pip install --system camelot_py
+RUN uv pip install --system chromadb
+RUN uv pip install --system deep_translator
+RUN uv pip install --system Evaluation
+RUN uv pip install --system faiss_cpu
+RUN uv pip install --system fastapi
+RUN uv pip install --system fitz
+RUN uv pip install --system groq
+RUN uv pip install --system langchain_chroma
+RUN uv pip install --system langchain_classic
+RUN uv pip install --system langchain_community
+RUN uv pip install --system langchain_core
+RUN uv pip install --system langchain_experimental
+RUN uv pip install --system langchain_huggingface
+RUN uv pip install --system langchain_openai
+RUN uv pip install --system langchain_qdrant
+RUN uv pip install --system langchain_text_splitters
+RUN uv pip install --system mistralai
+RUN uv pip install --system nemoguardrails
+RUN uv pip install --system numpy
+RUN uv pip install --system openai
+RUN uv pip install --system phoenix
+RUN uv pip install --system Pillow
+RUN uv pip install --system pydantic
+RUN uv pip install --system pymupdf
+RUN uv pip install --system pytesseract
+RUN uv pip install --system python-dotenv
+RUN uv pip install --system qdrant_client
+RUN uv pip install --system Requests
+RUN uv pip install --system sentence_transformers
+RUN uv pip install --system sqlmodel
+RUN uv pip install --system tqdm
+RUN uv pip install --system transformers
+# RUN uv pip install --system openinference
+RUN uv pip install --system openinference.instrumentation.langchain
+RUN uv pip install --system openinference.instrumentation.openai
+RUN uv pip install --system python-multipart
+RUN uv pip install --system guardrails-ai
+RUN uv pip install --system arize-phoenix
+RUN uv pip install --system arize-phoenix-evals
+RUN uv pip install --system langchain-nvidia-ai-endpoints
+RUN uv pip install --system numpy
+RUN uv pip install --system pandas 
+RUN uv pip install --system dotenv
+RUN uv pip install --system python-multipart
+RUN uv pip install --system camelot-py
+RUN uv pip install --system huggingface-hub
+RUN uv pip install --system nvidia-riva-client
+RUN uv pip install --system opencv-python-headless
+RUN uv pip install --system pdf2image
+RUN uv pip install --system pillow
+RUN uv pip install --system pydantic
+RUN uv pip install --system sentence_transformers
+RUN uv pip install --system scikit-learn
+
+
+
+RUN uv pip install --system uvicorn
+RUN uv pip install --system python-multipart
+RUN uv pip install --system pydantic
+RUN uv pip install --system pydantic-settings
+RUN uv pip install --system sqlmodel
+RUN uv pip install --system python-dotenv
+RUN uv pip install --system aiofiles
+RUN uv pip install --system requests
+RUN uv pip install --system langchain
+RUN uv pip install --system langchain-core
+RUN uv pip install --system langchain-community
+RUN uv pip install --system langchain-text-splitters
+RUN uv pip install --system langchain-chroma
+RUN uv pip install --system langchain-openai
+RUN uv pip install --system langchain-experimental
+RUN uv pip install --system langchain-nvidia-ai-endpoints
+RUN uv pip install --system chromadb
+RUN uv pip install --system sentence-transformers
+RUN uv pip install --system PyMuPDF
+RUN uv pip install --system camelot-py
+RUN uv pip install --system pytesseract
+RUN uv pip install --system Pillow
+RUN uv pip install --system opencv-python-headless
+RUN uv pip install --system transformers
+RUN uv pip install --system torch
+
+
+# # --- RAG Pipeline & Safety ---
+# RUN uv pip install --system nemoguardrails
+# RUN uv pip install --system langchain-classic
+# RUN uv pip install --system langchain-qdrant
+
+# # --- Observability & Tracing (Phoenix) ---
+# RUN uv pip install --system opentelemetry-api
+# RUN uv pip install --system opentelemetry-sdk
+# RUN uv pip install --system opentelemetry-exporter-otlp
+# RUN uv pip install --system arize-phoenix-otel
+# RUN uv pip install --system arize-phoenix
+    
 # Stage 2: Runtime - Minimal image with only runtime dependencies
 FROM continuumio/miniconda3:latest
 

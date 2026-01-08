@@ -12,8 +12,7 @@ from Services.embedding_service import embed_and_store, check_embeddings_status,
 from Services.chunking_service import chunk_documents, save_chunks_to_json, load_docs_from_json
 from config import CONFIG  # ✅ centralized env-driven config
 import os
-from Evaluation.delete_qna import delete_qna_by_file,delete_generated_files  # ✅ centralized deletion of QA pairs
-
+# from Evaluation.delete_qna import delete_qna_by_file,delete_generated_files  
 router = APIRouter()
 
 

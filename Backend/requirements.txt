@@ -1,34 +1,35 @@
-beautifulsoup4
-camelot_py
-chromadb
-deep_translator
-Evaluation
-faiss_cpu
-fastapi
-fitz
-groq
-langchain_chroma
-langchain_classic
-langchain_community
-langchain_core
-langchain_experimental
-langchain_huggingface
-langchain_openai
-langchain_qdrant
-langchain_text_splitters
-mistralai
-nemoguardrails
-numpy
-openai
-phoenix
-Pillow
-pydantic
-pymupdf
-pytesseract
-python-dotenv
-qdrant_client
-Requests
-sentence_transformers
-sqlmodel
-tqdm
-transformers
+RUN pip install --system beautifulsoup4
+RUN pip install --system camelot_py
+RUN pip install --system chromadb
+RUN pip install --system deep_translator
+RUN pip install --system Evaluation
+RUN pip install --system faiss_cpu
+RUN pip install --system fastapi
+RUN pip install --system fitz
+RUN pip install --system groq
+RUN pip install --system langchain_chroma
+RUN pip install --system langchain_classic
+RUN pip install --system langchain_community
+RUN pip install --system langchain_core
+RUN pip install --system langchain_experimental
+RUN pip install --system langchain_huggingface
+RUN pip install --system langchain_openai
+RUN pip install --system langchain_qdrant
+RUN pip install --system langchain_text_splitters
+RUN pip install --system mistralai
+RUN pip install --system nemoguardrails
+RUN pip install --system numpy
+RUN pip install --system openai
+RUN pip install --system phoenix
+RUN pip install --system Pillow
+RUN pip install --system pydantic
+RUN pip install --system pymupdf
+RUN pip install --system pytesseract
+RUN pip install --system python-dotenv
+RUN pip install --system qdrant_client
+RUN pip install --system Requests
+RUN pip install --system sentence_transformers
+RUN pip install --system sqlmodel
+RUN pip install --system tqdm
+RUN pip install --system transformers
+RUN pip install --system open 

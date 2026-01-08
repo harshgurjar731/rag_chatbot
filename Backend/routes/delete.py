@@ -9,7 +9,7 @@ from models.datastore import DataStore
 from pydantic import BaseModel
 from models.FileRecord import FileRecord
 from config import CONFIG 
-from Evaluation.delete_qna import delete_qna_by_file # ✅ centralized config
+# from Evaluation.delete_qna import delete_qna_by_file # ✅ centralized config
 
 router = APIRouter()
 

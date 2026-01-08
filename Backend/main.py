@@ -61,7 +61,7 @@ configure_opentelemetry_for_phoenix()
 # =================================================
 
 from database import init_db, list_tables, list_tables_content, list_file_content
-from routes import datastore, upload, preview, chunking, embedding, retriever, delete, url_scraper, translate, frontend_config, evaluation
+from routes import datastore, upload, preview, chunking, embedding, retriever, delete, url_scraper, translate, frontend_config
 import requests
 from ingestion_pipleline.ingestion_datastore_router import router as ingestion_datastore_router
 from ingestion_pipleline.ingestion_document_loader_router import router as ingestion_document_router
@@ -93,7 +93,7 @@ app.include_router(delete.router, prefix="/datastore")
 app.include_router(url_scraper.router, prefix="/urlscraper")
 app.include_router(translate.router, prefix="/translate")
 app.include_router(frontend_config.router, prefix="/frontend")
-app.include_router(evaluation.router, prefix="/evaluation")
+# app.include_router(evaluation.router, prefix="/evaluation")
 
 
 
