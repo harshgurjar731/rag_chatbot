@@ -9,14 +9,28 @@ services:
     ports:
       - "8000:8000"
     environment:
+      - REDIS_HOST=redis
+      - DB_HOST=db
+      - DB_NAME=chatbot_db
+      - DB_USER=user
+      - DB_PASSWORD=password
       - CHROMA_SERVER_HOST=chromadb
       - CHROMA_SERVER_PORT=8000
       - DEFAULT_VECTOR_DB=Chroma
       - PHOENIX_COLLECTOR_ENDPOINT=http://phoenix:6006
       - OTEL_EXPORTER_OTLP_ENDPOINT=http://phoenix:6006/v1/traces
+      - OTEL_PROJECT_NAME="RAGBOT"
+    networks:
+      - chatbot_network
     depends_on:
-      - chromadb
-      - phoenix
+      chromadb:
+        condition: service_started
+      phoenix:
+        condition: service_started
+      redis:
+        condition: service_started
+      postgres:
+        condition: service_healthy
     volumes:
       - ./Backend:/app
       - ./Data:/app/Data
@@ -34,6 +48,8 @@ services:
       - /app/node_modules
     environment:
       - VITE_API_BASE_URL=http://localhost:8000
+    networks:
+      - chatbot_network
 
   chromadb:
     image: chromadb/chroma
@@ -42,23 +58,97 @@ services:
       - "8001:8000"
     volumes:
       - chroma_data:/chroma/chroma
+    networks:
+      chatbot_network:
+        aliases:
+          - chromadb
 
   phoenix:
     image: arizephoenix/phoenix
     container_name: rag_phoenix
     ports:
       - "6006:6006"
+      - "4317:4317" # OTLP gRPC collector
+      - "9090:9090"
     environment:
       - PHOENIX_PORT=6006
       - PHOENIX_GRPC_PORT=4317
+      - PHOENIX_WORKING_DIR=/mnt/data
 
-  sqlite:
-    image: alpine/sqlite
-    container_name: rag_sqlite
     volumes:
-      - ./Backend/rag.db:/data/rag.db
-    command: [ "sh", "-c", "while true; do sleep 3600; done" ]
-    # Just a clear way to keep the container running so user can exec into it.
+      - phoenix_data:/mnt/data
+    networks:
+      chatbot_network:
+        aliases:
+          - phoenix
+  # sqlite:
+  #   image: alpine/sqlite
+  #   container_name: rag_sqlite
+  #   volumes:
+  #     - ./Backend/rag.db:/data/rag.db
+  #   command: [ "sh", "-c", "while true; do sleep 3600; done" ]
+  #   # Just a clear way to keep the container running so user can exec into it.
+  worker-pool:
+    build: worker_pool
+    command: python main.py
+    environment:
+      - REDIS_HOST=redis
+      - DB_HOST=db
+      - DB_NAME=chatbot_db
+      - DB_USER=user
+      - DB_PASSWORD=password
+      - WORKER_POOL_SIZE=2
+      # - GOOGLE_API_KEY=${GOOGLE_API_KEY}
+      - PHOENIX_COLLECTOR_ENDPOINT=http://phoenix:6006
+      - PYTHONPATH=/app
+    networks:
+      - chatbot_network
+    depends_on:
+      redis:
+        condition: service_started
+      postgres:
+        condition: service_healthy
+    deploy:
+      replicas: 2
+
+  redis:
+    image: redis:alpine
+    command: redis-server --appendonly yes
+    networks:
+      chatbot_network:
+        aliases:
+          - redis
+    volumes:
+      - redis_data:/data
+
+  postgres:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: chatbot_db
+    networks:
+      chatbot_network:
+        aliases:
+          - db
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U user -d chatbot_db" ]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+networks:
+  chatbot_network:
+    driver: bridge
 
 volumes:
   chroma_data:
+    driver: local
+  redis_data:
+    driver: local
+  postgres_data:
+    driver: local
+  phoenix_data:
+    driver: local

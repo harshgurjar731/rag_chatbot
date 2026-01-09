@@ -2,8 +2,8 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from dotenv import load_dotenv
 
-# Load env file to pick up OTEL configs locally
-load_dotenv(override=True)
+# Load env file to pick up OTEL configs locally (don't override Docker envs)
+load_dotenv(override=False)
 
 # Standard OpenTelemetry Imports
 from opentelemetry import trace
@@ -19,8 +19,9 @@ def configure_opentelemetry_for_phoenix():
     """
     Configures OpenTelemetry with a standard OTLP exporter pointing to Phoenix.
     """
-    endpoint = "http://localhost:6006/v1/traces"
-    project_name = "RAGBOT"
+    import os
+    endpoint = os.getenv("OTEL_EXPORTER_OTLP_ENDPOINT", "")
+    project_name = os.getenv("OTEL_PROJECT_NAME", "RAGBOT")
 
     print(f"📡 Configuring Phoenix Tracing to: {endpoint} (Project: {project_name})")
 

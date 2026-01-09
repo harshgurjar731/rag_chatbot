@@ -107,8 +107,7 @@ RUN uv pip install --system opencv-python-headless
 RUN uv pip install --system transformers
 RUN uv pip install --system torch
 RUN uv pip install --system redis
-# RUN uv pip install --system psycopg2
-RUN uv pip install --system psycopg2-binary
+
 
 
 # # --- RAG Pipeline & Safety ---
@@ -146,13 +145,3 @@ COPY . .
 ENV PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1 \
     PATH="/opt/conda/bin:${PATH}"
-
-# Expose port
-EXPOSE 8000
-
-# Health check
-HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
-    CMD python -c "import requests; requests.get('http://localhost:8000/health', timeout=5)" || exit 1
-
-# Command to run the application (remove --reload for production)
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
