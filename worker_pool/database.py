@@ -3,7 +3,7 @@ from sqlmodel import SQLModel, create_engine, Session, text
 from models.datastore import DataStore
 from models.FileRecord import FileRecord
 
-DATABASE_URL = "sqlite:///app/db/rag.db"
+DATABASE_URL = "sqlite:////app/db/rag.db"
 engine = create_engine(DATABASE_URL, echo=True)
 
 

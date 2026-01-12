@@ -47,7 +47,7 @@ class BotCommunicator:
         self,
         bot_name: str,
         message_text: str,
-        timeout: int = 30,
+        timeout: int = 60,
         use_knowledge_base: bool = True,
         llm_model_provider: str = "openai",
         llm_model_name: str = "gpt-3.5-turbo",
@@ -135,3 +135,56 @@ class BotCommunicator:
             return True, f"Cleaned up data for bot '{bot_name}'"
         except Exception as e:
             return False, f"Error cleaning up bot data: {e}"
+
+    def send_message(
+        self,
+        bot_name: str,
+        message_text: str,
+        timeout: int = 60,
+        use_knowledge_base: bool = True,
+        llm_model_provider: str = "openai",
+        llm_model_name: str = "gpt-3.5-turbo",
+        temperature: float = 0.7,
+        max_token: int = 8192,
+        use_reranker: bool = False,
+        reranker_type: str = "default",
+        query_rewriting_type: str = "default",
+        use_guardrail: bool = False,
+        guardrail_type: str = "default",
+        use_citation: bool = False,
+        datastore_id: str = "",
+        query: str = "",
+        is_vision_search: bool = False,
+        messages: List[Dict[str, Any]] = [],
+        selected_documents: List[str] = []
+    ) -> str:
+        """
+        Send a message to a bot and get a complete response via Redis PubSub.
+        """
+        full_response = []
+        try:
+            for chunk in self.send_message_streaming(
+                bot_name=bot_name,
+                message_text=message_text,
+                timeout=timeout,
+                use_knowledge_base=use_knowledge_base,
+                llm_model_provider=llm_model_provider,
+                llm_model_name=llm_model_name,
+                temperature=temperature,
+                max_token=max_token,
+                use_reranker=use_reranker,
+                reranker_type=reranker_type,
+                query_rewriting_type=query_rewriting_type,
+                use_guardrail=use_guardrail,
+                guardrail_type=guardrail_type,
+                use_citation=use_citation,
+                datastore_id=datastore_id,
+                query=query,
+                is_vision_search=is_vision_search,
+                messages=messages,
+                selected_documents=selected_documents
+            ):
+                full_response.append(chunk)
+            return "".join(full_response)
+        except Exception as e:
+            return f"Error: {str(e)}"

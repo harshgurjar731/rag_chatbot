@@ -161,10 +161,36 @@ async def retrieve(
     print("1")
     try:
         # Stream response from bot
-        for chunk in bot_comm.send_message_streaming(
+        # for chunk in bot_comm.send_message_streaming(
+        #     bot_name=chatbot_id,
+        #     message_text=query,
+        #     timeout=60,
+        #     use_knowledge_base=use_knowledge_base,
+        #     llm_model_provider=llm_model_provider,
+        #     llm_model_name=llm_model_name,
+        #     temperature=temperature,
+        #     max_token=max_token,
+        #     use_reranker=use_reranker,
+        #     reranker_type=reranker_type,
+        #     query_rewriting_type=query_rewriting_type,
+        #     use_guardrail=use_guardrail,
+        #     guardrail_type=guardrail_type,
+        #     use_citation=use_citation,
+        #     datastore_id=datastore_id,
+        #     query=query,
+        #     is_vision_search=is_vision_search,
+        #     messages=[m.dict() for m in data.messages] if data.messages else [],
+        #     selected_documents=data.selected_documents if data.selected_documents else []
+            
+        # ):
+        #     print("2")  
+        #     full_response += chunk
+        #     print(f"full_response: {full_response}")
+        
+        full_response = bot_comm.send_message(
             bot_name=chatbot_id,
             message_text=query,
-            timeout=30,
+            timeout=60,
             use_knowledge_base=use_knowledge_base,
             llm_model_provider=llm_model_provider,
             llm_model_name=llm_model_name,
@@ -181,11 +207,7 @@ async def retrieve(
             is_vision_search=is_vision_search,
             messages=[m.dict() for m in data.messages] if data.messages else [],
             selected_documents=data.selected_documents if data.selected_documents else []
-            
-        ):
-            print("2")  
-            full_response += chunk
-                
+        )
         if full_response and not full_response.startswith("Error:"):
             print("3")
             return {"answer": full_response}

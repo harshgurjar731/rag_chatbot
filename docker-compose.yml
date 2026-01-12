@@ -21,7 +21,7 @@ services:
       - OTEL_EXPORTER_OTLP_ENDPOINT=http://phoenix:6006/v1/traces
       - OTEL_PROJECT_NAME="RAGBOT"
       - NVIDIA_API_KEY=${NVIDIA_API_KEY}
-
+      - GROQ_API_KEY=${GROQ_API_KEY}
     networks:
       - chatbot_network
     depends_on:
