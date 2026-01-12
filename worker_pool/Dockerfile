@@ -107,6 +107,7 @@ RUN uv pip install --system opencv-python-headless
 RUN uv pip install --system transformers
 RUN uv pip install --system torch
 RUN uv pip install --system redis
+RUN uv pip install --system psycopg2-binary
 
 
 

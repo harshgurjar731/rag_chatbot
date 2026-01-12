@@ -20,6 +20,8 @@ services:
       - PHOENIX_COLLECTOR_ENDPOINT=http://phoenix:6006
       - OTEL_EXPORTER_OTLP_ENDPOINT=http://phoenix:6006/v1/traces
       - OTEL_PROJECT_NAME="RAGBOT"
+      - NVIDIA_API_KEY=${NVIDIA_API_KEY}
+
     networks:
       - chatbot_network
     depends_on:
@@ -32,9 +34,7 @@ services:
       postgres:
         condition: service_healthy
     volumes:
-      - ./Backend:/app
-      - ./Data:/app/Data
-      - ./db:/app/db
+      - app-db:/app/db
 
   frontend:
     build:
@@ -53,7 +53,6 @@ services:
 
   chromadb:
     image: chromadb/chroma
-    container_name: rag_chromadb
     ports:
       - "8001:8000"
     volumes:
@@ -65,7 +64,6 @@ services:
 
   phoenix:
     image: arizephoenix/phoenix
-    container_name: rag_phoenix
     ports:
       - "6006:6006"
       - "4317:4317" # OTLP gRPC collector
@@ -81,13 +79,7 @@ services:
       chatbot_network:
         aliases:
           - phoenix
-  # sqlite:
-  #   image: alpine/sqlite
-  #   container_name: rag_sqlite
-  #   volumes:
-  #     - ./Backend/rag.db:/data/rag.db
-  #   command: [ "sh", "-c", "while true; do sleep 3600; done" ]
-  #   # Just a clear way to keep the container running so user can exec into it.
+
   worker-pool:
     build: worker_pool
     command: python main.py
@@ -108,8 +100,12 @@ services:
         condition: service_started
       postgres:
         condition: service_healthy
+      backend:
+        condition: service_started
     deploy:
-      replicas: 2
+      replicas: 1
+    volumes:
+      - app-db:/app/db
 
   redis:
     image: redis:alpine
@@ -152,3 +148,4 @@ volumes:
     driver: local
   phoenix_data:
     driver: local
+  app-db:

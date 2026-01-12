@@ -61,11 +61,14 @@ class BotCommunicator:
         use_citation: bool = False,
         datastore_id: str = "",
         query: str = "",
-        is_vision_search: bool = False
+        is_vision_search: bool = False,
+        messages: List[Dict[str, Any]] = [],
+        selected_documents: List[str] = []
     ) -> Iterator[str]:
         """
         Send a message to a bot and get a streaming response via Redis PubSub.
         """
+        print("a")
         msg_id = str(uuid.uuid4())
         response_channel = f"msg:{msg_id}:stream"
         inbox_key = f"bot:{bot_name}:inbox"
@@ -92,27 +95,36 @@ class BotCommunicator:
             "use_citation": use_citation,
             "datastore_id": datastore_id,
             "query": query,
-            "is_vision_search": is_vision_search
+            "is_vision_search": is_vision_search,
+            "messages": messages,
+            "selected_documents": selected_documents
         }
+        print("b")
         try:
             self.redis_client.rpush(inbox_key, json.dumps(payload))
-            
+            print("c")
             # Read stream
             start_time = time.time()
             for message in pubsub.listen():
+                print("d")
                 if time.time() - start_time > timeout:
+                    print("e")
                     yield "Error: Timeout waiting for response"
                     break
                     
                 if message["type"] == "message":
+                    print("f")
                     data = message["data"]
                     if data == "__END__":
+                        print("g")
                         break
                     yield data
-                    
+            print("h")
         except Exception as e:
+            print("i")
             yield f"Error: {str(e)}"
         finally:
+            print("j")
             pubsub.unsubscribe()
             self.redis_client.delete(response_channel) # Cleanup (optional, channels aren't stored keys)
 

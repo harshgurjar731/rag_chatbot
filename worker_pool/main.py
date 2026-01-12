@@ -6,7 +6,7 @@ import signal
 import sys
 import redis # Added redis import
 from sqlalchemy.orm import Session
-from services.db.models import init_db, Bot, BotStatus, WorkerPool
+from db.models import init_db, Bot, BotStatus, WorkerPool
 import psutil
 from datetime import datetime, timedelta, timezone
 
@@ -60,9 +60,9 @@ def stop_bot_process(bot_name):
 def spawn_bot_process(bot):
     print(f"[*] Spawning worker for bot: {bot.bot_id}")
     env = os.environ.copy()
-    env["BOT_NAME"] = bot.name
+    env["BOT_NAME"] = bot.bot_name
     env["BOT_ID"] = bot.bot_id
-    env["DATASTORE_ID"] = bot.datastore_id
+    env["DATASTORE_ID"] = str(bot.datastore_id)
     # PYTHONPATH to include root so imports work
     env["PYTHONPATH"] = os.getcwd() 
 
@@ -172,11 +172,19 @@ def release_orphaned_bots(db: Session):
             print(f"[*] Detected dead worker pool: {pool.id} (Last heard: {pool.last_heartbeat})")
             
             # Release bots
-            orphaned_bots = db.query(Bot).filter(Bot.pool_id == pool.id, Bot.status == BotStatus.ACTIVE).all()
+            # Release bots
+            # Fetch ALL bots assigned to this pool, not just ACTIVE ones.
+            # If we don't clear pool_id for STOPPED/ERROR bots, we get FK violation on pool delete.
+            orphaned_bots = db.query(Bot).filter(Bot.pool_id == pool.id).all()
+            
             if orphaned_bots:
                 print(f"[*] Releasing {len(orphaned_bots)} orphaned bots from {pool.id}")
                 for bot in orphaned_bots:
-                    bot.status = BotStatus.PENDING
+                    # If it was active, it needs to be restarted elsewhere -> PENDING
+                    if bot.status == BotStatus.ACTIVE:
+                        bot.status = BotStatus.PENDING
+                    
+                    # Always clear the pool_id so we can delete the pool record
                     bot.pool_id = None
             
             # Remove the dead pool record
@@ -220,6 +228,9 @@ def reconcile_active_processes(db: Session):
 def main():
     db = get_db()
     
+    # Ensure pool exists in DB before we try to claim anything (prevents FK violation)
+    update_pool_heartbeat(db)
+
     # Restore
     restore_active_bots(db)
     
