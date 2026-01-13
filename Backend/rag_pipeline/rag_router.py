@@ -46,7 +46,7 @@ async def createAssistant(
     session.commit()
     session.refresh(new_assistant)
 
-    new_id = str(new_assistant.id)
+    new_id = new_assistant.id
     success, message = bot_manager.create_bot(new_id, data.name , data.datastore_id)
  
     return new_assistant
@@ -69,14 +69,14 @@ async def get_assistants(session: Session = Depends(get_session)):
 
 @router.post("/deleteAssistant/{assistant_id}" , response_model=KnowledgeAssistantResponse)
 async def delete_assistant(
-    assistant_id: int, 
+    assistant_id: str, 
     session: Session = Depends(get_session)):
 
     assistant = session.exec(select(KnowledgeAssistant).where(KnowledgeAssistant.id == assistant_id)).first()
     session.delete(assistant)
     session.commit()
 
-    bot_id = str(assitant.id)
+    bot_id = assistant.id
     success, message = bot_manager.delete_bot(bot_id)
     bot_comm.cleanup_bot_data(bot_id)
     
