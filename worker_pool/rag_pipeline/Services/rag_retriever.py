@@ -97,18 +97,20 @@ def get_rag_answer_text(
     returned_chunks: List[Document] = []
     all_chunks_array = []
 
-    updated_query = history_based_query_generator(
-        query = query,
-        llm= llm,
-        message_history=message_history
-    )
+    # updated_query = history_based_query_generator(
+    #     query = query,
+    #     llm= llm,
+    #     message_history=message_history
+    # )
+    updated_query = query
     print("Query Optimizer", query_optimizer)
     print("Updated Query based on history", updated_query)
-    rewritten_queries = handle_query_rewriting(
-        rewritingType=query_optimizer,
-        query=updated_query,
-        llm= llm,
-    )
+    # rewritten_queries = handle_query_rewriting(
+    #     rewritingType=query_optimizer,
+    #     query=updated_query,
+    #     llm= llm,
+    # )
+    rewritten_queries = [updated_query]
     if (query_optimizer.lower() == "multiquery" or query_optimizer.lower() == "ragfusion"):
         retrieval_top_k = RAG_CONFIG["default_multiquery_retrieval_top_k"]
     else:
@@ -116,7 +118,9 @@ def get_rag_answer_text(
                                         
     print("Rewritten Queries: ", rewritten_queries)
     all_chunks_array = vector_db.test_retrieval(collection=vector_store_collection_name, embedding=embedding_model, queryList=rewritten_queries, topk=retrieval_top_k, selected_docs=selected_documents) 
-    if(len(all_chunks_array) == 1):
+    if(len(all_chunks_array) == 0):
+        returned_chunks = []
+    elif(len(all_chunks_array) == 1):
         returned_chunks = all_chunks_array[0]
     else :
         returned_chunks = handle_chunk_union(

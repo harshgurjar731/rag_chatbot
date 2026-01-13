@@ -13,7 +13,7 @@ class BotManager:
     def get_db(self):
         return self.SessionLocal()
 
-    def create_bot(self, bot_id: str, name: str, datastore_id: str) -> tuple[bool, str]:
+    def create_bot(self, bot_id: str,name: str, datastore_id: str) -> tuple[bool, str]:
         db = self.get_db()
         try:
             # Check if exists

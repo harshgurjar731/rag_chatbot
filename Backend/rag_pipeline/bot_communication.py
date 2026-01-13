@@ -107,11 +107,11 @@ class BotCommunicator:
             start_time = time.time()
             for message in pubsub.listen():
                 print("d")
-                if time.time() - start_time > timeout:
+                if timeout > 0 and (time.time() - start_time) > timeout:
                     print("e")
                     yield "Error: Timeout waiting for response"
                     break
-                    
+                
                 if message["type"] == "message":
                     print("f")
                     data = message["data"]

@@ -114,28 +114,61 @@ async def process_message(message_data):
                 datastore = session.exec(select(DataStore).where(DataStore.id == int(datastore_id))).first()
             
             # Resolve selected documents
-            # Passed as list of strings in payload?
-            # bot_communication payload doesn't seem to have selected_documents?
-            # Check bot_communication.py again.
+            selected_docs_payload = message_data.get('selected_documents', [])
+            final_selected_documents = [] 
             
-            final_selected_documents = [] # Default empty
-            
-            # Since bot_communication might be missing fields, use defaults.
-            
+            if datastore and datastore.vector_store_provider == "ChromaDB":
+                if selected_docs_payload:
+                    for doc_name in selected_docs_payload:
+                        # If it already looks like a path, keep it
+                        if "/" in doc_name or "\\" in doc_name:
+                            final_selected_documents.append(doc_name)
+                            continue
+                            
+                        # Lookup the file path in the database
+                        doc_record = session.exec(
+                            select(DocumentRecord).where(
+                                (DocumentRecord.datastore_id == int(datastore_id)) & 
+                                (DocumentRecord.filename == doc_name)
+                            )
+                        ).first()
+                        
+                        if doc_record and doc_record.filePath:
+                            # print(f"Mapped document '{doc_name}' to path: {doc_record.filePath}")
+                            final_selected_documents.append(doc_record.filePath)
+                        else:
+                            # print(f"Warning: Could not find file path for document '{doc_name}'")
+                            final_selected_documents.append(doc_name)
+            else:
+                final_selected_documents = selected_docs_payload
+
             # Tracer
             tracer = trace.get_tracer(__name__)
             with tracer.start_as_current_span("rag_query_handler") as span:
                 span.set_attribute("input.value", query)
 
                 # Call retrieve_documents
-                # construct default history if needed
-                message_history = [Message(role="user", content=query)] 
+                # construct message history
+                raw_history = message_data.get('messages', [])
+                message_history = []
+                if raw_history:
+                    try:
+                        # Convert dicts back to Message objects
+                        message_history = [Message(**msg) for msg in raw_history]
+                    except Exception as e:
+                        print(f"Error parsing history: {e}")
+                        message_history = [Message(role="user", content=query)]
+                else:
+                    message_history = [Message(role="user", content=query)]
+                
+                # Get search image
+                search_image = message_data.get('search_image', "")
                 
                 # Note: retrieve_service.py expects List[Message] objects
                 
                 results_object = await retrieve_documents(
                     query=query,
-                    search_image="", # Not in payload?
+                    search_image=search_image, 
                     message_history=message_history, 
                     selected_documents=final_selected_documents,
                     use_knowledge_base=use_knowledge_base,
@@ -189,12 +222,12 @@ async def process_message(message_data):
                     # The commented out code in rag_router suggests it WANTS traceId.
                     # But the CURRENT implementation in rag_router just returns {"answer": full_response}.
                     
-                    # So, I should just send the text answer.
-                    r.publish(response_channel, answer)
+                    # Publish the whole object as JSON
+                    r.publish(response_channel, json.dumps(results_object))
                     
                 else:
                     answer = str(results_object)
-                    r.publish(response_channel, answer)
+                    r.publish(response_channel, json.dumps({"answer": answer}))
                 
                 span.set_attribute("output.value", answer)
                 

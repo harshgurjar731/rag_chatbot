@@ -8,6 +8,7 @@ import time
 from typing import List
 from models.datastore import KnowledgeAssistant, DataStore
 from models.FileRecord import DocumentRecord
+import json
 from rag_pipeline.rag_models import CreateAssitantRequest, KnowledgeAssistantResponse, ChatInterfaceDetails, FeedbackRequest
 
 from rag_pipeline.Config.rag_config import RAG_CONFIG
@@ -190,7 +191,7 @@ async def retrieve(
         full_response = bot_comm.send_message(
             bot_name=chatbot_id,
             message_text=query,
-            timeout=60,
+            timeout=0,
             use_knowledge_base=use_knowledge_base,
             llm_model_provider=llm_model_provider,
             llm_model_name=llm_model_name,
@@ -210,6 +211,15 @@ async def retrieve(
         )
         if full_response and not full_response.startswith("Error:"):
             print("3")
+            # Try to parse as JSON first
+            try:
+                json_response = json.loads(full_response)
+                if isinstance(json_response, dict):
+                     return json_response
+            except json.JSONDecodeError:
+                pass
+            
+            # Fallback for plain text
             return {"answer": full_response}
         else:
             print("4")
