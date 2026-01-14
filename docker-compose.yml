@@ -55,8 +55,11 @@ services:
     image: chromadb/chroma
     ports:
       - "8001:8000"
+    # environment:
+    #   - IS_PERSISTENT=TRUE
+    #   - PERSIST_DIRECTORY=/data
     volumes:
-      - chroma_data:/chroma/chroma
+      - chroma_data:/data
     networks:
       chatbot_network:
         aliases:
