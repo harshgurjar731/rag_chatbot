@@ -1,3 +1,9 @@
+"""
+Unified RAG Pipeline Service.
+
+This module provides the core logic for the RAG chatbot, integrating various
+retrieval strategies (MultiQuery, RAG Fusion, StepBack) and generation capabilities.
+"""
 # services/unified_rag_pipeline.py
 
 from typing import List
@@ -18,6 +24,17 @@ from config import CONFIG
 
 
 class UnifiedRAGPipeline:
+    """
+    A unified pipeline for Retrieval-Augmented Generation (RAG).
+    
+    This class orchestrates the entire RAG process including:
+    - Query optimization (MultiQuery, RAG Fusion, StepBack)
+    - Document retrieval from vector stores (FAISS/Chroma)
+    - Reranking of retrieved documents
+    - Context construction and citation handling
+    - Answer generation using LLM
+    - Guardrail validation
+    """
     def __init__(
         self,
         db: FAISS | Chroma,
@@ -27,6 +44,17 @@ class UnifiedRAGPipeline:
         guardrail_level: str = None,
         rerankerOption: str = None,
     ):
+        """
+        Initializes the UnifiedRAGPipeline.
+
+        Args:
+            db (FAISS | Chroma): The vector database instance.
+            llm_model_name (str): Name of the LLM model to use.
+            temperature (float): Sampling temperature for the LLM.
+            token_size (int): Max tokens for response.
+            guardrail_level (str): Guardrail configuration level.
+            rerankerOption (str): Reranker strategy to use.
+        """
         self.db = db
         self.llm_model_name = llm_model_name or CONFIG["default_llm_model"]
         self.temperature = temperature if temperature is not None else CONFIG["default_temperature"]
@@ -46,6 +74,7 @@ class UnifiedRAGPipeline:
         self.llm = llm_factory.get_llm()
 
     # ------------------ MAIN ENTRY ------------------ #
+    # ------------------ MAIN ENTRY ------------------ #
     def run(
         self,
         query: str,
@@ -54,6 +83,19 @@ class UnifiedRAGPipeline:
         top_k: int = None,
         rrf_k: int = None,
     ):
+        """
+        Executes the RAG pipeline for a given query.
+
+        Args:
+            query (str): The user's question.
+            include_sources (bool): Whether to include source citations in the output.
+            mode (str): Retrieval mode ('multiquery', 'ragfusion', 'stepback', 'none').
+            top_k (int, optional): Number of documents to retrieve.
+            rrf_k (int, optional): RRF constant for RAG Fusion.
+
+        Returns:
+            dict: The result containing the answer, sources, and other metadata.
+        """
         # Retrieve documents based on mode
         if mode == "stepback":
             docs = self._stepback_retrieval(query)

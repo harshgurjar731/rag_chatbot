@@ -1,3 +1,9 @@
+"""
+Qdrant Vector Store Adapter.
+
+This module implements the VectorStoreProtocol for Qdrant, providing support for
+high-performance vector search, filtering, and cloud-based deployments.
+"""
 from ingestion_pipleline.VectorStores.vector_store_protocol import VectorStoreProtocol
 from typing import List, Dict, Any, Optional
 from PIL import Image
@@ -26,6 +32,10 @@ QDRANT_CLUSTER_URL = "https://e53339bc-373e-425a-a9b2-fddccecdd40c.us-east-1-1.a
 QDRANT_TIMEOUT = 120
 
 class QDrantVectorDB(VectorStoreProtocol):
+    """
+    Qdrant Vector DB implementation.
+    Manages connections to Qdrant Cloud or local instance and handles vector operations.
+    """
     def __init__(self):
         self.client = QdrantClient(url=QDRANT_CLUSTER_URL, api_key=QDRANT_API_KEY, timeout=QDRANT_TIMEOUT)
 
@@ -51,6 +61,13 @@ class QDrantVectorDB(VectorStoreProtocol):
     
 
     def create_collection(self, name: str, embedding: HuggingFaceEmbeddings|OpenAIEmbeddings) -> None:
+        """
+        Create a new collection in Qdrant if it doesn't exist.
+        
+        Args:
+            name (str): Collection name.
+            embedding: Embedding model (used to determine vector dimension).
+        """
         if (self.client.collection_exists(collection_name=name)):
             return
         dimension = len(embedding.embed_query("Test Query"))
@@ -74,6 +91,18 @@ class QDrantVectorDB(VectorStoreProtocol):
 
 
     def insert_docs(self, collection: str, documents: List[Document], chunkids: List[str], embedding: Embeddings|None):
+        """
+        Insert LangChain Documents into Qdrant using QdrantVectorStore wrapper.
+
+        Args:
+            collection (str): Collection name.
+            documents (List[Document]): Documents to insert.
+            chunkids (List[str]): IDs for the chunks.
+            embedding (Embeddings): Embedding model.
+
+        Returns:
+            bool: True if insertion was successful.
+        """
         vector_store = QdrantVectorStore(
             client=self.client,
             collection_name=collection,
@@ -114,6 +143,19 @@ class QDrantVectorDB(VectorStoreProtocol):
         return result[0].dict() if result else None
 
     def test_retrieval(self, collection: str, embedding: Embeddings, queryList: List[str], topk: int, selected_docs: List[str] = []) -> List[List[Document]]:
+        """
+        Execute concurrent retrieval tests for multiple queries.
+
+        Args:
+            collection (str): Collection name.
+            embedding (Embeddings): Embedding model.
+            queryList (List[str]): List of query strings.
+            topk (int): Number of results per query.
+            selected_docs (List[str], optional): Filter by source filenames.
+
+        Returns:
+            List[List[Document]]: Results for each query.
+        """
         # vector_store = QdrantVectorStore(
         #     client=self.client,
         #     collection_name=collection,

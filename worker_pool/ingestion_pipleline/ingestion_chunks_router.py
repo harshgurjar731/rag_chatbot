@@ -1,3 +1,9 @@
+"""
+API routes for document chunking and vector upsertion in the ingestion pipeline.
+
+This module manages the core processing loop: loading documents, text splitting (chunking),
+and pushing embeddings to the vector store.
+"""
 
 from fastapi import APIRouter, HTTPException, Depends, Query, UploadFile, File, Form
 from fastapi.concurrency import run_in_threadpool
@@ -41,6 +47,23 @@ async def upsertDocs(
     data: UpsertRequestData,
     session: Session = Depends(get_session),
     ):
+    """
+    Upsert pending documents into the vector store.
+
+    This function processes documents that have been chunked but not yet inserted
+    into the vector database. It supports both text and image chunks.
+
+    Args:
+        datastore_id (int): ID of the datastore.
+        data (UpsertRequestData): Configuration for bedding and vector store.
+        session (Session): Database session.
+
+    Returns:
+        bool: True if successful.
+
+    Raises:
+        HTTPException: If no pending documents found.
+    """
 
     pending_document_ids = session.exec(select(DocumentRecord.id).where((DocumentRecord.datastore_id == datastore_id) & (DocumentRecord.insert_vector_status != True))).all()
     if (len(pending_document_ids) == 0):
@@ -137,6 +160,19 @@ async def test_retrieval(
     data: TestRetrievalRequestData,
     session: Session = Depends(get_session),
     ):
+    """
+    Test retrieval from the datastore.
+
+    Allows running a test query (text or image) against the vector store to verify results.
+
+    Args:
+        datastore_id (int): ID of the datastore.
+        data (TestRetrievalRequestData): Query parameters.
+        session (Session): Database session.
+
+    Returns:
+        List: Retrieval results.
+    """
 
     if (data.is_vision_search == True):
         embeddingModel = create_embedding_model(
@@ -228,6 +264,19 @@ async def process_document(
     documentRecord: List[DocumentRecord],
     session: Session = Depends(get_session)
 ):
+    """
+    Process (chunk) a list of documents.
+
+    Loads the documents, splits them into chunks using a background thread pool,
+    and bulk inserts the chunks into the database.
+
+    Args:
+        documentRecord (List[DocumentRecord]): List of documents to process.
+        session (Session): Database session.
+
+    Returns:
+        List[ProcessDocumentResponse]: List of chunking results.
+    """
 
     # 1️⃣ Batch fetch all docs
     ids = [d.id for d in documentRecord]
@@ -280,6 +329,17 @@ async def preview_chunks(
     previewLimit: int = 0,
     session: Session = Depends(get_session)
     ):
+    """
+    Get chunks for a specific document from the database.
+
+    Args:
+        data (GetDocumentDetailsRequest): Document identifier details.
+        previewLimit (int): Max number of chunks to return (0 for all).
+        session (Session): Database session.
+
+    Returns:
+        ChunkTextResponse: List of chunk texts.
+    """
     print("Fetching chunks for Doc Id", data.datastoreId, data.id)
     chunks = session.exec(select(ChunkRecord).where((ChunkRecord.datastore_id == data.datastoreId) & (ChunkRecord.document_id == data.id))).all()
     if (previewLimit == 0):
@@ -296,6 +356,20 @@ async def preview_chunks(
     previewLimit: int = 10,
     session: Session = Depends(get_session)
     ):
+    """
+    Preview chunks for a file *before* it is fully ingested.
+    
+    Uploads a temporary file, processes it, returns chunks, and then deletes the file.
+
+    Args:
+        file (UploadFile): The file to preview.
+        documentDetails (str): JSON string of document metadata/settings.
+        previewLimit (int): Number of chunks to return.
+        session (Session): Database session.
+
+    Returns:
+        ChunkTextResponse: List of preview chunks.
+    """
 
     documentDetailsObj = DocumentRecord.model_validate_json(documentDetails)
     datastore_temp_root = INGESTION_CONFIG["ingestion_root"] / INGESTION_CONFIG["ingestion_temp_folder_name"]

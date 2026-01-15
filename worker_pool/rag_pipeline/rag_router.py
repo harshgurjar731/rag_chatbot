@@ -1,3 +1,11 @@
+"""
+RAG Pipeline Router.
+
+This module exposes the main API endpoints for the RAG chatbot system, including:
+- Assistant management (create/delete/list)
+- Query interface (streaming chat)
+- Feedback logging
+"""
 from fastapi import APIRouter, HTTPException, Depends, Query
 from pathlib import Path
 from sqlmodel import Session, select
@@ -30,6 +38,19 @@ async def createAssistant(
     data: CreateAssitantRequest,
     session: Session = Depends(get_session),
     ):
+    """
+    Create a new AI Assistant.
+
+    Args:
+        data (CreateAssitantRequest): Assistant creation details.
+        session (Session): Database session.
+
+    Returns:
+        KnowledgeAssistant: Created assistant object.
+
+    Raises:
+        HTTPException: If assistant with same name exists.
+    """
     print("Creating new assistant with name:", data.name)
     # 1️⃣ Check for duplicate name
     existing = session.exec(select(KnowledgeAssistant).where(KnowledgeAssistant.name == data.name)).first()
@@ -52,6 +73,12 @@ async def createAssistant(
 
 @router.get("/getAssistants" , response_model=List[KnowledgeAssistantResponse])
 async def get_assistants(session: Session = Depends(get_session)):
+    """
+    Get all registered knowledge assistants.
+
+    Returns:
+        List[KnowledgeAssistantResponse]: List of assistants.
+    """
     assistants = session.exec(select(KnowledgeAssistant)).all()
     return_assistants: List[KnowledgeAssistantResponse] = []
     for assistant in assistants:
@@ -70,6 +97,16 @@ async def get_assistants(session: Session = Depends(get_session)):
 async def delete_assistant(
     assistant_id: int, 
     session: Session = Depends(get_session)):
+    """
+    Delete an assistant and cleanup its resources.
+
+    Args:
+        assistant_id (int): ID of the assistant.
+        session (Session): Database session.
+
+    Returns:
+        KnowledgeAssistant: The deleted assistant object.
+    """
 
     assistant = session.exec(select(KnowledgeAssistant).where(KnowledgeAssistant.id == assistant_id)).first()
     session.delete(assistant)
@@ -154,8 +191,23 @@ async def retrieve(
     # ),
 
     # document_id: List[int] = Query(..., description="File IDs to search within"),
+    # document_id: List[int] = Query(..., description="File IDs to search within"),
     session: Session = Depends(get_session)
 ):
+    """
+    Execute a RAG query against a chatbot.
+
+    Streams the response from the worker bot via Redis.
+
+    Args:
+        chatbot_id (str): Name/ID of the bot to query.
+        data (ChatInterfaceDetails): Request payload containing messages/context.
+        session (Session): Database session.
+        [Many other optional query parameters for LLM config...]
+
+    Returns:
+        dict: The final answer.
+    """
 
     full_response = ""
     print("1")
@@ -295,6 +347,18 @@ async def log_feedback(
     feedback_data: FeedbackRequest,
     session: Session = Depends(get_session)
 ):
+    """
+    Log user feedback for a chat turn.
+
+    Sends annotation to Phoenix/Arize for evaluation.
+
+    Args:
+        feedback_data (FeedbackRequest): Feedback details (thumbs up/down).
+        session (Session): Database session.
+
+    Returns:
+        dict: Submission status.
+    """
     print(f"Received feedback: {feedback_data}")
     
     # Use REST API to log annotation since phoenix client is not available in broken env

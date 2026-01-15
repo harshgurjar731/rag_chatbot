@@ -1,7 +1,9 @@
 """
 Bot Utilities Module
 
-Shared utility functions for bot name handling and validation.
+This module provides shared utility functions for bot name handling and validation.
+It includes functions to sanitize bot names for Docker usage, generate container names,
+and validate user-provided bot names against system constraints.
 """
 
 import re
@@ -16,10 +18,10 @@ def sanitize_bot_name(bot_name: str) -> str:
     Docker network aliases must be valid DNS names.
     
     Args:
-        bot_name: Original bot name (may contain spaces, mixed case)
+        bot_name (str): Original bot name (may contain spaces, mixed case).
         
     Returns:
-        Sanitized name suitable for Docker network alias (lowercase, no spaces)
+        str: Sanitized name suitable for Docker network alias (lowercase, no spaces).
         
     Examples:
         "Bot 1" -> "bot-1"
@@ -44,10 +46,10 @@ def get_container_name(bot_name: str) -> str:
     Generate Docker container name from bot name.
     
     Args:
-        bot_name: Name of the bot
+        bot_name (str): Name of the bot.
         
     Returns:
-        Docker-compatible container name with 'bot_' prefix
+        str: Docker-compatible container name with 'bot_' prefix.
     """
     sanitized = bot_name.replace(' ', '_')
     return f"bot_{sanitized}"
@@ -57,11 +59,16 @@ def validate_bot_name(bot_name: str) -> Tuple[bool, str]:
     """
     Validate a bot name for use in the system.
     
+    Checks if the name is not empty, within length limits, and results in a valid
+    alphanumeric identifier after sanitization.
+    
     Args:
-        bot_name: Name to validate
+        bot_name (str): Name to validate.
         
     Returns:
-        Tuple of (is_valid: bool, message: str)
+        Tuple[bool, str]: A tuple containing:
+            - is_valid (bool): True if the name is valid, False otherwise.
+            - message (str): A message explaining the validation result.
     """
     if not bot_name or not bot_name.strip():
         return False, "Bot name cannot be empty"

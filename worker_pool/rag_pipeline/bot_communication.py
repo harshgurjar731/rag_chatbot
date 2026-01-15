@@ -67,6 +67,17 @@ class BotCommunicator:
     ) -> Iterator[str]:
         """
         Send a message to a bot and get a streaming response via Redis PubSub.
+
+        This method acts as a bridge between the HTTP API and the worker bots over Redis.
+
+        Args:
+            bot_name (str): The identifier of the bot.
+            message_text (str): The user's query text.
+            timeout (int): Timeout in seconds.
+            [... other config args correspond to RAG parameters ...]
+
+        Yields:
+             str: Text chunks of the response.
         """
         msg_id = str(uuid.uuid4())
         response_channel = f"msg:{msg_id}:stream"

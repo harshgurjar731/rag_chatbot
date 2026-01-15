@@ -1,3 +1,9 @@
+"""
+ChromaDB Vector Store Adapter.
+
+This module implements the VectorStoreProtocol for ChromaDB, handling collection
+management, vector insertion, and similarity search.
+"""
 from ingestion_pipleline.VectorStores.vector_store_protocol import VectorStoreProtocol
 from typing import List, Dict, Any, Optional
 import chromadb
@@ -9,6 +15,10 @@ import os
 CHROMA_PERSIST_DIRECTORY = "./chroma_db"
 
 class ChromaVectorDB(VectorStoreProtocol):
+    """
+    ChromaDB implementation of the VectorStoreProtocol.
+    Supports both local persistence and HTTP client connection.
+    """
     def __init__(self, persist_directory: str = CHROMA_PERSIST_DIRECTORY):
         chroma_host = os.getenv("CHROMA_SERVER_HOST")
         chroma_port = os.getenv("CHROMA_SERVER_PORT", "8000")
@@ -22,6 +32,13 @@ class ChromaVectorDB(VectorStoreProtocol):
             self.client = chromadb.PersistentClient(path=persist_directory)
 
     def create_collection(self, name: str, embedding: HuggingFaceEmbeddings | OpenAIEmbeddings) -> None:
+        """
+        Create a new collection or retrieve existing one.
+        
+        Args:
+            name (str): Collection name.
+            embedding (Embeddings): Embedding model (unused by Chroma directly in client mode, but part of protocol).
+        """
         # Note: Chroma handles embeddings differently if using its built-in functions, 
         # but here we follow the protocol where embeddings might be handled externally or via this instance.
         self.client.get_or_create_collection(name=name)
@@ -37,6 +54,18 @@ class ChromaVectorDB(VectorStoreProtocol):
             return False
 
     def insert_vectors(self, collection: str, vectors: List[List[float]], metadata: List[Dict[str, Any]], ids: List[str] = None) -> List[str]:
+        """
+        Insert raw vectors and metadata into a collection.
+
+        Args:
+            collection (str): Collection name.
+            vectors (List[List[float]]): List of embedding vectors.
+            metadata (List[Dict]): List of metadata dictionaries.
+            ids (List[str], optional): List of IDs. Defaults to UUIDs.
+
+        Returns:
+            List[str]: List of inserted IDs.
+        """
         chroma_coll = self.client.get_collection(name=collection)
         if ids is None:
             import uuid
@@ -62,6 +91,18 @@ class ChromaVectorDB(VectorStoreProtocol):
         return ids
 
     def query(self, collection: str, vector: List[float], top_k: int = 5, filters: Dict[str, Any] = None) -> List[Dict]:
+        """
+        Query the collection using a vector.
+
+        Args:
+            collection (str): Collection name.
+            vector (List[float]): Query vector.
+            top_k (int): Number of results.
+            filters (Dict, optional): Metadata filters.
+
+        Returns:
+            List[Dict]: List of results with id, score, metadata, and document.
+        """
         chroma_coll = self.client.get_collection(name=collection)
         
         where_filter = None

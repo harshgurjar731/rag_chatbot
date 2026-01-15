@@ -1,3 +1,9 @@
+"""
+Image document loader.
+
+This module handles loading and processing of image files, including OCR capabilities
+using Tesseract.
+"""
 from ingestion_pipleline.Loaders.loader_protocol import LoaderProtocol
 from langchain_community.document_loaders import ImageCaptionLoader
 from pathlib import Path
@@ -23,7 +29,17 @@ def ocr_image_with_tesseract(image_path: str) -> str:
         raise RuntimeError(f"Tesseract OCR failed on {image_path}: {e}")
 
 class ImageLoader(LoaderProtocol):
+    """Loader for image files using ImageCaptionLoader (and potentially OCR)."""
     def load(self, path: str) -> List[Document]:
+        """
+        Load an image file and extraction its content/caption.
+
+        Args:
+            path (str): Path to the image file.
+
+        Returns:
+            List[Document]: List containing the loaded image document.
+        """
         file_path = Path(path)
         try:
             file_metadata = {

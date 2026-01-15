@@ -1,3 +1,11 @@
+"""
+RAG Configuration Module
+
+This module defines the configuration settings for the RAG pipeline, including
+LLM parameters, vector database settings, API keys, and guardrail thresholds.
+It loads environment variables using `dotenv`.
+"""
+
 import os
 from pathlib import Path
 from dotenv import load_dotenv

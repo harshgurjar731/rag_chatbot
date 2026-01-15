@@ -1,3 +1,9 @@
+"""
+Service for loading and processing documents for ingestion.
+
+This module supports various file formats (PDF, TXT, HTML, MD, CSV, Images) and
+provides functionality to extract text, tables, and perform OCR.
+"""
 from pathlib import Path
 from typing import List
 from langchain_core.documents import Document
@@ -356,6 +362,18 @@ def load_file_with_loader(file_path: str, loader_type: str = None) -> List[Docum
     """
     Loads various file types into LangChain Document objects with enhanced metadata.
     Automatically determines loader type if not specified.
+
+    Args:
+        file_path (str): Path to the file to load.
+        loader_type (str, optional): Type of loader/file format (e.g., 'pdf', 'txt'). 
+                                     If None, it tries to guess based on mime type or extension.
+
+    Returns:
+        List[Document]: A list of loaded LangChain Document objects.
+    
+    Raises:
+        ValueError: If loader type cannot be determined or is unsupported.
+        RuntimeError: If file loading fails.
     """
     file_path = Path(file_path)
     document_list = []

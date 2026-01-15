@@ -1,3 +1,10 @@
+"""
+RAG Prompts Configuration
+
+This module contains the prompt templates used throughout the RAG pipeline,
+including templates for chat, RAG generation, query decomposition, and rewriting.
+"""
+
 import os
 from pathlib import Path
 from dotenv import load_dotenv

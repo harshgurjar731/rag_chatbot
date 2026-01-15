@@ -1,3 +1,8 @@
+"""
+Bot Manager Module.
+
+Handles database operations for bot lifecycle management (creation, deletion, status checks).
+"""
 from sqlalchemy.orm import Session
 from rag_pipeline.db.models import Bot, BotStatus, init_db
 from sqlalchemy.exc import IntegrityError
@@ -11,9 +16,21 @@ class BotManager:
         self.SessionLocal = init_db()
 
     def get_db(self):
+        """Get a new database session."""
         return self.SessionLocal()
 
     def create_bot(self, bot_id: str, name: str, datastore_id: str) -> tuple[bool, str]:
+        """
+        Register a new bot in the database.
+
+        Args:
+            bot_id (str): Unique identifier.
+            name (str): Bot name.
+            datastore_id (str): ID of the associated datastore.
+
+        Returns:
+            tuple[bool, str]: Success status and message.
+        """
         db = self.get_db()
         try:
             # Check if exists
@@ -32,6 +49,15 @@ class BotManager:
             db.close()
 
     def delete_bot(self, bot_id: str) -> tuple[bool, str]:
+        """
+        Delete a bot from the database.
+
+        Args:
+            bot_id (str): Bot identifier.
+
+        Returns:
+            tuple[bool, str]: Success status and message.
+        """
         db = self.get_db()
         try:
             bot = db.query(Bot).filter(Bot.bot_id == bot_id).first()
@@ -54,6 +80,15 @@ class BotManager:
             db.close()
 
     def get_bot_status(self, bot_id: str) -> str:
+        """
+        Get the current status of a bot.
+
+        Args:
+            bot_id (str): Bot identifier.
+
+        Returns:
+            str: Status string (e.g. 'PENDING', 'RUNNING') or 'unknown'.
+        """
         db = self.get_db()
         try:
             bot = db.query(Bot).filter(Bot.bot_id == bot_id).first()
@@ -62,6 +97,12 @@ class BotManager:
             db.close()
 
     def get_all_bots(self):
+        """
+        Retrieve all registered bots.
+
+        Returns:
+            List[Bot]: List of bot records.
+        """
         db = self.get_db()
         try:
             return db.query(Bot).all()

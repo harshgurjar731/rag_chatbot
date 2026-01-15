@@ -1,3 +1,9 @@
+"""
+API route for file preview.
+
+This module provides an endpoint to preview the actual text content of a file
+before it is chunked or embedded, helping users verify data quality.
+"""
 # rag_app/backend/routes/file_preview.py
 from database import get_session
 from Services.document_loader import load_file_with_loader
@@ -18,6 +24,21 @@ def preview_file(
     loader_type: str,
     session: Session = Depends(get_session),
 ):
+    """
+    Preview the content of a file using a specific loader.
+
+    Args:
+        datastore_id (int): ID of the datastore.
+        file_id (int): ID of the file.
+        loader_type (str): Type of loader to use (e.g., 'pdf', 'txt').
+        session (Session): Database session.
+
+    Returns:
+        dict: Filename, preview text, and total length.
+
+    Raises:
+        HTTPException: If file/datastore not found.
+    """
     # 1️⃣ Validate file
     file_record = session.get(FileRecord, file_id)
     if not file_record or file_record.datastore_id != datastore_id:

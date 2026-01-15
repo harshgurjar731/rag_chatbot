@@ -1,4 +1,9 @@
-# services/unified_rag_pipeline.py
+"""
+This module provides the core RAG retrieval logic.
+
+It includes functions to retrieve text and image answers using the RAG pipeline,
+incorporating query decomposition, rewriting, vector store retrieval, and reranking.
+"""
 
 from typing import List
 import json
@@ -31,6 +36,15 @@ from ingestion_pipleline.VectorStores.vector_store_generator import create_vecto
 from ingestion_pipleline.Reranker.reranking_helper import apply_reranker, get_reranker_model
 
 def encode_image_to_base64(path: str) -> str:
+    """
+    Encode an image file to a base64 string.
+
+    Args:
+        path (str): The file path to the image.
+
+    Returns:
+        str: The base64 encoded string of the image.
+    """
     with open(path, "rb") as f:
         return base64.b64encode(f.read()).decode("utf-8")
         
@@ -54,7 +68,39 @@ def get_rag_answer_text(
     reranker_top_k: int = 5,
     query_optimizer: str = "none"
 ):
-    """General purpose chatbot without using any file/vector store data."""
+    """
+    Generate a text-based RAG answer.
+
+    This function orchestrates the entire RAG pipeline for text queries, including:
+    1. Query history contextualization (if enabled).
+    2. Query optimization/rewriting (MultiQuery, RAGFusion, etc.).
+    3. Document retrieval from the vector store.
+    4. Reranking of retrieved documents.
+    5. Final answer generation using the LLM with the retrieved context.
+
+    Args:
+        query (str): The user's query.
+        search_image (str): (Unused in text RAG, but kept for signature compatibility).
+        message_history (any): The conversation history.
+        selected_documents (List[str]): List of document identifiers to filter by.
+        llm_model_name (str): LLM model name.
+        llm_model_provider (str): LLM provider.
+        temperature (float): LLM temperature.
+        token_size (int): Max tokens for response.
+        include_sources (bool): Whether to include source citations.
+        guardrail_level (str): Guardrail configuration.
+        embedding_model_name (str): Embedding model name.
+        embedding_model_provider (str): Embedding provider.
+        vector_store_provider (str): Vector store provider (e.g., Qdrant, Chroma).
+        vector_store_collection_name (str): collection/datastore name.
+        vector_store_top_k (int): Number of docs to retrieve.
+        reranker_type (str): Reranker technique/model to use.
+        reranker_top_k (int): Number of docs after reranking.
+        query_optimizer (str): Query optimization strategy.
+
+    Returns:
+        dict: The final response containing the answer and citations.
+    """
     if not llm_model_name or not llm_model_provider:
         raise ValueError("LLM model & provider name must be provided")
 
@@ -223,7 +269,27 @@ def get_rag_answer_image(
     reranker_top_k: int = 5,
     #query_optimizer: str = "none"
 ):
-    """General purpose chatbot without using any file/vector store data."""
+    """
+    Generate an answer using image retrieval (Vision RAG).
+
+    This function embeds the query (text or image) and retrieves relevant images from
+    the vector store.
+
+    Args:
+        query (str): The user's text query.
+        search_image (str): Base64 encoded image string for image-to-image search.
+        include_sources (bool): Whether to include sources (placeholder).
+        embedding_model_name (str): Embedding model to use for image/text embedding.
+        embedding_model_provider (str): Provider for the embedding model.
+        vector_store_provider (str): Vector store provider.
+        vector_store_collection_name (str): Collection name (will append "_image").
+        vector_store_top_k (int): Number of images to retrieve.
+        reranker_type (str): Reranker type (not currently active for images).
+        reranker_top_k (int): Reranking top K.
+
+    Returns:
+        dict: Response containing retrieved image base64 strings.
+    """
     # if not llm_model_name or not llm_model_provider:
     #     raise ValueError("LLM model & provider name must be provided")
 

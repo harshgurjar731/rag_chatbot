@@ -1,3 +1,9 @@
+"""
+PDF document loader.
+
+This module provides advanced PDF extraction capabilities, including text extraction,
+table parsing with Camelot, and OCR support.
+"""
 from ingestion_pipleline.Loaders.loader_protocol import LoaderProtocol
 from langchain_community.document_loaders import UnstructuredImageLoader
 from pathlib import Path
@@ -14,7 +20,20 @@ import csv
 import io
 
 class PDFLoader(LoaderProtocol):
+    """
+    Loader for PDF documents.
+    Extracts text, tables (via Camelot), and potentially images/OCR.
+    """
     def load(self, path: str) -> List[Document]:
+        """
+        Load a PDF file and extract its content.
+
+        Args:
+            path (str): Path to the PDF file.
+
+        Returns:
+            List[Document]: List of documents representing pages/tables.
+        """
         file_path = Path(path)
         document_list:List[Document] = []
         try:

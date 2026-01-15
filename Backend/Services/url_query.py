@@ -1,3 +1,9 @@
+"""
+Service for scraping content from URLs.
+
+This module provides functionality to fetch web pages, extract visible text,
+and save the content to local files for ingestion.
+"""
 import requests
 from bs4 import BeautifulSoup
 from pathlib import Path

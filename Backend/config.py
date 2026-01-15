@@ -1,4 +1,10 @@
 # rag_app/backend/config.py
+"""
+Configuration module for the RAG Backend application.
+
+This module loads environment variables and defines the configuration settings
+for the application, including model parameters, database settings, and API keys.
+"""
 import os
 from pathlib import Path
 from dotenv import load_dotenv

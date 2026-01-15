@@ -1,4 +1,10 @@
-# rag_app/backend/routes/datastore.py
+"""
+API routes for RAG evaluation.
+
+This module provides endpoints to manage Q&A pairs (ground truth) and trigger
+evaluations using frameworks like Phoenix or Ragaas to assess RAG performance.
+"""
+# rag_app/backend/routes/evaluation.py
 import os
 import time
 import uuid
@@ -28,6 +34,16 @@ router = APIRouter()
 def get_all_questions(datastore_id: int, session: Session = Depends(get_session)):
     """
     Ensure QA is generated for all files if missing, then return all QA pairs for the datastore.
+
+    Args:
+        datastore_id (int): The ID of the datastore.
+        session (Session): Database session.
+
+    Returns:
+        List[QuestionAnswer]: List of QA pairs.
+
+    Raises:
+        HTTPException: If no QA pairs are found.
     """
     insert_qna_for_datastore(session, datastore_id)
 
@@ -52,6 +68,20 @@ def add_qna_pair(
     request: QnaRequest,
     session: Session = Depends(get_session),
 ):
+    """
+    Add a new manual Q&A pair to the datastore.
+
+    Args:
+        datastore_id (int): ID of the datastore.
+        request (QnaRequest): The QnA data.
+        session (Session): Database session.
+
+    Returns:
+        dict: Success message and details.
+
+    Raises:
+        HTTPException: If datastore not found or insertion fails.
+    """
     # Check datastore exists
     datastore = session.get(DataStore, datastore_id)
     if not datastore:
@@ -89,6 +119,16 @@ def add_qna_pair(
 def delete_question_by_id(question_id: int, session: Session = Depends(get_session)):
     """
     Delete a single QuestionAnswer entry by question_id.
+
+    Args:
+        question_id (int): DB ID of the question-answer pair to delete.
+        session (Session): Database session.
+
+    Returns:
+        dict: Success message.
+
+    Raises:
+        HTTPException: If question ID not found.
     """
     qa_to_delete = session.get(QuestionAnswer, question_id)
     if not qa_to_delete:
@@ -307,6 +347,14 @@ def start_evaluation(
     """
     Start an evaluation asynchronously and return an evaluation_id.
     Framework is read from request body and handled dynamically.
+
+    Args:
+        req (EvaluationRequest): Evaluation configuration.
+        background_tasks (BackgroundTasks): FastAPI background tasks handler.
+        session (Session): Database session.
+
+    Returns:
+        dict: Evaluation ID and status.
     """
     evaluation_id = f"eval-{uuid.uuid4().hex[:8]}"
     framework = req.framework.lower()

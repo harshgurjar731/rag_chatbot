@@ -1,3 +1,9 @@
+"""
+Document loading entry point.
+
+This module acts as a factory/dispatcher to load documents using the appropriate
+loader implementation based on file type.
+"""
 from sqlmodel import Session, select
 from models.FileRecord import FileRecord
 from database import get_session
@@ -14,6 +20,21 @@ from ingestion_pipleline.Loaders.loader_protocol import LoaderProtocol
 import mimetypes
 
 def load_document_with_metadata(doc: DocumentRecord) -> List[Document]:
+    """
+    Load a document with metadata based on its type.
+
+    Automatically determines the correct loader (PDF, Image, etc.) based on the
+    document record's loaderType or file extension.
+
+    Args:
+        doc (DocumentRecord): The document metadata record.
+
+    Returns:
+        List[Document]: A list of loaded LangChain documents.
+    
+    Raises:
+        ValueError: If loader type cannot be determined.
+    """
     # Automatically determine file type if not provided
     print("LoaderType: ", doc.loaderType)
     if doc.loaderType == 'pdf':

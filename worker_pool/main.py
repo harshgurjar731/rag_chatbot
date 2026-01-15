@@ -1,3 +1,11 @@
+"""
+Worker Pool Main Service
+
+This module is the entry point for the worker pool service. It manages the lifecycle
+of bot processes, including spawning, monitoring, and cleaning up worker processes.
+It uses Redis for heartbeats and PostgreSQL for state management.
+"""
+
 import os
 import time
 import socket
@@ -27,9 +35,18 @@ processes = {}
 r = redis.Redis(host=REDIS_HOST, port=6379, db=0, decode_responses=True)
 
 def get_db():
+    """Create a new database session."""
     return SessionLocal()
 
 def update_pool_heartbeat(db: Session):
+    """
+    Update the heartbeat for this worker pool in the database.
+    
+    Creates a new WorkerPool record if one doesn't exist for this host.
+    
+    Args:
+        db (Session): Database session.
+    """
     pool = db.query(WorkerPool).filter(WorkerPool.id == HOSTNAME).first()
     if not pool:
         pool = WorkerPool(id=HOSTNAME, active_workers=len(processes))
@@ -40,6 +57,14 @@ def update_pool_heartbeat(db: Session):
     db.commit()
 
 def stop_bot_process(bot_name):
+    """
+    Stop and clean up a bot process.
+    
+    Terminates the process, cleans up Redis heartbeat keys, and removes from the processes dict.
+    
+    Args:
+        bot_name (str): The name/ID of the bot to stop.
+    """
     if bot_name in processes:
         print(f"[*] Stopping process for {bot_name}")
         proc = processes[bot_name]
@@ -58,6 +83,17 @@ def stop_bot_process(bot_name):
         del processes[bot_name]
 
 def spawn_bot_process(bot):
+    """
+    Spawn a new worker process for a bot.
+    
+    Sets up the environment variables and spawns `worker_wrapper.py`.
+    
+    Args:
+        bot (Bot): The bot database record.
+        
+    Returns:
+        bool: True if successful, False otherwise.
+    """
     print(f"[*] Spawning worker for bot: {bot.bot_id}")
     env = os.environ.copy()
     env["BOT_NAME"] = bot.bot_name
@@ -82,6 +118,12 @@ def spawn_bot_process(bot):
         return False
 
 def check_process_health(db: Session):
+    """
+    Check active processes for health and restart if dead.
+    
+    Args:
+        db (Session): Database session.
+    """
     # Check for dead processes
     dead_bots = []
     for bot_id, proc in processes.items():
@@ -101,6 +143,12 @@ def check_process_health(db: Session):
             del processes[bot_id]
 
 def claim_pending_bots(db: Session):
+    """
+    Claim pending bots from the database and spawn them if capacity permits.
+    
+    Args:
+        db (Session): Database session.
+    """
     # Check if we have capacity
     if len(processes) >= WORKER_POOL_SIZE:
         return
@@ -140,6 +188,9 @@ def restore_active_bots(db: Session):
     """
     On startup, find bots that were assigned to this pool (or are ACTIVE but have no running process).
     Use case: System restart.
+    
+    Args:
+        db (Session): Database session.
     """
     # 1. Bots assigned to THIS pool that are marked ACTIVE
     my_bots = db.query(Bot).filter(Bot.pool_id == HOSTNAME, Bot.status == BotStatus.ACTIVE).all()
@@ -158,6 +209,9 @@ def release_orphaned_bots(db: Session):
     """
     Find worker pools that haven't sent a heartbeat in > 10 seconds.
     Release their bots (set to PENDING) so they can be picked up by active pools.
+    
+    Args:
+        db (Session): Database session.
     """
     # 10 seconds timeout (heartbeat is every 2s, so this is 5 misses)
     timeout = datetime.now(timezone.utc) - timedelta(seconds=10)
@@ -199,6 +253,9 @@ def reconcile_active_processes(db: Session):
     """
     Check running processes against DB.
     Kill processes for bots that are DELETED (missing from DB) or STOPPED.
+    
+    Args:
+        db (Session): Database session.
     """
     active_names = list(processes.keys())
     if not active_names:
@@ -226,6 +283,9 @@ def reconcile_active_processes(db: Session):
         print(f"[!] Error reconciling processes: {e}")
 
 def main():
+    """
+    Main loop for the worker pool service.
+    """
     db = get_db()
     
     # Ensure pool exists in DB before we try to claim anything (prevents FK violation)

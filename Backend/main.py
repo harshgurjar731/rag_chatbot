@@ -1,3 +1,9 @@
+"""
+Main entry point for the RAG Backend API.
+
+This module initializes the FastAPI application, sets up OpenTelemetry tracing,
+configures CORS middleware, and includes API routers for various services.
+"""
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from dotenv import load_dotenv
@@ -18,6 +24,9 @@ from openinference.instrumentation.openai import OpenAIInstrumentor
 def configure_opentelemetry_for_phoenix():
     """
     Configures OpenTelemetry with a standard OTLP exporter pointing to Phoenix.
+
+    This function sets up the tracer provider, OTLP exporter with project headers,
+    and instruments LangChain and OpenAI libraries for tracing.
     """
     import os
     endpoint = os.getenv("OTEL_EXPORTER_OTLP_ENDPOINT", "")
@@ -83,7 +92,7 @@ app.add_middleware(
 )
 
 
-# Include all the different API routers
+# # Include all the different API routers
 app.include_router(datastore.router, prefix="/datastore")
 app.include_router(upload.router)
 app.include_router(preview.router, prefix="/datastore")

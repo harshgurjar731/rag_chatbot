@@ -1,3 +1,9 @@
+"""
+Document splitting (chunking) logic.
+
+This module processes loaded documents and splits them into smaller chunks
+suitable for embedding, using various LangChain splitter implementations.
+"""
 from sqlmodel import Session, select
 from models.FileRecord import FileRecord
 from database import get_session
@@ -17,6 +23,19 @@ from langchain_text_splitters import (
 from ingestion_pipleline.Config.Config import INGESTION_CONFIG
 
 def split_document(doc: DocumentRecord, loadedDocs: List[Document]) -> List[Document]:
+    """
+    Split a document into chunks based on the specified method.
+
+    Supports 'character', 'recursive', 'markdown', and 'token' based splitting.
+    Also ensures metadata like 'source' is preserved or set on chunks.
+
+    Args:
+        doc (DocumentRecord): Document metadata record (contains split config).
+        loadedDocs (List[Document]): The loaded document(s) to split.
+
+    Returns:
+        List[Document]: The list of chunked documents.
+    """
     method = doc.textSplitMethod.lower()
     print("In Splitter")
     if method == "character".lower():

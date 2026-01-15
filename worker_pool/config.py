@@ -1,4 +1,10 @@
 # rag_app/backend/config.py
+"""
+Worker Pool Configuration Module
+
+This module defines the configuration settings for the worker pool service,
+including backend URLs, default model parameters, and storage paths.
+"""
 import os
 from pathlib import Path
 from dotenv import load_dotenv

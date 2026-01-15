@@ -80,6 +80,13 @@
 #     return {"answer": final_answer.strip()}
 
 
+"""
+This module provides the service for obtaining direct LLM answers without retrieval.
+
+It handles the creation of the LLM chain, optional output validation via guardrails,
+and source attribution if requested.
+"""
+
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.output_parsers import StrOutputParser
 from Services.guardrail import validate_output  
@@ -98,8 +105,28 @@ def get_llm_answer(
     include_sources: bool = False,
     guardrail_level: str = "none"
 ):
-    """General purpose chatbot without using any file/vector store data."""
+    """
+    Get an answer from the LLM based on the query, without using an external knowledge base.
 
+    This function configures the LLM, constructs the prompt, invokes the model,
+    optionally validates the output using guardrails, and formats the response.
+
+    Args:
+        query (str): The user's question.
+        llm_model_name (str): The name of the LLM model to use.
+        llm_model_provider (str): The provider of the LLM model (e.g., "groq", "azureopenai").
+        temperature (float): The sampling temperature.
+        token_size (int, optional): The maximum number of tokens to generate. Defaults to 256.
+        include_sources (bool, optional): Whether to parse and include sources in the response. Defaults to False.
+        guardrail_level (str, optional): The level of guardrails to apply (e.g., "none"). Defaults to "none".
+
+    Returns:
+        dict: A dictionary containing the answer, and optionally images and citations placeholders.
+              Structure: {"answer": str, "images": list, "citations": str}
+
+    Raises:
+        ValueError: If `llm_model_name` or `llm_model_provider` is missing.
+    """
     if not llm_model_name or not llm_model_provider:
         raise ValueError("LLM model & provider name must be provided")
 

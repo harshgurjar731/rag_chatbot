@@ -1,3 +1,8 @@
+"""
+Image Reranking Router.
+
+Provides an endpoint to rerank images using a vision-language model (SigLIP).
+"""
 from fastapi import APIRouter, UploadFile, File, Form
 from typing import List
 from transformers import AutoProcessor, AutoModel
@@ -15,6 +20,20 @@ async def rerank_image_search(
     queryImage: UploadFile = File(...),
     top_k_images: List[str] = Form(...)
 ):
+    """
+    Rerank retrieved images based on a multi-modal query (text + image).
+
+    Uses a SigLIP model to compute similarity between the query (text+image)
+    and candidate images.
+
+    Args:
+        textQuery (str): The textual part of the query.
+        queryImage (UploadFile): The image part of the query.
+        top_k_images (List[str]): List of base64 encoded candidate images.
+
+    Returns:
+        dict: Original query and reranked list of images with scores.
+    """
     model_name = "google/siglip2-base"
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 

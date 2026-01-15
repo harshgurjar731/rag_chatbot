@@ -1,3 +1,10 @@
+"""
+This module defines custom actions for NeMo Guardrails.
+
+It includes actions for jailbreak detection (using Groq), content safety checks (using NVIDIA API),
+topic control, and formatting safety violations for the frontend.
+"""
+
 from nemoguardrails.actions import action
 from openai import AsyncOpenAI
 
@@ -12,16 +19,25 @@ load_dotenv()
 nvidia_client = AsyncOpenAI(
     base_url="https://integrate.api.nvidia.com/v1",
     api_key=os.getenv("NVIDIA_API_KEY")
-    # api_key="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",
 )
 
 
 groq_client = AsyncGroq(
     api_key=os.getenv("GROQ_API_KEY")
-    #api_key="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",
 )
 
 def get_model_name_from_config(context, config_name, default_model):
+    """
+    Retrieve user-configured model name from the context or return default.
+    
+    Args:
+        context (dict): The current execution context containing config.
+        config_name (str): The configuration key to look for (e.g., 'groq_jailbreak_model').
+        default_model (str): The default model to use if not found.
+        
+    Returns:
+        str: The resolved model name.
+    """
     try:
         config = context.get("config")
         if config and hasattr(config, "models"):
@@ -37,6 +53,15 @@ def get_model_name_from_config(context, config_name, default_model):
 # ---------------------------------------------------------------------------
 @action(name="check_jailbreak_groq")
 async def check_jailbreak_groq(context: dict):
+    """
+    Check if the user input attempts to jailbreak the LLM using Llama Prompt Guard (via Groq).
+    
+    Args:
+        context (dict): The current execution context containing the user message.
+        
+    Returns:
+        bool: True if jailbreak is detected, False otherwise.
+    """
     model_name = get_model_name_from_config(context, "groq_jailbreak_model", "meta-llama/llama-prompt-guard-2-86m")
     user_message = context.get("last_user_message") or context.get("user_message", "")
     print("In JailBreak GROQ", user_message)
@@ -66,8 +91,6 @@ async def check_jailbreak_groq(context: dict):
         print(f"[ERROR] Jailbreak check failed: {e}")
         return False
 
-# [Keep existing imports at the top]
-
 # ---------------------------------------------------------------------------
 # NEW: NVIDIA CONTENT SAFETY ACTION (Direct API Call)
 # ---------------------------------------------------------------------------
@@ -75,6 +98,15 @@ import json # Ensure json is imported at top of file
 # ... (Keep other imports)
 @action(name="check_nvidia_content_safety")
 async def check_nvidia_content_safety(context: dict):
+    """
+    Check content safety using NVIDIA's Content Safety model.
+    
+    Args:
+        context (dict): The current execution context.
+        
+    Returns:
+        str: 'safe' if content is safe, or a formatted 'BLOCK_PAYLOAD: ...' string with violation categories.
+    """
     user_message = context.get("last_user_message") or context.get("user_message", "")
     if not user_message: return "safe"
 
@@ -111,71 +143,19 @@ async def check_nvidia_content_safety(context: dict):
         print(f"[ERROR] NVIDIA Safety Action failed: {e}")
         return "safe"
     
-      # ---------------------------------------------------------------------------
-# CONTENT SAFETY CHECK (Input)
-# # ---------------------------------------------------------------------------
-# @action(name="check_content_safety_groq")
-# async def check_content_safety_groq(context: dict):
-#     model_name = get_model_name_from_config(context, "groq_content_safety_model", "meta-llama/llama-guard-4-12b")
-#     user_message = context.get("last_user_message") or context.get("user_message", "")
-    
-#     if not user_message: return "safe"
-
-#     try:
-#         completion = await groq_client.chat.completions.create(
-#             model=model_name,
-#             messages=[{"role": "user", "content": user_message}],
-#             temperature=0.0
-#         )
-#         result = completion.choices[0].message.content.strip().lower()
-#         if result.startswith("unsafe"): return "unsafe"
-#         return "safe"
-#     except Exception as e:
-#         print(f"[ERROR] Input Safety check failed: {e}")
-#         return "safe"
-
-# ---------------------------------------------------------------------------
-# CONTENT SAFETY CHECK (Output) - NEW
-# ---------------------------------------------------------------------------
-# @action(name="check_content_safety_output_groq")
-# async def check_content_safety_output_groq(context: dict):
-#     model_name = get_model_name_from_config(context, "groq_content_safety_model", "meta-llama/llama-guard-4-12b")
-    
-#     # CRITICAL: For output rails, we need the BOT's message
-#     bot_message = context.get("bot_message", "")
-    
-#     if not bot_message: return "safe"
-
-#     try:
-#         # Llama Guard expects "Agent" role for bot output checking usually, 
-#         # but simpler user-role check works for general toxicity.
-#         # Ideally, Llama Guard Prompt format: 
-#         # User: [Msg]
-#         # Agent: [Msg]
-#         # But here we just check the bot message content for safety.
-#         completion = await groq_client.chat.completions.create(
-#             model=model_name,
-#             messages=[{"role": "user", "content": bot_message}],
-#             temperature=0.0
-#         )
-#         result = completion.choices[0].message.content.strip().lower()
-        
-#         # print(f"[DEBUG] Output Safety Check: {result}")
-        
-#         if result.startswith("unsafe"): return "unsafe"
-#         return "safe"
-#     except Exception as e:
-#         print(f"[ERROR] Output Safety check failed: {e}")
-#         return "safe"
-
-
-
 
 @action(name="topic_control_check")
 async def topic_control_check(context: dict):
     """
     Check if user input is on-topic for a medical assistant using NVIDIA's topic control model.
-    Returns 'on-topic' or 'off-topic'.
+    
+    Retrieves system instructions from the config and compares the user input against allowed topics.
+    
+    Args:
+        context (dict): The current execution context.
+        
+    Returns:
+        str: 'on-topic' or 'off-topic'.
     """
     # Get the last user message from context
     # NeMo provides this as 'last_user_message'
@@ -231,15 +211,17 @@ async def topic_control_check(context: dict):
         return "on-topic"
     
 
-
-# In actions.py
-
-# In actions.py
-# In actions.py
-# In actions.py
-
 @action(name="format_safety_violation")
 def format_safety_violation(data: dict) -> str:
+    """
+    Format a safety violation-payload into a user-facing blocking message.
+    
+    Args:
+        data (dict): Dictionary containing violation details (e.g. "policy_violations").
+        
+    Returns:
+        str: A formatted string starting with BLOCKED_SAFETY.
+    """
     violations = data.get("policy_violations", [])
     
     if not violations:

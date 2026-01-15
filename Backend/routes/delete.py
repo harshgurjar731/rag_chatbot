@@ -1,3 +1,9 @@
+"""
+API routes for deletion operations.
+
+This module provides specialized endpoints for deep deletion of resources,
+ensuring all associated data (QA pairs, files, chunks) is removed.
+"""
 # rag_app/backend/routes/datastore.py
 import os
 from pathlib import Path
@@ -21,6 +27,21 @@ class DataStoreCreate(BaseModel):
 
 @router.delete("/{datastore_id}", response_model=dict)
 def delete_datastore(datastore_id: int, session: Session = Depends(get_session)):
+    """
+    Delete a datastore completely.
+
+    This recursively deletes all files, QA pairs, chunks, and physical folders associated with the datastore.
+
+    Args:
+        datastore_id (int): The ID of the datastore to delete.
+        session (Session): Database session.
+
+    Returns:
+        dict: Success message.
+
+    Raises:
+        HTTPException: If datastore not found or deletion fails.
+    """
     # 1️⃣ Fetch datastore from DB
     datastore = session.get(DataStore, datastore_id)
     if not datastore:

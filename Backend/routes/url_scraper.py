@@ -1,3 +1,9 @@
+"""
+API route for URL scraping.
+
+This module provides an endpoint to scrape a website and ingest the content
+directly into a datastore.
+"""
 # rag_app/backend/routes/url_scraper.py
 
 from pydantic import BaseModel
@@ -33,6 +39,17 @@ async def scrape_website(
     """
     Scrape website content and process it (save, preview, chunk, embed) 
     directly without making an extra upload API call.
+
+    Args:
+        datastore_id (int): ID of the datastore.
+        url (str): The URL to scrape.
+        session (Session): Database session.
+
+    Returns:
+        ScrapeResponse: Details of the scraped file.
+
+    Raises:
+        HTTPException: If datastore not found or processing fails.
     """
 
     # ✅ Validate datastore exists

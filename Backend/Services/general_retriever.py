@@ -96,7 +96,21 @@ def get_llm_answer(
     include_sources: bool = False,
     guardrail_level: str = "none"
 ):
-    """General purpose chatbot without using any file/vector store data."""
+    """
+    Generates an answer from an LLM without using any RAG context.
+    
+    Args:
+        query (str): The user's question.
+        llm_model_name (str): The name of the LLM model to use.
+        llm_model_provider (str, optional): The provider of the LLM (e.g., 'Groq', 'Azure').
+        temperature (float, optional): Sampling temperature for the LLM.
+        token_size (int): Maximum number of tokens for the response.
+        include_sources (bool): Whether to include a "Sources" section (even if hypothetical).
+        guardrail_level (str): The level of guardrails to apply to the output.
+
+    Returns:
+        dict: A dictionary containing the 'answer' key with the generated text.
+    """
 
     if not llm_model_name:
         raise ValueError("LLM model name must be provided")

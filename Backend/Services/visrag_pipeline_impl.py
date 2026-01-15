@@ -64,7 +64,14 @@ OFFICIAL_VISRAG_RETRIEVER = "openbmb/VisRAG-Ret"  # *optional swap*
 def pdf_to_page_images(pdf_path: str, out_dir: str = "./page_images", dpi: int = PAGE_DPI) -> List[str]:
     """
     Render PDF pages to images using PyMuPDF (fitz).
-    Returns list of saved image paths, one per page.
+
+    Args:
+        pdf_path (str): Path to the source PDF file.
+        out_dir (str): Directory where page images will be saved.
+        dpi (int): Dots per inch for rendering quality.
+
+    Returns:
+        List[str]: List of paths to the saved page images.
     """
     Path(out_dir).mkdir(parents=True, exist_ok=True)
     doc = pymupdf.open(pdf_path)
@@ -82,7 +89,17 @@ def pdf_to_page_images(pdf_path: str, out_dir: str = "./page_images", dpi: int =
 # Embedding: CLIP (image + text)
 # -----------------------
 class ClipIndexer:
+    """
+    A class to index and search images/text using CLIP embeddings.
+    """
     def __init__(self, model_name: str = CLIP_MODEL, device: str = DEVICE):
+        """
+        Initializes the ClipIndexer with a specified model.
+        
+        Args:
+            model_name (str): The name of the CLIP model to load.
+            device (str): Computation device ('cuda' or 'cpu').
+        """
         self.device = device
         self.model_name = model_name
         self.model = CLIPModel.from_pretrained(model_name).to(self.device)
@@ -102,7 +119,13 @@ class ClipIndexer:
 
     def embed_images(self, pil_images: List[Image.Image]) -> np.ndarray:
         """
-        Compute normalized CLIP image embeddings (float32) shape (N, dim).
+        Compute normalized CLIP image embeddings.
+
+        Args:
+            pil_images (List[Image.Image]): List of PIL Image objects.
+
+        Returns:
+            np.ndarray: Normalized image embeddings of shape (N, dim).
         """
         inputs = self.processor(images=pil_images, return_tensors="pt").to(self.device)
         with torch.no_grad():
@@ -113,7 +136,13 @@ class ClipIndexer:
 
     def embed_texts(self, texts: List[str]) -> np.ndarray:
         """
-        Compute normalized CLIP text embeddings (float32) shape (N, dim).
+        Compute normalized CLIP text embeddings.
+
+        Args:
+            texts (List[str]): List of text strings.
+
+        Returns:
+            np.ndarray: Normalized text embeddings of shape (N, dim).
         """
         inputs = self.processor(text=texts, return_tensors="pt", padding=True, truncation=True).to(self.device)
         with torch.no_grad():
@@ -128,6 +157,13 @@ class ClipIndexer:
         """
         Add new embeddings and metadata to the FAISS index.
         Automatically validates vector dimensionality.
+
+        Args:
+            vectors (np.ndarray): Embeddings array.
+            metas (List[Dict[str, Any]]): List of metadata dictionaries corresponding to vectors.
+
+        Raises:
+            ValueError: If vector dimension matches FAISS index dimension.
         """
         vectors = np.array(vectors).astype("float32")
 
@@ -150,9 +186,16 @@ class ClipIndexer:
 
     # ---------------------- Search ----------------------
 
-    def search_by_vector(self, qvec: np.ndarray, top_k: int = TOP_K):
+    def search_by_vector(self, qvec: np.ndarray, top_k: int = TOP_K) -> List[Tuple[Dict, float]]:
         """
         Search the FAISS index by query vector and return top_k results.
+
+        Args:
+           qvec (np.ndarray): Query vector.
+           top_k (int): Number of top results to return.
+
+        Returns:
+           List[Tuple[Dict, float]]: List of (metadata, score) tuples.
         """
         faiss.normalize_L2(qvec)
         D, I = self.index.search(qvec, top_k)

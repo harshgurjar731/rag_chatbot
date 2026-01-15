@@ -1,3 +1,9 @@
+"""
+This module serves as the main entry point for document retrieval and question answering.
+
+It orchestrates the flow between the chat answer retriever (pure LLM) and the RAG-based retriever
+(knowledge base enabled), determining the appropriate strategy based on the request parameters.
+"""
 
 from fastapi import HTTPException
 from langchain_community.vectorstores import FAISS, Chroma
@@ -32,7 +38,37 @@ async def retrieve_documents(
     is_vision_search: bool = False,
     # chatbot_id: str = "RAG_Document_Store"
 ):
-    """Main entry for retrieving documents using unified RAG pipeline."""
+    """
+    Retrieve documents and generate an answer based on the provided query and configuration.
+
+    This function acts as a facade, routing the request to either `get_llm_answer` (if no
+    knowledge base is used) or `get_rag_answer_text`/`get_rag_answer_image` (if RAG is enabled).
+    It handles history formatting and parameter extraction.
+
+    Args:
+        query (str): The user's query.
+        search_image (str): Base64 encoded image string for vision search.
+        message_history (List[Message]): List of previous messages in the conversation.
+        selected_documents (List[str]): List of specific document IDs to restrict search to.
+        query_optimizer (str, optional): Strategy for query optimization (e.g., "Multi Query").
+        use_knowledge_base (bool, optional): Whether to use the RAG pipeline. Defaults to True.
+        embedding_model_provider (str, optional): Provider for embeddings.
+        embedding_model_name (str, optional): Name of the embedding model.
+        llm_model_name (str, optional): Name of the LLM model.
+        llm_model_provider (str, optional): Provider for the LLM.
+        vector_db (str, optional): Vector database provider.
+        file_id (list, optional): List of file IDs (legacy/unused).
+        temperature (float, optional): LLM temperature.
+        token_size (int, optional): Max tokens for response.
+        sources (bool, optional): Whether to include sources in the response. Defaults to False.
+        guardrailOption (str, optional): Guardrail level.
+        rerankerOption (str, optional): Reranker type.
+        datastore_id (str, optional): ID of the datastore to query.
+        is_vision_search (bool, optional): Whether this is an image-based search. Defaults to False.
+
+    Returns:
+        dict: The final result containing the answer, images, and citations.
+    """
     # -----------------------------
     # Load defaults from config
     # -----------------------------

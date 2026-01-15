@@ -1,3 +1,9 @@
+"""
+API routes for file management (upload/download/delete).
+
+This module handles the full lifecycle of file ingestion, from upload to
+chunking and embedding generation.
+"""
 # backend/routes/upload.py
 from fastapi import APIRouter, UploadFile, File, HTTPException, Depends, Query, status
 from sqlmodel import Session, select
@@ -20,6 +26,27 @@ router = APIRouter()
 def upload_file_to_datastore(
     datastore_id: int, file: UploadFile = File(...), session: Session = Depends(get_session)
 ):
+    """
+    Upload a file to a datastore and trigger processing.
+
+    This endpoint handles:
+    1. Saving the file to disk.
+    2. Creating a DB record.
+    3. Generating a preview.
+    4. Chunking the document.
+    5. Generating and storing embeddings.
+
+    Args:
+        datastore_id (int): ID of the datastore.
+        file (UploadFile): The file to upload.
+        session (Session): Database session.
+
+    Returns:
+        dict: Success message and file details.
+
+    Raises:
+        HTTPException: If datastore not found or any processing step fails.
+    """
     # 1️⃣ Validate datastore
     datastore = session.get(DataStore, datastore_id)
     if not datastore:
@@ -89,6 +116,16 @@ def upload_file_to_datastore(
 
 @router.get("/datastores/{datastore_id}/files", response_model=List[FileRecord])
 def list_files_in_datastore(datastore_id: int, session: Session = Depends(get_session)):
+    """
+    List all files in a datastore.
+
+    Args:
+        datastore_id (int): ID of the datastore.
+        session (Session): Database session.
+
+    Returns:
+        List[FileRecord]: List of file records.
+    """
     datastore = session.get(DataStore, datastore_id)
     if not datastore:
         raise HTTPException(status_code=404, detail="Datastore not found")
@@ -104,6 +141,23 @@ def delete_file_from_datastore(
     vector_db: str = Query(CONFIG["default_vector_db"], description="Vector DB name"),
     session: Session = Depends(get_session),
 ):
+    """
+    Delete a file from a datastore.
+
+    This removes the physical file, its chunks, embeddings, QA pairs, and DB record.
+
+    Args:
+        datastore_id (int): ID of the datastore.
+        file_id (int): ID of the file.
+        vector_db (str, optional): Vector DB name.
+        session (Session): Database session.
+
+    Returns:
+        dict: Success message.
+
+    Raises:
+        HTTPException: If file/datastore not found or deletion fails.
+    """
     datastore = session.get(DataStore, datastore_id)
     if not datastore:
         raise HTTPException(status_code=404, detail="Datastore not found")
@@ -176,6 +230,17 @@ def delete_file_from_datastore(
 
 @router.get("/datastores/{datastore_id}/files/{filename}", response_class=FileResponse)
 def get_file(datastore_id: int, filename: str, session: Session = Depends(get_session)):
+    """
+    Download/Serve a file from the datastore.
+
+    Args:
+        datastore_id (int): ID of the datastore.
+        filename (str): Name of the file.
+        session (Session): Database session.
+
+    Returns:
+        FileResponse: The file content.
+    """
     datastore = session.get(DataStore, datastore_id)
     if not datastore:
         raise HTTPException(status_code=404, detail="Datastore not found")
@@ -198,6 +263,17 @@ def get_file(datastore_id: int, filename: str, session: Session = Depends(get_se
 
 @router.delete("/datastores/{datastore_id}/files/{filename}")
 def delete_file(datastore_id: int, filename: str, session: Session = Depends(get_session)):
+    """
+    Delete a file by filename (deprecated, prefer by ID).
+
+    Args:
+        datastore_id (int): ID of the datastore.
+        filename (str): Name of the file.
+        session (Session): Database session.
+
+    Returns:
+        dict: Success message.
+    """
     datastore = session.get(DataStore, datastore_id)
     if not datastore:
         raise HTTPException(status_code=404, detail="Datastore not found")

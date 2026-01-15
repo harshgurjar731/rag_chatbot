@@ -153,8 +153,24 @@ from Services.rag_pipeline import UnifiedRAGPipeline  # ✅ Unified RAG Pipeline
 # -----------------------------
 # Load embeddings
 # -----------------------------
+# -----------------------------
+# Load embeddings
+# -----------------------------
 def load_embeddings(file_id: int, vector_db: str = None, model_name: str = None):
-    """Load FAISS/Chroma embeddings for a given file ID."""
+    """
+    Load FAISS/Chroma embeddings vector store for a given file ID.
+
+    Args:
+        file_id (int): The ID of the file.
+        vector_db (str, optional): Vector database type ('faiss' or 'chroma'). Defaults to config.
+        model_name (str, optional): Embedding model name. Defaults to config.
+
+    Returns:
+        VectorStore: The loaded vector store object.
+
+    Raises:
+        HTTPException: If the vector DB type is unsupported.
+    """
     vector_db = vector_db or CONFIG["default_vector_db"]
     model_name = model_name or CONFIG["default_embedding_model"]
 
@@ -182,6 +198,9 @@ def load_embeddings(file_id: int, vector_db: str = None, model_name: str = None)
 # -----------------------------
 # Document Retrieval
 # -----------------------------
+# -----------------------------
+# Document Retrieval
+# -----------------------------
 def retrieve_documents(
     query: str,
     query_optimizer: str = None,
@@ -196,7 +215,32 @@ def retrieve_documents(
     rerankerOption: str = None,
     chatbot_id: str = "RAG_Document_Store"
 ):
-    """Main entry for retrieving documents using unified RAG pipeline."""
+    """
+    Main entry point for retrieving documents using the unified RAG pipeline.
+    
+    This function orchestrates the retrieval process by:
+    1. Loading defaults from configuration.
+    2. Handling cases with no files (plain LLM answer).
+    3. Merging embeddings from multiple files if applicable.
+    4. Initializing and running the UnifiedRAGPipeline with selected options.
+
+    Args:
+        query (str): The user's query.
+        query_optimizer (str): Strategy for query optimization (e.g., 'Multi Query', 'Step Back').
+        embedding_model_name (str): Name of the embedding model.
+        llm_model_name (str): Name of the LLM model.
+        vector_db (str): Vector database type.
+        file_id (list): List of file IDs to retrieve from.
+        temperature (float): LLM temperature.
+        token_size (int): Max tokens for response.
+        sources (bool): Whether to include sources in response.
+        guardrailOption (str): Guardrail level.
+        rerankerOption (str): Reranker option.
+        chatbot_id (str): Chatbot identifier.
+
+    Returns:
+        dict: The result containing the answer, sources, and other metadata.
+    """
 
     # -----------------------------
     # Load defaults from config

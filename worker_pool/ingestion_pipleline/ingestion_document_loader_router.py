@@ -1,3 +1,9 @@
+"""
+API routes for document loading in the ingestion pipeline.
+
+This module provides endpoints to upload, download, and delete documents,
+managing both physical files and database records.
+"""
 
 from fastapi import APIRouter, HTTPException, Depends, Query, UploadFile, File, Form
 from fastapi.responses import FileResponse
@@ -28,6 +34,21 @@ async def upload_files_to_datastore(
     documentDetails: List[str] = Form(...),
     session: Session = Depends(get_session)
 ):
+    """
+    Upload multiple files to a datastore with metadata.
+
+    Args:
+        datastore_id (int): ID of the datastore.
+        files (List[UploadFile]): List of files to upload.
+        documentDetails (List[str]): JSON strings containing metadata for each file.
+        session (Session): Database session.
+
+    Returns:
+        List[DocumentRecord]: List of created document records.
+
+    Raises:
+        HTTPException: If mismatched files/metadata or save failure.
+    """
     # Ensure same number of metadata entries and files
     if len(files) != len(documentDetails):
         raise HTTPException(
@@ -116,6 +137,16 @@ async def upload_files_to_datastore(
 async def get_documents(
     datastore_id: int,
     session: Session = Depends(get_session)):
+    """
+    Get all documents in a datastore.
+
+    Args:
+        datastore_id (int): ID of the datastore.
+        session (Session): Database session.
+
+    Returns:
+        List[DocumentRecordResponse]: List of documents with chunk counts.
+    """
     
     return_documents: List[DocumentRecordResponse] = []
     documents = session.exec(select(DocumentRecord).where(DocumentRecord.datastore_id == datastore_id)).all()
@@ -138,6 +169,17 @@ async def download_file(
     datastore_id: int,
     doc_name: str,
     session: Session = Depends(get_session)):
+    """
+    Download a file from the datastore.
+
+    Args:
+        datastore_id (int): ID of the datastore.
+        doc_name (str): Name of the file.
+        session (Session): Database session.
+
+    Returns:
+        FileResponse: The file download.
+    """
 
     safe_filename = urllib.parse.unquote(doc_name)
     document = session.exec(select(DocumentRecord).where((DocumentRecord.filename == doc_name) & (DocumentRecord.datastore_id == datastore_id))).first()
@@ -159,6 +201,16 @@ async def download_file(
 async def delete_document(
     document_id: int, 
     session: Session = Depends(get_session)):
+    """
+    Delete a document and its vectors.
+
+    Args:
+        document_id (int): ID of the document.
+        session (Session): Database session.
+
+    Returns:
+        None
+    """
 
     document = session.exec(select(DocumentRecord).where(DocumentRecord.id == document_id)).first()
     datastore = session.exec(select(DataStore).where(DataStore.id == document.datastore_id)).first()

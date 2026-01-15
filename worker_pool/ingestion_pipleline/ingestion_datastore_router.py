@@ -1,3 +1,9 @@
+"""
+API routes for datastore management in the ingestion pipeline.
+
+This module provides endpoints to create, list, and delete datastores within
+the specialized ingestion worker.
+"""
 
 from fastapi import APIRouter, HTTPException, Depends, Query
 from pathlib import Path
@@ -20,6 +26,19 @@ router = APIRouter()
 
 @router.post("/createDatastore" , response_model=DataStore)
 async def create_new_datastore(data: DataStoreCreate, session: Session = Depends(get_session)):
+    """
+    Create a new datastore.
+
+    Args:
+        data (DataStoreCreate): Datastore creation data.
+        session (Session): Database session.
+
+    Returns:
+        DataStore: Created datastore object.
+
+    Raises:
+        HTTPException: If datastore already exists.
+    """
     print("Creating new datastore with name:", data.name)
     # 1️⃣ Check for duplicate name
     existing = session.exec(select(DataStore).where(DataStore.name == data.name)).first()
@@ -46,6 +65,15 @@ async def create_new_datastore(data: DataStoreCreate, session: Session = Depends
 
 @router.get("/getDatastores" , response_model=List[DataStoreResponse])
 async def get_datastores(session: Session = Depends(get_session)):
+    """
+    List all datastores with document counts.
+
+    Args:
+        session (Session): Database session.
+
+    Returns:
+        List[DataStoreResponse]: List of datastores with metadata.
+    """
     datastores = session.exec(select(DataStore)).all()
     return_datastores: List[DataStoreResponse] = []
     for datastore in datastores:
@@ -63,6 +91,16 @@ async def get_datastores(session: Session = Depends(get_session)):
 async def delete_datastore(
     datastore_id: int, 
     session: Session = Depends(get_session)):
+    """
+    Delete a datastore and all associated resources (vector store, files).
+
+    Args:
+        datastore_id (int): ID of the datastore.
+        session (Session): Database session.
+
+    Returns:
+        DataStore: The deleted datastore object.
+    """
                 
     datastore = session.exec(select(DataStore).where(DataStore.id == datastore_id)).first()
     # chunk_ids = session.exec(select(ChunkRecord.id).where(ChunkRecord.datastore_id == datastore_id)).all()

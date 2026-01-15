@@ -1,4 +1,11 @@
 
+"""
+This module integrates NVIDIA NeMo Guardrails into the RAG pipeline.
+
+It provides the `NemoService` class, which initializes the guardrails configuration,
+registers actions, and acts as a middleware to check prompts and responses for
+safety, topic control, and jailbreak attempts.
+"""
 
 import json
 from nemoguardrails import LLMRails, RailsConfig
@@ -22,12 +29,25 @@ NVIDIA_SAFETY_MAP = {
 
 
 class NemoService:
+    """
+    Service for handling NeMo Guardrails interactions.
+
+    Attributes:
+        rails (LLMRails): The initialized NeMo Guardrails instance.
+    """
+
     def __init__(self):
+        """
+        Initialize the NemoService and load the rails configuration.
+        """
         self.rails = None
         
         self._initialize_rails()
 
     def _initialize_rails(self):
+        """
+        Load NeMo Guardrails configuration from the specified path and register actions.
+        """
         
         print("[DEBUG] Loading NeMo Config...")
         print("[DEBUG] NVIDIA_API_KEY loaded:", "NVIDIA_API_KEY" in os.environ)
@@ -43,6 +63,18 @@ class NemoService:
         print("[DEBUG] NeMo Rails Initialized.")
 
     async def generate_response(self, query: str) -> str:
+        """
+        Generate a response using the NeMo Guardrails, which may block or modify the output.
+
+        Args:
+            query (str): The user input query.
+
+        Returns:
+            str: The generated response if it passes the guardrails.
+
+        Raises:
+            HTTPException: If the query triggers a safety violation, topic control block, or jailbreak detection.
+        """
         response = await self.rails.generate_async(messages=[{"role": "user", "content": query}])
         final_answer = response.get("content", "") if isinstance(response, dict) else str(response)
         

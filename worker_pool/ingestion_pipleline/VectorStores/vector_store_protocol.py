@@ -4,7 +4,9 @@ from langchain_core.documents import Document
 from langchain_community.embeddings import HuggingFaceEmbeddings, OpenAIEmbeddings
 
 class VectorStoreProtocol(Protocol):
+    """Protocol defining the interface for vector store adapters."""
     def create_collection(self, name: str, embedding: HuggingFaceEmbeddings|OpenAIEmbeddings) -> None:
+        """Create a new collection."""
         ...
 
     def delete_collection(self, name: str) -> bool:

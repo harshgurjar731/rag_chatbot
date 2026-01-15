@@ -1,3 +1,10 @@
+"""
+Worker Process Wrapper.
+
+This script runs as a standalone worker process managed by the worker pool.
+It listens for messages on Redis, processes them using the RAG pipeline, and
+streams responses back.
+"""
 
 import os
 import redis
@@ -50,6 +57,12 @@ tracer_provider = register(
 async def process_message(message_data):
     """
     Process a single message and stream responses back via Redis PubSub.
+
+    Retrieves necessary configurations from the message data, rebuilds context/history,
+    invokes the retrieval service, and publishes results (or chunks) to Redis.
+    
+    Args:
+        message_data (dict): The message payload containing query, history, and config.
     """
     # Extract fields
     msg_id = message_data.get('id')
@@ -241,7 +254,10 @@ async def process_message(message_data):
 
 
 async def heartbeat_loop():
-    """Maintain Redis heartbeat to show bot is alive."""
+    """
+    Maintain Redis heartbeat to show bot is alive.
+    Runs indefinitely, updating a TTL key in Redis every 5 seconds.
+    """
     while True:
         try:
             # Heartbeat now includes PID so the pool manager can track it too if needed
@@ -252,7 +268,10 @@ async def heartbeat_loop():
             await asyncio.sleep(5)
 
 async def message_loop():
-    """Poll Redis list for new messages."""
+    """
+    Poll Redis list for new messages.
+    Blocking pop (blpop) is used to wait for messages efficiently.
+    """
     inbox_key = f"bot:{BOT_ID}:inbox"
     print(f"[*] {BOT_ID} listening on {inbox_key}")
     
@@ -272,6 +291,10 @@ async def message_loop():
             await asyncio.sleep(1)
 
 async def main():
+    """
+    Main entry point for the worker process.
+    Starts the heartbeat loop and the message polling loop.
+    """
     print(f"[*] Bot process started: {BOT_NAME} (PID: {os.getpid()})")
     asyncio.create_task(heartbeat_loop())
     await message_loop()

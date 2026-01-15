@@ -1,3 +1,9 @@
+"""
+API routes for managing datastores.
+
+This module provides endpoints to create, list, update, and delete datastores,
+which serve as containers for files and their processed data.
+"""
 # rag_app/backend/routes/datastore.py
 import os
 from pathlib import Path
@@ -20,6 +26,19 @@ class DataStoreCreate(BaseModel):
 
 @router.post("/", response_model=DataStore)
 def create_datastore(data: DataStoreCreate, session: Session = Depends(get_session)):
+    """
+    Create a new datastore.
+
+    Args:
+        data (DataStoreCreate): The datastore creation payload.
+        session (Session): Database session.
+
+    Returns:
+        DataStore: The created datastore object.
+
+    Raises:
+        HTTPException: If a datastore with the same name already exists.
+    """
     # 1️⃣ Check for duplicate name
     existing = session.exec(select(DataStore).where(DataStore.name == data.name)).first()
     if existing:
@@ -47,11 +66,33 @@ def create_datastore(data: DataStoreCreate, session: Session = Depends(get_sessi
 
 @router.get("/", response_model=List[DataStore])
 def list_datastores(session: Session = Depends(get_session)):
+    """
+    List all available datastores.
+
+    Args:
+        session (Session): Database session.
+
+    Returns:
+        List[DataStore]: A list of all datastores.
+    """
     return session.exec(select(DataStore)).all()
 
 
 @router.delete("/{datastore_id}", response_model=dict)
 def delete_datastore(datastore_id: int, session: Session = Depends(get_session)):
+    """
+    Delete a datastore and all its contents (files, chunks, records).
+
+    Args:
+        datastore_id (int): The ID of the datastore to delete.
+        session (Session): Database session.
+
+    Returns:
+        dict: Success message.
+
+    Raises:
+        HTTPException: If the datastore is not found.
+    """
     # 1️⃣ Get datastore
     datastore = session.get(DataStore, datastore_id)
     if not datastore:
@@ -96,6 +137,20 @@ def update_datastore_chatbot_id(
     chatbot_id: str = Query(...),
     session: Session = Depends(get_session),
 ):
+    """
+    Update the chatbot ID associated with a datastore.
+
+    Args:
+        datastore_id (int): The ID of the datastore.
+        chatbot_id (str): The new chatbot ID.
+        session (Session): Database session.
+
+    Returns:
+        DataStore: The updated datastore object.
+
+    Raises:
+        HTTPException: If the datastore is not found.
+    """
     # 1️⃣ Get datastore
     datastore = session.get(DataStore, datastore_id)
     if not datastore:

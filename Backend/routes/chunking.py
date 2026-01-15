@@ -1,3 +1,9 @@
+"""
+API routes for document chunking operations.
+
+This module provides endpoints to preview (generate) chunks for files and
+delete generated chunk files.
+"""
 # rag_app/backend/routes/chunking.py
 
 from fastapi import APIRouter, HTTPException, Depends, Query
@@ -22,6 +28,26 @@ def preview_chunks(
     chunk_overlap: int = Query(None, description="Chunk overlap"),
     session: Session = Depends(get_session),
 ):
+    """
+    Preview chunks for a specific file in a datastore.
+
+    Chunks the file content based on the specified method and parameters,
+    saves the chunks to a JSON file, and returns the chunk text.
+
+    Args:
+        datastore_id (int): The ID of the datastore.
+        file_id (int): The ID of the file.
+        method (str, optional): Chunking method (e.g., 'recursive'). Defaults to config.
+        chunk_size (int, optional): Size of each chunk. Defaults to config.
+        chunk_overlap (int, optional): Overlap between chunks. Defaults to config.
+        session (Session): Database session.
+
+    Returns:
+        dict: A dictionary containing a list of chunk texts.
+    
+    Raises:
+        HTTPException: If file or datastore is not found, or if processing fails.
+    """
     # ✅ Use env/defaults if query params not provided
     method = method or CONFIG["default_chunk_method"]
     chunk_size = chunk_size or CONFIG["default_chunk_size"]
@@ -81,6 +107,20 @@ def delete_chunk_file(
     file_id: int,
     session: Session = Depends(get_session),
 ):
+    """
+    Delete the chunked JSON file for a specific file.
+
+    Args:
+        datastore_id (int): The ID of the datastore.
+        file_id (int): The ID of the file.
+        session (Session): Database session.
+
+    Returns:
+        dict: Success message.
+
+    Raises:
+        HTTPException: If file, datastore, or chunk file is not found, or invalid.
+    """
     # 1️⃣ Validate file
     file = session.get(FileRecord, file_id)
     if not file or file.datastore_id != datastore_id:

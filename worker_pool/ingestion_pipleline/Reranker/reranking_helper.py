@@ -1,3 +1,8 @@
+"""
+Reranking Helper used in ingestion testing.
+
+(Note: This seems to reference a `Services.reranker_service` which might be outside ingestion_pipleline)
+"""
 from Services.reranker_service import get_reranker
 from typing import List
 from langchain_core.documents import Document
@@ -5,6 +10,19 @@ from ingestion_pipleline.Config.Config import INGESTION_CONFIG
 
 
 def apply_reranker(reranker_type: str, model_name: str, query: str, docs: List[Document], top_k: int):
+    """
+    Rerank a list of documents based on relevance to the query.
+
+    Args:
+        reranker_type (str): Type of reranker (e.g., 'FlashRank').
+        model_name (str): Model name for the reranker.
+        query (str): Search query.
+        docs (List[Document]): Initial list of retrieved documents.
+        top_k (int): Number of top documents to return.
+
+    Returns:
+        List[Document]: Reranked list of documents with updating scores.
+    """
     reranker = get_reranker(reranker_type=reranker_type, model_name=model_name)
     if reranker:
         doc_texts = [doc.page_content for doc in docs]

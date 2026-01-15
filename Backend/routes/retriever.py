@@ -1,3 +1,9 @@
+"""
+API route for RAG retrieval.
+
+This module provides the main query endpoint that orchestration the retrieval
+and generation process via the RAG pipeline.
+"""
 # rag_app/backend/routes/query.py
 from fastapi import APIRouter, Query, Depends
 from Services.retriever_service import retrieve_documents
@@ -49,6 +55,26 @@ def retrieve(
         CONFIG["default_reranker_option"], description="Reranker option to use"
     ),
 ):
+    """
+    Execute a RAG query against the chatbot.
+
+    Args:
+        chatbot_id (str): Unique identifier for the chatbot.
+        query (str): The user's natural language question.
+        query_optimizer (str, optional): Optimization strategy.
+        embedding_model_name (str, optional): Embedding model.
+        llm_model_name (str, optional): LLM model.
+        vector_db (str, optional): Vector database type.
+        file_id (List[int]): List of file IDs to consider.
+        temperature (float, optional): LLM temperature.
+        guardrailOption (str, optional): Guardrail level.
+        token_size (int, optional): Max response tokens.
+        sources (bool, optional): Include citations?.
+        rerankerOption (str, optional): Reranker strategy.
+
+    Returns:
+        dict: Answer, trace ID, and citations.
+    """
     # # 🔹 Call retriever service
     # results = retrieve_documents(
     #     query,
