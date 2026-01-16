@@ -139,40 +139,65 @@ async def download_file(
     doc_name: str,
     session: Session = Depends(get_session)):
 
-    safe_filename = urllib.parse.unquote(doc_name)
-    document = session.exec(select(DocumentRecord).where((DocumentRecord.filename == doc_name) & (DocumentRecord.datastore_id == datastore_id))).first()
-    datastore = session.exec(select(DataStore.name).where(DataStore.id == document.datastore_id)).first()
+    try:
+        safe_filename = urllib.parse.unquote(doc_name)
+        document = session.exec(select(DocumentRecord).where((DocumentRecord.filename == doc_name) & (DocumentRecord.datastore_id == datastore_id))).first()
+        if not document:
+             raise HTTPException(status_code=404, detail="Document record not found")
 
-    datastore_root = INGESTION_CONFIG["ingestion_root"] / INGESTION_CONFIG["ingestion_data_folder_name"]
-    file_path = datastore_root / datastore / document.filename
+        datastore = session.exec(select(DataStore.name).where(DataStore.id == document.datastore_id)).first()
 
-    if not os.path.exists(file_path):
-        raise HTTPException(status_code=404, detail="File not found")
+        datastore_root = INGESTION_CONFIG["ingestion_root"] / INGESTION_CONFIG["ingestion_data_folder_name"]
+        file_path = datastore_root / datastore / document.filename
 
-    return FileResponse(
-        path=file_path,
-        filename=document.filename,
-        media_type="application/octet-stream"
-    )
+        if not os.path.exists(file_path):
+            raise HTTPException(status_code=404, detail="File not found on server")
+
+        return FileResponse(
+            path=file_path,
+            filename=document.filename,
+            media_type="application/octet-stream"
+        )
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"Error downloading file: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to download file: {str(e)}")
 
 @router.post("/deleteDocument/{document_id}")
 async def delete_document(
     document_id: int, 
     session: Session = Depends(get_session)):
 
-    document = session.exec(select(DocumentRecord).where(DocumentRecord.id == document_id)).first()
-    datastore = session.exec(select(DataStore).where(DataStore.id == document.datastore_id)).first()
-    chunk_indexes = session.exec(select(ChunkRecord.chunk_index).where(ChunkRecord.document_id == document_id)).all()
+    try:
+        document = session.exec(select(DocumentRecord).where(DocumentRecord.id == document_id)).first()
+        if not document:
+            raise HTTPException(status_code=404, detail="Document not found")
+            
+        datastore = session.exec(select(DataStore).where(DataStore.id == document.datastore_id)).first()
+        chunk_indexes = session.exec(select(ChunkRecord.chunk_index).where(ChunkRecord.document_id == document_id)).all()
 
-    if ((datastore.vector_store_provider != None) & (len(chunk_indexes) > 0)):
-        vectorDB = create_vector_store(provider=datastore.vector_store_provider)
-        vectorDB.delete(collection=f"datastore_{datastore.id}", ids = chunk_indexes)
+        if ((datastore.vector_store_provider != None) & (len(chunk_indexes) > 0)):
+            try:
+                vectorDB = create_vector_store(provider=datastore.vector_store_provider)
+                vectorDB.delete(collection=f"datastore_{datastore.id}", ids = chunk_indexes)
+            except Exception as e:
+                 print(f"Warning: Failed to delete vectors: {e}")
 
-    if os.path.exists(document.filePath):
-        os.remove(document.filePath)
-        print("File deleted successfully.")
-    else:
-        print("File not found.")
-    
-    session.delete(document)
-    session.commit()
+        if os.path.exists(document.filePath):
+            try:
+                os.remove(document.filePath)
+                print("File deleted successfully.")
+            except OSError as e:
+                print(f"Warning: Failed to delete physical file: {e}")
+        else:
+            print("File not found.")
+        
+        session.delete(document)
+        session.commit()
+    except HTTPException:
+        raise
+    except Exception as e:
+        session.rollback()
+        print(f"Error deleting document: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to delete document: {str(e)}")

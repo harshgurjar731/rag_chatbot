@@ -61,15 +61,23 @@ async def createAssistant(
 
     # 2️⃣ Create datastore record
     print("Create Chatbot Data", data)
-    new_assistant = KnowledgeAssistant(name=data.name, description=data.description, datastore_id=data.datastore_id)
-    session.add(new_assistant)
-    session.commit()
-    session.refresh(new_assistant)
+    try:
+        new_assistant = KnowledgeAssistant(name=data.name, description=data.description, datastore_id=data.datastore_id)
+        session.add(new_assistant)
+        session.commit()
+        session.refresh(new_assistant)
 
-    new_id = str(new_assistant.id)
-    success, message = bot_manager.create_bot(new_id, data.name , data.datastore_id)
- 
-    return new_assistant
+        new_id = str(new_assistant.id)
+        success, message = bot_manager.create_bot(new_id, data.name , data.datastore_id)
+        
+        if not success:
+             raise Exception(f"Bot manager failed: {message}")
+     
+        return new_assistant
+    except Exception as e:
+        session.rollback()
+        print(f"Error creating assistant: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to create assistant: {str(e)}")
 
 @router.get("/getAssistants" , response_model=List[KnowledgeAssistantResponse])
 async def get_assistants(session: Session = Depends(get_session)):
@@ -108,15 +116,30 @@ async def delete_assistant(
         KnowledgeAssistant: The deleted assistant object.
     """
 
-    assistant = session.exec(select(KnowledgeAssistant).where(KnowledgeAssistant.id == assistant_id)).first()
-    session.delete(assistant)
-    session.commit()
+    try:
+        assistant = session.exec(select(KnowledgeAssistant).where(KnowledgeAssistant.id == assistant_id)).first()
+        if not assistant:
+             raise HTTPException(status_code=404, detail="Assistant not found")
+             
+        session.delete(assistant)
+        session.commit()
 
-    bot_id = str(assitant.id)
-    success, message = bot_manager.delete_bot(bot_id)
-    bot_comm.cleanup_bot_data(bot_id)
-    
-    return assistant
+        bot_id = str(assistant.id) # Typo in original file: assitant -> assistant
+        try:
+            success, message = bot_manager.delete_bot(bot_id)
+            if not success:
+                 print(f"Warning: Bot manager delete failed: {message}")
+            bot_comm.cleanup_bot_data(bot_id)
+        except Exception as e:
+             print(f"Warning: Failed to cleanup bot resources: {e}")
+        
+        return assistant
+    except HTTPException:
+        raise
+    except Exception as e:
+        session.rollback()
+        print(f"Error deleting assistant: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to delete assistant: {str(e)}")
 
 
 
@@ -245,9 +268,9 @@ async def retrieve(
             print("4")
             raise HTTPException(status_code=400, detail=full_response or "⚠️ No reply received. The bot may be offline.")
     except Exception as e:
-        error_msg = f"⚠️ Error: {str(e)}"
-        print("5")
-        raise HTTPException(status_code=400, detail=error_msg)
+        error_msg = f"⚠️ Error processing query: {str(e)}"
+        print(f"Query Error: {e}")
+        raise HTTPException(status_code=500, detail=error_msg)
 
     # Call your existing service logic.
     print("In rag router /query", data, is_vision_search)
