@@ -1,0 +1,108 @@
+{
+  "summary": "The document is an Amended and Restated Unconditional Capital Maintenance Agreement between American International Group, Inc. (AIG) and American General Life Insurance Company, effective February 18, 2014. The agreement outlines AIG's commitment to maintain the financial condition of its wholly-owned subsidiary, American General Life Insurance Company, by providing capital contributions if the company's Total Adjusted Capital falls below a specified minimum percentage of its projected risk-based capital (RBC). It details the timing and mechanics of these contributions, compliance with applicable laws, and the responsibilities of both parties regarding financial governance and planning. The agreement also includes provisions for the review and adjustment of the specified minimum percentage and outlines the conditions under which the agreement may be terminated.",
+  "qa_pairs": [
+    {
+      "question": "When did the Amended and Restated Unconditional Capital Maintenance Agreement become effective?",
+      "answer": "The Agreement became effective as of February 18, 2014.",
+      "rating": 10
+    },
+    {
+      "question": "What is the relationship between American International Group, Inc. and American General Life Insurance Company?",
+      "answer": "The Company is an indirect wholly owned subsidiary of AIG.",
+      "rating": 10
+    },
+    {
+      "question": "What obligations does AIG have under the Agreement if the Company's Total Adjusted Capital falls below a specified level?",
+      "answer": "AIG shall provide to the Company cash, cash equivalents, securities or other instruments that qualify as admitted assets to ensure the Company\u2019s Total Adjusted Capital is at least equal to the Specified Minimum Percentage of the Company\u2019s Company Action Level RBC.",
+      "rating": 10
+    },
+    {
+      "question": "What laws and regulations is the American General Life Insurance Company subject to?",
+      "answer": "The Company is subject to certain capital requirements of the insurance laws and regulations of Texas.",
+      "rating": 10
+    },
+    {
+      "question": "What was executed by AIG and the Company on March 30, 2011?",
+      "answer": "AIG and the Company executed the Unconditional Capital Maintenance Agreement, dated March 30, 2011.",
+      "rating": 10
+    }
+  ],
+  "conversations": [
+    [
+      {
+        "role": "system",
+        "content": "You are a helpful AI assistant that provides accurate, detailed responses."
+      },
+      {
+        "role": "user",
+        "content": "When did the Amended and Restated Unconditional Capital Maintenance Agreement become effective?"
+      },
+      {
+        "role": "assistant",
+        "content": "The Agreement became effective as of February 18, 2014."
+      }
+    ],
+    [
+      {
+        "role": "system",
+        "content": "You are a helpful AI assistant that provides accurate, detailed responses."
+      },
+      {
+        "role": "user",
+        "content": "What is the relationship between American International Group, Inc. and American General Life Insurance Company?"
+      },
+      {
+        "role": "assistant",
+        "content": "The Company is an indirect wholly owned subsidiary of AIG."
+      }
+    ],
+    [
+      {
+        "role": "system",
+        "content": "You are a helpful AI assistant that provides accurate, detailed responses."
+      },
+      {
+        "role": "user",
+        "content": "What obligations does AIG have under the Agreement if the Company's Total Adjusted Capital falls below a specified level?"
+      },
+      {
+        "role": "assistant",
+        "content": "AIG shall provide to the Company cash, cash equivalents, securities or other instruments that qualify as admitted assets to ensure the Company\u2019s Total Adjusted Capital is at least equal to the Specified Minimum Percentage of the Company\u2019s Company Action Level RBC."
+      }
+    ],
+    [
+      {
+        "role": "system",
+        "content": "You are a helpful AI assistant that provides accurate, detailed responses."
+      },
+      {
+        "role": "user",
+        "content": "What laws and regulations is the American General Life Insurance Company subject to?"
+      },
+      {
+        "role": "assistant",
+        "content": "The Company is subject to certain capital requirements of the insurance laws and regulations of Texas."
+      }
+    ],
+    [
+      {
+        "role": "system",
+        "content": "You are a helpful AI assistant that provides accurate, detailed responses."
+      },
+      {
+        "role": "user",
+        "content": "What was executed by AIG and the Company on March 30, 2011?"
+      },
+      {
+        "role": "assistant",
+        "content": "AIG and the Company executed the Unconditional Capital Maintenance Agreement, dated March 30, 2011."
+      }
+    ]
+  ],
+  "metrics": {
+    "total": 5,
+    "filtered": 5,
+    "retention_rate": 1.0,
+    "avg_score": 10.0
+  }
+}

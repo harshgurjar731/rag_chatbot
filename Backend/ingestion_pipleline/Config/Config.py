@@ -110,10 +110,16 @@ INGESTION_CONFIG = {
         "llama-3.3-70b-versatile,deepseek-r1-distill-llama-70b,gemma2-9b-it,llama-3.1-8b-instant,openai/gpt-oss-20b"
     ).split(","),
 
+
     "azure_supported_models": os.getenv(
         "AZURE_SUPPORTED_MODELS",
         "gpt-4o-mini"
     ).split(","),
+
+    # Azure Document Intelligence
+    "AZURE_DOCUMENT_INTELLIGENCE_ENDPOINT": os.getenv("AZURE_DOCUMENT_INTELLIGENCE_ENDPOINT", "https://knowledge-assistant-documentai.cognitiveservices.azure.com/"),
+    "AZURE_DOCUMENT_INTELLIGENCE_KEY": os.getenv("AZURE_DOCUMENT_INTELLIGENCE_KEY", "1HOIt3E6JMDfWd8pVSYOsjIDEJeHFn4sK5uB6Fffwgf47GJy5UcwJQQJ99CAACYeBjFXJ3w3AAALACOGowxJ"),
+
 
 
 

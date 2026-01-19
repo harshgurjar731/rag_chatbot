@@ -3,7 +3,8 @@ import os
 import time
 import uuid
 from pathlib import Path
-from typing import List, Dict
+from typing import List, Dict, Optional, Union
+from tqdm import tqdm
 
 from fastapi import APIRouter, Depends, HTTPException, status, BackgroundTasks
 from sqlmodel import Session, select
@@ -100,18 +101,25 @@ def delete_question_by_id(question_id: int, session: Session = Depends(get_sessi
     return {"message": f"Question with ID {question_id} deleted successfully"}
 
 @router.get("/datastore/qna/id")
-def get_question_id(file_id: int, question: str, session: Session = Depends(get_session)):
+def get_question_id(question: str, file_id: str = None, session: Session = Depends(get_session)):
     """
     Get the question_id of a QA pair based on file_id and question text.
+    Handles 'null' string for file_id by treating it as None (datastore-level question).
     """
+    target_file_id = None
+    if file_id and file_id.lower() != 'null':
+        if not file_id.isdigit():
+             raise HTTPException(status_code=400, detail="Invalid file_id format")
+        target_file_id = int(file_id)
+
     statement = select(QuestionAnswer).where(
-        QuestionAnswer.file_id == file_id,
+        QuestionAnswer.file_id == target_file_id,
         QuestionAnswer.question == question
     )
     qa_record = session.exec(statement).first()
 
     if not qa_record:
-        raise HTTPException(status_code=404, detail="Question not found for this file")
+        raise HTTPException(status_code=404, detail="Question not found")
 
     return {"question_id": qa_record.question_id}
 
@@ -128,9 +136,10 @@ class QnaRequest(BaseModel):
 
 class EvaluationRequest(BaseModel):
     datastore_id: int
-    datastore_name: str
+    datastore_name: Optional[str] = None
     framework: str
     metrics: List[str]
+    chatbot_id: Optional[Union[str, int]] = None # Added chatbot_id
 
 
 class EvaluationResponse(BaseModel):
@@ -151,7 +160,7 @@ METRIC_MAP = {
 
 
 # --- Utility: Run Phoenix Evaluation ---
-def run_phoenix_evaluation(evaluation_id: str, req: EvaluationRequest, session: Session):
+async def run_phoenix_evaluation(evaluation_id: str, req: EvaluationRequest, session: Session):
     """Dedicated runner for Phoenix framework."""
     try:
         evaluations[evaluation_id]["status"] = "initializing"
@@ -164,12 +173,13 @@ def run_phoenix_evaluation(evaluation_id: str, req: EvaluationRequest, session: 
         evaluations[evaluation_id]["progress"] = 25
 
         # Generate QAs
-        json_qas = generate_qna_with_retrieval(
+        json_qas = await generate_qna_with_retrieval(
             datastore_id=req.datastore_id,
             session=session,
+            chatbot_id=req.chatbot_id, # Added chatbot_id
             output_file=str(
                 CONFIG["project_root"]
-                / "Data"
+                / CONFIG["datastore_data_folder"]
                 / req.datastore_name
                 / f"{req.datastore_name}_evaluation_qa.json"
             ),
@@ -183,7 +193,7 @@ def run_phoenix_evaluation(evaluation_id: str, req: EvaluationRequest, session: 
         evaluations[evaluation_id]["status"] = "running_evaluation"
         evaluations[evaluation_id]["progress"] = 60
 
-        for metric in req.metrics:
+        for metric in tqdm(req.metrics, desc="Processing Phoenix Metrics", unit="metric"):
             internal_metric = METRIC_MAP.get(metric)
             if not internal_metric:
                 print(f"[WARN] Unsupported metric: {metric}, skipping...")
@@ -191,8 +201,13 @@ def run_phoenix_evaluation(evaluation_id: str, req: EvaluationRequest, session: 
 
             try:
                 print(f"[INFO] Evaluating {metric} ({internal_metric})")
-                result = evaluate_records(json_qas, metric=internal_metric)
-                metric_results[metric] = result.dict()
+                # Updated to use DB source
+                result = evaluate_records(
+                    session=session, 
+                    chatbot_id=req.chatbot_id, 
+                    metric=internal_metric
+                )
+                metric_results[metric] = result.dict(exclude_none=True)
             except Exception as metric_err:
                 print(f"[ERROR] {metric} evaluation failed: {metric_err}")
                 metric_results[metric] = {"error": str(metric_err)}
@@ -207,7 +222,7 @@ def run_phoenix_evaluation(evaluation_id: str, req: EvaluationRequest, session: 
         print(f"[ERROR] Phoenix evaluation failed: {e}")
 
 
-def run_ragaas_evaluation_wrapper(evaluation_id: str, req: EvaluationRequest, session: Session) -> EvaluationResponse:
+async def run_ragaas_evaluation_wrapper(evaluation_id: str, req: EvaluationRequest, session: Session) -> EvaluationResponse:
     """
     Wrapper for executing RAGAS evaluation safely with progress tracking.
     """
@@ -223,9 +238,10 @@ def run_ragaas_evaluation_wrapper(evaluation_id: str, req: EvaluationRequest, se
         evaluations[evaluation_id]["progress"] = 25
 
         # Generate QAs
-        json_qas = generate_qna_with_retrieval(
+        json_qas = await generate_qna_with_retrieval(
             datastore_id=req.datastore_id,
             session=session,
+            chatbot_id=req.chatbot_id, # Added chatbot_id to RAGAS wrapper
             output_file=str(
                 CONFIG["project_root"]
                 / "Data"
@@ -245,8 +261,10 @@ def run_ragaas_evaluation_wrapper(evaluation_id: str, req: EvaluationRequest, se
         # Perform evaluation
         results = perform_ragaas_evaluation(
             datastore_id=req.datastore_id,
+            datastore_name=req.datastore_name,
             metrics=req.metrics,
-            session=session
+            session=session,
+            chatbot_id=req.chatbot_id # Added
         )
 
         evaluations[evaluation_id]["results"] = results
@@ -277,7 +295,7 @@ def run_ragaas_evaluation_wrapper(evaluation_id: str, req: EvaluationRequest, se
 
 
 # --- Dynamic Framework Dispatcher ---
-def dispatch_framework_evaluation(evaluation_id: str, req: EvaluationRequest, session: Session):
+async def dispatch_framework_evaluation(evaluation_id: str, req: EvaluationRequest, session: Session):
     """Select and run framework evaluation dynamically based on config."""
     framework = req.framework.lower()
     # supported_frameworks = CONFIG.get("frameworks", ["phoenix", "ragaas"])
@@ -289,9 +307,9 @@ def dispatch_framework_evaluation(evaluation_id: str, req: EvaluationRequest, se
     #     )
 
     if framework == "phoenix":
-        run_phoenix_evaluation(evaluation_id, req, session)
+        await run_phoenix_evaluation(evaluation_id, req, session)
     elif framework == "ragaas":
-        run_ragaas_evaluation_wrapper(evaluation_id, req, session)
+        await run_ragaas_evaluation_wrapper(evaluation_id, req, session)
     else:
         raise HTTPException(status_code=400, detail=f"No evaluation handler for '{framework}'.")
 
@@ -308,6 +326,18 @@ def start_evaluation(
     Start an evaluation asynchronously and return an evaluation_id.
     Framework is read from request body and handled dynamically.
     """
+    # ✅ 1. Validate and Fetch Datastore (Source of Truth)
+    datastore = session.get(DataStore, req.datastore_id)
+    if not datastore:
+        raise HTTPException(status_code=404, detail=f"Datastore with ID {req.datastore_id} not found.")
+    
+    # ✅ 2. Force use of correct name from DB
+    req.datastore_name = datastore.name
+    
+    # ✅ 3. Normalize chatbot_id
+    if req.chatbot_id is not None:
+        req.chatbot_id = str(req.chatbot_id)
+
     evaluation_id = f"eval-{uuid.uuid4().hex[:8]}"
     framework = req.framework.lower()
 
@@ -315,7 +345,7 @@ def start_evaluation(
         f"[INFO] Starting evaluation {evaluation_id} "
         f"for framework '{framework}' "
         f"on datastore '{req.datastore_name}' (ID: {req.datastore_id}) "
-        f"with metrics {req.metrics}"
+        f"with metrics {req.metrics}. ChatbotID: {req.chatbot_id}"
     )
 
     # Initialize state

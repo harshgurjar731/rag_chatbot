@@ -9,6 +9,7 @@ from typing import List
 from pydantic import BaseModel
 from models.FileRecord import FileRecord
 from config import CONFIG  # ✅ centralized config
+from Evaluation.delete_qna import delete_qna_by_datastore  # ✅ Import deletion utility
 
 router = APIRouter()
 
@@ -82,6 +83,15 @@ def delete_datastore(datastore_id: int, session: Session = Depends(get_session))
     # 6️⃣ Remove file records from DB
     for file in files:
         session.delete(file)
+
+    # 6a️⃣ Delete associated QA pairs
+    try:
+        deleted_count = delete_qna_by_datastore(session, datastore_id)
+        if deleted_count > 0:
+            print(f"[INFO] Deleted {deleted_count} QA pairs for datastore_id {datastore_id}")
+    except Exception as e:
+        print(f"[ERROR] Failed to delete QA pairs for datastore {datastore_id}: {str(e)}")
+        # Proceed with datastore deletion anyway? Or raise? Prefer logging and proceeding to clean up as much as possible.
 
     # 7️⃣ Delete datastore
     session.delete(datastore)

@@ -84,7 +84,11 @@ class FileRecord(SQLModel, table=True):
     size: int
     uploaded_at: datetime = Field(default_factory=datetime.utcnow)
 
-    datastore_id: int = Field(foreign_key="datastore.id")
+    datastore_id: int = Field(
+        sa_column=Column(ForeignKey("datastore.id", ondelete="CASCADE"))
+    )
+
+    datastore: Optional[DataStore] = Relationship(back_populates="files")
 
 class QuestionAnswer(SQLModel, table=True):
     # Use question_id as primary key with autoincrement
@@ -92,5 +96,14 @@ class QuestionAnswer(SQLModel, table=True):
     question: str
     answer: str
 
-    datastore_id: int = Field(foreign_key="datastore.id")
-    file_id: Optional[int] = Field(default=None, foreign_key="filerecord.id")
+    datastore_id: int = Field(
+        sa_column=Column(ForeignKey("datastore.id", ondelete="CASCADE"))
+    )
+    file_id: Optional[int] = Field(
+        default=None,
+        sa_column=Column(ForeignKey("filerecord.id", ondelete="CASCADE"))
+    )
+    document_id: Optional[int] = Field(
+        default=None, 
+        sa_column=Column(ForeignKey("documentrecord.id", ondelete="CASCADE"))
+    )

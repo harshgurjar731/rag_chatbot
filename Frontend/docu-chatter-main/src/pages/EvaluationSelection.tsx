@@ -2,7 +2,14 @@ import { FiTrash2 } from "react-icons/fi";
 import { SingleValue } from "react-select";
 import SelectMulti from "react-select";
 import { CardDescription } from '@/components/ui/card';
-import { Trash2, Upload, Plus, FileText, MessageSquarePlus, Settings } from 'lucide-react';
+import { Trash2, Upload, Plus, FileText, MessageSquarePlus, Settings, Loader2, Database, BrainCircuit, CheckCircle, Sparkles } from 'lucide-react';
+// Define rich step info mapping
+const STEP_INFO = [
+  { label: "Initializing", desc: "Setting up environment", icon: Loader2 },
+  { label: "Fetching Data", desc: "Retrieving context & Q&A", icon: Database },
+  { label: "Running Evaluation", desc: "Calculating Ragas metrics", icon: BrainCircuit },
+  { label: "Finalizing", desc: "Formatting results", icon: Sparkles },
+];
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useParams } from 'react-router-dom';
 import { Input } from '@/components/ui/input';
@@ -53,7 +60,7 @@ const EvaluationSelection = () => {
   const navigate = useNavigate();
   const [selectedMetric, setSelectedMetric] = useState("");
   const [currentStep, setCurrentStep] = useState(0);
-  const { getChatbot, deleteChatbot, addDocument, addQnA, } = useChatbots();
+  const { getChatbot, deleteChatbot } = useChatbots();
   const { toast } = useToast();
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [newFile, setNewFile] = useState<File | null>(null);
@@ -70,7 +77,7 @@ const EvaluationSelection = () => {
   const [curationMode, setCurationMode] = useState<"automation" | "manual" | null>("automation");
   const [loading, setLoading] = useState(false);
   const [generatedQA, setGeneratedQA] = useState<
-    { question: string; answer: string; file_id: number; question_id: number; datastore_id: number }[]
+    { question: string; answer: string; file_id: number; document_id?: number; question_id: number; datastore_id: number }[]
   >([]);
 
 
@@ -147,7 +154,9 @@ const EvaluationSelection = () => {
   useEffect(() => {
     if (!chatbot?.documents) {
       // If chatbot or documents is undefined, reset selectedDocs
-      setSelectedDocs([]);
+      if (selectedDocs.length > 0) {
+        setSelectedDocs([]);
+      }
       return;
     }
 
@@ -246,12 +255,21 @@ const EvaluationSelection = () => {
   };;
   const [fileNames, setFileNames] = useState<{ [key: number]: string }>({});
 
-  const getFileName = async (file_id: number): Promise<string> => {
+  const getFileName = async (file_id?: number, document_id?: number): Promise<string> => {
     try {
-      const res = await fetch(`${config.base_url}/datastores/${chatbot.datastoreId}/files/${file_id}/name`);
+      let url = "";
+      if (document_id) {
+        url = `${config.base_url}/datastores/${chatbot.datastoreId}/documents/${document_id}/name`;
+      } else if (file_id) {
+        url = `${config.base_url}/datastores/${chatbot.datastoreId}/files/${file_id}/name`;
+      } else {
+        return "Unknown File";
+      }
+
+      const res = await fetch(url);
       if (!res.ok) throw new Error("File not found");
       const data = await res.json();
-      return data.file_name; // assuming API returns { filename: "..." }
+      return data.file_name;
     } catch {
       return "Unknown File";
     }
@@ -260,7 +278,14 @@ const EvaluationSelection = () => {
     const fetchFileNames = async () => {
       const names: { [key: number]: string } = {};
       for (const qa of generatedQA) {
-        names[qa.file_id] = await getFileName(qa.file_id);
+        // Use document_id as key preference, fallback to file_id (though file_id might be null)
+        // Actually, we should store by the ID we use.
+        // Let's store by index or just map both if needed.
+        // Simplest: use document_id if available.
+        const id = qa.document_id || qa.file_id;
+        if (id) {
+          names[id] = await getFileName(qa.file_id, qa.document_id);
+        }
       }
       setFileNames(names);
     };
@@ -305,106 +330,85 @@ const EvaluationSelection = () => {
       display: "flex",
       alignItems: "center",
       justifyContent: "space-between",
-      minHeight: "2.5rem", // allows growth
-      width: "66.666667%", // md:w-2/3
-      borderRadius: "calc(var(--radius) - 2px)",
+      minHeight: "3rem", // Match h-12
+      width: "100%",
+      borderRadius: "0.75rem", // rounded-xl
       borderWidth: "1px",
-      borderColor: state.menuIsOpen
-        ? "hsl(var(--ring))"
-        : state.isFocused
-          ? "hsl(var(--ring))"
-          : "hsl(var(--input))",
-      backgroundColor: "hsl(var(--background))",
-      padding: "0.25rem 0.75rem",
-      fontSize: "0.875rem", // text-sm
-      lineHeight: "1.25rem",
-      color: "#ffffff", // text color white
-      boxShadow: state.isFocused
-        ? "0 0 0 2px hsl(var(--ring) / 0.5)"
-        : "none",
+      borderColor: state.isFocused ? "rgb(99 102 241)" : "rgba(255, 255, 255, 0.1)", // indigo-500 or white/10
+      backgroundColor: "rgba(255, 255, 255, 0.05)", // white/5
+      padding: "0.25rem 0.5rem",
+      fontSize: "0.875rem",
+      color: "#f3f4f6", // gray-100
+      boxShadow: state.isFocused ? "0 0 0 1px rgb(99 102 241)" : "none",
       transition: "all 0.2s ease-in-out",
-      cursor: state.isDisabled ? "not-allowed" : "pointer",
-      opacity: state.isDisabled ? 0.5 : 1,
-      flexWrap: "wrap", // ✅ allows multiValue items to wrap and expand height
+      cursor: "pointer",
+      ":hover": {
+        borderColor: "rgba(255, 255, 255, 0.2)",
+      },
     }),
 
     menu: (base) => ({
       ...base,
-      zIndex: 50,
-      fontSize: "0.875rem",
-      borderRadius: "var(--radius)",
-      marginTop: "0.25rem",
-      backgroundColor: "hsl(var(--popover))",
-      color: "hsl(var(--popover-foreground))",
-      border: "1px solid hsl(var(--border))",
-      boxShadow: "0 8px 32px -8px hsl(195 100% 50% / 0.15)", // fallback for var(--shadow-card)
-      width: "66.666667%", // match control width
-      position: "absolute",
+      zIndex: 9999, // Ensure it sits on top
+      borderRadius: "0.75rem",
+      marginTop: "0.5rem",
+      backgroundColor: "#111827", // gray-900 (Solid color for readability)
+      border: "1px solid rgba(255, 255, 255, 0.1)",
+      boxShadow: "0 10px 15px -3px rgba(0, 0, 0, 0.5)",
+      overflow: "hidden",
     }),
 
     option: (base, { isFocused, isSelected }) => ({
       ...base,
-      borderRadius: "calc(var(--radius) - 2px)",
-      margin: "2px 4px",
-      padding: "0.5rem 0.75rem",
       backgroundColor: isSelected
-        ? "hsl(var(--primary))"
+        ? "rgb(79 70 229)" // indigo-600
         : isFocused
-          ? "hsl(var(--muted))"
+          ? "rgba(255, 255, 255, 0.1)" // Hover state
           : "transparent",
-      color: isSelected
-        ? "hsl(var(--primary-foreground))"
-        : "hsl(var(--foreground))",
+      color: isSelected ? "white" : "#e5e7eb", // gray-200
       cursor: "pointer",
-      transition: "all 0.15s ease-in-out",
+      padding: "0.75rem 1rem",
     }),
 
     multiValue: (base) => ({
       ...base,
-      backgroundColor: "hsl(var(--muted))",
-      borderRadius: "calc(var(--radius) - 2px)",
-      padding: "4px 8px",
-      margin: "2px",
-      transition: "all 0.2s ease", // smooth growth/shrink
+      backgroundColor: "rgba(99, 102, 241, 0.2)", // indigo-500/20
+      border: "1px solid rgba(99, 102, 241, 0.3)",
+      borderRadius: "0.375rem",
     }),
     multiValueLabel: (base) => ({
       ...base,
-      color: "hsl(var(--muted-foreground))",
+      color: "#e0e7ff", // indigo-100
       fontWeight: 500,
-      overflow: "hidden",
-      textOverflow: "ellipsis",
-      whiteSpace: "nowrap",
     }),
     multiValueRemove: (base) => ({
       ...base,
-      color: "hsl(var(--muted-foreground))",
-      borderRadius: "0.25rem",
-      cursor: "pointer",
+      color: "#a5b4fc", // indigo-300
       ":hover": {
-        backgroundColor: "hsl(var(--destructive))",
-        color: "hsl(var(--destructive-foreground))",
+        backgroundColor: "rgba(99, 102, 241, 0.4)",
+        color: "white",
       },
+    }),
+    input: (base) => ({
+      ...base,
+      color: "white",
     }),
     placeholder: (base) => ({
       ...base,
-      color: "hsl(var(--muted-foreground))",
-      fontSize: "0.875rem",
+      color: "#9ca3af", // gray-400
     }),
     singleValue: (base) => ({
       ...base,
-      color: "hsl(var(--foreground))",
+      color: "#f3f4f6",
     }),
-    dropdownIndicator: (base, state) => ({
+    dropdownIndicator: (base) => ({
       ...base,
-      color: "hsl(var(--muted-foreground))",
-      transition: "transform 0.2s ease",
-      transform: state.selectProps.menuIsOpen ? "rotate(180deg)" : "rotate(0deg)",
-      ":hover": {
-        color: "hsl(var(--foreground))",
-      },
+      color: "#9ca3af",
+      ":hover": { color: "white" },
     }),
-    indicatorSeparator: () => ({
-      display: "none",
+    menuPortal: (base) => ({
+      ...base,
+      zIndex: 9999,
     }),
   };
 
@@ -441,6 +445,7 @@ const EvaluationSelection = () => {
           datastore_name: chatbot.name,
           framework: selectedFramework,
           metrics: selectedMetrics,
+          chatbot_id: chatbot.id, // Added chatbot_id
         }),
       });
 
@@ -533,21 +538,20 @@ const EvaluationSelection = () => {
             statusMessage = "Completed";
             setIsCompleted(true);
             clearInterval(pollInterval);
-            // setEvaluationResult(data.results);
             // ✅ Flatten results for UI
-            // const flattenedResults = Object.entries(data.results || {}).flatMap(
-            //   ([metric, metricData]: [string, any]) =>
-            //     (metricData.results || []).map((r: any) => ({
-            //       metric,
-            //       ...r,
-            //     }))
-            // );
+            const flattenedResults = Object.entries(data.results || {}).flatMap(
+              ([metric, metricData]: [string, any]) =>
+                (metricData.results || []).map((r: any) => ({
+                  metric,
+                  ...r,
+                }))
+            );
 
-            // // store in state
-            // setEvaluationResult(flattenedResults);
+            // store in state
+            setEvaluationResult(flattenedResults);
 
-            // // notify parent with clean data
-            // onEvaluationComplete(flattenedResults);
+            // notify parent with clean data
+            onEvaluationComplete(flattenedResults);
 
 
             toast({
@@ -592,77 +596,101 @@ const EvaluationSelection = () => {
     return (
       <div className="min-h-screen bg-gradient-surface flex items-center justify-center">
         <div className="text-center">
-          <h1 className="text-2xl font-bold text-foreground mb-4">Chatbot Not Found</h1>
-          <Button onClick={() => navigate('/')} variant="chatbot">
-            <ArrowLeft className="h-4 w-4" />
-            Back to Dashboard
-          </Button>
+          <div className="animate-pulse space-y-4">
+            <div className="h-6 w-48 bg-muted rounded"></div>
+            <div className="h-10 w-40 bg-muted rounded"></div>
+          </div>
         </div>
       </div>
     );
   }
   return (
-    <div className="min-h-screen bg-gradient-surface">
-      <header className="border-b border-chatbot-primary/20 bg-gradient-card">
-        <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center gap-4 ">
+    <div className="min-h-screen bg-gradient-surface text-gray-100 font-sans selection:bg-indigo-500/30">
+
+      <header className="border-b border-gray-800 bg-gradient-card mb-6 shadow-md">
+        <div className="container mx-auto px-6 py-4">
+          <div className="flex items-center gap-4">
             <Button
               variant="ghost"
               size="icon"
               onClick={() => navigate("/evaluation")}
+              className="hover:bg-white/10 text-gray-400 hover:text-white rounded-full"
             >
               <ArrowLeft className="h-5 w-5" />
             </Button>
             <div>
-              <h1 className="text-3xl font-bold text-foreground">{chatbot.name} Evaluation </h1>
+              <h1 className="text-xl font-medium tracking-tight text-white flex items-center gap-2">
+                <span className="opacity-50">Evaluation /</span>
+                {chatbot.name}
+              </h1>
             </div>
           </div>
         </div>
       </header>
 
-      {/* <main className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8"> */}
-      {/* min-h-screen bg-gradient-surface */}
-      <div className="min-h-screen w-full bg-gradient-surface from-indigo-50 via-white to-white px-6 py-12">
-        <Tabs defaultValue="evaluation" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-2  bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 p-1">
-            <TabsTrigger value="evaluation" className="flex items-center gap-2">
-              <MessageSquarePlus className="h-4 w-4" />
-              Evaluation
-            </TabsTrigger>
-            <TabsTrigger value="datacuration" className="flex items-center gap-2">
-              <FileText className="h-4 w-4" />
-              Data Curation
-            </TabsTrigger>
-          </TabsList>
-          <TabsContent value="evaluation" className="space-y-4">
-            <div className="max-w-full mx-auto space-y-16">
-              <Card className="shadow-md rounded-2xl border border-gray-10">
+      <div className="pb-20 px-6 max-w-7xl mx-auto space-y-10 relative z-10">
+
+        {/* Page Title & Desc */}
+        <div className="space-y-2">
+          <h2 className="text-4xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-white via-gray-200 to-gray-400">
+            Evaluation Hub
+          </h2>
+          <p className="text-lg text-gray-500 max-w-2xl">
+            Configure evaluation parameters or curate custom Q&A datasets to refine your chatbot's performance.
+          </p>
+        </div>
+
+        <Tabs defaultValue="evaluation" className="space-y-10">
+          <div className="flex justify-start">
+            <TabsList className="bg-gray-900/50 border border-white/5 p-1 rounded-full backdrop-blur-sm shadow-xl">
+              <TabsTrigger
+                value="evaluation"
+                className="rounded-full px-6 py-2.5 data-[state=active]:bg-indigo-600 data-[state=active]:text-white data-[state=active]:shadow-lg hover:text-white transition-all text-gray-400 gap-2 flex"
+              >
+                <MessageSquarePlus className="h-4 w-4" />
+                Evaluation
+              </TabsTrigger>
+              <TabsTrigger
+                value="datacuration"
+                className="rounded-full px-6 py-2.5 data-[state=active]:bg-indigo-600 data-[state=active]:text-white data-[state=active]:shadow-lg hover:text-white transition-all text-gray-400 gap-2 flex"
+              >
+                <FileText className="h-4 w-4" />
+                Data Curation
+              </TabsTrigger>
+            </TabsList>
+          </div>
+
+          <TabsContent value="evaluation" className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+              {/* Configuration Card */}
+              <Card className="lg:col-span-1 border border-white/10 bg-white/5 backdrop-blur-sm shadow-2xl rounded-3xl overflow-hidden">
+                <div className="h-1 w-full bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500" />
                 <CardHeader>
-                  <CardTitle className=" text-2xl font-bold text-black-800 ">
-                    Configure Evaluation Parameters
+                  <CardTitle className=" text-xl font-semibold text-white">
+                    Configuration
                   </CardTitle>
+                  <CardDescription className="text-gray-400">
+                    Set up your evaluation run settings.
+                  </CardDescription>
                 </CardHeader>
 
-                <CardContent className="space-y-8">
-                  {/* Framework Selection */}
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium text-gray-700">Select Framework</label>
+                <CardContent className="space-y-6">
+                  <div className="space-y-3">
+                    <Label className="text-gray-300 font-medium ml-1">Framework</Label>
                     <Select
                       value={selectedFramework || ""}
                       onValueChange={(value) => {
                         setSelectedFramework(value);
-                        // Reset selected metrics when framework changes
                         setSelectedMetrics([]);
                       }}
                       disabled={evaluationStarted}
                     >
-                      <SelectTrigger className="w-full md:w-2/3">
-                        <SelectValue placeholder="Choose evaluation framework" />
+                      <SelectTrigger className="w-full h-12 rounded-xl bg-white/5 border-white/10 text-white focus:ring-indigo-500/50 focus:border-indigo-500">
+                        <SelectValue placeholder="Select Framework" />
                       </SelectTrigger>
-
-                      <SelectContent>
+                      <SelectContent className="bg-gray-900 border-white/10 text-white">
                         {frameworks.map((framework) => (
-                          <SelectItem key={framework} value={framework}>
+                          <SelectItem key={framework} value={framework} className="focus:bg-white/10 focus:text-white cursor-pointer">
                             {framework}
                           </SelectItem>
                         ))}
@@ -670,9 +698,8 @@ const EvaluationSelection = () => {
                     </Select>
                   </div>
 
-                  {/* Metrics Selection */}
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium text-gray-700">Select Evaluator Metrics</label>
+                  <div className="space-y-3">
+                    <Label className="text-gray-300 font-medium ml-1">Metrics</Label>
                     <SelectMulti
                       isMulti
                       styles={customMultiStyles}
@@ -688,372 +715,341 @@ const EvaluationSelection = () => {
                       onChange={(selectedOptions) =>
                         setSelectedMetrics(selectedOptions.map((opt) => opt.value))
                       }
-                      placeholder="Select Evaluator metrics"
+                      placeholder="Select metrics..."
                       isDisabled={!selectedFramework || evaluationStarted}
+                      menuPortalTarget={document.body}
+                      menuPosition="fixed"
                     />
                   </div>
 
-                  {/* Start Evaluation Button */}
-                  {/* <Button
-    onClick={handleStartEvaluation}
-    disabled={
-      !selectedFramework || selectedMetrics.length === 0 || evaluationStarted || loading
-    }
-    className={`w-full md:w-2/3 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 
-text-white shadow-lg transition-opacity flex items-center justify-center py-3 text-base rounded-xl
-${loading ? "opacity-70 cursor-not-allowed" : "hover:opacity-90"}`}
-  >
-    {loading ? (
-      <>
-        <svg
-          className="animate-spin h-5 w-5 mr-2 text-white"
-          xmlns="http://www.w3.org/2000/svg"
-          fill="none"
-          viewBox="0 0 24 24"
-        >
-          <circle
-            className="opacity-25"
-            cx="12"
-            cy="12"
-            r="10"
-            stroke="currentColor"
-            strokeWidth="4"
-          ></circle>
-          <path
-            className="opacity-75"
-            fill="currentColor"
-            d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"
-          ></path>
-        </svg>
-        Starting...
-      </>
-    ) : (
-      <>
-        <Play className="h-5 w-5 mr-2" />
-        Start Evaluation
-      </>
-    )}
-  </Button> */}
-
-                  <Button
-                    onClick={() => {
-                      if (!selectedFramework) {
-                        toast({
-                          title: "Framework not selected",
-                          description: "Please select a framework before starting evaluation.",
-                          variant: "destructive",
-                        });
-                        return;
-                      }
-
-                      if (selectedMetrics.length === 0) {
-                        toast({
-                          title: "Metrics not selected",
-                          description: "Please select at least one metric.",
-                          variant: "destructive",
-                        });
-                        return;
-                      }
-
-                      // ✅ Safe to proceed
-                      handleStartEvaluation();
-                    }}
-                    disabled={loading || evaluationStarted}
-                    className={`w-full md:w-2/3 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 
-text-white shadow-lg flex items-center justify-center py-3 rounded-xl 
-${loading ? "opacity-70 cursor-not-allowed" : "hover:opacity-90"}`}
-                  >
-                    {loading ? (
-                      <span>Starting...</span>
-                    ) : (
-                      <>
-                        <Play className="h-5 w-5 mr-2" />
-                        Start Evaluation
-                      </>
-                    )}
-                  </Button>
+                  <div className="pt-4">
+                    <Button
+                      onClick={() => {
+                        if (!selectedFramework) {
+                          toast({
+                            title: "Framework Required",
+                            description: "Please select a framework first.",
+                            variant: "destructive",
+                          });
+                          return;
+                        }
+                        if (selectedMetrics.length === 0) {
+                          toast({
+                            title: "Metrics Required",
+                            description: "Please select at least one metric.",
+                            variant: "destructive",
+                          });
+                          return;
+                        }
+                        handleStartEvaluation();
+                      }}
+                      disabled={loading || evaluationStarted}
+                      className={`w-full h-12 rounded-xl text-md font-semibold font-medium transition-all duration-300 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white shadow-lg hover:shadow-indigo-500/25 ring-0 border-0 
+                        ${loading ? "opacity-70" : "hover:scale-[1.02]"}`}
+                    >
+                      {loading ? (
+                        <div className="flex items-center gap-2">
+                          <span className="w-4 h-4 rounded-full border-2 border-white/30 border-t-white animate-spin" />
+                          Starting...
+                        </div>
+                      ) : (
+                        <div className="flex items-center gap-2">
+                          <Play className="h-4 w-4 fill-white" />
+                          Start Evaluation
+                        </div>
+                      )}
+                    </Button>
+                  </div>
                 </CardContent>
-
               </Card>
 
-              {/* Evaluation Timeline */}
-              {evaluationStarted && (
-                <Card
-                  ref={timelineRef}
-                  className="w-full shadow-md rounded-2xl border border-gray-10"
-                >
-                  {/* Header */}
-                  <CardHeader className="px-6 pt-6 pb-4">
-                    <div className="flex flex-col md:flex-row md:items-center md:justify-between">
-                      <CardTitle className="text-xl font-semibold text-gray-10">
-                        Processing Timeline
-                      </CardTitle>
-                      <p className="text-sm text-gray-500 mt-2 md:mt-0">{timelineStatus}</p>
-                    </div>
-                  </CardHeader>
+              {/* Timeline Card */}
+              <div className="lg:col-span-2">
+                {evaluationStarted ? (
+                  <Card
+                    ref={timelineRef}
+                    className="h-full border border-white/10 bg-white/5 backdrop-blur-sm shadow-2xl rounded-3xl overflow-hidden relative"
+                  >
+                    <div className="absolute inset-0 bg-gradient-to-b from-indigo-500/5 to-transparent pointer-events-none" />
+                    <CardHeader className="px-8 pt-8">
+                      <div className="flex items-center justify-between">
+                        <CardTitle className="text-xl font-semibold text-white flex items-center gap-3">
+                          <div className="p-2 rounded-lg bg-indigo-500/20">
+                            <Settings className="w-5 h-5 text-indigo-400" />
+                          </div>
+                          Live Progress
+                        </CardTitle>
+                        <Badge variant="outline" className="border-indigo-500/30 text-indigo-300 bg-indigo-500/10 px-3 py-1 rounded-full uppercase tracking-wider text-xs font-semibold">
+                          {timelineStatus}
+                        </Badge>
+                      </div>
+                    </CardHeader>
 
-                  {/* Timeline */}
-                  <CardContent className="px-6 pb-8 space-y-8">
-                    <div className="flex items-center justify-between w-full overflow-x-auto py-4 gap-8 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-transparent">
-                      {timelineSteps.map((step, index) => (
-                        <div
-                          key={index}
-                          className="timeline-step flex-shrink-0 transition-all duration-500 ease-out"
-                          style={{
-                            opacity: visibleSteps.includes(index) ? 1 : 0,
-                            transform: visibleSteps.includes(index)
-                              ? "translateY(0)"
-                              : "translateY(40px)",
-                          }}
-                        >
-                          <TimelineStep
-                            label={step}
-                            status={getStepStatus(index)}
-                            isLast={index === timelineSteps.length - 1}
+                    <CardContent className="px-8 pb-8 pt-12">
+                      <div className="relative">
+                        {/* Connecting Line Backdrop */}
+                        <div className="absolute top-5 left-0 w-full h-1 bg-white/5 rounded-full overflow-hidden z-0">
+                          <div
+                            className="h-full bg-gradient-to-r from-indigo-500 via-purple-500 to-indigo-500 animate-gradient-x transition-all duration-1000 ease-out"
+                            style={{ width: `${progress}%` }}
                           />
                         </div>
-                      ))}
+
+                        <div className="grid grid-cols-4 relative z-10">
+                          {STEP_INFO.map((info, index) => {
+                            const status = getStepStatus(index);
+                            const isActive = status === 'current';
+                            const isCompleted = status === 'completed';
+                            const Icon = info.icon;
+
+                            return (
+                              <div key={index} className="flex flex-col items-center gap-4 group"
+                                style={{
+                                  opacity: visibleSteps.includes(index) ? 1 : 0,
+                                  transform: visibleSteps.includes(index) ? 'translateY(0)' : 'translateY(20px)',
+                                  transition: `all 0.5s ease-out ${index * 0.2}s`
+                                }}>
+
+                                {/* Icon Circle */}
+                                <div className={`
+                                  w-12 h-12 rounded-2xl flex items-center justify-center border transition-all duration-500 z-20 relative
+                                  ${isCompleted
+                                    ? 'bg-indigo-500 border-indigo-400 shadow-[0_0_25px_rgba(99,102,241,0.6)] text-white'
+                                    : isActive
+                                      ? 'bg-gray-900 border-indigo-500 shadow-[0_0_30px_rgba(99,102,241,0.4)] text-indigo-400 scale-110'
+                                      : 'bg-gray-900/80 border-white/10 text-gray-600'}
+                                `}>
+                                  {isActive && (
+                                    <div className="absolute inset-0 bg-indigo-500/20 rounded-2xl animate-ping" />
+                                  )}
+                                  <Icon className={`w-5 h-5 ${isActive && index === 0 ? 'animate-spin' : ''}`} />
+
+                                  {isCompleted && (
+                                    <div className="absolute -top-1 -right-1 bg-green-500 rounded-full p-0.5 border-2 border-gray-900">
+                                      <CheckCircle className="w-3 h-3 text-white" />
+                                    </div>
+                                  )}
+                                </div>
+
+                                {/* Text Content */}
+                                <div className="text-center space-y-1">
+                                  <h4 className={`text-sm font-semibold transition-colors duration-300 ${isActive ? 'text-white' : isCompleted ? 'text-gray-200' : 'text-gray-600'
+                                    }`}>
+                                    {info.label}
+                                  </h4>
+                                  <p className={`text-xs transition-colors duration-300 ${isActive ? 'text-indigo-400' : 'text-gray-600'
+                                    }`}>
+                                    {info.desc}
+                                  </p>
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+
+                      <div className="mt-12 flex justify-center">
+                        <Button
+                          onClick={() => {
+                            if (evaluationResult) {
+                              const framework = evaluationResult?.framework?.toLowerCase();
+                              const targetPath =
+                                framework === "ragaas"
+                                  ? `/ragaas-output/${chatbot.id}?evalId=${evaluationResult.evaluation_id}`
+                                  : `/rag-output/${chatbot.id}?evalId=${evaluationResult.evaluation_id}`;
+
+                              navigate(targetPath, {
+                                state: { evaluationResponse: evaluationResult },
+                              });
+                            }
+                          }}
+                          disabled={!isCompleted}
+                          className={`
+                            relative group overflow-hidden px-8 h-12 rounded-xl font-semibold transition-all duration-300
+                            ${isCompleted
+                              ? 'bg-white text-indigo-950 shadow-[0_0_30px_rgba(255,255,255,0.2)] hover:scale-105 hover:shadow-[0_0_40px_rgba(255,255,255,0.3)]'
+                              : 'bg-white/5 text-gray-500 cursor-not-allowed opacity-50'}
+                          `}
+                        >
+                          {isCompleted && (
+                            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/50 to-transparent -translate-x-full group-hover:animate-shimmer" />
+                          )}
+                          <div className="flex items-center gap-2 relative z-10">
+                            <Eye className="h-5 w-5" />
+                            View Detailed Results
+                          </div>
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ) : (
+                  <div className="h-full border border-white/5 bg-white/[0.02] rounded-3xl flex flex-col items-center justify-center text-center p-12 border-dashed">
+                    <div className="w-20 h-20 bg-gradient-to-tr from-indigo-500/20 to-purple-500/20 rounded-full flex items-center justify-center mx-auto mb-6 animate-pulse">
+                      <Play className="w-8 h-8 text-white/20" />
                     </div>
-
-                    {/* CTA Button */}
-                    <div className="flex justify-center">
-                      <Button
-                        onClick={() => {
-                          if (evaluationResult) {
-                            const framework = evaluationResult?.framework?.toLowerCase();
-                            const targetPath =
-                              framework === "ragaas"
-                                ? `/ragaas-output/${chatbot.id}`
-                                : `/rag-output/${chatbot.id}`;
-
-                            navigate(targetPath, {
-                              state: { evaluationResponse: evaluationResult },
-                            });
-                          }
-                        }}
-                        disabled={!isCompleted}
-                        className="w-full md:w-2/3 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 
-    text-white shadow-lg hover:opacity-90 transition-opacity disabled:opacity-50 
-    flex items-center justify-center py-3 text-base rounded-xl"
-                      >
-                        <Eye className="h-5 w-5 mr-2" />
-                        Show Result
-                      </Button>
-
-                    </div>
-                  </CardContent>
-                </Card>
-              )}
-
+                    <h3 className="text-xl font-medium text-white mb-2">Ready to Evaluate</h3>
+                    <p className="text-gray-500 max-w-sm">
+                      Select a framework and metric from the configuration panel to begin the evaluation process.
+                    </p>
+                  </div>
+                )}
+              </div>
             </div>
           </TabsContent>
-          <TabsContent value="datacuration" className="space-y-6">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {/* Current Q&As */}
-              <Card>
 
+          <TabsContent value="datacuration" className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+              {/* Left: Input Form */}
+              <Card className="border border-white/10 bg-white/5 backdrop-blur-sm shadow-2xl rounded-3xl overflow-hidden h-fit">
                 <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <MessageSquarePlus className="h-5 w-5" />
-                    Q&A Pairs ({chatbot.qna.length})
+                  <CardTitle className=" text-xl font-semibold text-white flex items-center gap-2">
+                    <FileText className="w-5 h-5 text-purple-400" />
+                    Curation Method
                   </CardTitle>
-                  <CardDescription>
-                    Custom question and answer pairs for this chatbot
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  {!generatedQA || generatedQA.length === 0 ? (
-                    <p className="text-muted-foreground text-center py-8">
-                      No Q&A pairs generated yet
-                    </p>
-                  ) : (
-                    <div className="space-y-4 max-h-96 overflow-y-auto">
-                      {generatedQA.map((qa, index) => (
-                        <div
-                          key={index}
-                          className="relative p-4 rounded-xl border border-gray-200 bg-white shadow-sm hover:shadow-md transition"
-                        >
-                          {/* Delete Icon */}
-                          <FiTrash2
-                            className="absolute top-2 right-2 text-red-500 hover:text-red-700 cursor-pointer"
-                            size={18}
-                            onClick={async () => {
-                              if (!confirm("Are you sure you want to delete this QA?")) return;
-
-                              try {
-                                // Call API to delete QA
-                                await deleteQA(qa.file_id, qa.question);
-
-                                // Remove from UI
-                                setGeneratedQA((prev) =>
-                                  prev.filter((item) => item.question_id !== qa.question_id)
-                                );
-                              } catch (err) {
-                                console.error("Failed to delete QA:", err);
-                                alert("Failed to delete QA. Try again.");
-                              }
-                            }}
-                            title="Delete QA"
-                          />
-
-                          {/* File Name */}
-                          <div className="text-xs font-medium text-gray-500 mb-1">
-                            File: {fileNames[qa.file_id]}
-                          </div>
-
-                          {/* Question */}
-                          <div className="flex items-start space-x-2">
-                            <span className="px-2 py-1 text-xs font-semibold text-white bg-blue-500 rounded">
-                              Q
-                            </span>
-                            <p className="text-sm text-gray-800">{qa.question}</p>
-                          </div>
-
-                          {/* Answer */}
-                          <div className="flex items-start space-x-2 mt-3">
-                            <span className="px-2 py-1 text-xs font-semibold text-white bg-green-500 rounded">
-                              A
-                            </span>
-                            <p className="text-sm text-gray-600">{qa.answer}</p>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-
-                  )}
-                </CardContent>
-
-              </Card>
-
-              {/* Add New Q&A */}
-              <Card>
-                {/* <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Plus className="h-5 w-5" />
-                    Add Q&A Pair
-                  </CardTitle>
-                  <CardDescription>
-                    Add custom question and answer pairs
-                  </CardDescription>
-                </CardHeader> */}
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <MessageSquarePlus className="h-5 w-5" />
-                    Select Data Curation Method
-                  </CardTitle>
-                  <CardDescription>
-                    select method for data curation for this chatbot out of the following choices.
-                  </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-6">
-                  {/* Step 1: Selection for Curation Type */}
-                  <div>
-                    <Label>Data Curation Mode</Label>
-                    <div className="mt-2 flex space-x-4">
-                      <Button
-                        type="button"
-                        variant={curationMode === "automation" ? "chatbot" : "outline"}
-                        onClick={() => setCurationMode("automation")}
-                      >
-                        Automation
-                      </Button>
-                      <Button
-                        type="button"
-                        variant={curationMode === "manual" ? "chatbot" : "outline"}
-                        onClick={() => setCurationMode("manual")}
-                      >
-                        Manual
-                      </Button>
-                    </div>
+                  <div className="p-1 bg-black/40 rounded-xl inline-flex w-full">
+                    <button
+                      onClick={() => setCurationMode("automation")}
+                      className={`flex-1 py-2.5 rounded-lg text-sm font-medium transition-all duration-300 ${curationMode === 'automation' ? 'bg-indigo-600 text-white shadow-lg' : 'text-gray-400 hover:text-white'
+                        }`}
+                    >
+                      Automation
+                    </button>
+                    <button
+                      onClick={() => setCurationMode("manual")}
+                      className={`flex-1 py-2.5 rounded-lg text-sm font-medium transition-all duration-300 ${curationMode === 'manual' ? 'bg-indigo-600 text-white shadow-lg' : 'text-gray-400 hover:text-white'
+                        }`}
+                    >
+                      Manual Entry
+                    </button>
                   </div>
 
-                  {/* Step 2: Automation Flow */}
-                  {curationMode === "automation" && (
-                    <div className="space-y-4">
+                  {curationMode === 'automation' ? (
+                    <div className="py-8 text-center space-y-6">
+                      <div className="bg-indigo-500/10 w-24 h-24 rounded-full flex items-center justify-center mx-auto mb-4 border border-indigo-500/20">
+                        <MessageSquarePlus className="w-10 h-10 text-indigo-400" />
+                      </div>
+                      <div>
+                        <h4 className="text-lg font-medium text-white mb-2">Auto-Generate Q&A</h4>
+                        <p className="text-sm text-gray-400 max-w-xs mx-auto">
+                          Let our AI analyze your documents and generate high-quality question-answer pairs automatically.
+                        </p>
+                      </div>
                       <Button
-                        className="w-full"
-                        variant="chatbot"
+                        className="w-full h-12 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white shadow-lg font-medium text-md"
                         onClick={() => handleAutomationFlow(chatbot.datastoreId)}
                         disabled={loading}
                       >
-                        {loading ? "Processing..." : "Run Automation"}
+                        {loading ? "Generating..." : "Start Automation"}
                       </Button>
-
-
-                      {/* Display generated Q&A in side panel after completion */}
-                      {/* {generatedQA && (
-                        <div className="border rounded-lg p-4 bg-gray-50">
-                          <h3 className="font-semibold text-sm mb-2">Generated Q&A</h3>
-                          <ul className="space-y-2">
-                            {generatedQA.map((item, idx) => (
-                              <li key={idx} className="text-sm">
-                                <span className="font-medium">Q:</span> {item.question}
-                                <br />
-                                <span className="font-medium">A:</span> {item.answer}
-                              </li>
-                            ))}
-                          </ul>
-                        </div>
-                      )} */}
                     </div>
-                  )}
-
-                  {/* Step 3: Manual Flow */}
-                  {curationMode === "manual" && (
-                    <div className="space-y-4">
-                      {/* File Upload */}
-                      <div>
-                        <Label htmlFor="file">Select File</Label>
+                  ) : (
+                    <div className="space-y-5">
+                      <div className="space-y-2">
+                        <Label className="text-gray-300 ml-1">Source Document</Label>
                         <SelectMulti
                           isMulti={false}
                           styles={customMultiStyles}
                           options={getChatbotDocumentOptions(chatbot)}
-                          value={selectedDocs}  // Only the first selected item
+                          value={selectedDocs}
                           onChange={(selected: DocumentOption | null) =>
                             setSelectedDocs(selected ? [selected] : [])
                           }
                           isDisabled={isLoading}
-                          placeholder="Choose document"
+                          placeholder="Select a file..."
                         />
                       </div>
 
-                      {/* Question */}
-                      <div>
-                        <Label htmlFor="question">Question</Label>
+                      <div className="space-y-2">
+                        <Label className="text-gray-300 ml-1">Question</Label>
                         <Input
-                          id="question"
-                          placeholder="Enter a question..."
+                          placeholder="e.g. What is the return policy?"
                           value={newQuestion}
                           onChange={(e) => setNewQuestion(e.target.value)}
-                          className="mt-1.5"
+                          className="bg-white/5 border-white/10 text-white placeholder:text-gray-600 h-10 rounded-xl focus:border-indigo-500/50"
                         />
                       </div>
 
-                      {/* Answer */}
-                      <div>
-                        <Label htmlFor="answer">Answer</Label>
+                      <div className="space-y-2">
+                        <Label className="text-gray-300 ml-1">Answer</Label>
                         <Textarea
-                          id="answer"
-                          placeholder="Enter the answer..."
+                          placeholder="e.g. Returns are accepted within 30 days..."
                           value={newAnswer}
                           onChange={(e) => setNewAnswer(e.target.value)}
-                          className="mt-1.5 min-h-[100px]"
+                          className="bg-white/5 border-white/10 text-white placeholder:text-gray-600 min-h-[120px] rounded-xl focus:border-indigo-500/50 resize-none"
                         />
                       </div>
 
-                      {/* Submit */}
                       <Button
-                        variant="chatbot"
-                        className="w-full"
+                        className="w-full h-12 rounded-xl bg-white text-black hover:bg-gray-200 font-semibold shadow-lg mt-4"
                         onClick={handleManualSubmit}
                         disabled={!newQuestion.trim() || !newAnswer.trim() || selectedDocs.length === 0 || isLoading}
                       >
-                        Submit Q&A
+                        Save Pair
                       </Button>
                     </div>
                   )}
                 </CardContent>
+              </Card>
 
+              {/* Right: Existing Q&A List */}
+              <Card className="border border-white/10 bg-white/5 backdrop-blur-sm shadow-2xl rounded-3xl overflow-hidden h-[600px] flex flex-col">
+                <CardHeader className="border-b border-white/5 pb-4">
+                  <div className="flex justify-between items-center">
+                    <CardTitle className="text-xl font-semibold text-white">
+                      Generated Pairs
+                    </CardTitle>
+                    <Badge variant="secondary" className="bg-white/10 text-white border-0">
+                      {generatedQA?.length || 0} items
+                    </Badge>
+                  </div>
+                </CardHeader>
+                <CardContent className="flex-1 overflow-hidden p-0">
+                  {!generatedQA || generatedQA.length === 0 ? (
+                    <div className="h-full flex flex-col items-center justify-center text-gray-500 p-8 text-center opacity-60">
+                      <FileText className="w-12 h-12 mb-4 opacity-50" />
+                      <p>No Q&A pairs found.</p>
+                      <p className="text-sm mt-1">Run automation or add manually.</p>
+                    </div>
+                  ) : (
+                    <div className="h-full overflow-y-auto p-4 space-y-3 custom-scrollbar">
+                      {generatedQA.map((qa, index) => (
+                        <div key={index} className="group relative bg-[#0a0a0a]/40 border border-white/5 p-5 rounded-2xl hover:border-indigo-500/30 transition-all duration-300 hover:shadow-lg hover:bg-[#0a0a0a]/60">
+                          <div className="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <button
+                              className="p-2 text-gray-500 hover:text-red-400 hover:bg-red-400/10 rounded-lg transition-colors"
+                              onClick={async (e) => {
+                                e.stopPropagation();
+                                if (!confirm("Are you sure?")) return;
+                                await deleteQA(qa.file_id, qa.question);
+                              }}
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          </div>
+
+                          <div className="flex items-center gap-2 mb-3">
+                            <Badge variant="outline" className="border-blue-500/20 text-blue-300 bg-blue-500/10 text-[10px] px-2 py-0.5 rounded-md">Q</Badge>
+                            <p className="text-sm font-medium text-gray-200 line-clamp-2 pr-8">{qa.question}</p>
+                          </div>
+                          <div className="flex items-start gap-2 pl-1">
+                            <div className="min-w-[3px] h-full self-stretch bg-gray-700/50 rounded-full" />
+                            <p className="text-sm text-gray-400 line-clamp-3 leading-relaxed">
+                              {qa.answer}
+                            </p>
+                          </div>
+                          <div className="mt-3 pt-3 border-t border-white/5 flex justify-end">
+                            <span className="text-xs text-gray-600 flex items-center gap-1">
+                              <FileText className="w-3 h-3" />
+                              {fileNames[qa.document_id || qa.file_id] || "Unknown source"}
+                            </span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </CardContent>
               </Card>
             </div>
           </TabsContent>

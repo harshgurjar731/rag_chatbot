@@ -42,14 +42,14 @@ export const AssistantCard = ({ chatbot, onClick, className }: ChatbotCardProps)
           <div className="flex items-center space-x-2">
             <MessageSquare className="h-4 w-4 text-muted-foreground" />
             <span className="text-sm text-muted-foreground">
-              {chatbot.qna.length} Q&A
+              {/* {chatbot.qna.length} Q&A */}
             </span>
           </div>
         </div>
         
         <div className="flex items-center space-x-2 text-sm text-muted-foreground">
           <Clock className="h-4 w-4" />
-          <span>Updated {chatbot.updatedAt.toLocaleDateString()}</span>
+          {/* <span>Updated {chatbot.updatedAt.toLocaleDateString()}</span> */}
         </div>
       </CardContent>
     </Card>

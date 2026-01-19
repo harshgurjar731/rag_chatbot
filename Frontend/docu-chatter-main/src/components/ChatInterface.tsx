@@ -232,10 +232,10 @@ export const ChatInterface = ({
         prev.map((msg) =>
           msg.id === id
             ? {
-                ...msg,
-                originalContent: msg.originalContent || msg.content,
-                content: data.translatedText,
-              }
+              ...msg,
+              originalContent: msg.originalContent || msg.content,
+              content: data.translatedText,
+            }
             : msg
         )
       );
@@ -430,17 +430,17 @@ export const ChatInterface = ({
     }
   };
 
-   const handleSearchImageUpload = async (event) => {
-     try {
-       const file = event.target.files?.[0];
-       if (!file) return;
-       const base64 = await fileToBase64(file);
-       setInputImageBase64(base64);
-       setImagePreview(base64);
-     } catch (error) {
-       console.error("Failed to convert file to base64:", error);
-     }
-   };
+  const handleSearchImageUpload = async (event) => {
+    try {
+      const file = event.target.files?.[0];
+      if (!file) return;
+      const base64 = await fileToBase64(file);
+      setInputImageBase64(base64);
+      setImagePreview(base64);
+    } catch (error) {
+      console.error("Failed to convert file to base64:", error);
+    }
+  };
 
 
   const handleSend = async () => {
@@ -488,7 +488,7 @@ export const ChatInterface = ({
         searchImage: inputImageBase64,
         selectedDocuments: selectedDocsParam,
         useKnowledgeBase: selectedDocs.length != 0,
-        llmProvider: tempSettings.llmProvider, 
+        llmProvider: tempSettings.llmProvider,
         optimizer: tempSettings.optimizer,
         llmModel: tempSettings.llmModel,
         temperature: tempSettings.temperature,
@@ -499,7 +499,7 @@ export const ChatInterface = ({
         isVisionSearch: true,
       });
       // console.log("Response Citations JSON:", JSON.parse(response.citations));
-      console.log("Response ImagePaths JSON:",response.images)
+      console.log("Response ImagePaths JSON:", response.images)
       const grouped_citations: Citation[] = Object.values(
         JSON.parse(response["citations"]).reduce((acc, { source, page_number }) => {
           if (!acc[source]) {
@@ -524,12 +524,12 @@ export const ChatInterface = ({
       console.log("Bot message with citations:", botMessage.Citation);
       setMessages((prev) => [...prev, botMessage]);
     } catch (error: any) {
-      var errorStr =  error?.message ||
-          String(error) ||
-          "Failed to send message or fetch file ID.";
+      var errorStr = error?.message ||
+        String(error) ||
+        "Failed to send message or fetch file ID.";
       if (error.response.data.detail && JSON.parse(error.response.data.detail).safe == false) {
         errorStr = JSON.parse(error.response.data.detail).reason
-      } 
+      }
       console.error("handleSend error:", error.response.data.detail);
 
       const errorMessage: ChatMessage = {
@@ -649,46 +649,65 @@ export const ChatInterface = ({
 
   useEffect(() => {
     if (!chatbot?.id) return;
-    const saved = localStorage.getItem(`model-settings-${chatbot.id}`);
-    if (saved) {
-      setTempSettings(JSON.parse(saved));
+    const fetchSettings = async () => {
+      try {
+        const res = await axios.get(`${config?.base_url}/rag/settings/${chatbot.id}`);
+        if (res.data) {
+          const s = res.data;
+          setTempSettings(prev => ({
+            ...prev,
+            llmModel: s.llm_model || prev.llmModel,
+            llmProvider: s.llm_provider || prev.llmProvider,
+            temperature: s.temperature ?? prev.temperature,
+            tokenSize: s.max_tokens || prev.tokenSize,
+            rerankerOption: s.reranker_type || prev.rerankerOption,
+            optimizer: s.query_optimizer || prev.optimizer,
+            guardrailOption: s.guardrail_type || prev.guardrailOption,
+            vectorDb: s.vector_db || prev.vectorDb,
+            embeddingModel: s.embedding_model || prev.embeddingModel,
+            // showSources doesn't seem to be in ChatbotSettings?
+          }));
+        }
+      } catch (err) {
+        console.error("Failed to fetch settings:", err);
+      }
+    };
+    fetchSettings();
+  }, [chatbot?.id, config?.base_url]);
+
+  const viewDocument = async (doc_name: string) => {
+    try {
+      const encodedName = encodeURIComponent(doc_name)
+      const response = await axios.get(`http://localhost:8000/ingestion/download/${chatbot.datastoreId}/${encodedName}`, {
+        responseType: "blob", // important: we want the file bytes
+      });
+
+
+      console.log("response.data.type", response.data.type)
+      const mimeType = getMimeTypeFromName(doc_name);
+      // Create a blob and object URL for the file
+      const fileBlob = new Blob([response.data], { type: mimeType });
+      const fileUrl = window.URL.createObjectURL(fileBlob);
+
+      // Open the file in a new tab
+      window.open(fileUrl, "_blank");
+
+      // Optional cleanup after a short delay
+      setTimeout(() => window.URL.revokeObjectURL(fileUrl), 5000);
+    } catch (error) {
+      console.error("Error viewing file:", error);
     }
-  }, [chatbot?.id]);
-
-  const viewDocument = async(doc_name: string) => {
-  try {
-    const encodedName = encodeURIComponent(doc_name)
-    const response = await axios.get(`http://localhost:8000/ingestion/download/${chatbot.datastoreId}/${encodedName}`, {
-      responseType: "blob", // important: we want the file bytes
-    });
-
-
-    console.log("response.data.type", response.data.type)
-    const mimeType = getMimeTypeFromName(doc_name);
-    // Create a blob and object URL for the file
-    const fileBlob = new Blob([response.data], { type: mimeType });
-    const fileUrl = window.URL.createObjectURL(fileBlob);
-
-    // Open the file in a new tab
-    window.open(fileUrl, "_blank");
-
-    // Optional cleanup after a short delay
-    setTimeout(() => window.URL.revokeObjectURL(fileUrl), 5000);
-  } catch (error) {
-    console.error("Error viewing file:", error);
-  }
-};
-  const handleSave = (overrides: Partial<typeof tempSettings> = {}) => {
+  };
+  const handleSave = async (overrides: Partial<typeof tempSettings> = {}) => {
     const settings = { ...tempSettings, ...overrides };
     try {
-      localStorage.setItem(
-        `model-settings-${chatbot.id}`,
-        JSON.stringify(settings)
-      );
+      await axios.post(`${config?.base_url}/rag/settings/${chatbot.id}`, settings);
       setTempSettings(settings);
       setOpen(false);
+      toast({ title: "Settings Saved", description: "Chatbot configuration updated." });
     } catch (err) {
       console.error("Error saving settings:", err);
+      toast({ title: "Error", description: "Failed to save settings.", variant: "destructive" });
     }
   };
 
@@ -793,21 +812,18 @@ export const ChatInterface = ({
               {messages.map((message) => (
                 <div
                   key={message.id}
-                  className={`flex ${
-                    message.isUser ? "justify-end" : "justify-start"
-                  }`}
+                  className={`flex ${message.isUser ? "justify-end" : "justify-start"
+                    }`}
                 >
                   <div
-                    className={`max-w-[80%] ${
-                      message.isUser ? "order-2" : "order-1"
-                    }`}
+                    className={`max-w-[80%] ${message.isUser ? "order-2" : "order-1"
+                      }`}
                   >
                     <Card
-                      className={`${
-                        message.isUser
-                          ? "border-chatbot-primary/20"
-                          : "border-chatbot-primary/20"
-                      }`}
+                      className={`${message.isUser
+                        ? "border-chatbot-primary/20"
+                        : "border-chatbot-primary/20"
+                        }`}
                     >
                       <CardContent className="p-3">
                         <p className="text-sm whitespace-pre-wrap">
@@ -832,7 +848,7 @@ export const ChatInterface = ({
                             )}
 
                             {Array.isArray(message.Citation) &&
-                            message.Citation.length > 0 ? (
+                              message.Citation.length > 0 ? (
                               <div className="w-full rounded-lg border border-border/40 bg-muted/10 p-2">
                                 <span className="font-medium text-sm text-gray-700 mb-1 block">
                                   Sources:
@@ -844,7 +860,7 @@ export const ChatInterface = ({
                                     );
                                     const pages =
                                       citation.pages &&
-                                      citation.pages.length > 0
+                                        citation.pages.length > 0
                                         ? `(${citation.pages.join(", ")})`
                                         : "";
 
@@ -894,7 +910,7 @@ export const ChatInterface = ({
                               </span>
 
                               <div className="flex items-center gap-2">
-                                {/*
+                                {/* 
                             <Button
                               size="icon"
                               variant="ghost"
@@ -907,27 +923,29 @@ export const ChatInterface = ({
                                 <Volume2 size={14} />
                               )}
                             </Button>
-                           
-                            <Button
-                              size="icon"
-                              variant="ghost"
-                              className="h-6 w-6 rounded-full text-[11px] border border-border/40 text-green-500 hover:bg-muted/70 transition-colors"
-                              onClick={() => onFeedback(message.id, "Positive")}
-                            >
-                              <ThumbsUp size={14} />
-                            </Button>
+                             */}
+
+                                <Button
+                                  size="icon"
+                                  variant="ghost"
+                                  className="h-6 w-6 rounded-full text-[11px] border border-border/40 text-green-500 hover:bg-muted/70 transition-colors"
+                                  onClick={() => onFeedback(message.id, "thumbs_up")}
+                                >
+                                  <ThumbsUp size={14} />
+                                </Button>
 
 
-                            <Button
-                              size="icon"
-                              variant="ghost"
-                              className="h-6 w-6 rounded-full text-[11px] border border-border/40 text-red-500 hover:bg-muted/70 transition-colors"
-                              onClick={() => onFeedback(message.id, "Negative")}
-                            >
-                              <ThumbsDown size={14} />
-                            </Button>
+                                <Button
+                                  size="icon"
+                                  variant="ghost"
+                                  className="h-6 w-6 rounded-full text-[11px] border border-border/40 text-red-500 hover:bg-muted/70 transition-colors"
+                                  onClick={() => onFeedback(message.id, "thumbs_down")}
+                                >
+                                  <ThumbsDown size={14} />
+                                </Button>
 
 
+                                {/* 
                             <Popover
                               open={openPopoverId === message.id}
                               onOpenChange={(isOpen) =>
@@ -1160,7 +1178,7 @@ export const ChatInterface = ({
                           <input
                             type="checkbox"
                             checked={isSelected}
-                            onChange={() => {}}
+                            onChange={() => { }}
                             className="accent-primary"
                           />
                           <span className="text-sm">{doc.label}</span>
@@ -1246,9 +1264,8 @@ export const ChatInterface = ({
                       min={config?.token_size_options?.min ?? 256}
                       max={config?.token_size_options?.max ?? 2048}
                       step={config?.token_size_options?.step ?? 128}
-                      placeholder={`Default: ${
-                        config?.token_size_options?.default ?? 512
-                      }`}
+                      placeholder={`Default: ${config?.token_size_options?.default ?? 512
+                        }`}
                       value={tempSettings.tokenSize}
                       onChange={(e) =>
                         setTempSettings({
@@ -1407,7 +1424,7 @@ export const ChatInterface = ({
                 <Button variant="outline" onClick={handleCancel}>
                   Cancel
                 </Button>
-                <Button onClick={handleSave}>Save Settings</Button>
+                <Button onClick={() => handleSave()}>Save Settings</Button>
               </div>
             </TabsContent>
           </Tabs>
@@ -1757,106 +1774,106 @@ export const ChatInterface = ({
           tempSettings.tokenSize ||
           tempSettings.rerankerOption !== "none" ||
           typeof tempSettings.showSources === "boolean") && (
-          <div className="flex flex-wrap gap-2 mt-2 items-center">
-            <Label className="text-sm text-muted-foreground">Settings:</Label>
-            {tempSettings.optimizer && (
-              <span className="flex items-center gap-1 text-xs text-foreground border border-chatbot-primary/20 rounded-md px-2 py-1">
-                Optimizer: {tempSettings.optimizer}
-                <button
-                  type="button"
-                  className="flex items-center justify-center w-4 h-4 rounded-full hover:bg-destructive hover:text-destructive-foreground transition-colors duration-150"
-                  onClick={() => handleSave({ optimizer: "" })}
-                >
-                  <X size={10} strokeWidth={2} />
-                </button>
-              </span>
-            )}
-            {tempSettings.embeddingModel && (
-              <span className="flex items-center gap-1 text-xs text-foreground border border-chatbot-primary/20 rounded-md px-2 py-1">
-                Embedding: {tempSettings.embeddingModel}
-                <button
-                  type="button"
-                  className="flex items-center justify-center w-4 h-4 rounded-full hover:bg-destructive hover:text-destructive-foreground transition-colors duration-150"
-                  onClick={() => handleSave({ embeddingModel: "" })}
-                >
-                  <X size={10} strokeWidth={2} />
-                </button>
-              </span>
-            )}
-            {tempSettings.llmModel && (
-              <span className="flex items-center gap-1 text-xs text-foreground border border-chatbot-primary/20 rounded-md px-2 py-1">
-                LLM: {tempSettings.llmModel}
-                <button
-                  type="button"
-                  className="flex items-center justify-center w-4 h-4 rounded-full hover:bg-destructive hover:text-destructive-foreground transition-colors duration-150"
-                  onClick={() => handleSave({ llmModel: "" })}
-                >
-                  <X size={10} strokeWidth={2} />
-                </button>
-              </span>
-            )}
-            {tempSettings.vectorDb && (
-              <span className="flex items-center gap-1 text-xs text-foreground border border-chatbot-primary/20 rounded-md px-2 py-1">
-                Vector DB: {tempSettings.vectorDb}
-                <button
-                  type="button"
-                  className="flex items-center justify-center w-4 h-4 rounded-full hover:bg-destructive hover:text-destructive-foreground transition-colors duration-150"
-                  onClick={() => handleSave({ vectorDb: "" })}
-                >
-                  <X size={10} strokeWidth={2} />
-                </button>
-              </span>
-            )}
-            {typeof tempSettings.temperature === "number" && (
-              <span className="flex items-center gap-1 text-xs text-foreground border border-chatbot-primary/20 rounded-md px-2 py-1">
-                Temperature: {tempSettings.temperature}
-                <button
-                  type="button"
-                  className="flex items-center justify-center w-4 h-4 rounded-full hover:bg-destructive hover:text-destructive-foreground transition-colors duration-150"
-                  onClick={() => handleSave({ temperature: 0.0 })}
-                >
-                  <X size={10} strokeWidth={2} />
-                </button>
-              </span>
-            )}
-            {tempSettings.guardrailOption && (
-              <span className="flex items-center gap-1 text-xs text-foreground border border-chatbot-primary/20 rounded-md px-2 py-1">
-                Guardrails: {tempSettings.guardrailOption}
-                <button
-                  type="button"
-                  className="flex items-center justify-center w-4 h-4 rounded-full hover:bg-destructive hover:text-destructive-foreground transition-colors duration-150"
-                  onClick={() => handleSave({ guardrailOption: "" })}
-                >
-                  <X size={10} strokeWidth={2} />
-                </button>
-              </span>
-            )}
-            {tempSettings.tokenSize && (
-              <span className="flex items-center gap-1 text-xs text-foreground border border-chatbot-primary/20 rounded-md px-2 py-1">
-                Token Size: {tempSettings.tokenSize}
-                <button
-                  type="button"
-                  className="flex items-center justify-center  w-4 h-4 rounded-full hover:bg-destructive hover:text-destructive-foreground transition-colors duration-150"
-                  onClick={() => handleSave({ tokenSize: 256 })}
-                >
-                  <X size={10} strokeWidth={2} />
-                </button>
-              </span>
-            )}
-            {tempSettings.rerankerOption !== "none" && (
-              <span className="flex items-center gap-1 text-xs text-foreground border border-chatbot-primary/20 rounded-md px-2 py-1">
-                Re-ranker: {tempSettings.rerankerOption}
-                <button
-                  type="button"
-                  className="flex items-center justify-center w-4 h-4 rounded-full hover:bg-destructive hover:text-destructive-foreground transition-colors duration-150"
-                  onClick={() => handleSave({ rerankerOption: "none" })}
-                >
-                  <X size={10} strokeWidth={2} />
-                </button>
-              </span>
-            )}
-          </div>
-        )}
+            <div className="flex flex-wrap gap-2 mt-2 items-center">
+              <Label className="text-sm text-muted-foreground">Settings:</Label>
+              {tempSettings.optimizer && (
+                <span className="flex items-center gap-1 text-xs text-foreground border border-chatbot-primary/20 rounded-md px-2 py-1">
+                  Optimizer: {tempSettings.optimizer}
+                  <button
+                    type="button"
+                    className="flex items-center justify-center w-4 h-4 rounded-full hover:bg-destructive hover:text-destructive-foreground transition-colors duration-150"
+                    onClick={() => handleSave({ optimizer: "" })}
+                  >
+                    <X size={10} strokeWidth={2} />
+                  </button>
+                </span>
+              )}
+              {tempSettings.embeddingModel && (
+                <span className="flex items-center gap-1 text-xs text-foreground border border-chatbot-primary/20 rounded-md px-2 py-1">
+                  Embedding: {tempSettings.embeddingModel}
+                  <button
+                    type="button"
+                    className="flex items-center justify-center w-4 h-4 rounded-full hover:bg-destructive hover:text-destructive-foreground transition-colors duration-150"
+                    onClick={() => handleSave({ embeddingModel: "" })}
+                  >
+                    <X size={10} strokeWidth={2} />
+                  </button>
+                </span>
+              )}
+              {tempSettings.llmModel && (
+                <span className="flex items-center gap-1 text-xs text-foreground border border-chatbot-primary/20 rounded-md px-2 py-1">
+                  LLM: {tempSettings.llmModel}
+                  <button
+                    type="button"
+                    className="flex items-center justify-center w-4 h-4 rounded-full hover:bg-destructive hover:text-destructive-foreground transition-colors duration-150"
+                    onClick={() => handleSave({ llmModel: "" })}
+                  >
+                    <X size={10} strokeWidth={2} />
+                  </button>
+                </span>
+              )}
+              {tempSettings.vectorDb && (
+                <span className="flex items-center gap-1 text-xs text-foreground border border-chatbot-primary/20 rounded-md px-2 py-1">
+                  Vector DB: {tempSettings.vectorDb}
+                  <button
+                    type="button"
+                    className="flex items-center justify-center w-4 h-4 rounded-full hover:bg-destructive hover:text-destructive-foreground transition-colors duration-150"
+                    onClick={() => handleSave({ vectorDb: "" })}
+                  >
+                    <X size={10} strokeWidth={2} />
+                  </button>
+                </span>
+              )}
+              {typeof tempSettings.temperature === "number" && (
+                <span className="flex items-center gap-1 text-xs text-foreground border border-chatbot-primary/20 rounded-md px-2 py-1">
+                  Temperature: {tempSettings.temperature}
+                  <button
+                    type="button"
+                    className="flex items-center justify-center w-4 h-4 rounded-full hover:bg-destructive hover:text-destructive-foreground transition-colors duration-150"
+                    onClick={() => handleSave({ temperature: 0.0 })}
+                  >
+                    <X size={10} strokeWidth={2} />
+                  </button>
+                </span>
+              )}
+              {tempSettings.guardrailOption && (
+                <span className="flex items-center gap-1 text-xs text-foreground border border-chatbot-primary/20 rounded-md px-2 py-1">
+                  Guardrails: {tempSettings.guardrailOption}
+                  <button
+                    type="button"
+                    className="flex items-center justify-center w-4 h-4 rounded-full hover:bg-destructive hover:text-destructive-foreground transition-colors duration-150"
+                    onClick={() => handleSave({ guardrailOption: "" })}
+                  >
+                    <X size={10} strokeWidth={2} />
+                  </button>
+                </span>
+              )}
+              {tempSettings.tokenSize && (
+                <span className="flex items-center gap-1 text-xs text-foreground border border-chatbot-primary/20 rounded-md px-2 py-1">
+                  Token Size: {tempSettings.tokenSize}
+                  <button
+                    type="button"
+                    className="flex items-center justify-center  w-4 h-4 rounded-full hover:bg-destructive hover:text-destructive-foreground transition-colors duration-150"
+                    onClick={() => handleSave({ tokenSize: 256 })}
+                  >
+                    <X size={10} strokeWidth={2} />
+                  </button>
+                </span>
+              )}
+              {tempSettings.rerankerOption !== "none" && (
+                <span className="flex items-center gap-1 text-xs text-foreground border border-chatbot-primary/20 rounded-md px-2 py-1">
+                  Re-ranker: {tempSettings.rerankerOption}
+                  <button
+                    type="button"
+                    className="flex items-center justify-center w-4 h-4 rounded-full hover:bg-destructive hover:text-destructive-foreground transition-colors duration-150"
+                    onClick={() => handleSave({ rerankerOption: "none" })}
+                  >
+                    <X size={10} strokeWidth={2} />
+                  </button>
+                </span>
+              )}
+            </div>
+          )}
       </div>
     </>
   );

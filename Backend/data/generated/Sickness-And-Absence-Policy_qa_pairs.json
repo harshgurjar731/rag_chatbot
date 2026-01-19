@@ -1,0 +1,45 @@
+{
+  "summary": "The document is a comprehensive Sickness and Absence Policy that outlines how employees should notify the company of illness, the required certification process, and the handling of short\u2011term, long\u2011term, and persistent absences. Employees must inform their manager personally before their scheduled start time, provide reasons and expected return dates, and submit self\u2011certification or medical certificates depending on the length of absence. For long\u2011term or repeated absences, the company may conduct return\u2011to\u2011work interviews, request medical reports, and consider job adjustments or disability provisions while keeping all health information confidential under the company\u2019s data protection policy. The policy also covers sickness occurring during pre\u2011booked holidays, allowing employees to reschedule leave subject to proper notification and medical certification. Overall, the policy aims to support employee wellbeing, maintain workplace safety, and manage absences in a lawful, consistent manner.",
+  "qa_pairs": [
+    {
+      "question": "What is the purpose of the Sickness and Absence Policy?",
+      "answer": "The policy is designed to assist the Company in effectively managing sickness\u2011related and other staff absence, supporting employees through periods of absence and their return to work, and identifying unsafe work practices, morale issues, and underlying problems employees may face."
+    },
+    {
+      "question": "How will the Company handle employee health information?",
+      "answer": "Any and all information provided by employees about their health will be collected, held, and processed lawfully and in accordance with the Company\u2019s Employee Data Protection Policy, handled sensitively and in accordance with employee rights under the law."
+    },
+    {
+      "question": "Who must an employee contact if they cannot come to work?",
+      "answer": "They must inform the Company by contacting the [insert job title] at least [insert amount of time] before the time they would normally be due to start work on the first day of absence."
+    },
+    {
+      "question": "What is the preferred method for employees to notify the Company of sickness?",
+      "answer": "Employees should speak to their manager personally; calls on the employee\u2019s behalf from a friend/partner/parent and texting or emailing the manager will only be acceptable in exceptional circumstances."
+    },
+    {
+      "question": "What information should an employee provide when notifying the Company of sickness?",
+      "answer": "The employee should indicate the reason for their absence, its likely duration, and when the illness started."
+    },
+    {
+      "question": "What should an employee do if their absence continues for several days or weeks?",
+      "answer": "They must maintain regular contact with the Company, keep it informed of the reasons for their ongoing absence and the expected return date, and specify how the Company can contact them, ideally leaving a landline number."
+    },
+    {
+      "question": "What forms must be used to certify periods of sickness absence?",
+      "answer": "All periods of absence through sickness must be certified by the Company\u2019s sickness self\u2011certification form or the statutory Form SC2."
+    },
+    {
+      "question": "How should the completed sickness certification form indicate days of sickness?",
+      "answer": "The completed form should indicate actual days of sickness, even if they include days when the employee would not normally have worked (e.g., weekends and public holidays)."
+    },
+    {
+      "question": "For sickness absences up to [insert amount] calendar days, when should the self\u2011certification form be completed and submitted?",
+      "answer": "The employee should complete it upon return to work and hand it to [insert name and job title]."
+    },
+    {
+      "question": "For sickness absences exceeding [insert amount] calendar days, what additional documentation is required?",
+      "answer": "The employee must also provide a medical certificate (the statutory Form Med 3), also referred to as a \u2018fit note\u2019."
+    }
+  ]
+}

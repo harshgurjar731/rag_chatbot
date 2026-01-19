@@ -103,15 +103,18 @@ def retrieve(
     else:
         final_answer = "Could not process the response from the service."
 
-    # Get the traceId to send back to the frontend for the feedback feature.
-    # span_context = current_span.get_span_context()
+    # Get the current trace (span) to export trace_id
+    current_span = trace.get_current_span()
+    span_context = current_span.get_span_context()
+    
     trace_id = ""
-    # if span_context.is_valid:
-    #     trace_id = format(span_context.trace_id, '032x')
-    #     print(f"✅ Successfully captured Phoenix trace_id: {trace_id}")
-    # else:
-    #     trace_id = str(uuid.uuid4())
-    #     print(f"⚠️ WARNING: Could not find a valid span context. Using generated UUID as trace_id: {trace_id}")
+    if span_context.is_valid:
+        trace_id = format(span_context.trace_id, '032x')
+        # print(f"✅ Captured Trace ID: {trace_id}")
+    else:
+        # Fallback if no active trace
+        trace_id = ""
+        print("⚠️ No active trace found for this request.")
 
     return {"answer": final_answer, "traceId": trace_id,"citations": results_object.get("document_pages_dict", [])}
 

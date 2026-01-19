@@ -14,6 +14,7 @@ from config import CONFIG  # Load .env variables
 from ingestion_pipleline.ingestion_models import DataStoreCreate, DocumentRecordResponse
 from ingestion_pipleline.Config.Config import INGESTION_CONFIG
 from ingestion_pipleline.VectorStores.vector_store_generator import create_vector_store
+from Evaluation.delete_qna import delete_qna_by_document_id
 import shutil
 import urllib.parse
 
@@ -174,5 +175,12 @@ async def delete_document(
     else:
         print("File not found.")
     
+    # ✅ Delete QA pairs associated with this document
+    try:
+        deleted_count = delete_qna_by_document_id(session, document_id)
+        print(f"Deleted {deleted_count} QA pairs for document {document_id}")
+    except Exception as e:
+        print(f"Error deleting QA pairs: {e}")
+
     session.delete(document)
     session.commit()

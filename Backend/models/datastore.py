@@ -1,5 +1,5 @@
 # rag_app/backend/models/datastore.py
-from sqlmodel import SQLModel, Field, Session, select
+from sqlmodel import SQLModel, Field, Session, select, Relationship, Column, ForeignKey
 from typing import Optional
 from datetime import datetime
 from typing import List
@@ -18,7 +18,11 @@ class DataStore(SQLModel, table=True):
 
     documents: List["DocumentRecord"] = Relationship(
         back_populates="datastore", 
-        # cascade_delete=True
+        sa_relationship_kwargs={"cascade": "all, delete-orphan"}
+    )
+    
+    files: List["FileRecord"] = Relationship(
+        back_populates="datastore",
         sa_relationship_kwargs={"cascade": "all, delete-orphan"}
     )
 
@@ -46,4 +50,46 @@ class KnowledgeAssistant(SQLModel, table=True):
     description: Optional[str] = ""
     created_at: datetime = Field(default_factory=datetime.utcnow)
     datastore_id:Optional[int]
+
+class ChatbotSettings(SQLModel, table=True):
+    id: Optional[int] = Field(default=None, primary_key=True)
+    chatbot_id: str = Field(index=True, unique=True)
+    llm_model: Optional[str] = None
+    llm_provider: Optional[str] = None
+    temperature: Optional[float] = None
+    max_tokens: Optional[int] = None
+    reranker_type: Optional[str] = None
+    query_optimizer: Optional[str] = None
+    guardrail_type: Optional[str] = None
+    embedding_model: Optional[str] = None 
+    vector_db: Optional[str] = None
+    
+    updated_at: datetime = Field(default_factory=datetime.utcnow)
+
+
+class RAGResponse(SQLModel, table=True):
+    id: Optional[int] = Field(default=None, primary_key=True)
+    
+    # Links to the question generated for evaluation
+    question_id: int = Field(
+        sa_column=Column(ForeignKey("questionanswer.question_id", ondelete="CASCADE"))
+    )
+    
+    # Identify which chatbot (settings) this response belongs to
+    chatbot_id: str = Field(index=True)
+
+    # The actual content
+    generated_answer: str
+    
+    # Store as JSON string or use JSON column type if supported
+    citations: str  # Storing as JSON string for simplicity, or could use SA JSON type
+    
+    # Snapshot of settings used to generate this response
+    # These are used to invalidate the cache if settings change
+    llm_model: Optional[str] = None
+    llm_provider: Optional[str] = None
+    temperature: Optional[float] = None
+    
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+    updated_at: datetime = Field(default_factory=datetime.utcnow)
 

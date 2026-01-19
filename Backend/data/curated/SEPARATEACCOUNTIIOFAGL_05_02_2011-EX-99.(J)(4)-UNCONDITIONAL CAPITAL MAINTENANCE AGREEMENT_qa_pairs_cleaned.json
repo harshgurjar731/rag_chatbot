@@ -1,0 +1,108 @@
+{
+  "summary": "The document outlines an Unconditional Capital Maintenance Agreement between American International Group, Inc. (AIG) and American General Life Insurance Company of Delaware, effective March 30, 2011. The agreement stipulates that AIG will provide financial support to ensure that the life insurance company maintains its Total Adjusted Capital above a specified minimum percentage of its projected Company Action Level Risk-Based Capital (RBC). This support is to be provided in the form of cash or other qualifying assets, and AIG retains the discretion to make additional contributions as needed. The agreement also includes provisions for the payment of dividends by the Company, contingent upon its capital levels, and establishes definitions for key terms related to capital adequacy as per regulatory standards.",
+  "qa_pairs": [
+    {
+      "question": "What is the effective date of the Unconditional Capital Maintenance Agreement?",
+      "answer": "The effective date of the Agreement is March 30, 2011.",
+      "rating": 10
+    },
+    {
+      "question": "Which company is an indirect wholly owned subsidiary of AIG?",
+      "answer": "American General Life Insurance Company of Delaware is an indirect wholly owned subsidiary of AIG.",
+      "rating": 10
+    },
+    {
+      "question": "What will AIG provide to the Company if its Total Adjusted Capital falls below the Specified Minimum Percentage?",
+      "answer": "AIG shall provide to the Company cash, cash equivalents, securities or other instruments that qualify for purposes of calculating the Company's Total Adjusted Capital.",
+      "rating": 10
+    },
+    {
+      "question": "Under what conditions can the Company declare and pay dividends to its equity holders?",
+      "answer": "The Company can declare and pay dividends if its Total Adjusted Capital is in excess of the Specified Minimum Percentage of the Company's projected Company Action Level RBC.",
+      "rating": 10
+    },
+    {
+      "question": "What is the initial value of the Specified Minimum Percentage?",
+      "answer": "The Specified Minimum Percentage shall initially equal 350% of the Company's Company Action Level RBC.",
+      "rating": 10
+    }
+  ],
+  "conversations": [
+    [
+      {
+        "role": "system",
+        "content": "You are a helpful AI assistant that provides accurate, detailed responses."
+      },
+      {
+        "role": "user",
+        "content": "What is the effective date of the Unconditional Capital Maintenance Agreement?"
+      },
+      {
+        "role": "assistant",
+        "content": "The effective date of the Agreement is March 30, 2011."
+      }
+    ],
+    [
+      {
+        "role": "system",
+        "content": "You are a helpful AI assistant that provides accurate, detailed responses."
+      },
+      {
+        "role": "user",
+        "content": "Which company is an indirect wholly owned subsidiary of AIG?"
+      },
+      {
+        "role": "assistant",
+        "content": "American General Life Insurance Company of Delaware is an indirect wholly owned subsidiary of AIG."
+      }
+    ],
+    [
+      {
+        "role": "system",
+        "content": "You are a helpful AI assistant that provides accurate, detailed responses."
+      },
+      {
+        "role": "user",
+        "content": "What will AIG provide to the Company if its Total Adjusted Capital falls below the Specified Minimum Percentage?"
+      },
+      {
+        "role": "assistant",
+        "content": "AIG shall provide to the Company cash, cash equivalents, securities or other instruments that qualify for purposes of calculating the Company's Total Adjusted Capital."
+      }
+    ],
+    [
+      {
+        "role": "system",
+        "content": "You are a helpful AI assistant that provides accurate, detailed responses."
+      },
+      {
+        "role": "user",
+        "content": "Under what conditions can the Company declare and pay dividends to its equity holders?"
+      },
+      {
+        "role": "assistant",
+        "content": "The Company can declare and pay dividends if its Total Adjusted Capital is in excess of the Specified Minimum Percentage of the Company's projected Company Action Level RBC."
+      }
+    ],
+    [
+      {
+        "role": "system",
+        "content": "You are a helpful AI assistant that provides accurate, detailed responses."
+      },
+      {
+        "role": "user",
+        "content": "What is the initial value of the Specified Minimum Percentage?"
+      },
+      {
+        "role": "assistant",
+        "content": "The Specified Minimum Percentage shall initially equal 350% of the Company's Company Action Level RBC."
+      }
+    ]
+  ],
+  "metrics": {
+    "total": 5,
+    "filtered": 5,
+    "retention_rate": 1.0,
+    "avg_score": 10.0
+  }
+}

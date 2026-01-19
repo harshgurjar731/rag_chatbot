@@ -5,14 +5,18 @@ from pathlib import Path
 from typing import List
 from database import get_session
 from models.datastore import DataStore
-from models.FileRecord import FileRecord
+from models.FileRecord import FileRecord, DocumentRecord
+
+# ... (omitted parts)
+
+
 from fastapi.responses import FileResponse
 from Services.document_loader import load_file_with_loader
 from Services.embedding_service import embed_and_store, check_embeddings_status, delete_vector_store
 from Services.chunking_service import chunk_documents, save_chunks_to_json, load_docs_from_json
 from config import CONFIG  # ✅ centralized env-driven config
 import os
-from Evaluation.delete_qna import delete_qna_by_file,delete_generated_files  # ✅ centralized deletion of QA pairs
+from Evaluation.delete_qna import delete_qna_by_file, delete_generated_files, delete_qna_by_document_id  # ✅ centralized deletion of QA pairs
 
 router = APIRouter()
 
@@ -136,11 +140,27 @@ def delete_file_from_datastore(
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to delete vectors: {str(e)}")
 
-    # ✅ Delete QA pairs associated with this file
+    # ✅ Delete QA pairs associated with this file (using DocumentRecord ID if available)
     try:
+        # Try to find associated DocumentRecord
+        doc_record = session.exec(select(DocumentRecord).where(
+            DocumentRecord.filename == file_record.filename, 
+            DocumentRecord.datastore_id == datastore_id
+        )).first()
+
+        if doc_record:
+            deleted_doc_qa = delete_qna_by_document_id(session, doc_record.id)
+            print(f"[INFO] Deleted {deleted_doc_qa} QA pairs linked to document_id {doc_record.id}")
+            session.delete(doc_record)
+
         deleted_count = delete_qna_by_file(session, file_id)
-        print(f"[INFO] Deleted {deleted_count} QA pairs for file_id {file_id}")
+        if deleted_count > 0:
+            print(f"[INFO] Deleted {deleted_count} QA pairs for file_id {file_id}")
     except Exception as e:
+        # raise HTTPException(status_code=500, detail=f"Failed to delete QA pairs: {str(e)}")
+        # Log error but don't fail the whole request? Or fail? 
+        # Original code raised exception. Let's keep consistency but maybe safer.
+        print(f"[ERROR] Failed to delete QA pairs: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Failed to delete QA pairs: {str(e)}")
     
     try:
@@ -217,6 +237,33 @@ def delete_file(datastore_id: int, filename: str, session: Session = Depends(get
     else:
         raise HTTPException(status_code=404, detail="File not found on disk")
 
+
+    
+    # ✅ Delete QA pairs associated with this file (using DocumentRecord ID if available)
+    try:
+        # Try to find associated DocumentRecord
+        doc_record = session.exec(select(DocumentRecord).where(
+            DocumentRecord.filename == file_record.filename, 
+            DocumentRecord.datastore_id == datastore_id
+        )).first()
+
+        if doc_record:
+            deleted_doc_qa = delete_qna_by_document_id(session, doc_record.id)
+            print(f"[INFO] Deleted {deleted_doc_qa} QA pairs linked to document_id {doc_record.id}")
+
+            # Also delete the DocumentRecord itself if desired, or let cascade handle it?
+            # FileRecord deletion might not cascade to DocumentRecord if they are separate.
+            # Usually DocumentRecord is main pointer if created. 
+            session.delete(doc_record)
+        
+        # Fallback to FileID just in case
+        deleted_count = delete_qna_by_file(session, file_record.id)
+        if deleted_count > 0:
+            print(f"[INFO] Deleted {deleted_count} QA pairs for file_id {file_record.id}")
+            
+    except Exception as e:
+        print(f"[ERROR] Failed to delete QA pairs: {str(e)}")
+
     session.delete(file_record)
     session.commit()
     return {"detail": f"File '{filename}' deleted successfully"}
@@ -256,3 +303,24 @@ def get_file_name(datastore_id: int, file_id: int, session: Session = Depends(ge
         raise HTTPException(status_code=404, detail="File not found in database")
 
     return {"file_name": file_record.filename}
+
+@router.get("/datastores/{datastore_id}/documents/{document_id}/name")
+def get_document_name(datastore_id: int, document_id: int, session: Session = Depends(get_session)):
+    """
+    Get the filename for a specific document_id in a datastore.
+    """
+    # Check if datastore exists
+    datastore = session.get(DataStore, datastore_id)
+    if not datastore:
+        raise HTTPException(status_code=404, detail="Datastore not found")
+
+    # Query document record
+    statement = select(DocumentRecord).where(
+        DocumentRecord.id == document_id,
+        DocumentRecord.datastore_id == datastore_id
+    )
+    doc_record = session.exec(statement).first()
+    if not doc_record:
+        raise HTTPException(status_code=404, detail="Document not found in database")
+
+    return {"file_name": doc_record.filename}

@@ -1,11 +1,58 @@
 import React, { useState, useMemo, useEffect } from "react";
-import { useLocation, useNavigate, useParams } from "react-router-dom";
+import { useLocation, useNavigate, useParams, useSearchParams } from "react-router-dom";
+import { useConfigOptions } from "@/hooks/useConfigOptions";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
-import { Download, ArrowLeft } from "lucide-react";
+import {
+    Download,
+    ArrowLeft,
+    BarChart2,
+    CheckCircle2,
+    XCircle,
+    FileText,
+    Eye,
+    Target
+} from "lucide-react";
 import { saveAs } from "file-saver";
 import { useChatbots } from "@/hooks/useChatbots";
+import {
+    Dialog,
+    DialogContent,
+    DialogHeader,
+    DialogTitle,
+    DialogTrigger,
+} from "@/components/ui/dialog";
+import {
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow,
+} from "@/components/ui/table";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import {
+    ResponsiveContainer,
+    BarChart,
+    Bar,
+    XAxis,
+    YAxis,
+    Tooltip,
+    Legend,
+    CartesianGrid,
+    Cell
+} from "recharts";
+import { cn } from "@/lib/utils";
+
+// --- Types ---
+interface RagasRow {
+    "#": number;
+    [key: string]: any;
+}
+
+// --- Colors ---
+const CHART_COLORS = ["#8884d8", "#82ca9d", "#ffc658", "#ff8042", "#a4de6c", "#d0ed57", "#ffc658"];
 
 const RAGASEvaluationOutput: React.FC = () => {
     const navigate = useNavigate();
@@ -13,48 +60,93 @@ const RAGASEvaluationOutput: React.FC = () => {
     const location = useLocation();
     const { chatbots } = useChatbots();
     const { toast } = useToast();
+    const [searchParams] = useSearchParams();
+    const evalId = searchParams.get("evalId");
+    const { config } = useConfigOptions();
 
     const [selectedMetric, setSelectedMetric] = useState<string>("All");
     const [showMore, setShowMore] = useState(false);
-    //   const [displayedRows, setDisplayedRows] = useState<any[]>([]);
+    const [apiData, setApiData] = useState<any>(null);
+    const [loading, setLoading] = useState<boolean>(() => {
+        return !location.state?.evaluationResponse && !!evalId && !!config?.base_url;
+    });
 
-    const chatbot = chatbots.find((c) => c.id === id);
-    const evaluationResponse = location.state?.evaluationResponse;
+    const [selectedRecord, setSelectedRecord] = useState<any>(null); // For Modal
 
-    const metrics = evaluationResponse?.metrics || [];
+    useEffect(() => {
+        if (!location.state?.evaluationResponse && evalId && config?.base_url) {
+            setLoading(true);
+            fetch(`${config.base_url}/evaluation/evaluation-status/${evalId}`)
+                .then((res) => res.json())
+                .then((data) => {
+                    setApiData(data);
+                })
+                .catch((err) => {
+                    console.error(err);
+                    toast({ title: "Error", description: "Failed to load evaluation data", variant: "destructive" });
+                })
+                .finally(() => setLoading(false));
+        }
+    }, [location.state, evalId, config]);
+
+    const chatbot = chatbots.find((c) => String(c.id) === String(id));
+    const evaluationResponse = location.state?.evaluationResponse || apiData;
+
+    const metrics: string[] = evaluationResponse?.metrics || [];
     const results = evaluationResponse?.results || {};
 
-    // ✅ Function to shorten long text
-    const truncateText = (text: string, length = 80) => {
+    const truncateText = (text: string, length = 60) => {
         if (!text) return "N/A";
         return text.length > length ? text.slice(0, length) + "..." : text;
     };
 
     // ✅ Prepare all rows for all metrics
-    const prepareRows = (metrics: string[], results: any) => {
+    const prepareRows = (metrics: string[], results: any): RagasRow[] => {
         if (!metrics.length) return [];
-        const rows = [];
+        const rows: RagasRow[] = [];
         const maxRows = Math.max(...metrics.map((m) => results[m]?.length || 0));
 
         for (let i = 0; i < maxRows; i++) {
-            const row: Record<string, any> = { "#": i + 1 };
+            const row: RagasRow = { "#": i + 1 };
+            // Base record info (assuming aligned)
+            const baseMetric = metrics[0];
+            const baseEntry = results[baseMetric]?.[i];
+
+            row["common"] = {
+                user_input: baseEntry?.user_input || "N/A",
+                response: baseEntry?.response || "N/A",
+                contexts: baseEntry?.contexts || [],
+                ground_truth: baseEntry?.ground_truth || "N/A",
+            };
+
             metrics.forEach((metric) => {
                 const entry = results[metric]?.[i];
                 const key = metric.toLowerCase().replace(/\s+/g, "_");
-                row[metric] = entry
-                    ? {
-                        user_input: truncateText(entry.user_input),
-                        response: truncateText(entry.response),
-                        score:
-                            entry[key] !== undefined
-                                ? (entry[key]).toFixed(4)
-                                : "N/A",
-                        accuracy:
-                            entry[key] !== undefined
-                                ? ((entry[key] || 0) * 100).toFixed(2)
-                                : "N/A",
+                // Find numeric key if possible (faithfulness, answer_relevancy etc)
+                // Ragas often returns key same as metric name or slightly varied
+                // We try matching distinct numeric keys or fallback
+
+                let scoreVal = "N/A";
+                // Try to find the score value in the entry object
+                if (entry) {
+                    // entry like { question:..., answer:..., faithfulness: 0.8 }
+                    // Try exact key
+                    if (entry[key] !== undefined) scoreVal = entry[key];
+                    // Try metric name
+                    else if (entry[metric.toLowerCase()] !== undefined) scoreVal = entry[metric.toLowerCase()];
+                    // Try looking for any float property that isn't standard fields
+                    else {
+                        const potentialKey = Object.keys(entry).find(k =>
+                            !["question", "answer", "contexts", "ground_truth", "user_input", "response"].includes(k) &&
+                            typeof entry[k] === 'number'
+                        );
+                        if (potentialKey) scoreVal = entry[potentialKey];
                     }
-                    : { user_input: "N/A", response: "N/A", score: "N/A", accuracy: "N/A" };
+                }
+
+                row[metric] = {
+                    score: scoreVal !== "N/A" ? Number(scoreVal).toFixed(4) : "N/A",
+                };
             });
             rows.push(row);
         }
@@ -63,264 +155,264 @@ const RAGASEvaluationOutput: React.FC = () => {
 
     const allRows = useMemo(() => prepareRows(metrics, results), [metrics, results]);
 
-    // Compute filtered rows based on selected metric
-    const filteredRows = useMemo(() => {
-        if (selectedMetric === "All") return allRows;
-        return allRows.map((row) => ({
-            "#": row["#"],
-            [selectedMetric]: row[selectedMetric],
-        }));
-    }, [allRows, selectedMetric]);
-
-    // Compute displayed rows based on showMore
-    const displayedRows = useMemo(() => {
-        return showMore ? filteredRows : filteredRows.slice(0, 10);
-    }, [filteredRows, showMore]);
-
-
-    // ✅ Calculate average metric accuracies
-    const metricAccuracies: Record<string, string> = useMemo(() => {
-        const acc: Record<string, string> = {};
-        metrics.forEach((metric) => {
-            const metricResults = results[metric] || [];
-            const key = metric.toLowerCase().replace(/\s+/g, "_");
-            const validScores = metricResults
-                .map((r: any) => r?.[key])
-                .filter((v: number) => typeof v === "number" && !isNaN(v));
-            const avg =
-                validScores.length > 0
-                    ? ((validScores.reduce((a, b) => a + b, 0) / validScores.length) * 100).toFixed(2)
-                    : "N/A";
-            acc[metric] = avg;
+    // ✅ Calculate average metric accuracies for Charts
+    const metricAverages = useMemo(() => {
+        return metrics.map((metric) => {
+            const rowScores = allRows.map((r) => parseFloat(r[metric]?.score)).filter((s) => !isNaN(s));
+            const avg = rowScores.length ? rowScores.reduce((a, b) => a + b, 0) / rowScores.length : 0;
+            return {
+                name: metric,
+                value: parseFloat((avg * 100).toFixed(2)), // Convert to 0-100 scale generally for display
+                rawAvg: avg.toFixed(4)
+            };
         });
-        return acc;
-    }, [metrics, results]);
+    }, [allRows, metrics]);
+
 
     const exportCSV = () => {
         if (!chatbot) return;
-        const headers = [
-            "#",
-            ...metrics.flatMap((m) => [`${m} Input`, `${m} Response`, `${m} Score`, `${m} Accuracy`]),
-        ];
-        const csvData = allRows.map((row) =>
-            metrics.flatMap((m) => [
-                row[m].user_input,
-                row[m].response,
-                row[m].score,
-                row[m].accuracy,
-            ])
-        );
-        const csvContent = [headers.join(","), ...csvData.map((r) => r.map((v) => `"${v}"`).join(","))].join("\n");
-        saveAs(new Blob([csvContent], { type: "text/csv;charset=utf-8;" }), `${chatbot.name}_ragaas_results.csv`);
-        toast({ title: "Export Successful", description: "CSV file downloaded." });
+        // Simple Export Logic
+        const headers = ["#", "Question", "Response", ...metrics.map(m => `${m} Score`)];
+        const rows = allRows.map(r => [
+            r["#"],
+            `"${r.common.user_input.replace(/"/g, '""')}"`,
+            `"${r.common.response.replace(/"/g, '""')}"`,
+            ...metrics.map(m => r[m]?.score)
+        ]);
+        const csvContent = [headers.join(","), ...rows.map(r => r.join(","))].join("\n");
+        saveAs(new Blob([csvContent], { type: "text/csv;charset=utf-8;" }), `${chatbot.name}_ragas_results.csv`);
+        toast({ title: "Export Successful" });
     };
 
-    const exportJSON = () => {
-        if (!chatbot) return;
-        const data = { chatbot: chatbot.name, framework: evaluationResponse?.framework, metricAccuracies, data: allRows };
-        saveAs(new Blob([JSON.stringify(data, null, 2)], { type: "application/json" }), `${chatbot.name}_ragaas_results.json`);
-        toast({ title: "Export Successful", description: "JSON file downloaded." });
-    };
+    const displayedRows = showMore ? allRows : allRows.slice(0, 10);
 
-    // 🧱 Render fallback safely
-    if (!evaluationResponse) {
-        return (
-            <div className="flex flex-col items-center justify-center min-h-screen text-gray-200 bg-[#0f0f10]">
-                <h1 className="text-2xl font-semibold mb-2">No Evaluation Data Available</h1>
-                <p className="text-gray-400 mb-4">
-                    Please run a RAGAS evaluation for this chatbot.
-                </p>
-                <Button onClick={() => navigate(`/evaluation-selection/${chatbot?.id}`)}>
-                    Run Evaluation
-                </Button>
-            </div>
-        );
-    }
+    if (loading) return (
+        <div className="flex flex-col items-center justify-center min-h-screen bg-background text-foreground">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mb-4" />
+            <p>Loading Evaluation...</p>
+        </div>
+    );
 
-    if (!chatbot) {
-        return (
-            <div className="min-h-screen flex items-center justify-center bg-[#0f0f10] text-gray-200">
-                <div className="text-center">
-                    <h1 className="text-2xl font-bold mb-4">Chatbot Not Found</h1>
-                    <Button onClick={() => navigate("/")} variant="secondary">
-                        <ArrowLeft className="h-4 w-4 mr-2" /> Back to Dashboard
-                    </Button>
-                </div>
-            </div>
-        );
-    }
+    if (!evaluationResponse || !chatbot) return (
+        <div className="flex flex-col items-center justify-center min-h-screen bg-background text-foreground">
+            <h1 className="text-2xl font-bold">No Data Found</h1>
+            <Button onClick={() => navigate("/")} className="mt-4">Back Home</Button>
+        </div>
+    );
 
-    // ✅ Main UI render
     return (
-        <div className="min-h-screen bg-gradient-surface text-gray-200">
-            <header className="border-b border-gray-800 bg-gradient-card mb-6 shadow-md">
-                <div className="container mx-auto px-4 py-4 flex items-center gap-4 justify-between">
-                    <div className="flex items-center gap-3">
+        <div className="min-h-screen bg-background text-foreground animate-in fade-in duration-500">
+            {/* BACKGROUND */}
+            <div className="fixed inset-0 z-0 overflow-hidden pointer-events-none">
+                <div className="absolute top-0 -left-64 w-[600px] h-[600px] bg-primary/5 rounded-full blur-[100px]" />
+                <div className="absolute bottom-0 -right-64 w-[600px] h-[600px] bg-secondary/5 rounded-full blur-[100px]" />
+            </div>
+
+            <div className="relative z-10 flex flex-col min-h-screen max-w-[1600px] mx-auto p-6 space-y-8">
+                {/* HEAD */}
+                <header className="flex items-center justify-between p-4 bg-background/80 backdrop-blur-md border border-white/5 rounded-xl sticky top-4 z-50 shadow-sm">
+                    <div className="flex items-center gap-4">
                         <Button variant="ghost" size="icon" onClick={() => navigate(`/evaluation-selection/${id}`)}>
-                            <ArrowLeft className="h-5 w-5 text-white" />
+                            <ArrowLeft className="w-5 h-5" />
                         </Button>
-                        <h1 className="text-2xl font-bold text-white">
-                            {chatbot.name} – RAGAS Evaluation Results
-                        </h1>
-                    </div>
-                    <div className="flex gap-3">
-                        <Button
-                            onClick={exportCSV}
-                            className="flex items-center gap-2 bg-gradient-to-r from-indigo-500 to-purple-500 text-white hover:opacity-90"
-                        >
-                            <Download className="w-4 h-4" /> CSV
-                        </Button>
-                        <Button
-                            onClick={exportJSON}
-                            className="flex items-center gap-2 bg-gradient-to-r from-indigo-500 to-purple-500 text-white hover:opacity-90"
-                        >
-                            <Download className="w-4 h-4" /> JSON
-                        </Button>
-                    </div>
-                </div>
-            </header>
-
-            <main className="container mx-auto px-4 space-y-6">
-                {/* Metric Summary */}
-                <Card className="shadow-elegant border border-gray-700 shadow-lg">
-                    <CardHeader>
-                        <CardTitle className="text-xl font-semibold text-gray-200">
-                            Metric Averages
-                        </CardTitle>
-                    </CardHeader>
-                    <CardContent className="flex flex-wrap gap-4">
-                        {metrics.map((metric) => (
-                            <div
-                                key={metric}
-                                onClick={() => setSelectedMetric(metric)}
-                                className={`cursor-pointer rounded-lg px-4 py-3 border text-center flex-1 min-w-[150px] ${selectedMetric === metric
-                                        ? "bg-indigo-600 border-indigo-500 text-white"
-                                        : "bg-gradient-surface border-gray-700 hover:bg-gray-800"
-                                    }`}
-                            >
-                                <div className="text-sm font-medium">{metric}</div>
-                                <div className="text-lg font-bold">
-                                    {metricAccuracies[metric]}%
-                                </div>
-                            </div>
-                        ))}
-                        <div
-                            onClick={() => setSelectedMetric("All")}
-                            className={`cursor-pointer rounded-lg px-4 py-3 border text-center flex-1 min-w-[150px] ${selectedMetric === "All"
-                                    ? "bg-indigo-600 border-indigo-500 text-white"
-                                    : "bg-gradient-surface border-gray-700 hover:bg-gray-800"
-                                }`}
-                        >
-                            <div className="text-sm font-medium">All</div>
-                            <div className="text-lg font-bold">View All</div>
+                        <div>
+                            <h1 className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-white to-white/60">
+                                {chatbot.name}
+                            </h1>
+                            <p className="text-xs text-muted-foreground">RAGAS Evaluation Report</p>
                         </div>
-                    </CardContent>
-                </Card>
+                    </div>
+                    <div className="flex gap-2">
+                        <Button variant="outline" size="sm" onClick={exportCSV} className="gap-2">
+                            <Download className="w-4 h-4" /> Export It
+                        </Button>
+                    </div>
+                </header>
 
-                {/* Evaluation Table */}
-                <Card className="shadow-elegant border border-gray-700 shadow-md">
-                    <CardHeader>
-                        <CardTitle className="text-lg font-semibold text-gray-200">
-                            Detailed Evaluation Results
-                        </CardTitle>
+                {/* CHARTS & STATS */}
+                <section className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    {/* Left: Score Cards */}
+                    <div className="space-y-4 lg:col-span-1">
+                        <div className="grid grid-cols-2 gap-4">
+                            {metricAverages.map((m, idx) => (
+                                <Card key={m.name} className="bg-white/5 border-white/10 hover:border-primary/50 transition-colors group">
+                                    <CardHeader className="pb-2">
+                                        <CardTitle className="text-sm font-medium text-muted-foreground uppercase tracking-wider">{m.name}</CardTitle>
+                                    </CardHeader>
+                                    <CardContent>
+                                        <div className="text-2xl font-bold text-foreground group-hover:text-primary transition-colors">
+                                            {m.value}%
+                                        </div>
+                                        <p className="text-xs text-muted-foreground mt-1">
+                                            Avg Score: {m.rawAvg}
+                                        </p>
+                                    </CardContent>
+                                </Card>
+                            ))}
+                        </div>
+                    </div>
+
+                    {/* Right: Chart */}
+                    <Card className="lg:col-span-2 bg-white/5 border-white/10">
+                        <CardHeader>
+                            <CardTitle className="flex items-center gap-2">
+                                <BarChart2 className="w-5 h-5 text-primary" />
+                                Metric Performance Overview
+                            </CardTitle>
+                        </CardHeader>
+                        <CardContent className="h-[250px]">
+                            <ResponsiveContainer width="100%" height="100%">
+                                <BarChart data={metricAverages} barSize={40}>
+                                    <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />
+                                    <XAxis dataKey="name" stroke="#94a3b8" fontSize={12} tickLine={false} axisLine={false} />
+                                    <YAxis stroke="#94a3b8" fontSize={12} tickLine={false} axisLine={false} domain={[0, 100]} />
+                                    <Tooltip
+                                        cursor={{ fill: 'rgba(255,255,255,0.05)' }}
+                                        contentStyle={{ backgroundColor: '#1e293b', borderColor: 'rgba(255,255,255,0.1)', color: '#fff' }}
+                                    />
+                                    <Bar dataKey="value" radius={[4, 4, 0, 0]}>
+                                        {metricAverages.map((entry, index) => (
+                                            <Cell key={`cell-${index}`} fill={CHART_COLORS[index % CHART_COLORS.length]} />
+                                        ))}
+                                    </Bar>
+                                </BarChart>
+                            </ResponsiveContainer>
+                        </CardContent>
+                    </Card>
+                </section>
+
+                {/* MAIN TABLE */}
+                <Card className="bg-white/5 border-white/10 overflow-hidden">
+                    <CardHeader className="flex flex-row items-center justify-between">
+                        <CardTitle className="text-lg">Detailed Records</CardTitle>
+                        <Button variant="ghost" size="sm" onClick={() => setShowMore(!showMore)}>
+                            {showMore ? "Show Less" : "Show All"}
+                        </Button>
                     </CardHeader>
-
-                    <CardContent>
-                        <div className="max-h-[400px] overflow-y-auto rounded-xl border border-gray-700">
-                            <table className="min-w-full text-sm text-left text-gray-300">
-                                <thead className="bg-gradient-surface text-gray-400 uppercase text-xs border-b border-gray-700">
-                                    <tr>
-                                        <th className="px-4 py-3">#</th>
-                                        {selectedMetric === "All" ? (
-                                            <>
-                                                <th className="px-4 py-3">Input</th>
-                                                <th className="px-4 py-3">Response</th>
-                                                {metrics.map((metric) => (
-                                                    <th key={metric} className="px-4 py-3">
-                                                        {metric} Score (%)
-                                                    </th>
-                                                ))}
-                                            </>
-                                        ) : (
-                                            <>
-                                                <th className="px-4 py-3">Input</th>
-                                                <th className="px-4 py-3">Response</th>
-                                                <th className="px-4 py-3">Score</th>
-                                                <th className="px-4 py-3">Accuracy</th>
-                                            </>
-                                        )}
-                                    </tr>
-                                </thead>
-
-                                <tbody>
-                                    {displayedRows.map((row, idx) => (
-                                        <tr
-                                            key={idx}
-                                            className="border-b border-gray-700 hover:bg-gray-800 transition-all"
-                                        >
-                                            <td className="px-4 py-3">{row["#"]}</td>
-
-                                            {selectedMetric === "All" ? (
-                                                <>
-                                                    {/* Show input and response only once per row */}
-                                                    <td
-                                                        className="px-4 py-3 max-w-[300px] truncate"
-                                                        title={row[metrics[0]]?.user_input}
-                                                    >
-                                                        {row[metrics[0]]?.user_input}
-                                                    </td>
-                                                    <td
-                                                        className="px-4 py-3 max-w-[300px] truncate"
-                                                        title={row[metrics[0]]?.response}
-                                                    >
-                                                        {row[metrics[0]]?.response}
-                                                    </td>
-
-                                                    {/* Show each metric's score */}
-                                                    {metrics.map((metric) => (
-                                                        <td key={`${idx}-${metric}`} className="px-4 py-3 text-center">
-                                                            {row[metric]?.score ?? "N/A"}
-                                                        </td>
-                                                    ))}
-                                                </>
-                                            ) : (
-                                                <>
-                                                    <td
-                                                        className="px-4 py-3 max-w-[300px] truncate"
-                                                        title={row[selectedMetric]?.user_input}
-                                                    >
-                                                        {row[selectedMetric]?.user_input}
-                                                    </td>
-                                                    <td
-                                                        className="px-4 py-3 max-w-[300px] truncate"
-                                                        title={row[selectedMetric]?.response}
-                                                    >
-                                                        {row[selectedMetric]?.response}
-                                                    </td>
-                                                    <td className="px-4 py-3">{row[selectedMetric]?.score}</td>
-                                                    <td className="px-4 py-3">{row[selectedMetric]?.accuracy}</td>
-                                                </>
-                                            )}
-                                        </tr>
+                    <div className="overflow-x-auto">
+                        <Table>
+                            <TableHeader className="bg-black/20">
+                                <TableRow className="border-white/5 hover:bg-transparent">
+                                    <TableHead className="w-[50px]">#</TableHead>
+                                    <TableHead className="w-[300px]">Question</TableHead>
+                                    <TableHead className="w-[300px]">Response</TableHead>
+                                    {metrics.map(m => (
+                                        <TableHead key={m} className="text-right whitespace-nowrap">{m}</TableHead>
                                     ))}
-                                </tbody>
-                            </table>
-                        </div>
-
-                        {filteredRows.length > 10 && (
-                            <div className="flex justify-center mt-4">
-                                <Button
-                                    variant="secondary"
-                                    className="bg-gray-800 hover:bg-gray-700 text-white px-6 py-2 rounded-lg"
-                                    onClick={() => setShowMore(!showMore)}
-                                >
-                                    {showMore ? "Show Less" : "Show More"}
-                                </Button>
-                            </div>
-                        )}
-                    </CardContent>
+                                    <TableHead className="w-[100px] text-right">Actions</TableHead>
+                                </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                                {displayedRows.map((row, idx) => (
+                                    <TableRow key={idx} className="border-white/5 hover:bg-white/5 transition-colors">
+                                        <TableCell className="font-mono text-xs text-muted-foreground">{row["#"]}</TableCell>
+                                        <TableCell className="font-medium">
+                                            <div className="line-clamp-2" title={row.common.user_input}>
+                                                {row.common.user_input}
+                                            </div>
+                                        </TableCell>
+                                        <TableCell className="text-muted-foreground">
+                                            <div className="line-clamp-2" title={row.common.response}>
+                                                {row.common.response}
+                                            </div>
+                                        </TableCell>
+                                        {metrics.map(m => (
+                                            <TableCell key={m} className="text-right font-mono">
+                                                <span className={cn(
+                                                    "px-2 py-1 rounded text-xs font-bold",
+                                                    Number(row[m]?.score) > 0.7 ? "bg-green-500/10 text-green-500" :
+                                                        Number(row[m]?.score) < 0.3 ? "bg-red-500/10 text-red-500" : "bg-yellow-500/10 text-yellow-500"
+                                                )}>
+                                                    {row[m]?.score}
+                                                </span>
+                                            </TableCell>
+                                        ))}
+                                        <TableCell className="text-right">
+                                            <Button
+                                                variant="ghost"
+                                                size="sm"
+                                                onClick={() => setSelectedRecord(row)}
+                                                className="hover:bg-primary/20 hover:text-primary"
+                                            >
+                                                <Eye className="w-4 h-4" />
+                                            </Button>
+                                        </TableCell>
+                                    </TableRow>
+                                ))}
+                            </TableBody>
+                        </Table>
+                    </div>
                 </Card>
-            </main>
+
+                {/* DETAILS MODAL */}
+                <Dialog open={!!selectedRecord} onOpenChange={(open) => !open && setSelectedRecord(null)}>
+                    <DialogContent className="max-w-3xl max-h-[85vh] flex flex-col bg-background/95 backdrop-blur-md border-white/10">
+                        <DialogHeader>
+                            <DialogTitle className="flex items-center gap-2">
+                                <FileText className="w-5 h-5 text-primary" />
+                                Record Details #{selectedRecord?.["#"]}
+                            </DialogTitle>
+                        </DialogHeader>
+
+                        {selectedRecord && (
+                            <ScrollArea className="flex-1 pr-4 mt-4">
+                                <div className="space-y-6">
+                                    {/* QA Section */}
+                                    <div className="grid gap-4">
+                                        <div className="bg-white/5 p-4 rounded-lg border border-white/5">
+                                            <h3 className="text-sm font-semibold text-muted-foreground mb-2 flex items-center gap-2">
+                                                <CheckCircle2 className="w-4 h-4 text-primary" /> Question
+                                            </h3>
+                                            <p className="text-foreground leading-relaxed whitespace-pre-wrap">{selectedRecord.common.user_input}</p>
+                                        </div>
+
+                                        <div className="bg-white/5 p-4 rounded-lg border border-white/5">
+                                            <h3 className="text-sm font-semibold text-muted-foreground mb-2 flex items-center gap-2">
+                                                <Target className="w-4 h-4 text-secondary" /> Response
+                                            </h3>
+                                            <p className="text-foreground leading-relaxed whitespace-pre-wrap">{selectedRecord.common.response}</p>
+                                        </div>
+                                    </div>
+
+                                    {/* Metrics Breakdown */}
+                                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                                        {metrics.map(m => (
+                                            <div key={m} className="bg-black/20 p-3 rounded-lg border border-white/5 text-center">
+                                                <p className="text-xs text-muted-foreground uppercase mb-1">{m}</p>
+                                                <p className="text-xl font-bold text-primary">{selectedRecord[m]?.score}</p>
+                                            </div>
+                                        ))}
+                                    </div>
+
+                                    {/* Ground Truth & Contexts */}
+                                    <div className="space-y-4">
+                                        <div className="bg-white/5 p-4 rounded-lg border border-white/5">
+                                            <h3 className="text-sm font-semibold text-muted-foreground mb-2">Ground Truth</h3>
+                                            <p className="text-sm text-foreground/80">{selectedRecord.common.ground_truth || "N/A"}</p>
+                                        </div>
+
+                                        <div className="bg-white/5 p-4 rounded-lg border border-white/5">
+                                            <h3 className="text-sm font-semibold text-muted-foreground mb-2">Retrieved Contexts</h3>
+                                            {selectedRecord.common.contexts?.length > 0 ? (
+                                                <ul className="space-y-2">
+                                                    {selectedRecord.common.contexts.map((ctx: string, idx: number) => (
+                                                        <li key={idx} className="text-sm text-foreground/80 bg-black/20 p-2 rounded border-l-2 border-primary/50">
+                                                            {ctx}
+                                                        </li>
+                                                    ))}
+                                                </ul>
+                                            ) : (
+                                                <p className="text-sm text-muted-foreground italic">No contexts retrieved.</p>
+                                            )}
+                                        </div>
+                                    </div>
+                                </div>
+                            </ScrollArea>
+                        )}
+                    </DialogContent>
+                </Dialog>
+
+            </div>
         </div>
     );
 };

@@ -7,4 +7,4 @@ def create_vector_store(provider: str):
     elif (provider.lower() == "Chroma".lower() or provider.lower() == "ChromaDB".lower()):
         return ChromaVectorDB()
     else:
-        print("VectorDB not supported currently")
+        print(f"VectorDB '{provider}' not supported currently")

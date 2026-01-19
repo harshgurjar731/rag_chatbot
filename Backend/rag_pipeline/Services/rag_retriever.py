@@ -2,6 +2,7 @@
 
 from typing import List
 import json
+import os
 from operator import itemgetter
 from collections import defaultdict
 from langchain_core.prompts import ChatPromptTemplate
@@ -97,18 +98,20 @@ def get_rag_answer_text(
     returned_chunks: List[Document] = []
     all_chunks_array = []
 
-    updated_query = history_based_query_generator(
-        query = query,
-        llm= llm,
-        message_history=message_history
-    )
+    # updated_query = history_based_query_generator(
+    #     query = query,
+    #     llm= llm,
+    #     message_history=message_history
+    # )
+    updated_query = query
     print("Query Optimizer", query_optimizer)
     print("Updated Query based on history", updated_query)
-    rewritten_queries = handle_query_rewriting(
-        rewritingType=query_optimizer,
-        query=updated_query,
-        llm= llm,
-    )
+    # rewritten_queries = handle_query_rewriting(
+    #     rewritingType=query_optimizer,
+    #     query=updated_query,
+    #     llm= llm,
+    # )
+    rewritten_queries = [updated_query]
     if (query_optimizer.lower() == "multiquery" or query_optimizer.lower() == "ragfusion"):
         retrieval_top_k = RAG_CONFIG["default_multiquery_retrieval_top_k"]
     else:
@@ -116,7 +119,9 @@ def get_rag_answer_text(
                                         
     print("Rewritten Queries: ", rewritten_queries)
     all_chunks_array = vector_db.test_retrieval(collection=vector_store_collection_name, embedding=embedding_model, queryList=rewritten_queries, topk=retrieval_top_k, selected_docs=selected_documents) 
-    if(len(all_chunks_array) == 1):
+    if(len(all_chunks_array) == 0):
+        returned_chunks = []
+    elif(len(all_chunks_array) == 1):
         returned_chunks = all_chunks_array[0]
     else :
         returned_chunks = handle_chunk_union(
@@ -166,37 +171,42 @@ def get_rag_answer_text(
 
     # ✅ Handle sources
     print("LLM Answer:", final_response)
-    final_response_obj = json.loads(final_response)
+    try:
+        # Clean potential markdown
+        cleaned_response = final_response.strip().replace("```json", "").replace("```", "")
+        final_response_obj = json.loads(cleaned_response)
+    except json.JSONDecodeError:
+        print("Warning: Failed to parse LLM response as JSON. Treating as raw string.")
+        final_response_obj = {"response": final_response, "used_chunks": []}
     print("LLM Response:", final_response_obj["response"])
     
     used_chunk_indices = final_response_obj["used_chunks"]
-    used_chunks = [returned_chunks[i] for i in used_chunk_indices]
+    used_chunks = [returned_chunks[i] for i in used_chunk_indices if 0 <= i < len(returned_chunks)]
 
     unique_pairs = set()
+    unique_list = []
 
     for chunk in used_chunks:
         metadata = chunk.metadata
         source = metadata["source"]
         page = metadata["page_number"]
-        unique_pairs.add((source, page))
+        filename = os.path.basename(source)
 
-    unique_list = [{"source": s, "page_number": p} for s, p in unique_pairs]
+        if (filename, page) not in unique_pairs:
+            unique_pairs.add((filename, page))
+            unique_list.append({"source": source, "page_number": page})
 
     # Convert to JSON string
     source_json_string = json.dumps(unique_list, indent=2)
     print("source_json_string:", source_json_string)
-    # if include_sources and "Sources:" in final_answer:
-    #     parts = final_answer.split("Sources:")
-    #     answer_text = parts[0].strip()
-    #     sources_text = parts[1].strip() if len(parts) > 1 else ""
-    #     return {
-    #         "answer": answer_text + "\n\nSources: " + str(sources_text.split("\n") if sources_text else [])
-    #     }
 
+    # Extract text content from used chunks for evaluation
+    retrieved_contexts = [chunk.page_content for chunk in used_chunks]
 
     return {"answer": final_response_obj["response"].strip(),
             "images": [],
-            "citations": source_json_string}
+            "citations": source_json_string,
+            "retrieved_contexts": retrieved_contexts}
 
 
 def get_rag_answer_image(

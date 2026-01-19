@@ -14,6 +14,21 @@ def get_session():
 
 def init_db():
     SQLModel.metadata.create_all(engine)
+    
+    # --- Migration: Add document_id column to questionanswer if missing ---
+    with Session(engine) as session:
+        try:
+            # Check if column exists by trying to select it
+            session.exec(text("SELECT document_id FROM questionanswer LIMIT 1"))
+        except Exception:
+            print("[INFO] Migration: Adding missing 'document_id' column to 'questionanswer' table.")
+            try:
+                session.exec(text("ALTER TABLE questionanswer ADD COLUMN document_id INTEGER REFERENCES documentrecord(id)"))
+                session.commit()
+                print("[INFO] Migration successful.")
+            except Exception as e:
+                print(f"[ERROR] Migration failed: {e}")
+                session.rollback()
 
 def list_tables():
     with Session(engine) as session:

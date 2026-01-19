@@ -15,7 +15,7 @@ from config import CONFIG  # Load .env variables
 from langchain_core.documents import Document
 from ingestion_pipleline.ingestion_models import DataStoreCreate, ChunkTextResponse, GetDocumentDetailsRequest, ProcessDocumentResponse
 from ingestion_pipleline.Config.Config import INGESTION_CONFIG
-from ingestion_pipleline.Loaders.document_loader import load_document_with_metadata 
+from ingestion_pipleline.Loaders.document_loader import load_document_with_metadata,load_document_with_metadata_docAI 
 from ingestion_pipleline.TextSplitters.document_splitter import split_document
 import base64
 from io import BytesIO
@@ -311,7 +311,8 @@ async def preview_chunks(
     documentDetailsObj.filePath = str(file_path)
 
 
-    list_of_documets = load_document_with_metadata(documentDetailsObj)
+    # list_of_documets = load_document_with_metadata(documentDetailsObj)
+    list_of_documets = load_document_with_metadata_docAI(documentDetailsObj)
     splitted_chunks = split_document(documentDetailsObj, list_of_documets)
     print("Splitted Docs", len(splitted_chunks))    
     
@@ -326,3 +327,10 @@ async def preview_chunks(
     chunk_texts = [chunk.page_content for chunk in requested_chunks]
 
     return ChunkTextResponse(chunks=chunk_texts)
+
+
+
+
+
+
+

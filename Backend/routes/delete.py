@@ -9,7 +9,7 @@ from models.datastore import DataStore
 from pydantic import BaseModel
 from models.FileRecord import FileRecord
 from config import CONFIG 
-from Evaluation.delete_qna import delete_qna_by_file # ✅ centralized config
+from Evaluation.delete_qna import delete_qna_by_file, delete_qna_by_datastore # ✅ centralized config
 
 router = APIRouter()
 
@@ -25,6 +25,15 @@ def delete_datastore(datastore_id: int, session: Session = Depends(get_session))
     datastore = session.get(DataStore, datastore_id)
     if not datastore:
         raise HTTPException(status_code=404, detail="Datastore not found")
+
+    # 1.1 Delete all QA pairs for this datastore (covers any orphaned QAs)
+    try:
+        deleted_qna_count = delete_qna_by_datastore(session, datastore.id)
+        print(f"[INFO] Deleted {deleted_qna_count} QA pairs for datastore_id {datastore.id}")
+    except Exception as e:
+        print(f"[ERROR] Failed to delete QA pairs for datastore_id {datastore.id}: {e}")
+        # Proceeding despite error to ensure datastore deletion isn't blocked completely, 
+        # or you could raise HTTPException if strict consistency is required.
 
     # 2️⃣ Get all files for this datastore
     files = session.exec(select(FileRecord).where(FileRecord.datastore_id == datastore_id)).all()
