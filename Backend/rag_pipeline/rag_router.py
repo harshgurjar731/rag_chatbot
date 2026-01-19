@@ -183,7 +183,7 @@ async def retrieve(
 ):
 
     full_response = ""
-    print("1")
+    
     try:
         # Stream response from bot
         # for chunk in bot_comm.send_message_streaming(
@@ -234,7 +234,7 @@ async def retrieve(
             selected_documents=data.selected_documents if data.selected_documents else []
         )
         if full_response and not full_response.startswith("Error:"):
-            print("3")
+            
             # Try to parse as JSON first
             try:
                 json_response = json.loads(full_response)
@@ -246,7 +246,7 @@ async def retrieve(
             # Fallback for plain text
             return {"answer": full_response}
         else:
-            print("4")
+            
             raise HTTPException(status_code=400, detail=full_response or "⚠️ No reply received. The bot may be offline.")
     except Exception as e:
         error_msg = f"⚠️ Error processing query: {str(e)}"

@@ -14,7 +14,7 @@ For a deep dive into the system architecture, including the Worker Pool pattern 
 *   **Redis**: Acts as the communication backbone (Message Broker) and state store.
 *   **ChromaDB**: The default Vector Database for storing document embeddings.
 *   **Phoenix**: Provides end-to-end tracing and observability for LLM applications.
-
+                     
 ## 🚀 Getting Started
 
 ### Prerequisites

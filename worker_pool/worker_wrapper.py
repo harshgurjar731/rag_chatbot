@@ -236,13 +236,16 @@ async def process_message(message_data):
                     # But the CURRENT implementation in rag_router just returns {"answer": full_response}.
                     
                     # Publish the whole object as JSON
+                    print("a")
                     r.publish(response_channel, json.dumps(results_object))
                     
                 else:
                     answer = str(results_object)
+                    print("b")
                     r.publish(response_channel, json.dumps({"answer": answer}))
                 
                 span.set_attribute("output.value", answer)
+                print("c")
                 
     except Exception as e:
         print(f"[!] Error processing message: {e}")
