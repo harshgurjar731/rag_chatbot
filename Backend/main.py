@@ -77,7 +77,7 @@ from ingestion_pipleline.ingestion_datastore_router import router as ingestion_d
 from ingestion_pipleline.ingestion_document_loader_router import router as ingestion_document_router
 from ingestion_pipleline.ingestion_chunks_router import router as ingestion_chunking_router
 from rag_pipeline.rag_router import router as rag_knowledge_asst_router
-from routes import translate, frontend_config, embedding
+from routes import translate, frontend_config, embedding, evaluation, feedback
 
 
 app = FastAPI(title="RAG Document Store")
@@ -105,7 +105,8 @@ app.include_router(embedding.router, prefix="/datastore")
 # app.include_router(url_scraper.router, prefix="/urlscraper")
 app.include_router(translate.router, prefix="/translate")
 app.include_router(frontend_config.router, prefix="/frontend")
-# app.include_router(evaluation.router, prefix="/evaluation")
+app.include_router(evaluation.router, prefix="/evaluation")
+app.include_router(feedback.router, prefix="/feedback")
 
 
 

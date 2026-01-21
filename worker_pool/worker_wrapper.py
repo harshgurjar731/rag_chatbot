@@ -42,9 +42,11 @@ print(f'REDIS_HOST = {REDIS_HOST}')
 r = redis.Redis(host=REDIS_HOST, port=6379, db=0, decode_responses=True)
 
 # Database Setup
-# Using absolute path to ensure we find the DB
-# DB_PATH = os.path.join(os.getcwd(), "Backend", "rag.db")
-DATABASE_URL = f"sqlite:////app/db/rag.db"
+user = os.getenv("DB_USER", "user")
+password = os.getenv("DB_PASSWORD", "password")
+host = os.getenv("DB_HOST", "db")
+dbname = os.getenv("DB_NAME", "chatbot_db")
+DATABASE_URL = f"postgresql://{user}:{password}@{host}/{dbname}"
 engine = create_engine(DATABASE_URL)
 
 # OpenTelemetry

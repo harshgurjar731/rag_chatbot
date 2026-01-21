@@ -3,7 +3,14 @@ from sqlmodel import SQLModel, create_engine, Session, text
 from models.datastore import DataStore
 from models.FileRecord import FileRecord
 
-DATABASE_URL = "sqlite:////app/db/rag.db"
+import os
+
+user = os.getenv("DB_USER", "user")
+password = os.getenv("DB_PASSWORD", "password")
+host = os.getenv("DB_HOST", "db")
+dbname = os.getenv("DB_NAME", "chatbot_db")
+DATABASE_URL = f"postgresql://{user}:{password}@{host}/{dbname}"
+
 engine = create_engine(DATABASE_URL, echo=True)
 
 
@@ -24,13 +31,14 @@ def init_db():
     """
     SQLModel.metadata.create_all(engine)
 
+from sqlalchemy import inspect
+
 def list_tables():
     """
-    Lists all tables currently present in the SQLite database.
+    Lists all tables currently present in the database.
     """
-    with Session(engine) as session:
-        result = session.exec(text("SELECT name FROM sqlite_master WHERE type='table';"))
-        print("Tables:", result.all())
+    inspector = inspect(engine)
+    print("Tables:", inspector.get_table_names())
 
 def list_tables_content():
     """

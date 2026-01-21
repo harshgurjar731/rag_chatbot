@@ -1,0 +1,38 @@
+[build-system]
+requires = ["setuptools>=42", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "synthetic_data_kit"
+version = "0.0.1"
+description = "A toolkit for preparing synthetic data for LLM fine-tuning"
+authors = [
+    {name = "Meta Platforms, Inc."}
+]
+requires-python = ">=3.8"
+dependencies = [
+    "pydantic",
+    "pyyaml",
+    "paramiko",
+    "tqdm",
+    "requests",
+    "fastapi",
+    "uvicorn",
+    "jinja2",
+    "langchain",
+    "openai"
+]
+
+[tool.setuptools]
+packages = [
+    "synthetic_data_kit",
+    "synthetic_data_kit.core",
+    "synthetic_data_kit.generators",
+    "synthetic_data_kit.models",
+    "synthetic_data_kit.parsers",
+    "synthetic_data_kit.server",
+    "synthetic_data_kit.utils"
+]
+
+[tool.setuptools.package-dir]
+"synthetic_data_kit" = "."

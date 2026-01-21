@@ -9,7 +9,7 @@ from Evaluation.qna_curation import *
 from config import CONFIG
 import os
 
-def get_file_path(datastore_id: int, datastore_name: str, filename: str, base_folder: str = "..\Data") -> Path:
+def get_file_path(datastore_id: int, datastore_name: str, filename: str, base_folder: str = r"..\Data") -> Path:
     """
     Constructs a full file path dynamically based on datastore id, name, and filename.
     

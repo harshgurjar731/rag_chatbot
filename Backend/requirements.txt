@@ -32,4 +32,4 @@ RUN pip install --system sentence_transformers
 RUN pip install --system sqlmodel
 RUN pip install --system tqdm
 RUN pip install --system transformers
-RUN pip install --system open 
+ 

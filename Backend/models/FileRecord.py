@@ -85,6 +85,7 @@ class FileRecord(SQLModel, table=True):
     uploaded_at: datetime = Field(default_factory=datetime.utcnow)
 
     datastore_id: int = Field(foreign_key="datastore.id")
+    datastore: "DataStore" = Relationship(back_populates="files")
 
 class QuestionAnswer(SQLModel, table=True):
     # Use question_id as primary key with autoincrement
@@ -94,3 +95,4 @@ class QuestionAnswer(SQLModel, table=True):
 
     datastore_id: int = Field(foreign_key="datastore.id")
     file_id: Optional[int] = Field(default=None, foreign_key="filerecord.id")
+    document_id: Optional[int] = Field(default=None, foreign_key="documentrecord.id")

@@ -10,7 +10,7 @@ class CreateAssitantRequest(BaseModel):
     datastore_id: int
 
 class KnowledgeAssistantResponse(BaseModel):
-    id: str
+    id: int
     name: str
     description: str
     created_at: Any

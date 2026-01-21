@@ -5,7 +5,7 @@ services:
     build:
       context: ./Backend
       dockerfile: Dockerfile
-    container_name: rag_backend
+    container_name: rag_newbackend
     ports:
       - "8000:8000"
     environment:
@@ -35,12 +35,13 @@ services:
         condition: service_healthy
     volumes:
       - app-db:/app/db
+      - ./Data:/Data
 
   frontend:
     build:
       context: ./Frontend/docu-chatter-main
       dockerfile: Dockerfile
-    container_name: rag_frontend
+    container_name: rag_newfrontend
     ports:
       - "8080:8080"
     volumes:
@@ -114,6 +115,7 @@ services:
       replicas: 1
     volumes:
       - app-db:/app/db
+      - ./Data:/Data
 
   redis:
     image: redis:alpine

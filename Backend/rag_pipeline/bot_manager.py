@@ -13,10 +13,11 @@ class BotManager:
     def get_db(self):
         return self.SessionLocal()
 
-    def create_bot(self, bot_id: str,name: str, datastore_id: str) -> tuple[bool, str]:
+    def create_bot(self, bot_id: str, name: str, datastore_id: str) -> tuple[bool, str]:
         db = self.get_db()
         try:
             # Check if exists
+            bot_id = str(bot_id)  # Ensure string type for query
             existing = db.query(Bot).filter(Bot.bot_id == bot_id).first()
             if existing:
                 return False, f"Bot '{bot_id}' already exists."

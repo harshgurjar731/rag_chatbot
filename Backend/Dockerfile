@@ -78,6 +78,10 @@ RUN uv pip install --system pillow
 RUN uv pip install --system pydantic
 RUN uv pip install --system sentence_transformers
 RUN uv pip install --system scikit-learn
+RUN uv pip install --system ragas
+COPY Evaluation/synthetic_data_kit /build/synthetic_data_kit
+RUN uv pip install --system /build/synthetic_data_kit
+
 
 
 
@@ -138,6 +142,8 @@ RUN conda install -y -c conda-forge \
 # Copy installed packages from builder
 COPY --from=builder /opt/conda/lib/python3.13/site-packages /opt/conda/lib/python3.13/site-packages
 COPY --from=builder /opt/conda/bin /opt/conda/bin
+
+
 
 # Copy application code
 COPY . .
