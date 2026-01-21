@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { Plus, Bot, Sparkles, FileText } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { Plus, Bot, Sparkles, FileText, DatabaseIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ChatbotCard } from '@/components/ChatbotCard';
 import { CreateChatbotDialog } from '@/components/CreateChatbotDialog';
@@ -9,18 +9,26 @@ import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 
 
-const Dashboard = () => {
-  const { chatbots, createChatbot } = useChatbots();
+export const Dashboard = () => {
+  const { chatbots, createChatbot, refetchChatbots } = useChatbots();
   const navigate = useNavigate();
 
   const handleCreateChatbot = (data: any) => {
-    const newBot = createChatbot(data);
-    navigate(`/chatbot/${newBot.id}`);
+    refetchChatbots()
   };
 
   const handleChatbotClick = (id: string) => {
     navigate(`/chatbot/${id}`);
   };
+
+  const refreshDashboard=async()=>{
+      setDatastores(await fetchDatastores());
+    };
+  
+  
+  useEffect(()=> {
+    console.log("Chatbots in Dashboard", chatbots)
+  }, [chatbots])
 
   return (
     <div className="min-h-screen bg-gradient-surface">
@@ -38,12 +46,12 @@ const Dashboard = () => {
               </div>
             </div>
             
-            <CreateChatbotDialog onCreateChatbot={handleCreateChatbot}>
+            {chatbots.length !== 0 && (<CreateChatbotDialog onCreateChatbot={handleCreateChatbot}>
               <Button variant="chatbot" size="lg" className="hidden md:flex">
                 <Plus className="h-5 w-5" />
                 Create Assistant
               </Button>
-            </CreateChatbotDialog>
+            </CreateChatbotDialog>)}
           </div>
         </div>
       </div>
@@ -57,33 +65,32 @@ const Dashboard = () => {
               <Bot className="h-16 w-16 text-chatbot-primary" />
             </div>
             <h2 className="text-2xl font-semibold mb-3 text-foreground">
-              Welcome to Your AI Assistant Hub
+              Welcome to your Knowledge Assistant Hub
             </h2>
             <p className="text-muted-foreground mb-8 max-w-md">
-              Create specialized chatbots for different topics and documents. 
-              Start by building your first AI assistant.
+              Build and manage specialized AI assistants that use your organization’s knowledge to answer questions, automate workflows, and support your teams.
             </p>
             
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8 max-w-2xl">
               <div className="flex flex-col items-center p-4 rounded-lg bg-chatbot-surface-variant/50">
-                <FileText className="h-8 w-8 text-chatbot-primary mb-2" />
-                <h3 className="font-medium text-sm">Upload Documents</h3>
+                <DatabaseIcon className="h-8 w-8 text-chatbot-primary mb-2" />
+                <h3 className="font-medium text-sm">Select datastore</h3>
                 <p className="text-xs text-muted-foreground text-center">
-                  Train your chatbot with PDFs, Word docs, and text files
+                  Connect a datastore so your assistant retrieves answers from the right documents and respond using accurate, domain‑specific knowledge.
                 </p>
               </div>
               <div className="flex flex-col items-center p-4 rounded-lg bg-chatbot-surface-variant/50">
                 <Bot className="h-8 w-8 text-chatbot-primary mb-2" />
-                <h3 className="font-medium text-sm">AI-Powered Responses</h3>
+                <h3 className="font-medium text-sm">AI‑powered responses</h3>
                 <p className="text-xs text-muted-foreground text-center">
-                  Get intelligent answers based on your specific content
+                 Let assistants generate accurate, conversational answers grounded in your business knowledge, not generic internet data.
                 </p>
               </div>
               <div className="flex flex-col items-center p-4 rounded-lg bg-chatbot-surface-variant/50">
                 <Sparkles className="h-8 w-8 text-chatbot-primary mb-2" />
-                <h3 className="font-medium text-sm">Voice Features</h3>
+                <h3 className="font-medium text-sm">Voice & chat experience</h3>
                 <p className="text-xs text-muted-foreground text-center">
-                  Speak your questions and hear responses read aloud
+                  Ask questions by text, image or voice and get instant, natural responses for faster decision‑making and support.
                 </p>
               </div>
             </div>
@@ -91,7 +98,7 @@ const Dashboard = () => {
             <CreateChatbotDialog onCreateChatbot={handleCreateChatbot}>
               <Button variant="chatbot" size="lg">
                 <Plus className="h-5 w-5" />
-                Create Your First Assistant
+                Create your first assistant
               </Button>
             </CreateChatbotDialog>
           </div>
@@ -100,10 +107,10 @@ const Dashboard = () => {
           <div>
             <div className="flex items-center justify-between mb-6">
               <div>
-                <h2 className="text-2xl font-semibold text-foreground">Your Assistants</h2>
-                <p className="text-muted-foreground">
+                <h2 className="text-2xl font-semibold text-foreground">Your knowledge assistants</h2>
+                {/* <p className="text-muted-foreground">
                   {chatbots.length} assistant{chatbots.length !== 1 ? 's' : ''} ready to help
-                </p>
+                </p> */}
               </div>
             </div>
 
@@ -113,6 +120,7 @@ const Dashboard = () => {
                   key={chatbot.id}
                   chatbot={chatbot}
                   onClick={() => handleChatbotClick(chatbot.id)}
+                  onDelete={refetchChatbots}
                 />
               ))}
             </div>

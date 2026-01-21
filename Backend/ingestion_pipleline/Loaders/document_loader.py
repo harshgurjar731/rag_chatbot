@@ -1,0 +1,74 @@
+from sqlmodel import Session, select
+from models.FileRecord import FileRecord
+from database import get_session
+from Services.chunking_service import chunk_documents, save_chunks_to_json, load_docs_from_json
+from models.datastore import DataStore
+from models.FileRecord import DocumentRecord 
+from pathlib import Path
+from typing import List, Protocol
+from PIL import Image
+from langchain_core.documents import Document
+from ingestion_pipleline.Loaders.pdf_loader import PDFLoader
+# from ingestion_pipleline.Loaders.pdf_loader import PDFLoader
+from ingestion_pipleline.AzureLoaders.azure_loader import AzureDocumentLoader
+from ingestion_pipleline.Loaders.image_loader import ImageLoader
+from ingestion_pipleline.Loaders.loader_protocol import LoaderProtocol
+import mimetypes
+
+def load_document_with_metadata(doc: DocumentRecord) -> List[Document]:
+    # Automatically determine file type if not provided
+    print("LoaderType: ", doc.loaderType)
+    if doc.loaderType == 'pdf':
+        loaded_documents = PDFLoader().load(doc.filePath)
+        return loaded_documents
+    elif doc.loaderType == 'img':
+        return ImageLoader().load(doc.filePath)
+
+    if not doc.loaderType:
+        mime_type, _ = mimetypes.guess_type(doc.filePath)
+        if mime_type:
+            if 'image' in mime_type:
+                loader_type = mime_type.split('/')[-1]
+            elif 'text' in mime_type:
+                loader_type = 'txt'
+            elif 'pdf' in mime_type:
+                loader_type = 'pdf'
+            elif 'csv' in mime_type:
+                loader_type = 'csv'
+            else:
+                loader_type = doc.filePath.suffix[1:]
+    
+    if not loader_type:
+        raise ValueError(f"Could not determine loader type for file: {doc.filePath}")
+        return []
+
+
+def load_document_with_metadata_docAI(doc: DocumentRecord) -> List[Document]:
+    # Automatically determine file type if not provided
+    print("LoaderType: ", doc.loaderType)
+    
+    # Use Azure Document Loader for PDFs
+    if doc.loaderType == 'pdf':
+        return AzureDocumentLoader().load(doc.filePath)
+        
+    elif doc.loaderType == 'img':
+        return ImageLoader().load(doc.filePath)
+
+    if not doc.loaderType:
+        mime_type, _ = mimetypes.guess_type(doc.filePath)
+        if mime_type:
+            if 'image' in mime_type:
+                loader_type = mime_type.split('/')[-1]
+            elif 'text' in mime_type:
+                loader_type = 'txt'
+            elif 'pdf' in mime_type:
+                loader_type = 'pdf'
+            elif 'csv' in mime_type:
+                loader_type = 'csv'
+            else:
+                loader_type = doc.filePath.suffix[1:]
+    
+    if not loader_type:
+        raise ValueError(f"Could not determine loader type for file: {doc.filePath}")
+        return []
+

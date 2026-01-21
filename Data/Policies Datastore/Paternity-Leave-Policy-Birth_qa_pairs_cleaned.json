@@ -1,0 +1,108 @@
+{
+  "summary": "This document outlines the company\u2019s paternity leave policy, which aims to support employees in balancing career and family responsibilities while complying with statutory requirements. Eligible employees\u2014biological fathers, partners, or spouses of the mother\u2014may take up to two consecutive weeks of unpaid leave, with the option to receive statutory or enhanced company pay, and must provide notice and a self\u2011certificate of eligibility. The policy specifies the timing of leave (within 56\u202fdays of birth or the expected week), procedures for requesting and changing dates, and the employee\u2019s rights during absence, including continued employment terms and inclusion in company communications. Additionally, the policy allows employees to combine paternity leave with shared parental leave, provided paternity leave is taken first and all notice requirements are met.",
+  "qa_pairs": [
+    {
+      "question": "What is the purpose of the Paternity Leave Policy?",
+      "answer": "The policy ensures that employees can combine their career and family responsibilities and supports partners following the birth of their children.",
+      "rating": 8
+    },
+    {
+      "question": "Which employees are eligible for paternity leave under the policy?",
+      "answer": "Employees who are the biological father of the child or the mother\u2019s husband or partner, have responsibility for the child\u2019s upbringing, have worked continuously for the company for at least 26 weeks ending with the 15th week before the baby is due, and can provide a self\u2011certificate as evidence.",
+      "rating": 9
+    },
+    {
+      "question": "How long is the maximum paternity leave period?",
+      "answer": "The maximum paternity leave period is 2 consecutive weeks, and employees may elect to take one week.",
+      "rating": 8
+    },
+    {
+      "question": "When can paternity leave commence?",
+      "answer": "Paternity leave can commence from the date of the baby\u2019s birth, whether earlier or later than expected, or from a specified number of days or weeks after the expected birth date.",
+      "rating": 8
+    },
+    {
+      "question": "What is the deadline for completing paternity leave?",
+      "answer": "Paternity leave must be completed within 56 days of the actual date of the baby\u2019s birth, or if the baby is born early, within 56 days after the first day of the expected week of birth.",
+      "rating": 8
+    }
+  ],
+  "conversations": [
+    [
+      {
+        "role": "system",
+        "content": "You are a helpful AI assistant that provides accurate, detailed responses."
+      },
+      {
+        "role": "user",
+        "content": "What is the purpose of the Paternity Leave Policy?"
+      },
+      {
+        "role": "assistant",
+        "content": "The policy ensures that employees can combine their career and family responsibilities and supports partners following the birth of their children."
+      }
+    ],
+    [
+      {
+        "role": "system",
+        "content": "You are a helpful AI assistant that provides accurate, detailed responses."
+      },
+      {
+        "role": "user",
+        "content": "Which employees are eligible for paternity leave under the policy?"
+      },
+      {
+        "role": "assistant",
+        "content": "Employees who are the biological father of the child or the mother\u2019s husband or partner, have responsibility for the child\u2019s upbringing, have worked continuously for the company for at least 26 weeks ending with the 15th week before the baby is due, and can provide a self\u2011certificate as evidence."
+      }
+    ],
+    [
+      {
+        "role": "system",
+        "content": "You are a helpful AI assistant that provides accurate, detailed responses."
+      },
+      {
+        "role": "user",
+        "content": "How long is the maximum paternity leave period?"
+      },
+      {
+        "role": "assistant",
+        "content": "The maximum paternity leave period is 2 consecutive weeks, and employees may elect to take one week."
+      }
+    ],
+    [
+      {
+        "role": "system",
+        "content": "You are a helpful AI assistant that provides accurate, detailed responses."
+      },
+      {
+        "role": "user",
+        "content": "When can paternity leave commence?"
+      },
+      {
+        "role": "assistant",
+        "content": "Paternity leave can commence from the date of the baby\u2019s birth, whether earlier or later than expected, or from a specified number of days or weeks after the expected birth date."
+      }
+    ],
+    [
+      {
+        "role": "system",
+        "content": "You are a helpful AI assistant that provides accurate, detailed responses."
+      },
+      {
+        "role": "user",
+        "content": "What is the deadline for completing paternity leave?"
+      },
+      {
+        "role": "assistant",
+        "content": "Paternity leave must be completed within 56 days of the actual date of the baby\u2019s birth, or if the baby is born early, within 56 days after the first day of the expected week of birth."
+      }
+    ]
+  ],
+  "metrics": {
+    "total": 5,
+    "filtered": 5,
+    "retention_rate": 1.0,
+    "avg_score": 8.2
+  }
+}

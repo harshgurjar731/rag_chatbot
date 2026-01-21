@@ -1,318 +1,234 @@
 # backend/routes/upload.py
-
-from fastapi import APIRouter, UploadFile, File, HTTPException, Depends,Query
-from sqlmodel import Session
-from uuid import UUID
+from fastapi import APIRouter, UploadFile, File, HTTPException, Depends, Query, status
+from sqlmodel import Session, select
 from pathlib import Path
 from typing import List
 from database import get_session
 from models.datastore import DataStore
-from models.FileRecord import FileRecord  # already imported above
-from sqlmodel import select
-from fastapi import status
-import os
+from models.FileRecord import FileRecord, DocumentRecord
+
+# ... (omitted parts)
+
+
 from fastapi.responses import FileResponse
 from Services.document_loader import load_file_with_loader
-from Services.embedding_service import embed_and_store, check_embeddings_status,  delete_vector_store
+from Services.embedding_service import embed_and_store, check_embeddings_status, delete_vector_store
 from Services.chunking_service import chunk_documents, save_chunks_to_json, load_docs_from_json
-
-
+from config import CONFIG  # ✅ centralized env-driven config
+import os
+from Evaluation.delete_qna import delete_qna_by_file, delete_generated_files, delete_qna_by_document_id  # ✅ centralized deletion of QA pairs
 
 router = APIRouter()
-""""
-#@router.post("/datastores/{datastore_id}/upload")
+
+
 @router.post("/datastores/{datastore_id}/upload")
-def upload_file_to_datastore(datastore_id: int, file: UploadFile = File(...), session: Session = Depends(get_session)):
-    # Validate datastore exists
+def upload_file_to_datastore(
+    datastore_id: int, file: UploadFile = File(...), session: Session = Depends(get_session)
+):
+    # 1️⃣ Validate datastore
     datastore = session.get(DataStore, datastore_id)
     if not datastore:
         raise HTTPException(status_code=404, detail="Datastore not found")
 
-    # Resolve physical path
-    project_root = Path(__file__).resolve().parent.parent.parent
-    ds_folder = project_root / "Data" / str(datastore.name)
+    # 2️⃣ Resolve physical path (✅ use CONFIG instead of hardcoded "Data")
+    ds_folder = CONFIG["project_root"]/ CONFIG["datastore_data_folder"] / str(datastore.name)
     if not ds_folder.exists():
         raise HTTPException(status_code=500, detail="Datastore folder not found")
 
-    # Save file
+    # 3️⃣ Save file
     file_path = ds_folder / file.filename
     file_bytes = file.file.read()
     with open(file_path, "wb") as f:
         f.write(file_bytes)
 
-    #return {"message": "File uploaded successfully", "filename": file.filename}
-
-    # Record metadata in DB
+    # 4️⃣ Record metadata in DB
     file_record = FileRecord(
         filename=file.filename,
         content_type=file.content_type,
         size=len(file_bytes),
-        datastore_id=datastore_id
+        datastore_id=datastore_id,
     )
     session.add(file_record)
     session.commit()
     session.refresh(file_record)
 
-    return {
-        "message": "File uploaded and recorded",
-        "file_id": file_record.id,
-        "filename": file_record.filename
-    }
-
-"""
-
-
-
-#@router.post("/datastores/{datastore_id}/upload")
-@router.post("/datastores/{datastore_id}/upload")
-def upload_file_to_datastore(datastore_id: int, file: UploadFile = File(...), session: Session = Depends(get_session)):
-    # Validate datastore exists
-    datastore = session.get(DataStore, datastore_id)
-    if not datastore:
-        raise HTTPException(status_code=404, detail="Datastore not found")
-
-    # Resolve physical path
-    project_root = Path(__file__).resolve().parent.parent.parent
-    ds_folder = project_root / "Data" / str(datastore.name)
-    if not ds_folder.exists():
-        raise HTTPException(status_code=500, detail="Datastore folder not found")
-
-    # Save file
-    file_path = ds_folder / file.filename
-    file_bytes = file.file.read()
-    with open(file_path, "wb") as f:
-        f.write(file_bytes)
-
-    #return {"message": "File uploaded successfully", "filename": file.filename}
-
-    # Record metadata in DB
-    file_record = FileRecord(
-        filename=file.filename,
-        content_type=file.content_type,
-        size=len(file_bytes),
-        datastore_id=datastore_id
-    )
-    session.add(file_record)
-    session.commit()
-    session.refresh(file_record)
-
-     # === PREVIEW LOGIC CALL (formerly its own API) ===
+    # === 5. Preview Logic ===
     try:
-        file_path = project_root / "Data" / str(datastore.name) / file_record.filename
-        if not file_path.exists():
-            raise HTTPException(status_code=404, detail="File not found on disk")
-
-        # You can hardcode or extract loader_type from file extension
-        loader_type = file.filename.split(".")[-1]  # e.g., 'pdf', 'docx'
-        
-
+        loader_type = file.filename.split(".")[-1]  # infer from extension
         docs = load_file_with_loader(file_path, loader_type)
         preview = docs[0].page_content[:1000]
         length = len(docs[0].page_content)
-
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Preview failed: {str(e)}")
-    
-     # === 6. Chunking Logic ===
+
+    # === 6. Chunking Logic ===
     try:
-        # Resolve JSON path
-        json_path = file_path.with_suffix('.json')
+        json_path = file_path.with_suffix(".json")
         if not json_path.exists():
             raise HTTPException(status_code=404, detail=f"JSON file not found: {json_path}")
 
-        # Load and chunk
         docs_from_json = load_docs_from_json(json_path)
         chunks = chunk_documents(docs_from_json, method="recursive", chunk_size=512, chunk_overlap=50)
 
-        # Save chunks
         chunks_file_path = ds_folder / f"{file.filename.rsplit('.', 1)[0]}_chunks.json"
         save_chunks_to_json(chunks, chunks_file_path)
-
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Chunking failed: {str(e)}")
-    
+
     # === 7. Store Embeddings Logic ===
     try:
-        model_name = "all-MiniLM-L6-v2"
-        vector_db = "faiss"
-        chunks_for_embedding_path = chunks_file_path  # already defined above
-        result = embed_and_store(chunks_for_embedding_path, file_record.id, model_name, vector_db)
+        model_name = CONFIG["default_embedding_model"]
+        vector_db = CONFIG["default_vector_db"]
+        result = embed_and_store(chunks_file_path, file_record.id, model_name, vector_db)
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Embedding failed: {str(e)}")
 
     return {
-        "message": "File uploaded and recorded",
+        "message": "File uploaded, previewed, chunked, and embeddings stored",
         "file_id": file_record.id,
-        "filename": file_record.filename
+        "filename": file_record.filename,
+        "preview": preview,
+        "length": length,
     }
+
 
 @router.get("/datastores/{datastore_id}/files", response_model=List[FileRecord])
 def list_files_in_datastore(datastore_id: int, session: Session = Depends(get_session)):
-    # Check if datastore exists
     datastore = session.get(DataStore, datastore_id)
     if not datastore:
         raise HTTPException(status_code=404, detail="Datastore not found")
 
-    # Query all files linked to this datastore
-    files = session.exec(
-        select(FileRecord).where(FileRecord.datastore_id == datastore_id)
-    ).all()
-
+    files = session.exec(select(FileRecord).where(FileRecord.datastore_id == datastore_id)).all()
     return files
-
-# @router.delete("/datastores/{datastore_id}/files/{file_id}", status_code=status.HTTP_200_OK)
-# def delete_file_from_datastore(datastore_id: int, file_id: int, session: Session = Depends(get_session)):
-#     # Validate datastore
-#     datastore = session.get(DataStore, datastore_id)
-#     if not datastore:
-#         raise HTTPException(status_code=404, detail="Datastore not found")
-
-#     # Validate file record
-#     file_record = session.get(FileRecord, file_id)
-#     if not file_record or file_record.datastore_id != datastore_id:
-#         raise HTTPException(status_code=404, detail="File not found in this datastore")
-
-#     # Resolve file path
-#     project_root = Path(__file__).resolve().parent.parent.parent
-#     file_path = project_root / "Data" / str(datastore.name) / file_record.filename
-
-#     # Attempt to delete file from filesystem
-#     try:
-#         if file_path.exists():
-#             file_path.unlink()
-#     except Exception as e:
-#         raise HTTPException(status_code=500, detail=f"Failed to delete file: {str(e)}")
-
-#     # Remove DB record
-#     session.delete(file_record)
-#     session.commit()
-
-#     return {
-#         "message": "File deleted successfully",
-#         "file_id": file_id,
-#         "filename": file_record.filename
-#     }
 
 
 @router.delete("/datastores/{datastore_id}/files/{file_id}", status_code=status.HTTP_200_OK)
 def delete_file_from_datastore(
     datastore_id: int,
     file_id: int,
-    vector_db: str = Query("faiss", description="Vector DB name"),
-    session: Session = Depends(get_session)
+    vector_db: str = Query(CONFIG["default_vector_db"], description="Vector DB name"),
+    session: Session = Depends(get_session),
 ):
-    # 1. Validate datastore
     datastore = session.get(DataStore, datastore_id)
     if not datastore:
         raise HTTPException(status_code=404, detail="Datastore not found")
 
-    # 2. Validate file record
     file_record = session.get(FileRecord, file_id)
     if not file_record or file_record.datastore_id != datastore_id:
         raise HTTPException(status_code=404, detail="File not found in this datastore")
 
-    # 3. Resolve paths
-    project_root = Path(__file__).resolve().parent.parent.parent
-    data_folder = project_root / "Data" / str(datastore.name)
+    data_folder = CONFIG["project_root"]/ CONFIG["datastore_data_folder"] / str(datastore.name)
     original_file_path = data_folder / file_record.filename
     preview_file_path = original_file_path.with_suffix(".json")
-    chunk_file_path = data_folder / (file_record.filename.rsplit('.', 1)[0] + "_chunks.json")
+    chunk_file_path = data_folder / (file_record.filename.rsplit(".", 1)[0] + "_chunks.json")
 
-    # 4. Delete original file
-    try:
-        if original_file_path.exists():
-            original_file_path.unlink()
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to delete original file: {str(e)}")
+    # Delete files safely
+    for path, label in [
+        (original_file_path, "original file"),
+        (preview_file_path, "preview file"),
+        (chunk_file_path, "chunked file"),
+    ]:
+        try:
+            if path.exists():
+                path.unlink()
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=f"Failed to delete {label}: {str(e)}")
 
-    # 5. Delete preview file
-    try:
-        if preview_file_path.exists():
-            preview_file_path.unlink()
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to delete preview file: {str(e)}")
-
-    # 6. Delete chunked file
-    try:
-        if chunk_file_path.exists():
-            chunk_file_path.unlink()
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to delete chunked file: {str(e)}")
-
-    # 7. Delete vector embeddings
+    # Delete embeddings
     try:
         delete_vector_store(file_id, vector_db)
-    except ValueError as ve:
-        raise HTTPException(status_code=400, detail=str(ve))
-    except FileNotFoundError as fe:
-        raise HTTPException(status_code=404, detail=str(fe))
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to delete vectors: {str(e)}")
 
-    # 8. Remove DB record
+    # ✅ Delete QA pairs associated with this file (using DocumentRecord ID if available)
+    try:
+        # Try to find associated DocumentRecord
+        doc_record = session.exec(select(DocumentRecord).where(
+            DocumentRecord.filename == file_record.filename, 
+            DocumentRecord.datastore_id == datastore_id
+        )).first()
+
+        if doc_record:
+            deleted_doc_qa = delete_qna_by_document_id(session, doc_record.id)
+            print(f"[INFO] Deleted {deleted_doc_qa} QA pairs linked to document_id {doc_record.id}")
+            session.delete(doc_record)
+
+        deleted_count = delete_qna_by_file(session, file_id)
+        if deleted_count > 0:
+            print(f"[INFO] Deleted {deleted_count} QA pairs for file_id {file_id}")
+    except Exception as e:
+        # raise HTTPException(status_code=500, detail=f"Failed to delete QA pairs: {str(e)}")
+        # Log error but don't fail the whole request? Or fail? 
+        # Original code raised exception. Let's keep consistency but maybe safer.
+        print(f"[ERROR] Failed to delete QA pairs: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to delete QA pairs: {str(e)}")
+    
+    try:
+        delete_generated_files(original_file_path)   
+    except FileNotFoundError as fnf_error:
+        print(f"[WARN] File not found: {fnf_error}")
+    except PermissionError as perm_error:
+        print(f"[ERROR] Permission denied: {perm_error}")
+    except Exception as e:
+        print(f"[ERROR] Failed to delete files: {e}")
+
+    json_file=Path(CONFIG["project_root"] / "Data" / datastore.name / f"{datastore.name}_evaluation_qa.json")
+    json_file1=Path(CONFIG["project_root"] / "Data" / datastore.name / f"{file_record.filename}_qa_pairs_cleaned.json")
+
+    try:
+        if json_file.exists() and json_file1.exists():
+            json_file.unlink()
+            json_file1.unlink()
+            print(f"[INFO] Deleted: {json_file}")
+            print(f"[INFO] Deleted: {json_file1}")
+    except Exception as e:
+        print(f"[ERROR] Failed to delete {json_file}: {e}")
+
+    # Delete the file record
     session.delete(file_record)
     session.commit()
 
     return {
-        "message": "File, preview, chunked data, and vectors deleted successfully",
+        "message": "File, preview, chunks, embeddings, and QA pairs deleted successfully",
         "file_id": file_id,
-        "filename": file_record.filename
+        "filename": file_record.filename,
     }
+
 
 @router.get("/datastores/{datastore_id}/files/{filename}", response_class=FileResponse)
 def get_file(datastore_id: int, filename: str, session: Session = Depends(get_session)):
-    # Validate datastore exists
     datastore = session.get(DataStore, datastore_id)
     if not datastore:
         raise HTTPException(status_code=404, detail="Datastore not found")
 
-    # Validate file record exists
-    statement = select(FileRecord).where(
-        FileRecord.filename == filename,
-        FileRecord.datastore_id == datastore_id
-    )
+    statement = select(FileRecord).where(FileRecord.filename == filename, FileRecord.datastore_id == datastore_id)
     file_record = session.exec(statement).first()
-
     if not file_record:
         raise HTTPException(status_code=404, detail="File not found in database")
 
-    # Resolve file path
-    project_root = Path(__file__).resolve().parent.parent.parent
-    file_path = project_root / "Data" / str(datastore.name) / filename
-
+    file_path = CONFIG["project_root"]/ CONFIG["datastore_data_folder"] / str(datastore.name) / filename
     if not file_path.exists():
         raise HTTPException(status_code=404, detail="File not found on disk")
 
     return FileResponse(
         path=file_path,
         filename=filename,
-        media_type=file_record.content_type or "application/octet-stream"
-        # media_type="application/octet-stream",
-        # headers={"Content-Disposition": f"attachment; filename={filename}"}
-
+        media_type=file_record.content_type or "application/octet-stream",
     )
+
 
 @router.delete("/datastores/{datastore_id}/files/{filename}")
 def delete_file(datastore_id: int, filename: str, session: Session = Depends(get_session)):
-    # 1. Validate datastore exists
     datastore = session.get(DataStore, datastore_id)
     if not datastore:
         raise HTTPException(status_code=404, detail="Datastore not found")
 
-    # 2. Validate file record exists in DB
-    statement = select(FileRecord).where(
-        FileRecord.filename == filename,
-        FileRecord.datastore_id == datastore_id
-    )
+    statement = select(FileRecord).where(FileRecord.filename == filename, FileRecord.datastore_id == datastore_id)
     file_record = session.exec(statement).first()
-
     if not file_record:
         raise HTTPException(status_code=404, detail="File not found in database")
 
-    # 3. Delete the physical file from disk
-    project_root = Path(__file__).resolve().parent.parent.parent
-    file_path = project_root / "Data" / str(datastore.name) / filename
-
+    file_path = CONFIG["project_root"]/ CONFIG["datastore_data_folder"] / str(datastore.name) / filename
     if file_path.exists():
         try:
             os.remove(file_path)
@@ -321,29 +237,90 @@ def delete_file(datastore_id: int, filename: str, session: Session = Depends(get
     else:
         raise HTTPException(status_code=404, detail="File not found on disk")
 
-    # 4. Delete the file record from DB
+
+    
+    # ✅ Delete QA pairs associated with this file (using DocumentRecord ID if available)
+    try:
+        # Try to find associated DocumentRecord
+        doc_record = session.exec(select(DocumentRecord).where(
+            DocumentRecord.filename == file_record.filename, 
+            DocumentRecord.datastore_id == datastore_id
+        )).first()
+
+        if doc_record:
+            deleted_doc_qa = delete_qna_by_document_id(session, doc_record.id)
+            print(f"[INFO] Deleted {deleted_doc_qa} QA pairs linked to document_id {doc_record.id}")
+
+            # Also delete the DocumentRecord itself if desired, or let cascade handle it?
+            # FileRecord deletion might not cascade to DocumentRecord if they are separate.
+            # Usually DocumentRecord is main pointer if created. 
+            session.delete(doc_record)
+        
+        # Fallback to FileID just in case
+        deleted_count = delete_qna_by_file(session, file_record.id)
+        if deleted_count > 0:
+            print(f"[INFO] Deleted {deleted_count} QA pairs for file_id {file_record.id}")
+            
+    except Exception as e:
+        print(f"[ERROR] Failed to delete QA pairs: {str(e)}")
+
     session.delete(file_record)
     session.commit()
-
     return {"detail": f"File '{filename}' deleted successfully"}
 
 
 @router.get("/datastores/{datastore_id}/files/{filename}/id")
 def get_file_id(datastore_id: int, filename: str, session: Session = Depends(get_session)):
-    # 1. Check if the datastore exists
+    print("In the API")
     datastore = session.get(DataStore, datastore_id)
     if not datastore:
         raise HTTPException(status_code=404, detail="Datastore not found")
 
-    # 2. Fetch the file record by filename and datastore_id
-    statement = select(FileRecord).where(
-        FileRecord.filename == filename,
-        FileRecord.datastore_id == datastore_id
-    )
+    statement = select(FileRecord).where(FileRecord.filename == filename, FileRecord.datastore_id == datastore_id)
     file_record = session.exec(statement).first()
-
     if not file_record:
         raise HTTPException(status_code=404, detail="File not found in database")
 
-    # 3. Return the file ID
     return {"file_id": file_record.id}
+
+@router.get("/datastores/{datastore_id}/files/{file_id}/name")
+def get_file_name(datastore_id: int, file_id: int, session: Session = Depends(get_session)):
+    """
+    Get the filename for a specific file_id in a datastore.
+    """
+    # Check if datastore exists
+    datastore = session.get(DataStore, datastore_id)
+    if not datastore:
+        raise HTTPException(status_code=404, detail="Datastore not found")
+
+    # Query file record
+    statement = select(FileRecord).where(
+        FileRecord.id == file_id,
+        FileRecord.datastore_id == datastore_id
+    )
+    file_record = session.exec(statement).first()
+    if not file_record:
+        raise HTTPException(status_code=404, detail="File not found in database")
+
+    return {"file_name": file_record.filename}
+
+@router.get("/datastores/{datastore_id}/documents/{document_id}/name")
+def get_document_name(datastore_id: int, document_id: int, session: Session = Depends(get_session)):
+    """
+    Get the filename for a specific document_id in a datastore.
+    """
+    # Check if datastore exists
+    datastore = session.get(DataStore, datastore_id)
+    if not datastore:
+        raise HTTPException(status_code=404, detail="Datastore not found")
+
+    # Query document record
+    statement = select(DocumentRecord).where(
+        DocumentRecord.id == document_id,
+        DocumentRecord.datastore_id == datastore_id
+    )
+    doc_record = session.exec(statement).first()
+    if not doc_record:
+        raise HTTPException(status_code=404, detail="Document not found in database")
+
+    return {"file_name": doc_record.filename}

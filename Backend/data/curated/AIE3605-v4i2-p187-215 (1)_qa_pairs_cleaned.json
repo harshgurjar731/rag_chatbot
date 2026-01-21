@@ -1,0 +1,108 @@
+{
+  "summary": "The article presents a systematic review of knowledge graphs (KGs), focusing on how they are classified and the diverse ways they are applied. It explains that KGs are directed, labeled graphs where nodes represent real\u2011world entities and edges encode their relationships, and discusses the historical evolution from early semantic networks to modern large\u2011scale KGs such as Google\u2019s Knowledge Graph, DBpedia, and Freebase. The review distinguishes KG classification along two axes: construction techniques (e.g., triplet vs. quadruplet representation, structured vs. unstructured data sources) and usage scenarios (e.g., information retrieval, semantic querying, recommendation, and data visualization). The authors argue that understanding these classifications is essential for tailoring KGs to specific application needs and highlight the growing importance of KGs in data\u2011driven AI systems.",
+  "qa_pairs": [
+    {
+      "question": "Who are the authors of the article?",
+      "answer": "Mst. Mim Akter and Md-Mizanur Rahoman.",
+      "rating": 9
+    },
+    {
+      "question": "Which department and university are the authors affiliated with?",
+      "answer": "Department of Computer Science and Engineering, Begum Rokeya University, Rangpur, Bangladesh.",
+      "rating": 9
+    },
+    {
+      "question": "What is the email address of the corresponding author?",
+      "answer": "mim.brur.bd@gmail.com.",
+      "rating": 9
+    },
+    {
+      "question": "When was the article received?",
+      "answer": "31 August 2023.",
+      "rating": 9
+    },
+    {
+      "question": "When was the article revised?",
+      "answer": "29 October 2023.",
+      "rating": 9
+    }
+  ],
+  "conversations": [
+    [
+      {
+        "role": "system",
+        "content": "You are a helpful AI assistant that provides accurate, detailed responses."
+      },
+      {
+        "role": "user",
+        "content": "Who are the authors of the article?"
+      },
+      {
+        "role": "assistant",
+        "content": "Mst. Mim Akter and Md-Mizanur Rahoman."
+      }
+    ],
+    [
+      {
+        "role": "system",
+        "content": "You are a helpful AI assistant that provides accurate, detailed responses."
+      },
+      {
+        "role": "user",
+        "content": "Which department and university are the authors affiliated with?"
+      },
+      {
+        "role": "assistant",
+        "content": "Department of Computer Science and Engineering, Begum Rokeya University, Rangpur, Bangladesh."
+      }
+    ],
+    [
+      {
+        "role": "system",
+        "content": "You are a helpful AI assistant that provides accurate, detailed responses."
+      },
+      {
+        "role": "user",
+        "content": "What is the email address of the corresponding author?"
+      },
+      {
+        "role": "assistant",
+        "content": "mim.brur.bd@gmail.com."
+      }
+    ],
+    [
+      {
+        "role": "system",
+        "content": "You are a helpful AI assistant that provides accurate, detailed responses."
+      },
+      {
+        "role": "user",
+        "content": "When was the article received?"
+      },
+      {
+        "role": "assistant",
+        "content": "31 August 2023."
+      }
+    ],
+    [
+      {
+        "role": "system",
+        "content": "You are a helpful AI assistant that provides accurate, detailed responses."
+      },
+      {
+        "role": "user",
+        "content": "When was the article revised?"
+      },
+      {
+        "role": "assistant",
+        "content": "29 October 2023."
+      }
+    ]
+  ],
+  "metrics": {
+    "total": 5,
+    "filtered": 5,
+    "retention_rate": 1.0,
+    "avg_score": 9.0
+  }
+}
