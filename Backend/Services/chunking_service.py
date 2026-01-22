@@ -1,9 +1,3 @@
-"""
-Service for chunking text documents into smaller pieces.
-
-This module provides functionality to split documents using various methods
-(character, recursive, markdown, token) and manage document loading/saving.
-"""
 
 from typing import List
 from langchain_core.documents import Document
@@ -17,28 +11,12 @@ from langchain_text_splitters import (
 )
 from config import CONFIG  # ✅ Use centralized config
 
-def load_docs_from_json(path: Path) -> List[Document]:
-    """
-    Loads documents from a JSON file.
-
-    Args:
-        path (Path): Path to the JSON file.
-
-    Returns:
-        List[Document]: A list of LangChain Document objects.
-    """
+def load_docs_from_json(path: Path):
     with open(path, "r", encoding="utf-8") as f:
         data = json.load(f)
     return [Document(page_content=d["content"], metadata=d["metadata"]) for d in data]
 
-def save_chunks_to_json(chunks: List[Document], output_path: Path):
-    """
-    Saves a list of document chunks to a JSON file.
-
-    Args:
-        chunks (List[Document]): List of document chunks to save.
-        output_path (Path): Destination path for the JSON file.
-    """
+def save_chunks_to_json(chunks: list[Document], output_path: Path):
     serializable = [
         {"content": chunk.page_content, "metadata": chunk.metadata}
         for chunk in chunks

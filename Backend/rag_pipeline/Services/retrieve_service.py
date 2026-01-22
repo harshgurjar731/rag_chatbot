@@ -36,15 +36,15 @@ async def retrieve_documents(
     # -----------------------------
     # Load defaults from config
     # -----------------------------
-    # query_optimizer = query_optimizer or CONFIG["default_query_optimizer"]
-    # embedding_model_name = embedding_model_name or CONFIG["default_embedding_model"]
-    # embedding_model_provider = 
-    # llm_model_name = llm_model_name or CONFIG["default_llm_model"]
-    # vector_db = vector_db or CONFIG["default_vector_db"]
-    # temperature = temperature if temperature is not None else CONFIG["default_temperature"]
-    # token_size = token_size or CONFIG["default_token_size"]
-    # guardrailOption = guardrailOption or CONFIG["default_guardrail_option"]
-    # rerankerOption = rerankerOption or CONFIG["default_reranker_option"]
+    query_optimizer = query_optimizer or CONFIG["default_query_optimizer"]
+    embedding_model_name = embedding_model_name or CONFIG["default_embedding_model"]
+    embedding_model_provider = embedding_model_provider or "HuggingFace"
+    llm_model_name = llm_model_name or CONFIG["default_llm_model"]
+    vector_db = vector_db or CONFIG["default_vector_db"]
+    temperature = temperature if temperature is not None else CONFIG["default_temperature"]
+    token_size = token_size or CONFIG["default_token_size"]
+    guardrailOption = guardrailOption or CONFIG["default_guardrail_option"]
+    rerankerOption = rerankerOption or CONFIG["default_reranker_option"]
 
     print("In retrieve service:",query, llm_model_name, temperature, token_size, sources, guardrailOption,  )
     print("Message_History", message_history)

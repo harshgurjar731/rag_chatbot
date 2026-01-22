@@ -16,13 +16,15 @@ def create_llm_model(provider: str, model_name: str, temperature: str, max_token
             temperature= temperature,
             max_tokens= max_tokens
         )
-    elif (provider.lower == "azureopenai"):
+    elif (provider.lower() == "azureopenai" or provider.lower() == "azure-openai"):
         print("Creating Azure OpenAI LLM")
         return AzureOpenAILLMModel().get_llm(
             model_name=model_name,
             temperature= temperature,
             max_tokens= max_tokens
         )
+    else:
+        raise ValueError(f"CRITICAL: Unsupported LLM Provider: '{provider}'")
     
 class GroqLLMModel(LLMModelsProtocol):
     def get_llm(self, model_name: str, temperature: float, max_tokens):

@@ -60,7 +60,7 @@ export const useChatbots = () => {
       const assistants = res.data;
 
       const fetchedDatastores = JSON.parse(localStorage.getItem("createdDataStores")
-        || "[]");
+            || "[]");
       console.log("Fetched List of Assistants", res.data)
       const list_chatbots: Chatbot[] = []
       // Step 2: Fetch files for each datastore
@@ -71,7 +71,7 @@ export const useChatbots = () => {
             `http://127.0.0.1:8000/ingestion/datastore/${assistant.datastore_id}/documents`
           );
           files = fileRes.data;
-
+         
 
         } catch (fileErr) {
           console.warn(`Failed to fetch files for datastore ${assistant.id}`, fileErr);
@@ -85,7 +85,7 @@ export const useChatbots = () => {
           documents: files.map((file) => file.filename),
           createdAt: new Date(assistant.created_at),
           datastoreId: assistant.datastore_id,
-          datastoreName: fetchedDatastore?.name || "Unknown Datastore"
+          datastoreName: fetchedDatastore.name
         };
       });
 
@@ -118,39 +118,39 @@ export const useChatbots = () => {
   //   return response.data;
   // };
 
-  //   const createChatbot = (data: CreateChatbotData): Chatbot => {
-  //   const newBot: Chatbot = {
-  //     id: crypto.randomUUID(),
-  //     name: data.name,
-  //     topic: data.topic,
-  //     // ✅ Handle multiple documents
-  //     documents: data.documents
-  //       ? data.documents.map((file) => file.name)
-  //       : [],
-  //     qna: [],
-  //     createdAt: new Date(),
-  //     updatedAt: new Date(),
-  //     icon: getRandomIcon(),
-  //     datastoreId: data.id,
-  //   };
+//   const createChatbot = (data: CreateChatbotData): Chatbot => {
+//   const newBot: Chatbot = {
+//     id: crypto.randomUUID(),
+//     name: data.name,
+//     topic: data.topic,
+//     // ✅ Handle multiple documents
+//     documents: data.documents
+//       ? data.documents.map((file) => file.name)
+//       : [],
+//     qna: [],
+//     createdAt: new Date(),
+//     updatedAt: new Date(),
+//     icon: getRandomIcon(),
+//     datastoreId: data.id,
+//   };
 
-  //   updateChatbotIdApiCall(newBot.datastoreId, newBot.id);
+//   updateChatbotIdApiCall(newBot.datastoreId, newBot.id);
 
-  //   const updated = [...chatbots, newBot];
-  //   saveChatbots(updated);
+//   const updated = [...chatbots, newBot];
+//   saveChatbots(updated);
 
-  //   return newBot;
-  // };
+//   return newBot;
+// };
 
 
-  const deleteChatbot = async (id: string) => {
+  const deleteChatbot = async(id: string) => {
     //To delete from DB.. Not handling local storage
     // const updated = chatbots.filter(bot => bot.id !== id);
     // saveChatbots(updated);
     try {
       const fileRes = await axios.post(`http://127.0.0.1:8000/rag/deleteAssistant/${id}`);
     } catch (error) {
-      console.warn(`Error while deleting chatbot ${id}`, error);
+        console.warn(`Error while deleting chatbot ${id}`, error);
     }
   };
 
@@ -269,7 +269,7 @@ export const useChatbots = () => {
   //     //   });
   //     // }
   //     // await new Promise((resolve) => setTimeout(resolve, 5000));
-
+      
   //     // await triggerEmbedding(bot.datastoreId, fileId);
 
   //     updateChatbot(id, { documents: updatedDocuments });

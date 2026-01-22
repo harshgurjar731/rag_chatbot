@@ -1,9 +1,3 @@
-"""
-Service for generating and managing text embeddings.
-
-This module helps in loading document chunks, generating embeddings using
-HuggingFace models, and storing them in vector databases (FAISS/Chroma).
-"""
 from sentence_transformers import SentenceTransformer
 #from langchain.vectorstores import FAISS, Chroma
 #from langchain.embeddings import HuggingFaceEmbeddings
@@ -151,20 +145,6 @@ def delete_vector_store(file_id: int, vector_db: str) -> None:
 
 
 def check_embeddings_status(file_id: int, vector_db: str, model_name: str):
-    """
-    Checks the status of embeddings for a given file.
-
-    Args:
-        file_id (int): The ID of the file to check.
-        vector_db (str): The type of vector database ("faiss" or "chroma").
-        model_name (str): The name of the embedding model used.
-
-    Returns:
-        dict: A dictionary containing the vector DB type and the count of vectors.
-
-    Raises:
-        HTTPException: If the vector DB type is unsupported.
-    """
     embedding = HuggingFaceEmbeddings(model_name=model_name)
 
     if vector_db == "faiss":

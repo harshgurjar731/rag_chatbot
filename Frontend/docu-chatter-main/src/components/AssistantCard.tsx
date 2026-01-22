@@ -19,15 +19,15 @@ export const AssistantCard = ({ chatbot, onClick, className }: ChatbotCardProps)
   };
 
   return (
-    <Card
+    <Card 
       className="group hover:shadow-elegant transition-all duration-300 hover:scale-[1.02] cursor-pointer"
       onClick={handleCardClick}
     >
       <CardHeader className="pb-3">
         <div className="flex items-center justify-between">
           <CardTitle className="text-lg font-semibold">{chatbot.name}</CardTitle>
-          <Badge variant="default" className="bg-success text-success-foreground">
-            Active
+          <Badge variant={status === "Active" ? "default" : "secondary"} className="bg-success text-success-foreground">
+            {status}
           </Badge>
         </div>
       </CardHeader>
@@ -39,17 +39,17 @@ export const AssistantCard = ({ chatbot, onClick, className }: ChatbotCardProps)
               {chatbot.documents.length} documents
             </span>
           </div>
-          {/* <div className="flex items-center space-x-2">
+          <div className="flex items-center space-x-2">
             <MessageSquare className="h-4 w-4 text-muted-foreground" />
             <span className="text-sm text-muted-foreground">
-              {chatbot.qna.length} Q&A
+              {/* {chatbot.qna.length} Q&A */}
             </span>
-          </div> */}
+          </div>
         </div>
-
+        
         <div className="flex items-center space-x-2 text-sm text-muted-foreground">
           <Clock className="h-4 w-4" />
-          <span>Created {chatbot.createdAt.toLocaleDateString()}</span>
+          {/* <span>Updated {chatbot.updatedAt.toLocaleDateString()}</span> */}
         </div>
       </CardContent>
     </Card>

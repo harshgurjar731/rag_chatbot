@@ -1,9 +1,3 @@
-"""
-Service for re-ranking retrieved documents.
-
-This module provides implementations for Cross-Encoder, Bi-Encoder, and LLM-based
-re-rankers to improve search result relevance.
-"""
 from typing import List, Tuple
 from sentence_transformers import CrossEncoder, SentenceTransformer, util
 from langchain_community.chat_models import ChatOpenAI
@@ -17,30 +11,10 @@ from config import CONFIG
 # Cross-encoder Re-ranker
 # -----------------------------
 class CrossEncoderReranker:
-    """
-    Reranker using a Cross-Encoder model.
-    """
     def __init__(self, model_name: str = CONFIG["cross_encoder_model"]):
-        """
-        Initializes the CrossEncoderReranker.
-
-        Args:
-            model_name (str): Name of the Cross-Encoder model.
-        """
         self.model = CrossEncoder(model_name)
 
     def rerank(self, query: str, docs: List[str], top_k: int = CONFIG["default_reranker_top_k"]) -> List[Tuple[str, float]]:
-        """
-        Reranks documents based on the query using the Cross-Encoder model.
-
-        Args:
-            query (str): The search query.
-            docs (List[str]): List of document strings to rerank.
-            top_k (int): Number of top results to return.
-
-        Returns:
-            List[Tuple[str, float]]: List of (document, score) tuples.
-        """
         pairs = [[query, doc] for doc in docs]
         scores = self.model.predict(pairs)
         ranked = sorted(zip(docs, scores), key=lambda x: x[1], reverse=True)
@@ -51,30 +25,10 @@ class CrossEncoderReranker:
 # Bi-encoder Re-ranker
 # -----------------------------
 class BiEncoderReranker:
-    """
-    Reranker using a Bi-Encoder model.
-    """
     def __init__(self, model_name: str = CONFIG["bi_encoder_model"]):
-        """
-        Initializes the BiEncoderReranker.
-
-        Args:
-            model_name (str): Name of the Bi-Encoder model.
-        """
         self.model = SentenceTransformer(model_name)
 
     def rerank(self, query: str, docs: List[str], top_k: int = CONFIG["default_reranker_top_k"]) -> List[Tuple[str, float]]:
-        """
-        Reranks documents based on the query using the Bi-Encoder model (Cosine Similarity).
-
-        Args:
-            query (str): The search query.
-            docs (List[str]): List of document strings to rerank.
-            top_k (int): Number of top results to return.
-
-        Returns:
-            List[Tuple[str, float]]: List of (document, score) tuples.
-        """
         query_emb = self.model.encode(query, convert_to_tensor=True)
         doc_embs = self.model.encode(docs, convert_to_tensor=True)
         scores = util.pytorch_cos_sim(query_emb, doc_embs)[0]

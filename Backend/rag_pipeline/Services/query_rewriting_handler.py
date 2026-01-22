@@ -29,6 +29,8 @@ def handle_chunk_union(
         return _get_unique_union(retrieved_chunks)
     elif (rewritingType.lower() == "ragfusion"):
         return _reciprocal_rank_fusion(retrieved_chunks, RAG_CONFIG["default_ragfusion_rrf_k"])
+    else:
+        return _get_unique_union(retrieved_chunks)
     
 
 def multiquery_generator(

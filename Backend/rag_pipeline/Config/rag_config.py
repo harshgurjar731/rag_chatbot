@@ -18,12 +18,12 @@ RAG_CONFIG = {
     "default_guardrail_type": os.getenv("DEFAULT_GUARDRAIL_TYPE", "None"),
 
      #Azure Open AI configs
-    "AZURE_OPENAI_ENDPOINT": "https://rupalitest.openai.azure.com/",
-    "AZURE_OPENAI_API_KEY": "GHjMpAUMjqSYSuVPp4oHkI1bhAAsWQlihigch0uTWxoCI0kdRhQdJQQJ99BKACYeBjFXJ3w3AAABACOGu0tn",
-    "AZURE_OPENAI_API_VERSION": "2024-02-01",
+    "AZURE_OPENAI_ENDPOINT": "https://knowledgesynthesis.openai.azure.com/",
+    "AZURE_OPENAI_API_KEY": "239wAP9aB98yqPnlsfsIJEyUhYLq7dW254TkygU4q7w7swGzqMhbJQQJ99BLACYeBjFXJ3w3AAABACOGJ103",
+    "AZURE_OPENAI_API_VERSION": "2025-01-01-preview",
 
     #GROQ OPEN AI configs
-    "GROQ_API_KEY": "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",
+    "GROQ_API_KEY": "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",
     "GROQ_API_BASE": "https://api.groq.com/openai/v1",
 
     "default_conversation_history_count": int(os.getenv("DEFAULT_CONVERSATION_HISTORY_COUNT", "10")),

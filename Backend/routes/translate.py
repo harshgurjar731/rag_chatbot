@@ -1,8 +1,3 @@
-"""
-API route for text translation.
-
-This module provides a simple endpoint to translate text using the Google Translate API.
-"""
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 from deep_translator import GoogleTranslator

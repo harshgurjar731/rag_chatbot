@@ -149,7 +149,6 @@ export const ChatInterface = ({
           ...msg,
           timestamp: new Date(msg.timestamp),
           traceId: msg.traceId || "",
-          spanId: msg.spanId || "",
           Citation: msg.Citation || [],
         }));
       } catch (err) {
@@ -519,7 +518,6 @@ export const ChatInterface = ({
         isUser: false,
         timestamp: new Date(),
         traceId: response["traceId"],
-        spanId: response["spanId"],
         Citation: grouped_citations || [],
         images: response["images"],
       };
@@ -651,11 +649,31 @@ export const ChatInterface = ({
 
   useEffect(() => {
     if (!chatbot?.id) return;
-    const saved = localStorage.getItem(`model-settings-${chatbot.id}`);
-    if (saved) {
-      setTempSettings(JSON.parse(saved));
-    }
-  }, [chatbot?.id]);
+    const fetchSettings = async () => {
+      try {
+        const res = await axios.get(`${config?.base_url}/rag/settings/${chatbot.id}`);
+        if (res.data) {
+          const s = res.data;
+          setTempSettings(prev => ({
+            ...prev,
+            llmModel: s.llm_model || prev.llmModel,
+            llmProvider: s.llm_provider || prev.llmProvider,
+            temperature: s.temperature ?? prev.temperature,
+            tokenSize: s.max_tokens || prev.tokenSize,
+            rerankerOption: s.reranker_type || prev.rerankerOption,
+            optimizer: s.query_optimizer || prev.optimizer,
+            guardrailOption: s.guardrail_type || prev.guardrailOption,
+            vectorDb: s.vector_db || prev.vectorDb,
+            embeddingModel: s.embedding_model || prev.embeddingModel,
+            // showSources doesn't seem to be in ChatbotSettings?
+          }));
+        }
+      } catch (err) {
+        console.error("Failed to fetch settings:", err);
+      }
+    };
+    fetchSettings();
+  }, [chatbot?.id, config?.base_url]);
 
   const viewDocument = async (doc_name: string) => {
     try {
@@ -680,17 +698,16 @@ export const ChatInterface = ({
       console.error("Error viewing file:", error);
     }
   };
-  const handleSave = (overrides: Partial<typeof tempSettings> = {}) => {
+  const handleSave = async (overrides: Partial<typeof tempSettings> = {}) => {
     const settings = { ...tempSettings, ...overrides };
     try {
-      localStorage.setItem(
-        `model-settings-${chatbot.id}`,
-        JSON.stringify(settings)
-      );
+      await axios.post(`${config?.base_url}/rag/settings/${chatbot.id}`, settings);
       setTempSettings(settings);
       setOpen(false);
+      toast({ title: "Settings Saved", description: "Chatbot configuration updated." });
     } catch (err) {
       console.error("Error saving settings:", err);
+      toast({ title: "Error", description: "Failed to save settings.", variant: "destructive" });
     }
   };
 
@@ -756,9 +773,8 @@ export const ChatInterface = ({
       return;
     }
     try {
-      await axios.post(`${config.base_url}/rag/feedback`, {
+      await axios.post(`${config.base_url}/feedback`, {
         trace_id: message.traceId,
-        span_id: message.spanId || "",
         feedback: feedback,
       });
       toast({
@@ -894,24 +910,26 @@ export const ChatInterface = ({
                               </span>
 
                               <div className="flex items-center gap-2">
-                                <Button
-                                  size="icon"
-                                  variant="ghost"
-                                  className="h-6 w-6 rounded-full text-[11px] border border-border/40 text-muted-foreground hover:bg-muted/70 transition-colors"
-                                  onClick={() => toggleSpeech(message.content)}
-                                >
-                                  {isSpeaking ? (
-                                    <VolumeX size={14} />
-                                  ) : (
-                                    <Volume2 size={14} />
-                                  )}
-                                </Button>
+                                {/* 
+                            <Button
+                              size="icon"
+                              variant="ghost"
+                              className="h-6 w-6 rounded-full text-[11px] border border-border/40 text-muted-foreground hover:bg-muted/70 transition-colors"
+                              onClick={() => toggleSpeech(message.content)}
+                            >
+                              {isSpeaking ? (
+                                <VolumeX size={14} />
+                              ) : (
+                                <Volume2 size={14} />
+                              )}
+                            </Button>
+                             */}
 
                                 <Button
                                   size="icon"
                                   variant="ghost"
                                   className="h-6 w-6 rounded-full text-[11px] border border-border/40 text-green-500 hover:bg-muted/70 transition-colors"
-                                  onClick={() => onFeedback(message.id, "Positive")}
+                                  onClick={() => onFeedback(message.id, "thumbs_up")}
                                 >
                                   <ThumbsUp size={14} />
                                 </Button>
@@ -921,52 +939,54 @@ export const ChatInterface = ({
                                   size="icon"
                                   variant="ghost"
                                   className="h-6 w-6 rounded-full text-[11px] border border-border/40 text-red-500 hover:bg-muted/70 transition-colors"
-                                  onClick={() => onFeedback(message.id, "Negative")}
+                                  onClick={() => onFeedback(message.id, "thumbs_down")}
                                 >
                                   <ThumbsDown size={14} />
                                 </Button>
 
 
-                                <Popover
-                                  open={openPopoverId === message.id}
-                                  onOpenChange={(isOpen) =>
-                                    setOpenPopoverId(isOpen ? message.id : null)
-                                  }
+                                {/* 
+                            <Popover
+                              open={openPopoverId === message.id}
+                              onOpenChange={(isOpen) =>
+                                setOpenPopoverId(isOpen ? message.id : null)
+                              }
+                            >
+                              <PopoverTrigger asChild>
+                                <Button
+                                  size="icon"
+                                  variant="ghost"
+                                  className="h-6 w-6 rounded-full text-[11px] border border-border/40 text-blue-500 hover:bg-muted/70 transition-colors"
                                 >
-                                  <PopoverTrigger asChild>
-                                    <Button
-                                      size="icon"
-                                      variant="ghost"
-                                      className="h-6 w-6 rounded-full text-[11px] border border-border/40 text-blue-500 hover:bg-muted/70 transition-colors"
-                                    >
-                                      <Info size={14} />
-                                    </Button>
-
-                                  </PopoverTrigger>
-                                  <PopoverContent className="w-64">
-                                    <div className="space-y-2">
-                                      <Label htmlFor={`comment-${message.id}`}>
-                                        Comment
-                                      </Label>
-                                      <Input
-                                        id={`comment-${message.id}`}
-                                        placeholder="Enter your feedback"
-                                        value={comment}
-                                        onChange={(e) => setComment(e.target.value)}
-                                      />
-                                      <Button
-                                        size="sm"
-                                        className="w-full"
-                                        onClick={() =>
-                                          handleCommentSubmit(message.id)
-                                        }
-                                      >
-                                        Submit
-                                      </Button>
-
-                                    </div>
-                                  </PopoverContent>
-                                </Popover>
+                                  <Info size={14} />
+                                </Button>
+                               
+                              </PopoverTrigger>
+                              <PopoverContent className="w-64">
+                                <div className="space-y-2">
+                                  <Label htmlFor={`comment-${message.id}`}>
+                                    Comment
+                                  </Label>
+                                  <Input
+                                    id={`comment-${message.id}`}
+                                    placeholder="Enter your feedback"
+                                    value={comment}
+                                    onChange={(e) => setComment(e.target.value)}
+                                  />
+                                  <Button
+                                    size="sm"
+                                    className="w-full"
+                                    onClick={() =>
+                                      handleCommentSubmit(message.id)
+                                    }
+                                  >
+                                    Submit
+                                  </Button>
+                                 
+                                </div>
+                              </PopoverContent>
+                            </Popover>
+                              */}
                                 <DropdownMenu>
                                   <DropdownMenuTrigger asChild>
                                     <Button
@@ -1404,7 +1424,7 @@ export const ChatInterface = ({
                 <Button variant="outline" onClick={handleCancel}>
                   Cancel
                 </Button>
-                <Button onClick={handleSave}>Save Settings</Button>
+                <Button onClick={() => handleSave()}>Save Settings</Button>
               </div>
             </TabsContent>
           </Tabs>

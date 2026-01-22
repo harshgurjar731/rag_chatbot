@@ -1,9 +1,3 @@
-"""
-API routes for embedding operations.
-
-This module provides endpoints to generate, check, and delete embeddings
-for documents in the vector store.
-"""
 # rag_app/backend/routes/embeddings.py
 from fastapi import APIRouter, Query, HTTPException, Depends
 from Services.embedding_service import embed_and_store, check_embeddings_status, delete_vector_store
@@ -25,22 +19,6 @@ def store_embeddings(
     vector_db: str = Query(CONFIG["default_vector_db"], description="Vector DB name"),
     session: Session = Depends(get_session),
 ):
-    """
-    Generate and store embeddings for a file.
-
-    Args:
-        datastore_id (int): ID of the datastore.
-        file_id (int): ID of the file.
-        model_name (str, optional): Embedding model to use.
-        vector_db (str, optional): Vector database to use ('faiss' or 'chroma').
-        session (Session): Database session.
-
-    Returns:
-        dict: Status and vector DB type.
-
-    Raises:
-        HTTPException: If file/datastore not found or embedding fails.
-    """
     # 1️⃣ Validate file
     file = session.get(FileRecord, file_id)
     if not file or file.datastore_id != datastore_id:
@@ -76,17 +54,6 @@ def check_embeddings(
     model_name: str = Query(CONFIG["default_embedding_model"], description="Embedding model"),
     vector_db: str = Query(CONFIG["default_vector_db"], description="Vector DB name"),
 ):
-    """
-    Check the status of embeddings for a file.
-
-    Args:
-        file_id (int): ID of the file.
-        model_name (str, optional): Embedding model name.
-        vector_db (str, optional): Vector DB name.
-
-    Returns:
-        dict: Vector count and status info.
-    """
     try:
         result = check_embeddings_status(file_id, vector_db, model_name)
         return result
@@ -101,21 +68,6 @@ def delete_vectors_for_file(
     vector_db: str = Query(CONFIG["default_vector_db"], description="Vector DB name"),
     session: Session = Depends(get_session),
 ):
-    """
-    Delete stored vectors for a file.
-
-    Args:
-        datastore_id (int): ID of the datastore.
-        file_id (int): ID of the file.
-        vector_db (str, optional): Vector DB name.
-        session (Session): Database session.
-
-    Returns:
-        dict: Success message.
-
-    Raises:
-        HTTPException: If file not found or deletion fails.
-    """
     # 1️⃣ Validate file
     file = session.get(FileRecord, file_id)
     if not file or file.datastore_id != datastore_id:
