@@ -93,6 +93,7 @@ RUN uv pip install --system sqlmodel
 RUN uv pip install --system python-dotenv
 RUN uv pip install --system aiofiles
 RUN uv pip install --system requests
+RUN uv pip install --system flask
 RUN uv pip install --system langchain
 RUN uv pip install --system langchain-core
 RUN uv pip install --system langchain-community

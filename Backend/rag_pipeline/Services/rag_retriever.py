@@ -13,7 +13,6 @@ from langchain_core.documents import Document
 from langchain_community.vectorstores import FAISS, Chroma
 from langchain_core.load import dumps, loads
 
-from Services.guardrail import validate_output
 from Services.reranker_service import get_reranker
 from utils.llm_factory import LLMFactory
 from config import CONFIG

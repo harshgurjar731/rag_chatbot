@@ -11,7 +11,6 @@ from langchain_core.documents import Document
 from langchain_community.vectorstores import FAISS, Chroma
 from langchain_core.load import dumps, loads
 
-from Services.guardrail import validate_output
 from Services.reranker_service import get_reranker
 from utils.llm_factory import LLMFactory
 from config import CONFIG
@@ -87,9 +86,10 @@ class UnifiedRAGPipeline:
         final_answer = final_rag_chain.invoke({"question": query})
 
         # Apply guardrails
-        validated = validate_output(final_answer, self.guardrail_level)
-        if "⚠️ Response blocked" in validated["answer"]:
-            return validated
+        # validated = validate_output(final_answer, self.guardrail_level)
+        # if "⚠️ Response blocked" in validated["answer"]:
+        #     return validated
+        validated = {"answer": final_answer}
 
         # Prepare final response based on include_sources
         if include_sources:

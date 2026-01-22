@@ -82,7 +82,6 @@
 
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.output_parsers import StrOutputParser
-from Services.guardrail import validate_output  
 from config import CONFIG
 from utils.llm_factory import LLMFactory  # ✅ Import our dynamic LLMFactory
 
@@ -136,12 +135,13 @@ def get_llm_answer(
     # Raw LLM output
     final_answer = chatbot_chain.invoke({"question": query})
 
-    # ✅ Apply guardrails
-    validated = validate_output(final_answer, guardrail_level)
-    if "⚠️ Response blocked" in validated["answer"]:
-        return validated
+    # ✅ Apply guardrails (Removed)
+    # validated = validate_output(final_answer, guardrail_level)
+    # if "⚠️ Response blocked" in validated["answer"]:
+    #     return validated
 
-    final_answer = validated["answer"]
+    # final_answer = validated["answer"]
+    pass
 
     # ✅ Handle sources
     if include_sources and "Sources:" in final_answer:

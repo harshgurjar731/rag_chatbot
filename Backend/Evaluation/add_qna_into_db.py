@@ -92,8 +92,9 @@ def insert_qna_for_datastore(session: Session, datastore_id: int):
         return 0
 
 
-# Build the dynamic path (points to Data folder inside project)
-    output_dir = Path(f"../Data/{datastore.name}")
+    # Build the dynamic path (points to Data folder inside project)
+    data_folder = Path(CONFIG["project_root"]) / CONFIG["datastore_data_folder"]
+    output_dir = data_folder / datastore.name
     output_dir.mkdir(parents=True, exist_ok=True)  # Ensure the directory exists
 
     for file in files:
@@ -126,11 +127,9 @@ def insert_qna_for_datastore(session: Session, datastore_id: int):
                 # If load fails, fall through to regenerate
 
         # Construct input file path
-        # Prefer the stored filePath if available and valid
-        if file.filePath and os.path.exists(file.filePath):
-            file_path = Path(file.filePath)
-        else:
-             file_path = Path(CONFIG["project_root"]) / CONFIG["datastore_data_folder"] / datastore.name / file.filename
+        # Construct input file path
+        # Always use the standardized path based on container config, ignoring legacy DB paths
+        file_path = Path(CONFIG["project_root"]) / CONFIG["datastore_data_folder"] / datastore.name / file.filename
         
         print(f"[INFO] Processing file: {file_path}")
 

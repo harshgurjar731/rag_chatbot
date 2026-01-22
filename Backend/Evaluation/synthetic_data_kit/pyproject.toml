@@ -20,7 +20,8 @@ dependencies = [
     "uvicorn",
     "jinja2",
     "langchain",
-    "openai"
+    "openai",
+    "flask"
 ]
 
 [tool.setuptools]
