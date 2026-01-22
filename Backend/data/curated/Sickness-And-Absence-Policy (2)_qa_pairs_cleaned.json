@@ -1,0 +1,51 @@
+{
+  "summary": "The Sickness and Absence Policy outlines the procedures and responsibilities for managing employee absences due to sickness. It emphasizes the importance of timely notification from employees regarding their absence, the requirement for certification of sickness, and the need for ongoing communication during extended absences. The policy also addresses long-term and persistent absences, detailing the company's approach to managing such cases, including potential adjustments to work arrangements and the handling of medical information in compliance with data protection laws. Additionally, it specifies the protocol for employees who fall ill during pre-booked holidays, allowing for the possibility of rescheduling their leave.",
+  "qa_pairs": [
+    {
+      "question": "What is the purpose of the Sickness and Absence Policy?",
+      "answer": "This policy is designed to assist the Company in effectively managing sickness-related and other staff absence.",
+      "rating": 9
+    },
+    {
+      "question": "How should employees notify the Company of their sickness absence?",
+      "answer": "If an employee is unable to come to work for any reason, they must inform the Company by contacting [insert job title] at least [insert amount of time] before the time they would normally be due to start work on the first day of absence.",
+      "rating": 7
+    }
+  ],
+  "conversations": [
+    [
+      {
+        "role": "system",
+        "content": "You are a helpful AI assistant that provides accurate, detailed responses."
+      },
+      {
+        "role": "user",
+        "content": "What is the purpose of the Sickness and Absence Policy?"
+      },
+      {
+        "role": "assistant",
+        "content": "This policy is designed to assist the Company in effectively managing sickness-related and other staff absence."
+      }
+    ],
+    [
+      {
+        "role": "system",
+        "content": "You are a helpful AI assistant that provides accurate, detailed responses."
+      },
+      {
+        "role": "user",
+        "content": "How should employees notify the Company of their sickness absence?"
+      },
+      {
+        "role": "assistant",
+        "content": "If an employee is unable to come to work for any reason, they must inform the Company by contacting [insert job title] at least [insert amount of time] before the time they would normally be due to start work on the first day of absence."
+      }
+    ]
+  ],
+  "metrics": {
+    "total": 2,
+    "filtered": 2,
+    "retention_rate": 1.0,
+    "avg_score": 8.0
+  }
+}

@@ -19,7 +19,9 @@ import urllib.parse
 
 
 
+
 router = APIRouter()
+router_root = APIRouter()
 
 @router.post("/datastore/{datastore_id}/upload", response_model=List[DocumentRecord])
 async def upload_files_to_datastore(
@@ -201,3 +203,22 @@ async def delete_document(
         session.rollback()
         print(f"Error deleting document: {e}")
         raise HTTPException(status_code=500, detail=f"Failed to delete document: {str(e)}")
+
+
+@router_root.get("/datastores/{datastore_id}/documents/{document_id}/name")
+async def get_document_name(
+    datastore_id: int,
+    document_id: int,
+    session: Session = Depends(get_session)
+):
+    document = session.exec(
+        select(DocumentRecord).where(
+            (DocumentRecord.id == document_id) & 
+            (DocumentRecord.datastore_id == datastore_id)
+        )
+    ).first()
+
+    if not document:
+        raise HTTPException(status_code=404, detail="Document not found")
+
+    return {"name": document.filename}

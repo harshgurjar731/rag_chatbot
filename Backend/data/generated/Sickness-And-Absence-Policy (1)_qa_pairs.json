@@ -1,0 +1,13 @@
+{
+  "summary": "The Sickness and Absence Policy outlines the procedures and responsibilities for managing employee absences due to illness. It emphasizes the importance of timely notification by employees regarding their absence, requiring them to inform their manager directly and provide details about the illness. The policy also specifies the need for certification of sickness through self-certification forms or medical certificates, particularly for long-term absences. Additionally, it addresses the handling of sensitive health information in compliance with data protection laws and outlines the company's approach to long-term and persistent absences, including potential adjustments to facilitate a return to work. Lastly, it includes provisions for employees who fall ill during pre-booked holidays, allowing for the transfer of sick leave to a later date under certain conditions.",
+  "qa_pairs": [
+    {
+      "question": "What is the purpose of the Sickness and Absence Policy?",
+      "answer": "This policy is designed to assist the Company in effectively managing sickness-related and other staff absence."
+    },
+    {
+      "question": "How should employees notify the Company of their sickness absence?",
+      "answer": "Employees must inform the Company by contacting [insert job title] at least [insert amount of time] before the time they would normally be due to start work on the first day of absence."
+    }
+  ]
+}

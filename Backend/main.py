@@ -42,7 +42,7 @@ from database import init_db, list_tables, list_tables_content, list_file_conten
 from routes import translate, frontend_config, evaluation, feedback, chatbot_settings
 import requests
 from ingestion_pipleline.ingestion_datastore_router import router as ingestion_datastore_router
-from ingestion_pipleline.ingestion_document_loader_router import router as ingestion_document_router
+from ingestion_pipleline.ingestion_document_loader_router import router as ingestion_document_router, router_root as ingestion_document_root_router
 from ingestion_pipleline.ingestion_chunks_router import router as ingestion_chunking_router
 from rag_pipeline.rag_router import router as rag_knowledge_asst_router
 
@@ -71,6 +71,7 @@ app.include_router(feedback.router, prefix="")
 
 app.include_router(ingestion_datastore_router, prefix="/ingestion")
 app.include_router(ingestion_document_router, prefix="/ingestion")
+app.include_router(ingestion_document_root_router, prefix="")
 app.include_router(ingestion_chunking_router, prefix="/ingestion")
 
 app.include_router(rag_knowledge_asst_router, prefix="/rag")
