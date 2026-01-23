@@ -12,7 +12,7 @@ import json
 from rag_pipeline.rag_models import CreateAssitantRequest, KnowledgeAssistantResponse, ChatInterfaceDetails, FeedbackRequest
 
 from rag_pipeline.Config.rag_config import RAG_CONFIG
-from rag_pipeline.Services.retrieve_service import retrieve_documents
+# from rag_pipeline.Services.retrieve_service import retrieve_documents
 
 from opentelemetry import trace
 import requests
@@ -289,38 +289,38 @@ async def retrieve(
     #     # For non-ChromaDB providers, pass the list as-is (or handle differently if needed)
     #     final_selected_documents = data.selected_documents if data.selected_documents else []
 
-    # # Manually start a span since FastAPI instrumentation might be missing or incomplete
+     # # Manually start a span since FastAPI instrumentation might be missing or incomplete
     # tracer = trace.get_tracer(__name__)
     # with tracer.start_as_current_span("rag_query_handler") as span:
-    #     results_object = await retrieve_documents(
-    #         query,
-    #         search_image=data.search_image,
-    #         message_history=data.messages,
-    #         selected_documents= final_selected_documents,
-    #         use_knowledge_base=use_knowledge_base,
-    #         query_optimizer= query_rewriting_type,
-    #         embedding_model_name= datastore.embedding_model,
-    #         embedding_model_provider= datastore.embedding_provider,
-    #         llm_model_name= llm_model_name,
-    #         llm_model_provider= llm_model_provider,
-    #         temperature = temperature,
-    #         vector_db = datastore.vector_store_provider,
-    #         token_size= max_token,
-    #         sources= use_citation,
-    #         guardrailOption= guardrail_type,
-    #         rerankerOption= reranker_type,
-    #         datastore_id= datastore_id,
-    #         is_vision_search= is_vision_search,
-    #     )
+    #     # results_object = await retrieve_documents(
+    #     #     query,
+    #     #     search_image=data.search_image,
+    #     #     message_history=data.messages,
+    #     #     selected_documents= final_selected_documents,
+    #     #     use_knowledge_base=use_knowledge_base,
+    #     #     query_optimizer= query_rewriting_type,
+    #     #     embedding_model_name= datastore.embedding_model,
+    #     #     embedding_model_provider= datastore.embedding_provider,
+    #     #     llm_model_name= llm_model_name,
+    #     #     llm_model_provider= llm_model_provider,
+    #     #     temperature = temperature,
+    #     #     vector_db = datastore.vector_store_provider,
+    #     #     token_size= max_token,
+    #     #     sources= use_citation,
+    #     #     guardrailOption= guardrail_type,
+    #     #     rerankerOption= reranker_type,
+    #     #     datastore_id= datastore_id,
+    #     #     is_vision_search= is_vision_search,
+    #     # )
         
     #     # Set attributes for Phoenix to display Input/Output
     #     span.set_attribute("input.value", query)
-    #     if isinstance(results_object, dict):
-    #         # Try to grab just the answer if possible, or dump the whole thing
-    #         answer_content = results_object.get("answer", str(results_object))
-    #         span.set_attribute("output.value", answer_content)
-    #     else:
-    #         span.set_attribute("output.value", str(results_object))
+    #     # if isinstance(results_object, dict):
+    #     #     # Try to grab just the answer if possible, or dump the whole thing
+    #     #     answer_content = results_object.get("answer", str(results_object))
+    #     #     span.set_attribute("output.value", answer_content)
+    #     # else:
+    #     #     span.set_attribute("output.value", str(results_object))
 
     #     # Get the traceId to send back to the frontend for the feedback feature.
     #     # current_span = trace.get_current_span() # Should be 'span'
@@ -336,14 +336,14 @@ async def retrieve(
     #         print(f"⚠️ WARNING: Could not find a valid span context. Using generated UUID as trace_id: {trace_id}")
 
     #     # return {"answer": final_answer, "traceId": trace_id,"citations": results_object.get("document_pages_dict", [])}
-    #     if isinstance(results_object, dict):
-    #         results_object["traceId"] = trace_id
-    #         results_object["spanId"] = span_id # Sending spanId
-    #     elif isinstance(results_object, str):
-    #         # If it's just a string, we might need to change implementation of retrieve_documents or wrap it
-    #         pass
+    #     # if isinstance(results_object, dict):
+    #     #     results_object["traceId"] = trace_id
+    #     #     results_object["spanId"] = span_id # Sending spanId
+    #     # elif isinstance(results_object, str):
+    #     #     # If it's just a string, we might need to change implementation of retrieve_documents or wrap it
+    #     #     pass
 
-    #     return results_object
+    #     # return results_object
 
 
 @router.post("/feedback")
