@@ -15,6 +15,12 @@ import sys
 from sqlmodel import create_engine, Session, select
 from opentelemetry import trace
 from phoenix.otel import register
+from dotenv import load_dotenv
+
+# Load environment variables from Backend .env
+# This ensures we get DB_HOST=localhost etc. when running locally
+backend_env_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "../Backend/.env")
+load_dotenv(backend_env_path)
 
 # Ensure we can import from Backend
 # transform path to include root rag_chatbot folder if running from there
@@ -31,7 +37,10 @@ from rag_pipeline.rag_models import Message
 BOT_NAME = os.getenv("BOT_NAME", "default")
 BOT_ID = os.getenv("BOT_ID", "-1")
 DATASTORE_ID = os.getenv("DATASTORE_ID", "-1")
-REDIS_HOST = os.getenv("REDIS_HOST", "redis")
+BOT_ID = os.getenv("BOT_ID", "-1")
+DATASTORE_ID = os.getenv("DATASTORE_ID", "-1")
+# REDIS_HOST = os.getenv("REDIS_HOST", "redis")
+REDIS_HOST = os.getenv("REDIS_HOST", "localhost")
 
 print(f'BOT_NAME = {BOT_NAME}')
 print(f'BOT_ID = {BOT_ID}')
@@ -44,7 +53,8 @@ r = redis.Redis(host=REDIS_HOST, port=6379, db=0, decode_responses=True)
 # Database Setup
 user = os.getenv("DB_USER", "user")
 password = os.getenv("DB_PASSWORD", "password")
-host = os.getenv("DB_HOST", "db")
+# host = os.getenv("DB_HOST", "db")
+host = os.getenv("DB_HOST", "localhost")
 dbname = os.getenv("DB_NAME", "chatbot_db")
 DATABASE_URL = f"postgresql://{user}:{password}@{host}/{dbname}"
 engine = create_engine(DATABASE_URL)

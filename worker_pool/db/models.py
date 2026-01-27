@@ -35,7 +35,8 @@ class WorkerPool(Base):
 def get_db_url():
     user = os.getenv("DB_USER", "user")
     password = os.getenv("DB_PASSWORD", "password")
-    host = os.getenv("DB_HOST", "db")
+    # host = os.getenv("DB_HOST", "db")
+    host = os.getenv("DB_HOST", "localhost")
     dbname = os.getenv("DB_NAME", "chatbot_db")
     return f"postgresql://{user}:{password}@{host}/{dbname}"
 

@@ -17,9 +17,16 @@ from sqlalchemy.orm import Session
 from db.models import init_db, Bot, BotStatus, WorkerPool
 import psutil
 from datetime import datetime, timedelta, timezone
+from dotenv import load_dotenv
+
+# Load environment variables from Backend .env
+# This ensures we get DB_HOST=localhost etc. when running locally
+backend_env_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "../Backend/.env")
+load_dotenv(backend_env_path)
 
 # Configuration
-REDIS_HOST = os.getenv("REDIS_HOST", "redis")
+# REDIS_HOST = os.getenv("REDIS_HOST", "redis")
+REDIS_HOST = os.getenv("REDIS_HOST", "localhost")
 WORKER_POOL_SIZE = int(os.getenv("WORKER_POOL_SIZE", "5"))
 HOSTNAME = socket.gethostname()
 
