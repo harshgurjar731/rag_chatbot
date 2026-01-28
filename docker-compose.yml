@@ -19,7 +19,7 @@ services:
       - DEFAULT_VECTOR_DB=Chroma
       - PHOENIX_COLLECTOR_ENDPOINT=http://phoenix:6006
       - OTEL_EXPORTER_OTLP_ENDPOINT=http://phoenix:6006/v1/traces
-      - OTEL_PROJECT_NAME="RAGBOT"
+      - OTEL_PROJECT_NAME="RAGBOT_API"
       - NVIDIA_API_KEY=${NVIDIA_API_KEY}
       - GROQ_API_KEY=${GROQ_API_KEY}
     networks:
@@ -35,6 +35,77 @@ services:
         condition: service_healthy
     volumes:
       - app-db:/app/db
+      - rag_data:/app/data_directory  # Shared volume for files
+
+  ingestion-pool:
+    build:
+      context: ./ingestion_pool
+      dockerfile: Dockerfile
+    container_name: ingestion_pool
+    environment:
+      - REDIS_HOST=redis
+      - DB_HOST=db
+      - DB_NAME=chatbot_db
+      - DB_USER=user
+      - DB_PASSWORD=password
+      - INGESTION_POOL_SIZE=2
+      - PHOENIX_COLLECTOR_ENDPOINT=http://phoenix:6006
+      - CHROMA_SERVER_HOST=chromadb
+      - CHROMA_SERVER_PORT=8000
+      # API Keys for embeddings which now happen here
+      - MISTRAL_API_KEY=${MISTRAL_API_KEY}
+      - GROQ_API_KEY=${GROQ_API_KEY}
+      - AZURE_API_KEY=${AZURE_API_KEY}
+      - NVIDIA_API_KEY=${NVIDIA_API_KEY}
+    networks:
+      - chatbot_network
+    depends_on:
+      redis:
+        condition: service_started
+      postgres:
+        condition: service_healthy
+      chromadb:
+        condition: service_started
+    volumes:
+      - app-db:/app/db
+      - rag_data:/app/data_directory # Shared volume for files
+
+  worker-pool:
+    build: worker_pool
+    command: python main.py
+    environment:
+      - REDIS_HOST=redis
+      - DB_HOST=db
+      - DB_NAME=chatbot_db
+      - DB_USER=user
+      - DB_PASSWORD=password
+      - WORKER_POOL_SIZE=2
+      - CHROMA_SERVER_HOST=chromadb
+      - CHROMA_SERVER_PORT=8000
+      - DEFAULT_VECTOR_DB=Chroma
+      # - GOOGLE_API_KEY=${GOOGLE_API_KEY}
+      - PHOENIX_COLLECTOR_ENDPOINT=http://phoenix:6006
+      - PYTHONPATH=/app
+      # API Keys for Generation/Reranking
+      - MISTRAL_API_KEY=${MISTRAL_API_KEY}
+      - GROQ_API_KEY=${GROQ_API_KEY}
+      - AZURE_API_KEY=${AZURE_API_KEY}
+    networks:
+      - chatbot_network
+    depends_on:
+      chromadb:
+        condition: service_started
+      redis:
+        condition: service_started
+      postgres:
+        condition: service_healthy
+      backend:
+        condition: service_started
+    deploy:
+      replicas: 1
+    volumes:
+      - app-db:/app/db
+      - rag_data:/app/data_directory # Shared volume for files
 
   frontend:
     build:
@@ -83,38 +154,6 @@ services:
         aliases:
           - phoenix
 
-  worker-pool:
-    build: worker_pool
-    command: python main.py
-    environment:
-      - REDIS_HOST=redis
-      - DB_HOST=db
-      - DB_NAME=chatbot_db
-      - DB_USER=user
-      - DB_PASSWORD=password
-      - WORKER_POOL_SIZE=2
-      - CHROMA_SERVER_HOST=chromadb
-      - CHROMA_SERVER_PORT=8000
-      - DEFAULT_VECTOR_DB=Chroma
-      # - GOOGLE_API_KEY=${GOOGLE_API_KEY}
-      - PHOENIX_COLLECTOR_ENDPOINT=http://phoenix:6006
-      - PYTHONPATH=/app
-    networks:
-      - chatbot_network
-    depends_on:
-      chromadb:
-        condition: service_started
-      redis:
-        condition: service_started
-      postgres:
-        condition: service_healthy
-      backend:
-        condition: service_started
-    deploy:
-      replicas: 1
-    volumes:
-      - app-db:/app/db
-
   redis:
     image: redis:alpine
     command: redis-server --appendonly yes
@@ -157,3 +196,5 @@ volumes:
   phoenix_data:
     driver: local
   app-db:
+  rag_data: # New shared volume
+

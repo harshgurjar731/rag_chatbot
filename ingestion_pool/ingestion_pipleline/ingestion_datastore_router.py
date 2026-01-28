@@ -4,22 +4,17 @@ from pathlib import Path
 from sqlmodel import Session, select
 from models.FileRecord import FileRecord, DocumentRecord, ChunkRecord
 from database import get_session
-# from Services.chunking_service import chunk_documents, save_chunks_to_json, load_docs_from_json
-# from ingestion_pipleline.VectorStores.vector_store_generator import create_vector_store
+from Services.chunking_service import chunk_documents, save_chunks_to_json, load_docs_from_json
+from ingestion_pipleline.VectorStores.vector_store_generator import create_vector_store
+# from ingestion_pipleline.VectorStores.vector_store_protocol import del
 from models.datastore import DataStore
 import os
 import shutil
 import time
-import redis
-import json
 from typing import List
 from config import CONFIG  # Load .env variables
 from ingestion_pipleline.ingestion_models import DataStoreCreate, DataStoreResponse
 from ingestion_pipleline.Config.Config import INGESTION_CONFIG
-
-# Redis Setup
-REDIS_HOST = os.getenv("REDIS_HOST", "redis")
-r = redis.Redis(host=REDIS_HOST, port=6379, db=0, decode_responses=True)
 
 router = APIRouter()
 
@@ -89,14 +84,11 @@ async def delete_datastore(
         # chunk_ids = session.exec(select(ChunkRecord.id).where(ChunkRecord.datastore_id == datastore_id)).all()
         
         if (datastore.vector_store_provider):
-            # Dispatch delete collection job
-            job_payload = {
-                "job_type": "delete_collection",
-                "datastore_id": datastore_id,
-                "vector_store_provider": datastore.vector_store_provider
-            }
-            r.rpush("ingestion:inbox", json.dumps(job_payload))
-            print(f"[*] Queued collection deletion for datastore {datastore_id}")
+            try:
+                vectorDB = create_vector_store(provider=datastore.vector_store_provider)
+                vectorDB.delete_collection(name=datastore.id)
+            except Exception as e:
+                print(f"Warning: Failed to delete vector store collection: {e}")
         
         datastore_folder = INGESTION_CONFIG["ingestion_root"] / INGESTION_CONFIG["ingestion_data_folder_name"] / datastore.name
         if os.path.exists(datastore_folder):

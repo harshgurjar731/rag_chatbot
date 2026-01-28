@@ -7,6 +7,7 @@ load_dotenv()
 
 INGESTION_CONFIG = {
     #Folder Paths
+    #Folder Paths
     "ingestion_root": Path("/app"),
     "ingestion_data_folder_name": "data_directory",
     "ingestion_temp_folder_name": "temp_directory",

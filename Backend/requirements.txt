@@ -1,35 +1,28 @@
-RUN pip install --system beautifulsoup4
-RUN pip install --system camelot_py
-RUN pip install --system chromadb
-RUN pip install --system deep_translator
-RUN pip install --system Evaluation
-RUN pip install --system faiss_cpu
-RUN pip install --system fastapi
-RUN pip install --system fitz
-RUN pip install --system groq
-RUN pip install --system langchain_chroma
-RUN pip install --system langchain_classic
-RUN pip install --system langchain_community
-RUN pip install --system langchain_core
-RUN pip install --system langchain_experimental
-RUN pip install --system langchain_huggingface
-RUN pip install --system langchain_openai
-RUN pip install --system langchain_qdrant
-RUN pip install --system langchain_text_splitters
-RUN pip install --system mistralai
-RUN pip install --system nemoguardrails
-RUN pip install --system numpy
-RUN pip install --system openai
-RUN pip install --system phoenix
-RUN pip install --system Pillow
-RUN pip install --system pydantic
-RUN pip install --system pymupdf
-RUN pip install --system pytesseract
-RUN pip install --system python-dotenv
-RUN pip install --system qdrant_client
-RUN pip install --system Requests
-RUN pip install --system sentence_transformers
-RUN pip install --system sqlmodel
-RUN pip install --system tqdm
-RUN pip install --system transformers
-RUN pip install --system open 
+# --- Core Framework & Utils ---
+fastapi
+uvicorn
+python-multipart
+pydantic
+pydantic-settings
+sqlmodel
+python-dotenv
+aiofiles
+requests
+redis
+
+# --- LangChain Ecosystem (Lightweight) ---
+langchain-core
+
+# --- Observability & Tracing (Phoenix) ---
+opentelemetry-api
+opentelemetry-sdk
+opentelemetry-exporter-otlp
+arize-phoenix-otel
+arize-phoenix
+openinference-instrumentation-langchain
+openinference-instrumentation-openai
+deep-translator
+langchain-text-splitters
+pypdf
+openai
+langchain-openai

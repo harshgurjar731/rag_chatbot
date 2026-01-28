@@ -1,18 +1,19 @@
 # RAG Chatbot Architecture
 
-This document outlines the architecture of the RAG Chatbot system, focusing on the Worker Pool pattern and the asynchronous communication mechanism using Redis.
+This document outlines the architecture of the RAG Chatbot system, focusing on the Worker Pool pattern, the independent Ingestion Pool, and the event-driven communication via Redis.
 
 ## 1. High-Level Architecture
 
-The system is composed of several Dockerized services orchestrated via Docker Compose.
+The system is composed of decoupled microservices orchestrated via Docker Compose.
 
 *   **Frontend**: React-based user interface (`rag_frontend`).
-*   **Backend**: FastAPI application (`rag_backend`) acting as the API gateway and orchestrator.
-*   **Worker Pool**: Service (`worker-pool`) responsible for managing individual Bot processes.
-*   **Redis**: In-memory data store used as a message broker and for state management.
-*   **PostgreSQL**: Primary relational database (`postgres`) for application data (Bots, Users, etc.).
+*   **Backend**: Lightweight FastAPI application (`rag_backend`) acting as the API gateway. It handles File I/O and metadata but delegating heavy processing to workers.
+*   **Worker Pool**: Scalable service (`worker-pool`) responsible for managing Bot processes (RAG Retrieval + Generation).
+*   **Ingestion Pool**: Scalable service (`ingestion-pool`) responsible for heavy file processing, chunking, embedding, and vector database updates.
+*   **Redis**: Message broker used for job queues (`inbox`) and request/response streaming.
+*   **PostgreSQL**: Primary relational database (`postgres`) for metadata (Bots, Files, Chunks).
 *   **ChromaDB**: Vector database (`chromadb`) for storing embeddings.
-*   **Phoenix**: Observability and tracing platform (`phoenix`).
+*   **Shared Volume**: `rag_data` volume accessible by Backend, Worker Pool, and Ingestion Pool for file access.
 
 ```mermaid
 graph TD
@@ -23,134 +24,95 @@ graph TD
         Redis[(Redis)]
         Postgres[(PostgreSQL)]
         Chroma[(ChromaDB)]
-        Phoenix[Phoenix Tracing]
+        SharedVol["Shared Volume (Data)"]
     end
 
     Backend <-->|Reads/Writes| Postgres
-    Backend <-->|Pub/Sub & Lists| Redis
-    Backend -->|Traces| Phoenix
+    Backend <-->|Push Jobs| Redis
+    Backend -->|Save File| SharedVol
 
-    subgraph "Worker Layer"
-        Pool[Worker Pool Manager]
-        Bot1[Bot Process 1]
-        Bot2[Bot Process 2]
+    subgraph "Compute Layer"
+        Ingestion[Ingestion Pool]
+        Workers[RAG Worker Pool]
     end
 
-    Pool <-->|Claims Bots| Postgres
-    Pool -->|Spawns| Bot1
-    Pool -->|Spawns| Bot2
+    Ingestion <-->|Pop Jobs| Redis
+    Ingestion <-->|Read File| SharedVol
+    Ingestion -->|Upsert/Delete| Chroma
+    Ingestion -->|Update| Postgres
 
-    Bot1 <-->|Read Inbox/Write Stream| Redis
-    Bot2 <-->|Read Inbox/Write Stream| Redis
-    
-    Bot1 <-->|Retrieve| Chroma
-    Bot2 <-->|Retrieve| Chroma
-    Bot1 -->|Traces| Phoenix
-    Bot2 -->|Traces| Phoenix
+    Workers <-->|Pop Queries| Redis
+    Workers <-->|Read File| SharedVol
+    Workers <-->|Retrieve| Chroma
+    Workers -->|Stream Response| Redis
 ```
 
-## 2. Worker Pool Architecture
+## 2. Service Roles
 
-The **Worker Pool** design allows for scalable and isolated execution of RAG pipelines for different bots. It decouples the API handling (Backend) from the heavy lifting of document retrieval and LLM inference.
+### Backend (`rag_backend`)
+The API Gateway layer.
+*   **Role**: Dispatcher.
+*   **Responsibilities**:
+    *   File Uploads: Saves files to Shared Volume.
+    *   Metadata: Creates initial records in PostgreSQL.
+    *   Dispatch: Pushes "Upsert" or "Process" jobs to Redis `ingestion:inbox`.
+    *   Authentication & Routing.
 
-### Key Components
+### Ingestion Pool (`ingestion-pool`)
+The Heavy Processing layer.
+*   **Role**: Consumer.
+*   **Responsibilities**:
+    *   Listens to `ingestion:inbox`.
+    *   **Jobs Handled**: `upsert`, `process_document`, `delete_collection`, `delete_vectors`.
+    *   **Logic**: Loads files via `Embeddings`/`TextSplitters` libs (PyTorch/Transformers) and updates Vector DB.
+    *   **Isolation**: Keeps heavy ML libraries out of the API layer.
 
-1.  **Worker Pool Service (`main.py`)**:
-    *   **Role**: Manager.
-    *   **Responsibility**: Monitors the database for `PENDING` bots, claims them, and spawns dedicated subprocesses (`worker_wrapper.py`) to handle them.
-    *   **Health Check**: Continuously monitors child processes. If a bot process dies, it restarts it.
-    *   **Orphan Cleanup**: Detects if other pools have died and releases their bots to be picked up by healthy pools.
+### Worker Pool (`worker-pool`)
+The RAG Inference layer.
+*   **Role**: Manager & Consumer.
+*   **Responsibilities**:
+    *   Manages "Bot Processes" for isolation.
+    *   Listens to `bot:{id}:inbox`.
+    *   **Logic**: Retrieval (Vector Search + Rerank) and Generation (LLM).
 
-2.  **Bot Process (`worker_wrapper.py`)**:
-    *   **Role**: Worker.
-    *   **Responsibility**: Dedicated to a single Bot ID. It listens to a specific Redis List (Inbox) for that bot.
-    *   **Isolation**: Each bot runs in its own process, ensuring that a crash in one bot doesn't affect others or the main API.
+## 3. Ingestion Flow (Event-Driven)
+
+Ingestion is entirely asynchronous. The user uploads a file, receives a "Processing" status, and the Ingestion Pool handles the rest.
 
 ```mermaid
 sequenceDiagram
-    participant DB as PostgreSQL
-    participant Pool as Worker Pool Manager
-    participant OS as Operating System
-    participant Bot as Bot Process (Worker)
-
-    loop Every 2 Seconds
-        Pool->>DB: Check for PENDING bots (SKIP LOCKED)
-        DB-->>Pool: Return list of PENDING bots
-        
-        alt Bots Found
-            Pool->>DB: Update Status=ACTIVE, PoolID=Hostname
-            Pool->>OS: Spawn subprocess (worker_wrapper.py)
-            OS-->>Bot: Start Process
-            Pool->>Pool: Add to monitored processes
-        end
-
-        Bot->>Pool: (Implicit) Process Health
-        
-        alt Process Dies
-            Pool->>Pool: Detect dead process
-            Pool->>OS: Respawn Process
-        end
-    end
-```
-
-## 3. Communication Flow (Redis)
-
-Communication between the Backend and the Bot Workers is asynchronous and event-driven using Redis.
-
-### Mechanism
-
-1.  **Request Queue (Inbox)**: Each active bot has a dedicated Redis List key: `bot:{BOT_ID}:inbox`.
-2.  **Response Stream (Pub/Sub)**: For each request, a unique temporary channel is created: `msg:{REQUEST_ID}:stream`.
-3.  **Protocol**:
-    *   Backend pushes a JSON payload to the Bot's Inbox.
-    *   Backend subscribes to the Response Stream.
-    *   Bot pops the message, processes it, and publishes the result to the Response Stream.
-    *   Bot publishes `__END__` to signal completion.
-
-### Sequence Diagram
-
-```mermaid
-sequenceDiagram
-    participant Client as Frontend/User
-    participant API as Backend (rag_router)
+    participant Client as Frontend
+    participant API as Backend
     participant Redis as Redis
-    participant Worker as Bot Process
+    participant Ingestion as Ingestion Worker
+    participant DB as Postgres/Chroma
 
-    Client->>API: POST /query/{bot_id} (msg="Hello")
-    
-    rect rgb(240, 248, 255)
-    note right of API: Request Setup
-    API->>API: Generate UUID (req_id)
-    API->>Redis: SUB msg:{req_id}:stream
-    API->>Redis: RPUSH bot:{bot_id}:inbox { "id": req_id, "text": "Hello" ... }
-    end
+    Client->>API: POST /upload (File)
+    API->>API: Save File to Shared Volume
+    API->>DB: Create Document Record (Pending)
+    API->>Client: Return "File Uploaded"
 
-    rect rgb(255, 250, 240)
-    note right of Worker: Processing
-    Worker->>Redis: BLPOP bot:{bot_id}:inbox
-    Redis-->>Worker: {Payload}
-    Worker->>Worker: Run RAG Pipeline (Retrieve -> Generate)
-    end
+    Client->>API: POST /upsert
+    API->>Redis: UPUSH ingestion:inbox { "job_type": "upsert", "ids": [...] }
+    API->>Client: Return "Job Queued"
 
-    rect rgb(240, 255, 240)
-    note right of Worker: Response Streaming
-    Worker->>Redis: PUBLISH msg:{req_id}:stream { "answer": "Hi there!" }
-    Redis-->>API: Receive JSON Chunk
-    Worker->>Redis: PUBLISH msg:{req_id}:stream "__END__"
-    Redis-->>API: Receive __END__
-    end
-
-    API->>Redis: UNSUB msg:{req_id}:stream
-    API->>Client: Return JSON Response
+    Ingestion->>Redis: BLPOP ingestion:inbox
+    Redis-->>Ingestion: { Job Payload }
+    Ingestion->>Ingestion: Read File from Volume
+    Ingestion->>Ingestion: Chunk & Embed (Heavy CPU)
+    Ingestion->>DB: Upsert Vectors & Update Status
 ```
 
-## 4. Database Interaction
+## 4. RAG Query Flow
 
-*   **Users/Bots**: Managed in PostgreSQL.
-*   **File Records**: Seemingly managed in SQLite (`rag.db`) accessed via shared volume by both Backend and Worker Pool, OR synchronized. *Note: Current code shows usage of `rag.db` (SQLite) for file mappings in `worker_wrapper.py`, while `docker-compose` mounts a volume for it.*
+The query flow remains similar but now relies on the Shared Volume for file paths if needed (though mostly relies on Vector DB).
 
-## 5. Observability
+1.  **Request**: Backend pushes Query to `bot:{id}:inbox`.
+2.  **Processing**: Worker pops Query.
+3.  **Retrieval**: Worker queries ChromaDB (populated by Ingestion Pool).
+4.  **Response**: Worker streams answer back via Redis Pub/Sub.
 
-*   **Phoenix**: Both Backend and Worker processes are instrumented with OpenTelemetry.
-*   **Tracing**: Traces are sent to the Phoenix collector (port 6006/4317).
-*   **Feedback**: Feedback from Frontend is logged to Phoenix via Backend Proxy.
+## 5. Deployment Notes
+
+*   **Shared Volume**: Critical for decoupling. The Backend "hands off" the file via disk, and the Worker/Ingestion service picks it up.
+*   **env variables**: API Keys (OpenAI, Mistral, Groq) must be provided to both pools if they perform embedding/generation.

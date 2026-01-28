@@ -5,21 +5,19 @@ from pathlib import Path
 from sqlmodel import Session, select, func
 from models.FileRecord import FileRecord
 from database import get_session
+from Services.chunking_service import chunk_documents, save_chunks_to_json, load_docs_from_json
 from models.datastore import DataStore
 from models.FileRecord import DocumentRecord, ChunkRecord
 import os
-import redis
-import json
 from typing import List
 from config import CONFIG  # Load .env variables
 from ingestion_pipleline.ingestion_models import DataStoreCreate, DocumentRecordResponse
 from ingestion_pipleline.Config.Config import INGESTION_CONFIG
+from ingestion_pipleline.VectorStores.vector_store_generator import create_vector_store
 import shutil
 import urllib.parse
 
-# Redis Setup
-REDIS_HOST = os.getenv("REDIS_HOST", "redis")
-r = redis.Redis(host=REDIS_HOST, port=6379, db=0, decode_responses=True)
+
 
 router = APIRouter()
 
@@ -179,17 +177,12 @@ async def delete_document(
         datastore = session.exec(select(DataStore).where(DataStore.id == document.datastore_id)).first()
         chunk_indexes = session.exec(select(ChunkRecord.chunk_index).where(ChunkRecord.document_id == document_id)).all()
 
-        if ((datastore.vector_store_provider != None) and (len(chunk_indexes) > 0)):
-            # Dispatch delete job to Redis
-            job_payload = {
-                "job_type": "delete_vectors",
-                "datastore_id": datastore.id,
-                "document_id": document_id,
-                "vector_store_provider": datastore.vector_store_provider,
-                "chunk_indexes": chunk_indexes
-            }
-            r.rpush("ingestion:inbox", json.dumps(job_payload))
-            print(f"[*] Queued vector deletion for document {document_id}")
+        if ((datastore.vector_store_provider != None) & (len(chunk_indexes) > 0)):
+            try:
+                vectorDB = create_vector_store(provider=datastore.vector_store_provider)
+                vectorDB.delete(collection=f"datastore_{datastore.id}", ids = chunk_indexes)
+            except Exception as e:
+                 print(f"Warning: Failed to delete vectors: {e}")
 
         if os.path.exists(document.filePath):
             try:

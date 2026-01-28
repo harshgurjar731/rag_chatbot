@@ -1,0 +1,36 @@
+# --- Core Framework & Utils ---
+python-multipart
+pydantic
+pydantic-settings
+sqlmodel
+python-dotenv
+aiofiles
+requests
+redis
+psutil
+
+# --- LangChain Ecosystem ---
+langchain
+langchain-core
+langchain-community
+langchain-text-splitters
+langchain-classic
+langchain-chroma
+langchain-openai
+langchain-experimental
+langchain-nvidia-ai-endpoints
+langchain-qdrant
+
+# --- Models & Vector Stores ---
+chromadb
+sentence-transformers
+transformers
+torch
+nemoguardrails
+
+# --- File Processing ---
+PyMuPDF
+camelot-py
+pytesseract
+Pillow
+opencv-python-headless
