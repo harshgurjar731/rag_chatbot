@@ -17,6 +17,13 @@ CONFIG = {
     "backend_base_url": os.getenv("BACKEND_BASE_URL", "http://127.0.0.1:8000"),
     "project_root": Path(os.getenv("PROJECT_ROOT", "..")),
 
+    # Database
+    "db_user": os.getenv("DB_USER", "user"),
+    "db_password": os.getenv("DB_PASSWORD", "password"),
+    "db_host": os.getenv("DB_HOST", "db"),
+    "db_name": os.getenv("DB_NAME", "chatbot_db"),
+
+
     # Models
     "default_embedding_model": os.getenv("DEFAULT_EMBEDDING_MODEL", "all-MiniLM-L6-v2"),
     "default_llm_model": os.getenv("DEFAULT_LLM_MODEL", "llama-3.3-70b-versatile"),
@@ -105,4 +112,5 @@ CONFIG = {
 
 
 
+    "database_url": f"postgresql://{os.getenv('DB_USER', 'user')}:{os.getenv('DB_PASSWORD', 'password')}@{os.getenv('DB_HOST', 'db')}/{os.getenv('DB_NAME', 'chatbot_db')}",
 }

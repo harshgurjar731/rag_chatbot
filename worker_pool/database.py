@@ -10,7 +10,9 @@ from sqlmodel import SQLModel, create_engine, Session, text
 from models.datastore import DataStore
 from models.FileRecord import FileRecord
 
-DATABASE_URL = "sqlite:////app/db/rag.db"
+from config import CONFIG
+
+DATABASE_URL = CONFIG["database_url"]
 engine = create_engine(DATABASE_URL, echo=True)
 
 
@@ -36,7 +38,7 @@ def list_tables():
     List all tables in the SQLite database.
     """
     with Session(engine) as session:
-        result = session.exec(text("SELECT name FROM sqlite_master WHERE type='table';"))
+        result = session.exec(text("SELECT table_name FROM information_schema.tables WHERE table_schema = 'public';"))
         print("Tables:", result.all())
 
 def list_tables_content():

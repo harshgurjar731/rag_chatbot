@@ -31,9 +31,9 @@ from rag_pipeline.Config.rag_config import RAG_CONFIG
 from rag_pipeline.Services.query_decomposition import iterative_query_decomposition
 from rag_pipeline.Services.query_rewriting_handler import handle_query_rewriting, handle_chunk_union, history_based_query_generator
 
-from ingestion_pipleline.Embeddings.embedding_models import create_embedding_model
-from ingestion_pipleline.VectorStores.vector_store_generator import create_vector_store
-from ingestion_pipleline.Reranker.reranking_helper import apply_reranker, get_reranker_model
+from rag_pipeline.Embeddings.embedding_models import create_embedding_model
+from rag_pipeline.VectorStores.vector_store_generator import create_vector_store
+from rag_pipeline.Reranker.reranking_helper import apply_reranker, get_reranker_model
 
 def encode_image_to_base64(path: str) -> str:
     """

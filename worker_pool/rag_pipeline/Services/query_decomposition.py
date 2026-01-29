@@ -25,8 +25,8 @@ from langchain_core.documents import Document
 from langchain_core.output_parsers import StrOutputParser
 from opentelemetry import context as otel_context
 
-from ingestion_pipleline.Embeddings.embedding_models import HuggingFaceEmbeddings, OpenAIEmbeddings
-from ingestion_pipleline.VectorStores.qdrant_vector_store import QDrantVectorDB
+from rag_pipeline.Embeddings.embedding_models import HuggingFaceEmbeddings, OpenAIEmbeddings
+from rag_pipeline.VectorStores.qdrant_vector_store import QDrantVectorDB
 from Services.reranker_service import CrossEncoderReranker, BiEncoderReranker, LLMReranker
 from rag_pipeline.LLMs.llm_model_protocol import ChatOpenAI, AzureChatOpenAI
 from rag_pipeline.Config.rag_prompts import RAG_PROMPTS

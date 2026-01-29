@@ -43,9 +43,8 @@ r = redis.Redis(host=REDIS_HOST, port=6379, db=0, decode_responses=True)
 
 # Database Setup
 # Using absolute path to ensure we find the DB
-# DB_PATH = os.path.join(os.getcwd(), "Backend", "rag.db")
-DATABASE_URL = f"sqlite:////app/db/rag.db"
-engine = create_engine(DATABASE_URL)
+# Database Setup
+from database import engine
 
 # OpenTelemetry
 tracer_provider = register(

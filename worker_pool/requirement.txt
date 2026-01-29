@@ -8,6 +8,7 @@ sqlmodel
 python-dotenv
 aiofiles
 requests
+psycopg2-binary
 
 # --- LangChain Ecosystem ---
 langchain

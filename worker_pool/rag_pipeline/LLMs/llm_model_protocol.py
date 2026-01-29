@@ -8,7 +8,7 @@ LLM instances, and concrete implementations for different providers like Groq an
 from typing import Protocol, Any
 from langchain_openai import ChatOpenAI
 from langchain_openai import AzureChatOpenAI
-from ingestion_pipleline.Config.Config import INGESTION_CONFIG
+# from ingestion_pipleline.Config.Config import INGESTION_CONFIG
 from rag_pipeline.Config.rag_config import RAG_CONFIG
 
 
