@@ -522,6 +522,7 @@ export const ChatInterface = ({
         spanId: response["spanId"],
         Citation: grouped_citations || [],
         images: response["images"],
+        detected_intent: response["detected_intent"],
       };
       console.log("Bot message with citations:", botMessage.Citation);
       setMessages((prev) => [...prev, botMessage]);
@@ -807,9 +808,15 @@ export const ChatInterface = ({
                       className={`${message.isUser
                         ? "border-chatbot-primary/20"
                         : "border-chatbot-primary/20"
-                        }`}
+                        } relative overflow-visible`} // Added relative and overflow-visible
                     >
                       <CardContent className="p-3">
+                        {/* Detected Intent Badge */}
+                        {!message.isUser && message.detected_intent && message.detected_intent !== "None" && message.detected_intent !== "null" && (
+                          <div className="absolute -top-3 right-2 bg-chatbot-primary/10 text-chatbot-primary text-[10px] font-semibold px-2 py-0.5 rounded-full border border-chatbot-primary/20 shadow-sm z-10 bg-white">
+                            {message.detected_intent}
+                          </div>
+                        )}
                         <p className="text-sm whitespace-pre-wrap">
                           {message.content}
                         </p>
@@ -1623,107 +1630,107 @@ export const ChatInterface = ({
                           </SelectContent>
                         </Select>
                       </div>
-                      <div className="space-y-1">
-                        <Label>Embedding Model</Label>
-                        <Select
-                          onValueChange={(value) =>
-                            setTempSettings({
-                              ...tempSettings,
-                              embeddingModel: value,
-                            })
-                          }
-                          disabled
-                        >
-                          <SelectTrigger className="border-4 border-gray-200">
-                            <SelectValue
-                              placeholder={
-                                tempSettings.embeddingModel !== ""
-                                  ? tempSettings.embeddingModel
-                                  : "all-MiniLM-L6-v2"
-                              }
-                            />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="all-MiniLM-L6-v2">
-                              all-MiniLM-L6-v2
-                            </SelectItem>
-                            <SelectItem value="sentence-transformers/all-mpnet-base-v2">
-                              sentence-transformers
-                            </SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-                      <div className="space-y-1">
-                        <Label>Vector DB</Label>
-                        <Select
-                          onValueChange={(value) =>
-                            setTempSettings({
-                              ...tempSettings,
-                              vectorDb: value,
-                            })
-                          }
-                          disabled
-                        >
-                          <SelectTrigger className="border-4 border-gray-200">
-                            <SelectValue
-                              placeholder={
-                                tempSettings.vectorDb !== ""
-                                  ? tempSettings.vectorDb
-                                  : "FAISS"
-                              }
-                            />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="faiss">FAISS</SelectItem>
-                            <SelectItem value="chroma">CHROMA</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-                      <div className="space-y-1">
-                        <Label>Re-ranker</Label>
-                        <select
-                          className="w-full rounded-lg border-4 border-gray-200 border-input bg-background px-3 py-2 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-ring"
-                          value={tempSettings.rerankerOption}
-                          onChange={(e) =>
-                            setTempSettings({
-                              ...tempSettings,
-                              rerankerOption: e.target.value,
-                            })
-                          }
-                          disabled={isLoading}
-                        >
-                          <option value="none">
-                            None – Use retriever results directly
-                          </option>
-                          <option value="cross-encoder">
-                            Cross-encoder – Most accurate, but slower
-                          </option>
-                          <option value="bi-encoder">
-                            Bi-encoder – Faster, less accurate
-                          </option>
-                          <option value="llm-reranker">
-                            LLM-based – Uses a language model
-                          </option>
-                        </select>
-                        <p className="text-xs text-muted-foreground">
-                          Choose a re-ranking method to reorder retrieved
-                          documents.
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-                <DialogFooter className="px-6 py-4 border-t bg-muted/40 flex justify-end gap-3">
-                  <Button variant="outline" onClick={handleCancel}>
-                    Cancel
-                  </Button>
-                  <Button onClick={() => handleSave()}>Save Settings</Button>
-                </DialogFooter>
-              </DialogContent>
-            </Dialog>
-          </div>
-        </div> */}
-      </div>
+        <div className="space-y-1">
+          <Label>Embedding Model</Label>
+          <Select
+            onValueChange={(value) =>
+              setTempSettings({
+                ...tempSettings,
+                embeddingModel: value,
+              })
+            }
+            disabled
+          >
+            <SelectTrigger className="border-4 border-gray-200">
+              <SelectValue
+                placeholder={
+                  tempSettings.embeddingModel !== ""
+                    ? tempSettings.embeddingModel
+                    : "all-MiniLM-L6-v2"
+                }
+              />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all-MiniLM-L6-v2">
+                all-MiniLM-L6-v2
+              </SelectItem>
+              <SelectItem value="sentence-transformers/all-mpnet-base-v2">
+                sentence-transformers
+              </SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="space-y-1">
+          <Label>Vector DB</Label>
+          <Select
+            onValueChange={(value) =>
+              setTempSettings({
+                ...tempSettings,
+                vectorDb: value,
+              })
+            }
+            disabled
+          >
+            <SelectTrigger className="border-4 border-gray-200">
+              <SelectValue
+                placeholder={
+                  tempSettings.vectorDb !== ""
+                    ? tempSettings.vectorDb
+                    : "FAISS"
+                }
+              />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="faiss">FAISS</SelectItem>
+              <SelectItem value="chroma">CHROMA</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="space-y-1">
+          <Label>Re-ranker</Label>
+          <select
+            className="w-full rounded-lg border-4 border-gray-200 border-input bg-background px-3 py-2 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-ring"
+            value={tempSettings.rerankerOption}
+            onChange={(e) =>
+              setTempSettings({
+                ...tempSettings,
+                rerankerOption: e.target.value,
+              })
+            }
+            disabled={isLoading}
+          >
+            <option value="none">
+              None – Use retriever results directly
+            </option>
+            <option value="cross-encoder">
+              Cross-encoder – Most accurate, but slower
+            </option>
+            <option value="bi-encoder">
+              Bi-encoder – Faster, less accurate
+            </option>
+            <option value="llm-reranker">
+              LLM-based – Uses a language model
+            </option>
+          </select>
+          <p className="text-xs text-muted-foreground">
+            Choose a re-ranking method to reorder retrieved
+            documents.
+          </p>
+        </div>
+      </div >
+    </div >
+                </div >
+  <DialogFooter className="px-6 py-4 border-t bg-muted/40 flex justify-end gap-3">
+    <Button variant="outline" onClick={handleCancel}>
+      Cancel
+    </Button>
+    <Button onClick={() => handleSave()}>Save Settings</Button>
+  </DialogFooter>
+              </DialogContent >
+            </Dialog >
+          </div >
+        </div > */}
+      </div >
       <div className="flex flex-col gap-4">
         {selectedDocs.length > 0 && (
           <div className="flex flex-wrap gap-1 mt-2 items-center">

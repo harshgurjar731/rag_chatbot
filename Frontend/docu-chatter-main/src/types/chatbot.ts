@@ -33,6 +33,7 @@ export interface ChatMessage {
   spanId?: string;
   Citation?: Citation[];
   images?: string[];
+  detected_intent?: string;
 };
 
 export interface Chatbot {
@@ -50,7 +51,8 @@ export interface CreateChatbotDataResponse {
   name: string;
   description: string;
   created_at?: string;
-  datastore_id: number
+  datastore_id: number;
+  intents?: { title: string; description: string }[];
 }
 
 export interface CreateDatastoreData {

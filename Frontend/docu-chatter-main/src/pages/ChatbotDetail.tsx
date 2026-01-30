@@ -330,7 +330,7 @@ const ChatbotDetail = () => {
       {/* Main Content */}
       <div className="container mx-auto px-4 py-6 h-[calc(100vh-220px)]">
         {/* <Tabs defaultValue="chat" className="space-y-6"> */}
-          {/* <TabsList className="grid w-full grid-cols-2">
+        {/* <TabsList className="grid w-full grid-cols-2">
             <TabsTrigger value="chat" className="flex items-center gap-2">
               <MessageSquarePlus className="h-4 w-4" />
               Chat
@@ -341,8 +341,8 @@ const ChatbotDetail = () => {
             </TabsTrigger>
           </TabsList> */}
 
-          {/* <TabsContent value="chat" className="space-y-4"> */}
-            {/* <ChatInterface
+        {/* <TabsContent value="chat" className="space-y-4"> */}
+        {/* <ChatInterface
               chatbot={chatbot}
               chatbotName={chatbot.name}
               // onSendMessage={simulateResponse}
@@ -351,49 +351,49 @@ const ChatbotDetail = () => {
                 return res.data.answer;  // depends on your API shape
               }}
             /> */}
-            <ChatInterface
-              chatbot={chatbot}
-              chatbotName="MyBot"
-              onSendMessage={async (payload) => {
-                const { question, messages, searchImage, useKnowledgeBase, selectedDocuments, optimizer, llmProvider, llmModel, temperature, guardrailOption, tokenSize, showSources, rerankerOption } = payload;
-                console.log("LLM Provider:", llmProvider, useKnowledgeBase)
-                const data = { 
-                                messages: messages.map((msg) => ({
-                                    role: msg.isUser ? "user" : "assistant",
-                                    content: msg.content,
-                                  })),
-                                selected_documents: selectedDocuments,
-                                search_image: searchImage
-                              }
-                const response = await axios.post(`http://localhost:8000/rag/query/${chatbot.id}`, data, {
-                // const response = await axios.get(`http://localhost:8000/retriever/query/${chatbot.name}`, {
-                  params: {
-                    chatbot_id: chatbot.id,
-                    use_knowledge_base: useKnowledgeBase,
-                    llm_model_provider: llmProvider || "groq",
-                    llm_model_name: llmModel || "llama-3.3-70b-versatile",
-                    temperature:  temperature || 0.0,
-                    max_token: tokenSize || 256,
-                    reranker_type: rerankerOption || "None",
-                    query_rewriting_type: optimizer || "None",
-                    guardrail_type: guardrailOption || "None",
-                    use_citation: showSources || false,
-                    datastore_id: chatbot.datastoreId,
-                    query: question,
-                    is_vision_search: false,
-                  },
+        <ChatInterface
+          chatbot={chatbot}
+          chatbotName="MyBot"
+          onSendMessage={async (payload) => {
+            const { question, messages, searchImage, useKnowledgeBase, selectedDocuments, optimizer, llmProvider, llmModel, temperature, guardrailOption, tokenSize, showSources, rerankerOption } = payload;
+            console.log("LLM Provider:", llmProvider, useKnowledgeBase)
+            const data = {
+              messages: messages.map((msg) => ({
+                role: msg.isUser ? "user" : "assistant",
+                content: msg.content,
+              })),
+              selected_documents: selectedDocuments,
+              search_image: searchImage
+            }
+            const response = await axios.post(`http://localhost:8000/rag/query/${chatbot.id}`, data, {
+              // const response = await axios.get(`http://localhost:8000/retriever/query/${chatbot.name}`, {
+              params: {
+                chatbot_id: chatbot.id,
+                use_knowledge_base: useKnowledgeBase,
+                llm_model_provider: llmProvider || "groq",
+                llm_model_name: llmModel || "llama-3.3-70b-versatile",
+                temperature: temperature || 0.0,
+                max_token: tokenSize || 256,
+                reranker_type: rerankerOption || "None",
+                query_rewriting_type: optimizer || "None",
+                guardrail_type: guardrailOption || "None",
+                use_citation: showSources || false,
+                datastore_id: chatbot.datastoreId,
+                query: question,
+                is_vision_search: false,
+              },
 
-                  // ✅ ensure arrays become file_id=12&file_id=16 instead of file_id[]=...
-                  // paramsSerializer: params =>
-                  //   qs.stringify(params, { arrayFormat: "repeat" }),
-                });
-                console.log("response", response)
-                return response.data || "No results found.";
-              }}
-            />
-          {/* </TabsContent> */}
+              // ✅ ensure arrays become file_id=12&file_id=16 instead of file_id[]=...
+              // paramsSerializer: params =>
+              //   qs.stringify(params, { arrayFormat: "repeat" }),
+            });
+            console.log("response", response)
+            return response.data || "No results found.";
+          }}
+        />
+        {/* </TabsContent> */}
 
-          {/* <TabsContent value="documents" className="space-y-6">
+        {/* <TabsContent value="documents" className="space-y-6">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               <Card>
                 <CardHeader>

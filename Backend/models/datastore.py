@@ -40,7 +40,9 @@ def update_datastore(session: Session, store_id: int, update_data: dict):
 
     return store
 
+
 from uuid import uuid4
+from sqlmodel import Column, JSON
 
 class KnowledgeAssistant(SQLModel, table=True):
     id: Optional[str] = Field(default_factory=lambda: str(uuid4()), primary_key=True)
@@ -48,4 +50,5 @@ class KnowledgeAssistant(SQLModel, table=True):
     description: Optional[str] = ""
     created_at: datetime = Field(default_factory=datetime.utcnow)
     datastore_id:Optional[int]
+    intents: Optional[List[dict]] = Field(default=None, sa_column=Column(JSON))
 

@@ -21,8 +21,12 @@ from rag_pipeline.bot_manager import BotManager
 from rag_pipeline.bot_communication import BotCommunicator
 from rag_pipeline.bot_utils import validate_bot_name, sanitize_bot_name
 
+from rag_pipeline.Services.intent_service import IntentDetectionService
+import asyncio
+
 router = APIRouter()
 bot_manager = BotManager()
+intent_service = IntentDetectionService()
 bot_comm = BotCommunicator(redis_host=os.getenv("REDIS_HOST", "redis"))
 
 
@@ -42,7 +46,12 @@ async def createAssistant(
     # 2️⃣ Create datastore record
     print("Create Chatbot Data", data)
     try:
-        new_assistant = KnowledgeAssistant(name=data.name, description=data.description, datastore_id=data.datastore_id)
+        new_assistant = KnowledgeAssistant(
+            name=data.name, 
+            description=data.description, 
+            datastore_id=data.datastore_id,
+            intents=data.intents
+        )
         session.add(new_assistant)
         session.commit()
         session.refresh(new_assistant)
@@ -212,7 +221,13 @@ async def retrieve(
         #     full_response += chunk
         #     print(f"full_response: {full_response}")
         
-        full_response = bot_comm.send_message(
+        # Fetch the assistant to get intents
+        assistant = session.exec(select(KnowledgeAssistant).where(KnowledgeAssistant.id == chatbot_id)).first()
+        intents = assistant.intents if assistant else []
+
+        # Execute RAG generation and Intent Detection in parallel
+        rag_response_task = asyncio.to_thread(
+            bot_comm.send_message,
             bot_name=chatbot_id,
             message_text=query,
             timeout=0,
@@ -233,18 +248,23 @@ async def retrieve(
             messages=[m.dict() for m in data.messages] if data.messages else [],
             selected_documents=data.selected_documents if data.selected_documents else []
         )
+
+        intent_detection_task = intent_service.detect_intent(query, intents)
+
+        full_response, detected_intent = await asyncio.gather(rag_response_task, intent_detection_task)
         if full_response and not full_response.startswith("Error:"):
             
             # Try to parse as JSON first
             try:
                 json_response = json.loads(full_response)
                 if isinstance(json_response, dict):
+                     json_response["detected_intent"] = detected_intent
                      return json_response
             except json.JSONDecodeError:
                 pass
             
             # Fallback for plain text
-            return {"answer": full_response}
+            return {"answer": full_response, "detected_intent": detected_intent}
         else:
             
             raise HTTPException(status_code=400, detail=full_response or "⚠️ No reply received. The bot may be offline.")

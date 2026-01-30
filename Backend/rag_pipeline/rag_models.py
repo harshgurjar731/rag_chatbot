@@ -8,6 +8,7 @@ class CreateAssitantRequest(BaseModel):
     name: str
     description: str
     datastore_id: int
+    intents: Optional[List[dict]] = None
 
 class KnowledgeAssistantResponse(BaseModel):
     id: str
@@ -15,6 +16,7 @@ class KnowledgeAssistantResponse(BaseModel):
     description: str
     created_at: Any
     datastore_id: int
+    intents: Optional[List[dict]] = None
 
 
 class Message(BaseModel):

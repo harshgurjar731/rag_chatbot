@@ -7,6 +7,8 @@ COPY package.json package-lock.json* bun.lockb* ./
 
 # Install dependencies
 RUN npm install
+RUN npm install react-markdown remark-gfm react-syntax-highlighter
+
 
 # Copy source code
 COPY . .
