@@ -2,7 +2,7 @@
 from fastapi import APIRouter, HTTPException, Depends, Query
 from pathlib import Path
 from sqlmodel import Session, select
-from models.FileRecord import FileRecord, DocumentRecord, ChunkRecord
+from models.FileRecord import FileRecord, DocumentRecord, ChunkRecord, Folder
 from database import get_session
 # from Services.chunking_service import chunk_documents, save_chunks_to_json, load_docs_from_json
 # from ingestion_pipleline.VectorStores.vector_store_generator import create_vector_store
@@ -39,6 +39,27 @@ async def create_new_datastore(data: DataStoreCreate, session: Session = Depends
         session.add(new_store)
         session.commit()
         session.refresh(new_store)
+
+         # 2️⃣ Create virtual root folder in the DB
+        root = Folder(
+            name="root",
+            parent_id=None,
+            datastore_id=new_store.id
+        )
+
+        session.add(root)
+        session.commit()
+        session.refresh(root)
+
+        # 3️⃣ OPTIONAL: set path if you're using path optimization
+        root.path = f"/{root.id}/"
+        session.add(root)
+        session.commit()
+
+        # 🔗 link root folder to datastore
+        new_store.root_folder_id = root.id
+        session.add(new_store)
+        session.commit()
 
 
         print("Datastore record created in DB with ID:", new_store.id)

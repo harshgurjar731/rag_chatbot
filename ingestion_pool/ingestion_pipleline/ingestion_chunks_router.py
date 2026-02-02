@@ -249,16 +249,34 @@ async def process_document(
         )
 
         # 3️⃣ Prepare bulk insert
-        chunk_records = [
-            ChunkRecord(
-                datastore_id=document.datastore_id,
-                document_id=document.id,
-                chunk_index=str(uuid.uuid4()),
-                text=chunk.page_content,
-                metadatas=chunk.metadata
+        # chunk_records = [
+        #     ChunkRecord(
+        #         datastore_id=document.datastore_id,
+        #         document_id=document.id,
+        #         chunk_index=str(uuid.uuid4()),
+        #         text=chunk.page_content,
+        #         metadatas=chunk.metadata
+        #     )
+        #     for chunk in splitted_chunks
+        # ]
+
+        chunk_records = []
+
+        for chunk in splitted_chunks:
+            enriched_metadata = {
+                **(chunk.metadata or {}),   # existing metadata (safe even if None)
+                "folder_id": document.folder_id,
+                "filename": document.filename
+            }
+            chunk_records.append(
+                ChunkRecord(
+                    datastore_id=document.datastore_id,
+                    document_id=document.id,
+                    chunk_index=str(uuid.uuid4()),
+                    text=chunk.page_content,
+                    metadatas=enriched_metadata
+                )
             )
-            for chunk in splitted_chunks
-        ]
 
         # 4️⃣ Bulk insert
         session.add_all(chunk_records)

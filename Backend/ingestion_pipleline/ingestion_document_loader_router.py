@@ -6,13 +6,13 @@ from sqlmodel import Session, select, func
 from models.FileRecord import FileRecord
 from database import get_session
 from models.datastore import DataStore
-from models.FileRecord import DocumentRecord, ChunkRecord
+from models.FileRecord import DocumentRecord, ChunkRecord, Folder
 import os
 import redis
 import json
 from typing import List
 from config import CONFIG  # Load .env variables
-from ingestion_pipleline.ingestion_models import DataStoreCreate, DocumentRecordResponse
+from ingestion_pipleline.ingestion_models import DataStoreCreate, DocumentRecordResponse, FolderCreate
 from ingestion_pipleline.Config.Config import INGESTION_CONFIG
 import shutil
 import urllib.parse
@@ -22,6 +22,84 @@ REDIS_HOST = os.getenv("REDIS_HOST", "redis")
 r = redis.Redis(host=REDIS_HOST, port=6379, db=0, decode_responses=True)
 
 router = APIRouter()
+
+@router.post("/folders", response_model=Folder)
+def create_folder(
+    payload: FolderCreate,
+    session: Session = Depends(get_session)
+):
+    parent = session.get(Folder, payload.parent_id)
+    print("payload", payload)
+    print("parent", parent)
+    if not parent:
+        raise HTTPException(404, "Parent folder not found")
+
+    folder = Folder(
+        name=payload.name,
+        parent_id=parent.id,
+        datastore_id=parent.datastore_id
+    )
+
+    session.add(folder)
+    session.commit()
+    session.refresh(folder)
+
+    if parent.path:
+        folder.path = f"{parent.path}{folder.id}/"
+        session.add(folder)
+        session.commit()
+
+    return folder
+
+
+@router.get("/datastore/{datastore_id}/folders")
+def list_folder_contents(
+    datastore_id: int,
+    parent_id: int | None = Query(None),
+    session: Session = Depends(get_session)
+):
+    # validate datastore exists (optional but recommended)
+    datastore = session.get(DataStore, datastore_id)
+    if not datastore:
+        raise HTTPException(404, "Datastore not found")
+
+    # if parent_id not provided → default to root folder
+    if parent_id is None or parent_id == "":
+        parent_id = datastore.root_folder_id
+
+    # safety: ensure folder belongs to datastore
+    folder = session.get(Folder, parent_id)
+    if not folder or folder.datastore_id != datastore_id:
+        raise HTTPException(400, "Invalid folder for this datastore")
+
+    subfolders = session.exec(
+        select(Folder).where(Folder.parent_id == parent_id)
+    ).all()
+
+    documents = session.exec(
+        select(DocumentRecord).where(DocumentRecord.folder_id == parent_id)
+    ).all()
+
+    return {
+        "current_folder": folder,
+        "folders": subfolders,
+        "documents": documents
+    }
+
+@router.get("/folders/{folder_id}/breadcrumbs")
+def get_breadcrumbs(folder_id: int, session: Session = Depends(get_session)):
+
+    folder = session.get(Folder, folder_id)
+    if not folder:
+        raise HTTPException(404, "Folder not found")
+
+    trail = []
+
+    while folder:
+        trail.append(folder)
+        folder = session.get(Folder, folder.parent_id) if folder.parent_id else None
+
+    return list(reversed(trail))
 
 @router.post("/datastore/{datastore_id}/upload", response_model=List[DocumentRecord])
 async def upload_files_to_datastore(

@@ -1,5 +1,5 @@
 # rag_app/backend/models/datastore.py
-from sqlmodel import SQLModel, Field, Session, select
+from sqlmodel import SQLModel, Field, Session, select, Column, ForeignKey
 from typing import Optional
 from datetime import datetime
 from typing import List
@@ -15,7 +15,10 @@ class DataStore(SQLModel, table=True):
     embedding_provider: Optional[str] = None
     vector_store_provider: Optional[str] = None
     similarity_metric: Optional[str] = None
-
+    root_folder_id: Optional[int] = Field(
+        default=None,
+        foreign_key="folder.id" 
+    )
     documents: List["DocumentRecord"] = Relationship(
         back_populates="datastore", 
         # cascade_delete=True

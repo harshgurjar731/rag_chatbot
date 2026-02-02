@@ -20,6 +20,10 @@ class DocumentRecord(BaseModel):
     chunkOverlap: int
     filePath: str|None = None
 
+class FolderCreate(BaseModel):
+    name: str
+    parent_id: int
+
 class UpsertRequestData(BaseModel):
     embedding_provider: str
     embedding_model: str
@@ -56,6 +60,7 @@ class DataStoreResponse(BaseModel):
     vector_store_provider: Optional[str] = None
     similarity_metric: Optional[str] = None
     document_count: Optional[int]
+    root_folder_id: Optional[int]
 
 class DocumentRecordResponse(BaseModel):
     id: int

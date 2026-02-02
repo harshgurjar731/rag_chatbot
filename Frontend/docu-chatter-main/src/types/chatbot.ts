@@ -66,6 +66,7 @@ export interface CreateDatastoreData {
   vectorStoreProvider?: string;
   similarityMetric?: string;
   documentCount?: number;
+  rootFolderId?: number;
 }
 
 export interface RawDatastore {
