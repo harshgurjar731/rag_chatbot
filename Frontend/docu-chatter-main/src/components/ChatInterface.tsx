@@ -813,12 +813,7 @@ export const ChatInterface = ({
                         } relative overflow-visible`} // Added relative and overflow-visible
                     >
                       <CardContent className="p-3">
-                        {/* Detected Intent Badge */}
-                        {!message.isUser && message.detected_intent && message.detected_intent !== "None" && message.detected_intent !== "null" && (
-                          <div className="absolute -top-3 right-2 bg-chatbot-primary/10 text-chatbot-primary text-[10px] font-semibold px-2 py-0.5 rounded-full border border-chatbot-primary/20 shadow-sm z-10 bg-white">
-                            {message.detected_intent}
-                          </div>
-                        )}
+
                         <p className="text-sm whitespace-pre-wrap">
                           {message.content}
                         </p>
@@ -826,6 +821,12 @@ export const ChatInterface = ({
                         {/* Witty Hook and Intent Source Link */}
                         {!message.isUser && message.witty_hook && (
                           <div className="mt-3 mb-1 p-3 bg-blue-50/50 border border-blue-100 rounded-lg">
+                            {/* Integrated Intent Badge */}
+                            {message.detected_intent && (
+                              <div className="text-xs font-bold text-blue-700 mb-1 uppercase tracking-wide">
+                                {message.detected_intent}
+                              </div>
+                            )}
                             <div className="text-sm italic text-gray-700 mb-2">
                               ✨ {message.witty_hook}
                             </div>

@@ -143,8 +143,15 @@ async def download_file(
 
     try:
         safe_filename = urllib.parse.unquote(doc_name)
-        document = session.exec(select(DocumentRecord).where((DocumentRecord.filename == doc_name) & (DocumentRecord.datastore_id == datastore_id))).first()
+        print(f"Downloading file. Raw: {doc_name}, Safe: {safe_filename}, DS: {datastore_id}")
+        document = session.exec(select(DocumentRecord).where((DocumentRecord.filename == safe_filename) & (DocumentRecord.datastore_id == datastore_id))).first()
+        
         if not document:
+            print(f"Exact match failed for {safe_filename}. Trying case-insensitive match.")
+            document = session.exec(select(DocumentRecord).where((func.lower(DocumentRecord.filename) == safe_filename.lower()) & (DocumentRecord.datastore_id == datastore_id))).first()
+            
+        if not document:
+             print(f"Document record not found for {safe_filename} in DS {datastore_id}")
              raise HTTPException(status_code=404, detail="Document record not found")
 
         datastore = session.exec(select(DataStore.name).where(DataStore.id == document.datastore_id)).first()

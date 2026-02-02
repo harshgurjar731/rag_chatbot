@@ -30,9 +30,10 @@ async def add_secondary_sources(
     
     new_records = []
     for source in sources:
+        clean_intent = source.intent.strip() if source.intent else ""
         new_source = SecondarySource(
             datastore_id=datastore_id,
-            intent=source.intent,
+            intent=clean_intent,
             description=source.description,
             file_path=source.file_path
         )

@@ -273,13 +273,20 @@ async def retrieve(
         intent_source = None
         
         if intent_result and isinstance(intent_result, dict):
-            detected_intent = intent_result.get("title")
+            detected_intent = intent_result.get("title", "").strip()
             witty_hook = intent_result.get("witty_hook")
             
-            # Find the source file path
-            matched_source = next((s for s in secondary_sources if s.intent == detected_intent), None)
+            print(f"DEBUG: Detected Intent: '{detected_intent}'")
+            print(f"DEBUG: Available Sources: {[(s.intent, s.file_path) for s in secondary_sources]}")
+            
+            # Find the source file path (normalize both sides)
+            matched_source = next((s for s in secondary_sources if s.intent.strip() == detected_intent), None)
+            
             if matched_source:
                 intent_source = matched_source.file_path
+                print(f"DEBUG: Found match. Source: {intent_source}")
+            else:
+                 print(f"DEBUG: No source match found for intent '{detected_intent}'")
 
         if full_response and not full_response.startswith("Error:"):
             
