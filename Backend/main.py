@@ -76,6 +76,7 @@ import requests
 from ingestion_pipleline.ingestion_datastore_router import router as ingestion_datastore_router
 from ingestion_pipleline.ingestion_document_loader_router import router as ingestion_document_router
 from ingestion_pipleline.ingestion_chunks_router import router as ingestion_chunking_router
+from ingestion_pipeline.secondary_source_router import router as secondary_source_router # Added
 from rag_pipeline.rag_router import router as rag_knowledge_asst_router
 from routes import translate, frontend_config, embedding
 
@@ -113,6 +114,7 @@ app.include_router(frontend_config.router, prefix="/frontend")
 app.include_router(ingestion_datastore_router, prefix="/ingestion")
 app.include_router(ingestion_document_router, prefix="/ingestion")
 app.include_router(ingestion_chunking_router, prefix="/ingestion")
+app.include_router(secondary_source_router, prefix="/ingestion", tags=["Secondary Sources"]) # Added
 
 app.include_router(rag_knowledge_asst_router, prefix="/rag")
 

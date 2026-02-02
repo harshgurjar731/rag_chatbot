@@ -34,6 +34,8 @@ export interface ChatMessage {
   Citation?: Citation[];
   images?: string[];
   detected_intent?: string;
+  witty_hook?: string;
+  intent_source?: string;
 };
 
 export interface Chatbot {
@@ -52,7 +54,6 @@ export interface CreateChatbotDataResponse {
   description: string;
   created_at?: string;
   datastore_id: number;
-  intents?: { title: string; description: string }[];
 }
 
 export interface CreateDatastoreData {

@@ -49,8 +49,7 @@ async def createAssistant(
         new_assistant = KnowledgeAssistant(
             name=data.name, 
             description=data.description, 
-            datastore_id=data.datastore_id,
-            intents=data.intents
+            datastore_id=data.datastore_id
         )
         session.add(new_assistant)
         session.commit()
@@ -223,7 +222,23 @@ async def retrieve(
         
         # Fetch the assistant to get intents
         assistant = session.exec(select(KnowledgeAssistant).where(KnowledgeAssistant.id == chatbot_id)).first()
-        intents = assistant.intents if assistant else []
+        
+        intents_list = []
+        secondary_sources = []
+        if assistant and assistant.datastore_id:
+             # Check for secondary sources linked to the datastore
+            from models.datastore import SecondarySource
+            secondary_sources = session.exec(
+                select(SecondarySource).where(SecondarySource.datastore_id == assistant.datastore_id)
+            ).all()
+            
+            # Convert SQLModel objects to dicts for the service
+            intents_list = [
+                {"title": s.intent, "description": s.description} 
+                for s in secondary_sources
+            ]
+        
+        print(f"Detected {len(intents_list)} secondary sources (intents).")
 
         # Execute RAG generation and Intent Detection in parallel
         rag_response_task = asyncio.to_thread(
@@ -249,9 +264,23 @@ async def retrieve(
             selected_documents=data.selected_documents if data.selected_documents else []
         )
 
-        intent_detection_task = intent_service.detect_intent(query, intents)
+        intent_detection_task = intent_service.detect_intent(query, intents_list)
 
-        full_response, detected_intent = await asyncio.gather(rag_response_task, intent_detection_task)
+        full_response, intent_result = await asyncio.gather(rag_response_task, intent_detection_task)
+        
+        detected_intent = None
+        witty_hook = None
+        intent_source = None
+        
+        if intent_result and isinstance(intent_result, dict):
+            detected_intent = intent_result.get("title")
+            witty_hook = intent_result.get("witty_hook")
+            
+            # Find the source file path
+            matched_source = next((s for s in secondary_sources if s.intent == detected_intent), None)
+            if matched_source:
+                intent_source = matched_source.file_path
+
         if full_response and not full_response.startswith("Error:"):
             
             # Try to parse as JSON first
@@ -259,12 +288,19 @@ async def retrieve(
                 json_response = json.loads(full_response)
                 if isinstance(json_response, dict):
                      json_response["detected_intent"] = detected_intent
+                     json_response["witty_hook"] = witty_hook
+                     json_response["intent_source"] = intent_source
                      return json_response
             except json.JSONDecodeError:
                 pass
             
             # Fallback for plain text
-            return {"answer": full_response, "detected_intent": detected_intent}
+            return {
+                "answer": full_response, 
+                "detected_intent": detected_intent,
+                "witty_hook": witty_hook,
+                "intent_source": intent_source
+            }
         else:
             
             raise HTTPException(status_code=400, detail=full_response or "⚠️ No reply received. The bot may be offline.")

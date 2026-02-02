@@ -21,6 +21,21 @@ class DataStore(SQLModel, table=True):
         # cascade_delete=True
         sa_relationship_kwargs={"cascade": "all, delete-orphan"}
     )
+    
+    has_secondary_sources: bool = Field(default=False)
+    secondary_sources: List["SecondarySource"] = Relationship(
+        back_populates="datastore",
+        sa_relationship_kwargs={"cascade": "all, delete-orphan"}
+    )
+
+class SecondarySource(SQLModel, table=True):
+    id: Optional[int] = Field(default=None, primary_key=True)
+    datastore_id: Optional[int] = Field(default=None, foreign_key="datastore.id")
+    intent: str
+    description: str
+    file_path: Optional[str] = None
+    
+    datastore: Optional[DataStore] = Relationship(back_populates="secondary_sources")
 
 def update_datastore(session: Session, store_id: int, update_data: dict):
     statement = select(DataStore).where(DataStore.id == store_id)
@@ -50,5 +65,5 @@ class KnowledgeAssistant(SQLModel, table=True):
     description: Optional[str] = ""
     created_at: datetime = Field(default_factory=datetime.utcnow)
     datastore_id:Optional[int]
-    intents: Optional[List[dict]] = Field(default=None, sa_column=Column(JSON))
+    # intents removed as they are now part of datastore secondary sources
 

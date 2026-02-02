@@ -16,6 +16,16 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { CreateDatastoreData } from "@/types/chatbot";
 import axios from "axios";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea"
 
 export interface DocumentObj {
   id: string;
@@ -43,34 +53,58 @@ export const DatastoreConfigDetail = () => {
   const [selectedDocument, setSelectedDocument] = useState<DocumentObj>();
   const [syncStatus, setSyncStatus] = useState<"idle" | "syncing">("idle");
 
+  // Secondary Source States
+  const [showSecondarySourceDialog, setShowSecondarySourceDialog] = useState(false);
+  const [secondarySourcesList, setSecondarySourcesList] = useState([
+    { intent: "", description: "", file_path: "" }
+  ]);
+  const [isSubmittingSource, setIsSubmittingSource] = useState(false);
+
+  const addSourceRow = () => {
+    setSecondarySourcesList([...secondarySourcesList, { intent: "", description: "", file_path: "" }]);
+  };
+
+  const removeSourceRow = (index: number) => {
+    const newList = [...secondarySourcesList];
+    newList.splice(index, 1);
+    setSecondarySourcesList(newList);
+  };
+
+  const updateSourceRow = (index: number, field: string, value: string) => {
+    const newList = [...secondarySourcesList];
+    // @ts-ignore
+    newList[index][field] = value;
+    setSecondarySourcesList(newList);
+  };
+
   async function fetchDocuments(datastore_id: number) {
-      try {
-        const response = await axios.get(`http://127.0.0.1:8000/ingestion/datastore/${id}/documents`);
-        var documentFromApi: DocumentObj[] = [];
-        response.data.forEach((doc: any) => {
-          const document = {
-            id: doc.id,
-            chunkOverlap: doc.chunkOverlap,
-            chunkSize: doc.chunkSize,
-            datastore_id: doc.datastore_id,
-            filePath: doc.filePath,
-            filename: doc.filename,
-            loaderType: doc.loaderType,
-            textSplitMethod: doc.textSplitMethod,
-            uploaded_at: doc.uploaded_at,
-            insert_vector_status: doc.insert_vector_status,
-            chunkCount: doc.chunk_count ?? 0
-          };
-          documentFromApi.push(document)
-        });
-        console.log("Received details:", documentFromApi)
-        setDocuments(documentFromApi)
-      } catch (error) {
-        console.error('Error fetching documents:', error);
-      }
+    try {
+      const response = await axios.get(`http://127.0.0.1:8000/ingestion/datastore/${id}/documents`);
+      var documentFromApi: DocumentObj[] = [];
+      response.data.forEach((doc: any) => {
+        const document = {
+          id: doc.id,
+          chunkOverlap: doc.chunkOverlap,
+          chunkSize: doc.chunkSize,
+          datastore_id: doc.datastore_id,
+          filePath: doc.filePath,
+          filename: doc.filename,
+          loaderType: doc.loaderType,
+          textSplitMethod: doc.textSplitMethod,
+          uploaded_at: doc.uploaded_at,
+          insert_vector_status: doc.insert_vector_status,
+          chunkCount: doc.chunk_count ?? 0
+        };
+        documentFromApi.push(document)
+      });
+      console.log("Received details:", documentFromApi)
+      setDocuments(documentFromApi)
+    } catch (error) {
+      console.error('Error fetching documents:', error);
+    }
   }
 
-  const handleLoaderOpenChange = async(open: boolean) => {
+  const handleLoaderOpenChange = async (open: boolean) => {
     setShowLoaderDialog(open)
     if (!open) {
       await fetchDocuments(datastore.id)
@@ -90,14 +124,14 @@ export const DatastoreConfigDetail = () => {
     setSelectedDocument(documents.find(doc => doc.id === id))
   }
 
-  const deleteDoc = async(id: string) => {
-    console.log("Delete Row ", id) 
+  const deleteDoc = async (id: string) => {
+    console.log("Delete Row ", id)
     const response = await axios.post(`http://127.0.0.1:8000/ingestion/deleteDocument/${id}`);
     await fetchDocuments(datastore.id);
   }
 
   useEffect(() => {
-    if(selectedDocument) {
+    if (selectedDocument) {
       setShowLoaderDialog(true)
     }
   }, [selectedDocument])
@@ -107,6 +141,33 @@ export const DatastoreConfigDetail = () => {
     await refetchChatbots();
     setTimeout(() => setSyncStatus("idle"), 1000);
   };
+
+  const handleSaveSecondarySource = async () => {
+    try {
+      setIsSubmittingSource(true)
+
+      // Filter out empty rows
+      const validSources = secondarySourcesList.filter(s => s.intent.trim() !== "");
+
+      if (validSources.length === 0) {
+        // Maybe show an error or just close?
+        setShowSecondarySourceDialog(false);
+        return;
+      }
+
+      await axios.post(`http://127.0.0.1:8000/ingestion/datastore/${id}/secondary_sources`, validSources);
+
+      // Reset and close
+      setSecondarySourcesList([{ intent: "", description: "", file_path: "" }]);
+      setShowSecondarySourceDialog(false);
+      console.log("Secondary source added successfully")
+
+    } catch (error) {
+      console.error("Error adding secondary source", error)
+    } finally {
+      setIsSubmittingSource(false)
+    }
+  }
 
   return (
     <div className="min-h-screen bg-background">
@@ -119,7 +180,7 @@ export const DatastoreConfigDetail = () => {
                 variant="ghost"
                 size="icon"
                 onClick={() => navigate("/datastore2")}
-                // className="text-secondary-foreground hover:bg-primary/90"
+              // className="text-secondary-foreground hover:bg-primary/90"
               >
                 <ArrowLeft className="h-5 w-5" />
               </Button>
@@ -133,7 +194,7 @@ export const DatastoreConfigDetail = () => {
               <Button
                 variant="chatbot"
                 onClick={() => setShowLoaderDialog(true)}
-                // className="bg-primary hover:bg-primary/90"
+              // className="bg-primary hover:bg-primary/90"
               >
                 <Plus className="h-4 w-4 mr-2" />
                 Add document
@@ -164,9 +225,15 @@ export const DatastoreConfigDetail = () => {
                     <Search className="h-4 w-4 mr-2" />
                     Retrieval Query
                   </DropdownMenuItem>
+                  <DropdownMenuItem
+                    onClick={() => setShowSecondarySourceDialog(true)}
+                  >
+                    <Plus className="h-4 w-4 mr-2" />
+                    Add Secondary sources
+                  </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
-            </div>) }
+            </div>)}
           </div>
         </div>
       </header>
@@ -200,7 +267,7 @@ export const DatastoreConfigDetail = () => {
             <Button
               variant="chatbot"
               onClick={() => setShowLoaderDialog(true)}
-              // className="mt-4 bg-primary hover:bg-primary/90"
+            // className="mt-4 bg-primary hover:bg-primary/90"
             >
               <Plus className="h-4 w-4 mr-2" />
               Add document
@@ -233,8 +300,7 @@ export const DatastoreConfigDetail = () => {
                   onClick={() => rowSelected(doc.id)}
                 >
                   <div className="col-span-4 flex items-center gap-2">
-                    <div className={`w-2 h-2 rounded-full ${
-                        doc.insert_vector_status ? "bg-green-500" : "bg-gray-500"
+                    <div className={`w-2 h-2 rounded-full ${doc.insert_vector_status ? "bg-green-500" : "bg-gray-500"
                       }`} />
                     <span className="text-sm overflow-hidden text-ellipsis whitespace-nowrap">{doc.filename}</span>
                   </div>
@@ -333,10 +399,10 @@ export const DatastoreConfigDetail = () => {
       {/* Dialogs */}
       <DocumentLoaderSelectionDialog
         open={showLoaderDialog}
-        onOpenChange={async(open) => {
-          if(!open){
+        onOpenChange={async (open) => {
+          if (!open) {
             setSelectedDocument(null)
-          }  
+          }
           handleLoaderOpenChange(open)
         }}
         datastoreId={datastore?.id}
@@ -345,16 +411,78 @@ export const DatastoreConfigDetail = () => {
 
       <EmbeddingConfigWizard
         open={showEmbeddingWizard}
-        onOpenChange={async(open) => {
-          if(!open){
+        onOpenChange={async (open) => {
+          if (!open) {
             await fetchDocuments(datastore.id);
-          }  
+          }
           setShowEmbeddingWizard(open)
         }}
         datastoreId={datastore?.id}
         startingStep={datastore?.embeddingModel ? 3 : 1}
         shouldUpsert={shouldUpsert}
       />
+
+      <Dialog open={showSecondarySourceDialog} onOpenChange={setShowSecondarySourceDialog}>
+        <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Add Secondary Sources</DialogTitle>
+          </DialogHeader>
+
+          <div className="space-y-4 py-4">
+            {secondarySourcesList.map((source, index) => (
+              <div key={index} className="grid gap-4 p-4 border rounded-lg relative">
+                {secondarySourcesList.length > 1 && (
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="absolute top-2 right-2 h-6 w-6 text-muted-foreground hover:text-destructive"
+                    onClick={() => removeSourceRow(index)}
+                  >
+                    <Trash className="h-4 w-4" />
+                  </Button>
+                )}
+                <div className="grid gap-2">
+                  <Label>Intent</Label>
+                  <Input
+                    placeholder="e.g., Pricing Inquiry"
+                    value={source.intent}
+                    onChange={(e) => updateSourceRow(index, "intent", e.target.value)}
+                  />
+                </div>
+                <div className="grid gap-2">
+                  <Label>Description (Prompt Instruction)</Label>
+                  <Textarea
+                    placeholder="Describe how the assistant should handle this intent..."
+                    value={source.description}
+                    onChange={(e) => updateSourceRow(index, "description", e.target.value)}
+                  />
+                </div>
+                <div className="grid gap-2">
+                  <Label>File Path (Optional)</Label>
+                  <Input
+                    placeholder="/path/to/relevant/file.pdf"
+                    value={source.file_path}
+                    onChange={(e) => updateSourceRow(index, "file_path", e.target.value)}
+                  />
+                </div>
+              </div>
+            ))}
+
+            <Button variant="outline" onClick={addSourceRow} className="w-full border-dashed">
+              <Plus className="h-4 w-4 mr-2" /> Add Another Intent
+            </Button>
+          </div>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowSecondarySourceDialog(false)}>
+              Cancel
+            </Button>
+            <Button onClick={handleSaveSecondarySource} disabled={isSubmittingSource}>
+              {isSubmittingSource ? "Saving..." : "Save All"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

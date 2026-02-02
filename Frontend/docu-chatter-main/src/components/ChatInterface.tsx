@@ -523,6 +523,8 @@ export const ChatInterface = ({
         Citation: grouped_citations || [],
         images: response["images"],
         detected_intent: response["detected_intent"],
+        witty_hook: response["witty_hook"],
+        intent_source: response["intent_source"],
       };
       console.log("Bot message with citations:", botMessage.Citation);
       setMessages((prev) => [...prev, botMessage]);
@@ -820,6 +822,27 @@ export const ChatInterface = ({
                         <p className="text-sm whitespace-pre-wrap">
                           {message.content}
                         </p>
+
+                        {/* Witty Hook and Intent Source Link */}
+                        {!message.isUser && message.witty_hook && (
+                          <div className="mt-3 mb-1 p-3 bg-blue-50/50 border border-blue-100 rounded-lg">
+                            <div className="text-sm italic text-gray-700 mb-2">
+                              ✨ {message.witty_hook}
+                            </div>
+                            {message.intent_source && (
+                              <button
+                                onClick={(e) => {
+                                  e.preventDefault();
+                                  const fname = getFilenameFromPath(message.intent_source || "");
+                                  viewDocument(fname);
+                                }}
+                                className="text-xs font-semibold text-white bg-blue-600 hover:bg-blue-700 px-3 py-1.5 rounded-full transition-colors flex items-center gap-2 w-fit shadow-sm"
+                              >
+                                <span>👉 Open Recommended Source</span>
+                              </button>
+                            )}
+                          </div>
+                        )}
 
                         {!message.isUser && (
                           <div className="mt-3 flex flex-col gap-2">

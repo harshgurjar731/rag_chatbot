@@ -92,14 +92,14 @@ class IntentDetectionService:
             # I will let it raise so it's visible in logs.
             raise e
 
-    async def detect_intent(self, query: str, intents: List[dict]) -> Optional[str]:
+    async def detect_intent(self, query: str, intents: List[dict]) -> Optional[dict]:
         if not intents or len(intents) == 0:
             return None
 
         # Format intents for the prompt
         intents_str = "\n".join([f"- Title: {i.get('title', 'N/A')}, Description: {i.get('description', 'N/A')}" for i in intents])
 
-        system_prompt = f"""You are an intelligent intent classifier.
+        system_prompt = f"""You are an intelligent intent classifier and a witty assistant.
 Your task is to analyze the user's query and identify if it matches one of the provided intents.
 
 Available Intents:
@@ -107,9 +107,11 @@ Available Intents:
 
 Instructions:
 1. Compare the query (meaning and context) with the Title and Description of each intent.
-2. If the query clearly matches an intent, return ONLY the exact 'Title' of that intent.
-3. If the query does not match any intent, return the string "None".
-4. Do not provide any explanation, only the Title or "None"."""
+2. If the query clearly matches an intent, return a JSON object with:
+   - "title": The exact Title of the matched intent.
+   - "witty_hook": A short, curious, or witty one-liner based on the intent description to encourage the user to click the source link. using emojis is allowed.
+3. If the query does not match any intent, return the string "None" (or a JSON with "title": "None").
+4. Do not provide any explanation, only the JSON."""
 
         human_prompt = f"Query: {query}"
 
@@ -125,13 +127,24 @@ Instructions:
             content = response.content.strip()
 
             # Clean quotes if present
+            if content.startswith('```json'):
+                content = content.replace('```json', '').replace('```', '')
             if content.startswith('"') and content.endswith('"'):
                 content = content[1:-1]
             
             if content.lower() == "none":
                 return None
             
-            return content
+            import json
+            try:
+                result = json.loads(content)
+                if result.get("title") == "None":
+                    return None
+                return result
+            except json.JSONDecodeError:
+                # Fallback if LLM returns just the title?
+                print(f"Failed to parse JSON from intent service: {content}")
+                return {"title": content, "witty_hook": "Check this out!"}
 
         except Exception as e:
             print(f"Error in intent detection: {e}")

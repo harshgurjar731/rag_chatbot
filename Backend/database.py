@@ -1,8 +1,8 @@
 # rag_app/backend/db/database.py
 import os
 from sqlmodel import SQLModel, create_engine, Session, text
-from models.datastore import DataStore
-from models.FileRecord import FileRecord
+from models.datastore import DataStore, SecondarySource, KnowledgeAssistant
+from models.FileRecord import FileRecord, DocumentRecord, ChunkRecord, QuestionAnswer
 
 # Use Environment variables for DB connection (PostgreSQL)
 DB_USER = os.getenv("DB_USER", "user")
@@ -32,15 +32,23 @@ def init_db():
     """
     Initializes the database by creating all tables defined in SQLModel metadata.
     """
-    SQLModel.metadata.create_all(engine)
+    try:
+        print("Creating tables...")
+        SQLModel.metadata.create_all(engine)
+        print("Tables created successfully.")
+    except Exception as e:
+        print(f"Error creating tables: {e}")
 
 def list_tables():
     """
     Lists all tables currently present in the database.
     """
-    with Session(engine) as session:
-        result = session.exec(text("SELECT table_name FROM information_schema.tables WHERE table_schema = 'public';"))
-        print("Tables:", result.all())
+    try:
+        with Session(engine) as session:
+            result = session.exec(text("SELECT table_name FROM information_schema.tables WHERE table_schema = 'public';"))
+            print("Tables in DB:", result.all())
+    except Exception as e:
+        print(f"Error listing tables: {e}")
 
 def list_tables_content():
     """
