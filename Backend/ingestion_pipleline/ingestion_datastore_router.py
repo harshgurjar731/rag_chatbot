@@ -63,7 +63,10 @@ async def get_datastores(session: Session = Depends(get_session)):
         datastores = session.exec(select(DataStore)).all()
         return_datastores: List[DataStoreResponse] = []
         for datastore in datastores:
-            docs = session.exec(select(DocumentRecord.id).where(DocumentRecord.datastore_id == datastore.id)).all()
+            docs = session.exec(select(DocumentRecord.id).where(
+                (DocumentRecord.datastore_id == datastore.id) & 
+                (DocumentRecord.loaderType != "SecondarySource")
+            )).all()
             # datastore["documentCount"] = len(docs)
             return_datastores.append( DataStoreResponse(
                 **datastore.model_dump(),

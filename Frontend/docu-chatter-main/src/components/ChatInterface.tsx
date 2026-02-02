@@ -1068,7 +1068,7 @@ export const ChatInterface = ({
           <div>
             <div className="flex gap-4 ml-4 mb-2">
               <Button
-                variant={isListening ? "destructive" : "chatbot-primary"}
+                variant={isListening ? "destructive" : "chatbot"}
                 className="hover:bg-chatbot-primary border border-chatbot-primary/40"
                 size="icon"
                 onClick={toggleListening}
@@ -1435,7 +1435,7 @@ export const ChatInterface = ({
                 <Button variant="outline" onClick={handleCancel}>
                   Cancel
                 </Button>
-                <Button onClick={handleSave}>Save Settings</Button>
+                <Button onClick={() => handleSave()}>Save Settings</Button>
               </div>
             </TabsContent>
           </Tabs>

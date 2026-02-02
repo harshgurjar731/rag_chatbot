@@ -31,7 +31,11 @@ async def upsertDocs(
     session: Session = Depends(get_session),
     ):
 
-    pending_document_ids = session.exec(select(DocumentRecord.id).where((DocumentRecord.datastore_id == datastore_id) & (DocumentRecord.insert_vector_status != True))).all()
+    pending_document_ids = session.exec(select(DocumentRecord.id).where(
+        (DocumentRecord.datastore_id == datastore_id) & 
+        (DocumentRecord.insert_vector_status != True) &
+        (DocumentRecord.loaderType != "SecondarySource")
+    )).all()
     if (len(pending_document_ids) == 0):
         # raise HTTPException(status_code=400, detail="No Files pending for upsert")
         return {"status": "No pending files"}

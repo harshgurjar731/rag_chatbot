@@ -108,7 +108,7 @@ RAG_CONFIG = {
 
     "azure_supported_models": os.getenv(
         "AZURE_SUPPORTED_MODELS",
-        "gpt-4o-mini"
+        "gpt-4o-mini,gpt-5.2-chat"
     ).split(","),
 
 

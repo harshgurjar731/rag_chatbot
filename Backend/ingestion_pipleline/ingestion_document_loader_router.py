@@ -120,7 +120,11 @@ async def get_documents(
     session: Session = Depends(get_session)):
     
     return_documents: List[DocumentRecordResponse] = []
-    documents = session.exec(select(DocumentRecord).where(DocumentRecord.datastore_id == datastore_id)).all()
+    return_documents: List[DocumentRecordResponse] = []
+    documents = session.exec(select(DocumentRecord).where(
+        (DocumentRecord.datastore_id == datastore_id) & 
+        (DocumentRecord.loaderType != "SecondarySource")
+    )).all()
     for document in documents:
         statement = (
             select(func.count(ChunkRecord.id))
