@@ -53,9 +53,9 @@ graph TD
 The API Gateway layer.
 *   **Role**: Dispatcher.
 *   **Responsibilities**:
-    *   File Uploads: Saves files to Shared Volume.
     *   Metadata: Creates initial records in PostgreSQL.
     *   Dispatch: Pushes "Upsert" or "Process" jobs to Redis `ingestion:inbox`.
+    *   **Intent Detection**: Runs lightweight classification (`IntentDetectionService`) in parallel with RAG requests.
     *   Authentication & Routing.
 
 ### Ingestion Pool (`ingestion-pool`)
@@ -75,7 +75,15 @@ The RAG Inference layer.
     *   Listens to `bot:{id}:inbox`.
     *   **Logic**: Retrieval (Vector Search + Rerank) and Generation (LLM).
 
-## 3. Ingestion Flow (Event-Driven)
+## 3. Data Model
+
+### PostgreSQL
+*   `KnowledgeAssistant`: The chatbot instance.
+*   `DataStore`: The collection of documents.
+*   `DocumentRecord`: File metadata.
+*   `SecondarySource`: **[NEW]** Lightweight intent-mapped files (e.g., specific PDFs for specific questions) linked to a `DataStore`.
+
+## 4. Ingestion Flow (Event-Driven)
 
 Ingestion is entirely asynchronous. The user uploads a file, receives a "Processing" status, and the Ingestion Pool handles the rest.
 
@@ -103,14 +111,36 @@ sequenceDiagram
     Ingestion->>DB: Upsert Vectors & Update Status
 ```
 
-## 4. RAG Query Flow
+## 5. RAG Query Flow (Parallelized)
 
-The query flow remains similar but now relies on the Shared Volume for file paths if needed (though mostly relies on Vector DB).
+The query flow now utilizes **parallel execution** to reduce latency. The Backend orchestrates both the heavy RAG job (via Worker) and the lightweight Intent Detection (locally).
 
-1.  **Request**: Backend pushes Query to `bot:{id}:inbox`.
-2.  **Processing**: Worker pops Query.
-3.  **Retrieval**: Worker queries ChromaDB (populated by Ingestion Pool).
-4.  **Response**: Worker streams answer back via Redis Pub/Sub.
+```mermaid
+sequenceDiagram
+    participant User
+    participant Backend
+    participant IntentService as Intent Service (In-Process)
+    participant Redis
+    participant Worker
+
+    User->>Backend: POST /query (Question)
+    
+    par Parallel Execution
+        Backend->>Redis: Push RAG Job to bot:{id}:inbox
+        Backend->>IntentService: Detect Intent (LLM Call)
+    end
+
+    Worker->>Redis: Pop Result
+    Redis-->>Backend: Stream Answer (from Worker)
+    IntentService-->>Backend: Return User Intent + Source
+    
+    Backend->>User: JSON { "answer": ..., "detected_intent": ..., "source": ... }
+```
+
+1.  **Split**: The Backend immediately triggers two tasks using `asyncio.gather`.
+2.  **Task A (RAG)**: Pushed to Redis. The **Worker Pool** picks it up, retrieves context from ChromaDB, and generates an answer.
+3.  **Task B (Intent)**: The **IntentDetectionService** (in Backend) calls an LLM to classify the query against `SecondarySource` records.
+4.  **Merge**: The Backend waits for both and merges the RAG answer with the detected intent/source before responding to the user.
 
 ## 5. Deployment Notes
 
