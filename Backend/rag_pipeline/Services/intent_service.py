@@ -1,4 +1,6 @@
 from typing import Protocol, List, Optional
+import os
+import mimetypes
 from langchain_openai import ChatOpenAI
 from langchain_openai import AzureChatOpenAI
 # from ingestion_pipleline.Config.Config import INGESTION_CONFIG # Commenting out as likely not needed for this service and path might be tricky
@@ -97,7 +99,34 @@ class IntentDetectionService:
             return None
 
         # Format intents for the prompt
-        intents_str = "\n".join([f"- Title: {i.get('title', 'N/A')}, Description: {i.get('description', 'N/A')}" for i in intents])
+        intents_str_list = []
+        for i in intents:
+             title = i.get('title', 'N/A')
+             desc = i.get('description', 'N/A')
+             file_path = i.get('file_path')
+             
+             metadata_str = "N/A"
+             if file_path and os.path.exists(file_path):
+                 try:
+                     size_bytes = os.path.getsize(file_path)
+                     # Convert to legible size
+                     for unit in ['B', 'KB', 'MB', 'GB']:
+                         if size_bytes < 1024:
+                             size_str = f"{size_bytes:.2f} {unit}"
+                             break
+                         size_bytes /= 1024
+                     else:
+                         size_str = f"{size_bytes:.2f} TB"
+                     
+                     mime_type, _ = mimetypes.guess_type(file_path)
+                     filename = os.path.basename(file_path)
+                     metadata_str = f"Filename: {filename}, Size: {size_str}, Type: {mime_type or 'Unknown'}"
+                 except Exception as e:
+                     metadata_str = f"Error reading metadata: {str(e)}"
+                     
+             intents_str_list.append(f"- Title: {title}\n  Description: {desc}\n  Source Metadata: {metadata_str}")
+
+        intents_str = "\n\n".join(intents_str_list)
 
         system_prompt = f"""You are an intelligent intent classifier and a witty assistant.
 Your task is to analyze the user's query and identify if it matches one of the provided intents.
@@ -106,10 +135,10 @@ Available Intents:
 {intents_str}
 
 Instructions:
-1. Compare the query (meaning and context) with the Title and Description of each intent.
+1. Compare the query (meaning and context) with the Title, Description, and Source Metadata of each intent.
 2. If the query clearly matches an intent, return a JSON object with:
    - "title": The exact Title of the matched intent.
-   - "witty_hook": A short, curious, or witty one-liner based on the intent description to encourage the user to click the source link. using emojis is allowed.
+   - "witty_hook": A short, curious, or witty one-liner based on the intent description AND the source metadata (e.g. don't mention the file type or size ) to encourage the user to click the source link. using emojis is allowed.
 3. If the query does not match any intent, return the string "None" (or a JSON with "title": "None").
 4. Do not provide any explanation, only the JSON."""
 

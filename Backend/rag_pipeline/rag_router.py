@@ -234,7 +234,7 @@ async def retrieve(
             
             # Convert SQLModel objects to dicts for the service
             intents_list = [
-                {"title": s.intent, "description": s.description} 
+                {"title": s.intent, "description": s.description, "file_path": s.file_path} 
                 for s in secondary_sources
             ]
         
