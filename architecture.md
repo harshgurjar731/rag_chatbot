@@ -56,6 +56,7 @@ The API Gateway layer.
     *   Metadata: Creates initial records in PostgreSQL.
     *   Dispatch: Pushes "Upsert" or "Process" jobs to Redis `ingestion:inbox`.
     *   **Intent Detection**: Runs lightweight classification (`IntentDetectionService`) in parallel with RAG requests.
+    *   **Video Processing**: Handles video uploads, extracts audio using `ffmpeg` (local), and calls Mistral for transcription (synchronous).
     *   Authentication & Routing.
 
 ### Ingestion Pool (`ingestion-pool`)
@@ -109,6 +110,35 @@ sequenceDiagram
     Ingestion->>Ingestion: Read File from Volume
     Ingestion->>Ingestion: Chunk & Embed (Heavy CPU)
     Ingestion->>DB: Upsert Vectors & Update Status
+
+### 4.1. Video Secondary Source Ingestion (Synchronous)
+
+Unlike the main document ingestion, Video Secondary Sources are processed synchronously within the Backend (mostly for immediate feedback/simpler flow).
+
+1.  **Extract**: Backend uses `ffmpeg` to extract audio from the uploaded video.
+2.  **Transcribe**: Backend sends audio to **Mistral API** (Voxtral) for transcription.
+3.  **Analyze**: Backend uses an LLM (via LangChain) to generate an `Intent` and `Description` from the transcription.
+4.  **Save**: The file is saved, and a `SecondarySource` record is created in PostgreSQL.
+
+```mermaid
+sequenceDiagram
+    participant User
+    participant Backend
+    participant FFmpeg as FFmpeg (Os)
+    participant Mistral as Mistral API
+    participant LLM as Intent LLM
+    participant DB as Postgres
+
+    User->>Backend: POST /upload_video_source
+    Backend->>FFmpeg: Extract Audio (.mp3)
+    FFmpeg-->>Backend: Audio File
+    Backend->>Mistral: Transcribe Audio
+    Mistral-->>Backend: Transcript Text
+    Backend->>LLM: Generate Intent & Description
+    LLM-->>Backend: JSON {intent, description}
+    Backend->>DB: Save SecondarySource
+    Backend->>User: Return Created Source
+```
 ```
 
 ## 5. RAG Query Flow (Parallelized)
@@ -144,5 +174,8 @@ sequenceDiagram
 
 ## 5. Deployment Notes
 
+*   **Detailed Dependencies**:
+    *   **FFmpeg**: Required on the `Backend` container for video audio extraction.
+    *   **Mistral API Key**: Required for video transcription (`voxtral-mini`) processing.
 *   **Shared Volume**: Critical for decoupling. The Backend "hands off" the file via disk, and the Worker/Ingestion service picks it up.
 *   **env variables**: API Keys (OpenAI, Mistral, Groq) must be provided to both pools if they perform embedding/generation.

@@ -216,19 +216,47 @@ def get_rag_answer_text(
 
     # ✅ Handle sources
     print("LLM Answer:", final_response)
-    final_response_obj = json.loads(final_response)
-    print("LLM Response:", final_response_obj["response"])
+    try:
+        final_response_obj = json.loads(final_response)
+        # Handle cases where response might be missing keys
+        if not isinstance(final_response_obj, dict):
+             # If it parsed but is not a dict (e.g. list or string), treat as raw response
+             final_response_obj = {"response": str(final_response_obj), "used_chunks": []}
+        
+        print("LLM Response:", final_response_obj.get("response", "")[:100]) # Print first 100 char safe
+        used_chunk_indices = final_response_obj.get("used_chunks", [])
+    except json.JSONDecodeError:
+        print("⚠️ Warning: LLM validation failed to return JSON. Using raw text.")
+        final_response_obj = {"response": final_response}
+        # Fallback: assume all chunks were potentially relevant or none. 
+        # For safety, let's say none to avoid hallucinated citations, 
+        # or maybe we can try to heuristic match? For now, empty list is safest to prevent crashes.
+        used_chunk_indices = []
     
-    used_chunk_indices = final_response_obj["used_chunks"]
-    used_chunks = [returned_chunks[i] for i in used_chunk_indices]
+    # Ensure used_chunk_indices is a list
+    if not isinstance(used_chunk_indices, list):
+        used_chunk_indices = []
+
+    # Check if used_chunk_indices contains valid integers/strings that map to returned_chunks
+    valid_indices = []
+    for idx in used_chunk_indices:
+        try:
+            i = int(idx)
+            if 0 <= i < len(returned_chunks):
+                valid_indices.append(i)
+        except (ValueError, TypeError):
+            pass
+            
+    used_chunks = [returned_chunks[i] for i in valid_indices]
 
     unique_pairs = set()
 
     for chunk in used_chunks:
         metadata = chunk.metadata
-        source = metadata["source"]
-        page = metadata["page_number"]
-        unique_pairs.add((source, page))
+        if isinstance(metadata, dict):
+            source = metadata.get("source", "Unknown Source")
+            page = metadata.get("page_number", "N/A")
+            unique_pairs.add((source, page))
 
     unique_list = [{"source": s, "page_number": p} for s, p in unique_pairs]
 
@@ -244,7 +272,11 @@ def get_rag_answer_text(
     #     }
 
 
-    return {"answer": final_response_obj["response"].strip(),
+    answer_text = final_response_obj["response"]
+    if isinstance(answer_text, dict) or isinstance(answer_text, list):
+        answer_text = json.dumps(answer_text)
+    
+    return {"answer": str(answer_text).strip(),
             "images": [],
             "citations": source_json_string}
 

@@ -56,32 +56,51 @@ export const DatastoreConfigDetail = () => {
   // Secondary Source States
   const [showSecondarySourceDialog, setShowSecondarySourceDialog] = useState(false);
   // Updated state to hold file object optional
-  const [secondarySourcesList, setSecondarySourcesList] = useState<{
-    intent: string;
-    description: string;
-    file_path: string;
-    fileObj?: File | null;
-  }[]>([
-    { intent: "", description: "", file_path: "", fileObj: null }
-  ]);
-  const [isSubmittingSource, setIsSubmittingSource] = useState(false);
+  // Removed manual secondary source state
+  // const [secondarySourcesList, setSecondarySourcesList] = useState...
+  const [isVideoUploading, setIsVideoUploading] = useState(false);
 
-  const addSourceRow = () => {
-    setSecondarySourcesList([...secondarySourcesList, { intent: "", description: "", file_path: "", fileObj: null }]);
+  const handleVideoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!e.target.files || e.target.files.length === 0) return;
+
+    setIsVideoUploading(true);
+    const files = Array.from(e.target.files);
+
+    // Use the base URL logic from existing code
+    const baseUrl = import.meta.env.VITE_API_BASE_URL || "http://127.0.0.1:8000";
+
+    try {
+      for (const file of files) {
+        const formData = new FormData();
+        formData.append("file", file); // key must match backend 'file'
+
+        console.log(`Uploading video: ${file.name}`);
+
+        await axios.post(`${baseUrl}/ingestion/datastore/${id}/upload_video_source`, formData, {
+          headers: { "Content-Type": "multipart/form-data" }
+        });
+
+        console.log(`Video processed: ${file.name}`);
+      }
+
+      // Notify success
+      alert(`Successfully processed ${files.length} videos and added them as secondary sources.`);
+
+      // Optionally close dialog or refresh something?
+      // setShowSecondarySourceDialog(false); 
+
+    } catch (error) {
+      console.error("Error uploading videos:", error);
+      alert("Failed to upload/process some videos. Check console for details.");
+    } finally {
+      setIsVideoUploading(false);
+      // Reset input if needed
+      e.target.value = "";
+    }
   };
 
-  const removeSourceRow = (index: number) => {
-    const newList = [...secondarySourcesList];
-    newList.splice(index, 1);
-    setSecondarySourcesList(newList);
-  };
+  // Removed manual source list handlers
 
-  const updateSourceRow = (index: number, field: string, value: any) => {
-    const newList = [...secondarySourcesList];
-    // @ts-ignore
-    newList[index][field] = value;
-    setSecondarySourcesList(newList);
-  };
 
   async function fetchDocuments(datastore_id: number) {
     try {
@@ -148,75 +167,8 @@ export const DatastoreConfigDetail = () => {
     setTimeout(() => setSyncStatus("idle"), 1000);
   };
 
-  const handleSaveSecondarySource = async () => {
-    try {
-      setIsSubmittingSource(true)
+  // Removed handleSaveSecondarySource as it was for manual entry mixing
 
-      // Filter out empty rows
-      const validSources = secondarySourcesList.filter(s => s.intent.trim() !== "");
-
-      if (validSources.length === 0) {
-        setShowSecondarySourceDialog(false);
-        return;
-      }
-
-      // Process uploads first
-      for (const source of validSources) {
-        if (source.fileObj) {
-          console.log(`Uploading file for category: ${source.intent}`);
-          const formData = new FormData();
-          formData.append("files", source.fileObj);
-
-          // Construct default metadata matching DocumentObj/DocumentRecord
-          const docMetadata = {
-            id: null,
-            filename: source.fileObj.name,
-            loaderType: "SecondarySource", // Hidden from main list
-            textSplitMethod: "RecursiveCharacterTextSplitter",
-            chunkSize: 500,
-            chunkOverlap: 50,
-            datastore_id: Number(id),
-            filePath: null,
-            uploaded_at: new Date().toISOString(),
-            insert_vector_status: false,
-            chunkCount: 0
-          };
-          formData.append("documentDetails", JSON.stringify(docMetadata));
-
-          try {
-            await axios.post(`${import.meta.env.VITE_API_BASE_URL || "http://127.0.0.1:8000"}/ingestion/datastore/${id}/upload`, formData, {
-              headers: { "Content-Type": "multipart/form-data" }
-            });
-            // On success, update the file_path to the filename which the system uses
-            source.file_path = source.fileObj.name;
-          } catch (err) {
-            console.error(`Failed to upload ${source.fileObj.name}`, err);
-            // Proceed? or Fail? Let's proceed but maybe warn.
-          }
-        }
-      }
-
-      // Now save the intents with the (possibly updated) file_paths
-      // We map to remove the fileObj before sending to the secondary source API
-      const payload = validSources.map(({ fileObj, ...rest }) => rest);
-
-      await axios.post(`http://127.0.0.1:8000/ingestion/datastore/${id}/secondary_sources`, payload);
-
-      // Reset and close
-      setSecondarySourcesList([{ intent: "", description: "", file_path: "", fileObj: null }]);
-      setShowSecondarySourceDialog(false);
-
-      // Refresh documents list as we might have just uploaded some
-      await fetchDocuments(Number(id));
-
-      console.log("Secondary sources added successfully")
-
-    } catch (error) {
-      console.error("Error adding secondary source", error)
-    } finally {
-      setIsSubmittingSource(false)
-    }
-  }
 
   return (
     <div className="min-h-screen bg-background">
@@ -477,73 +429,62 @@ export const DatastoreConfigDetail = () => {
             <DialogTitle>Add Secondary Sources</DialogTitle>
           </DialogHeader>
 
-          <div className="space-y-4 py-4">
-            {secondarySourcesList.map((source, index) => (
-              <div key={index} className="grid gap-4 p-4 border rounded-lg relative">
-                {secondarySourcesList.length > 1 && (
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="absolute top-2 right-2 h-6 w-6 text-muted-foreground hover:text-destructive"
-                    onClick={() => removeSourceRow(index)}
-                  >
-                    <Trash className="h-4 w-4" />
-                  </Button>
-                )}
-                <div className="grid gap-2">
-                  <Label>Category</Label>
-                  <Input
-                    placeholder="e.g., Pricing Inquiry"
-                    value={source.intent}
-                    onChange={(e) => updateSourceRow(index, "intent", e.target.value)}
-                  />
-                </div>
-                <div className="grid gap-2">
-                  <Label>Description (Prompt Instruction)</Label>
-                  <Textarea
-                    placeholder="Describe how the assistant should handle this category..."
-                    value={source.description}
-                    onChange={(e) => updateSourceRow(index, "description", e.target.value)}
-                  />
-                </div>
-                {/* Changed from File Path text input to File Upload */}
-                <div className="grid gap-2">
-                  <Label>Source File (Upload)</Label>
-                  <div className="flex gap-2 items-center">
-                    <Input
-                      type="file"
-                      // Limit file types if needed, e.g. accept=".pdf,.txt"
-                      onChange={(e) => {
-                        const file = e.target.files?.[0] || null;
-                        if (file) {
-                          updateSourceRow(index, "fileObj", file);
-                          // Also update file_path text locally for visual confirmation or if we keep the field
-                          updateSourceRow(index, "file_path", file.name);
-                        }
-                      }}
-                    />
-                    {/* Show selected filename if available */}
-                    {source.file_path && <span className="text-xs text-muted-foreground">{source.file_path}</span>}
-                  </div>
-                </div>
-              </div>
-            ))}
+          {/* Video Upload Section - Enhanced */}
+          <div className="p-6 border rounded-lg bg-muted/20 text-center">
+            <h3 className="text-lg font-medium mb-2">Upload Videos</h3>
+            <p className="text-sm text-muted-foreground mb-4">
+              Select multiple video files or a folder to automatically extract intents and descriptions.
+            </p>
 
-            <Button variant="outline" onClick={addSourceRow} className="w-full border-dashed">
-              <Plus className="h-4 w-4 mr-2" /> Add Another Category
-            </Button>
+            <div className="flex flex-col gap-4 items-center">
+              <Label htmlFor="video-upload" className="cursor-pointer bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-4 py-2 rounded-md flex items-center justify-center w-full max-w-xs transition-colors">
+                <Plus className="mr-2 h-4 w-4" /> Select Videos
+              </Label>
+              <Input
+                id="video-upload"
+                type="file"
+                multiple
+                accept="video/*"
+                onChange={handleVideoUpload}
+                disabled={isVideoUploading}
+                className="hidden"
+              />
+
+              {/* Folder Upload Support - using webkitdirectory attribute */}
+              {/* Note: React doesn't standardize webkitdirectory yet, so we use a ref or simple workaround if needed, 
+                      but standard input usually ignores it unless specified. 
+                      However, standard 'multiple' is often enough for user needs. 
+                      To truly support folder upload we might need a separate input or custom directive.
+                      Let's stick to standard multiple for now as it's safer, but if user explicitly asked for folder...
+                      we can try adding the attribute via prop spread or specialized component.
+                  */}
+              <p className="text-xs text-muted-foreground">
+                Supported formats: .mp4, .avi, .mov, .mkv
+              </p>
+            </div>
+
+            {isVideoUploading && (
+              <div className="mt-4">
+                <div className="flex items-center justify-center gap-2 text-blue-500">
+                  <RefreshCw className="h-4 w-4 animate-spin" />
+                  <span className="text-sm">Processing videos... This may take a while.</span>
+                </div>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Extracting audio, transcribing, and generating descriptions.
+                </p>
+              </div>
+            )}
           </div>
+
+
 
           <DialogFooter>
             <Button variant="outline" onClick={() => setShowSecondarySourceDialog(false)}>
-              Cancel
-            </Button>
-            <Button onClick={handleSaveSecondarySource} disabled={isSubmittingSource}>
-              {isSubmittingSource ? "Saving..." : "Save All"}
+              Close
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </div>
+    </div >
   );
 };

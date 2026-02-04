@@ -39,6 +39,7 @@ RUN uv pip install --system langchain-text-splitters
 RUN uv pip install --system pypdf
 RUN uv pip install --system openai
 RUN uv pip install --system langchain-openai
+RUN uv pip install --system mistralai
 
 # Observability
 RUN uv pip install --system opentelemetry-api
@@ -60,6 +61,10 @@ COPY --from=builder /opt/conda/bin /opt/conda/bin
 
 # Copy application code
 COPY . .
+
+# Install runtime binary dependencies (ffmpeg)
+# We install here to ensure shared libraries are properly linked in the runtime environment
+RUN conda install -y -c conda-forge ffmpeg && conda clean -a -y
 
 # Environment variables
 ENV PYTHONUNBUFFERED=1 \

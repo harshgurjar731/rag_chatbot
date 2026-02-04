@@ -20,6 +20,7 @@ import {
   XIcon,
   DatabaseIcon,
   Sparkles,
+  ArrowRight,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -663,9 +664,18 @@ export const ChatInterface = ({
   }, [chatbot?.id]);
 
   const viewDocument = async (doc_name: string) => {
+    // Check if it's a video file and route to secondary source handler
+    const isVideo = doc_name.toLowerCase().match(/\.(mp4|avi|mov|mkv)$/);
+    if (isVideo) {
+      await viewSecondarySource(doc_name);
+      return;
+    }
+
     try {
       const encodedName = encodeURIComponent(doc_name)
-      const response = await axios.get(`http://localhost:8000/ingestion/download/${chatbot.datastoreId}/${encodedName}`, {
+      // Use configured base_url or fallback
+      const baseUrl = config?.base_url || "http://127.0.0.1:8000";
+      const response = await axios.get(`${baseUrl}/ingestion/download/${chatbot.datastoreId}/${encodedName}`, {
         responseType: "blob", // important: we want the file bytes
       });
 
@@ -683,6 +693,39 @@ export const ChatInterface = ({
       setTimeout(() => window.URL.revokeObjectURL(fileUrl), 5000);
     } catch (error) {
       console.error("Error viewing file:", error);
+      toast({
+        title: "Error Opening File",
+        description: "Failed to download the document.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const viewSecondarySource = async (doc_name: string) => {
+    try {
+      const encodedName = encodeURIComponent(doc_name)
+      // Use configured base_url or fallback
+      const baseUrl = config?.base_url || "http://127.0.0.1:8000";
+      const response = await axios.get(`${baseUrl}/ingestion/datastore/${chatbot.datastoreId}/secondary_download/${encodedName}`, {
+        responseType: "blob",
+      });
+
+      console.log("Secondary source type", response.data.type)
+      const mimeType = "video/mp4"; // Defaulting to mp4 or infer from response/name
+
+      const fileBlob = new Blob([response.data], { type: mimeType });
+      const fileUrl = window.URL.createObjectURL(fileBlob);
+
+      window.open(fileUrl, "_blank");
+
+      setTimeout(() => window.URL.revokeObjectURL(fileUrl), 5000);
+    } catch (error) {
+      console.error("Error viewing secondary source:", error);
+      toast({
+        title: "Error Opening Video",
+        description: "Failed to download the video source. It might not exist on the server.",
+        variant: "destructive",
+      });
     }
   };
   const handleSave = (overrides: Partial<typeof tempSettings> = {}) => {
@@ -822,26 +865,31 @@ export const ChatInterface = ({
 
                         {/* Witty Hook and Intent Source Link */}
                         {!message.isUser && message.witty_hook && (
-                          <div className="mt-3 mb-1 p-3 bg-blue-50/50 border border-blue-100 rounded-lg">
+                          <div className="mt-4 pt-3 border-t border-border/40">
                             {/* Integrated Intent Badge */}
                             {message.detected_intent && (
-                              <div className="text-xs font-bold text-blue-700 mb-1 uppercase tracking-wide">
-                                {message.detected_intent}
+                              <div className="flex items-center gap-2 mb-1">
+                                <span className="text-[10px] uppercase tracking-widest text-muted-foreground font-medium">
+                                  {message.detected_intent}
+                                </span>
                               </div>
                             )}
-                            <div className="text-sm italic text-gray-700 mb-2">
-                              ✨ {message.witty_hook}
+
+                            <div className="text-sm text-foreground/80 italic mb-2 pl-2 border-l-2 border-primary/20">
+                              {message.witty_hook}
                             </div>
+
                             {message.intent_source && (
                               <button
                                 onClick={(e) => {
                                   e.preventDefault();
                                   const fname = getFilenameFromPath(message.intent_source || "");
-                                  viewDocument(fname);
+                                  viewSecondarySource(fname);
                                 }}
-                                className="text-xs font-semibold text-white bg-blue-600 hover:bg-blue-700 px-3 py-1.5 rounded-full transition-colors flex items-center gap-2 w-fit shadow-sm"
+                                className="text-xs text-primary hover:text-primary/80 hover:underline flex items-center gap-1 transition-colors group"
                               >
-                                <span>👉 Open Recommended Source</span>
+                                <span>Open Related Source</span>
+                                <ArrowRight className="w-3 h-3 transition-transform group-hover:translate-x-0.5" />
                               </button>
                             )}
                           </div>
@@ -1138,7 +1186,7 @@ export const ChatInterface = ({
               </Button>
             </div>
           </div>
-        </div>
+        </div >
         <div className="flex flex-col w-[30%] justify-between px-4 py-2 bg-gradient-surface rounded-lg border border-chatbot-primary/20">
           <Tabs defaultValue="documents" className="w-full">
             {/* Tab Buttons */}
@@ -1416,319 +1464,7 @@ export const ChatInterface = ({
           </Tabs>
         </div>
 
-        {/* <div className="flex flex-col justify-between overflow-y-auto px-4 py-2 bg-gradient-surface rounded-lg border border-chatbot-primary/20 space-y-2">
-          <div className="flex items-center flex-wrap gap-5 px-4 py-2 border-chatbot-primary/20">
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button variant="outline" size="default">
-                  Documents
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-[300px] h-[200px] max-h-[400px] overflow-y-auto">
-                <div className="space-y-2">
-                  <Label>Select Documents</Label>
-                  <SelectMulti
-                    isMulti={true}
-                    styles={customMultiStyles}
-                    options={getChatbotDocumentOptions(chatbot)}
-                    value={selectedDocs}
-                    onChange={(selected: any) =>
-                      setSelectedDocs(selected || [])
-                    }
-                    isDisabled={isLoading}
-                    placeholder="Choose document"
-                  />
-                  <div className="space-y-2">
-                    <Label>Enter Website URL</Label>
-                    <div className="flex gap-2">
-                      <Input
-                        type="url"
-                        placeholder="https://example.com"
-                        value={urlInput}
-                        onChange={(e) => setUrlInput(e.target.value)}
-                        disabled={isLoading}
-                      />
-                      <Button
-                        variant="chatbot"
-                        size="sm"
-                        onClick={handleUrlSubmit}
-                        disabled={!urlInput.trim() || isSubmitting}
-                      >
-                        {isSubmitting ? (
-                          <Loader2 className="h-4 w-4 animate-spin" />
-                        ) : (
-                          "Add"
-                        )}
-                      </Button>
-                    </div>
-                  </div>
-                </div>
-              </PopoverContent>
-            </Popover>
-            <Dialog open={open} onOpenChange={setOpen}>
-              <DialogTrigger asChild>
-                <Button variant="outline" size="default">
-                  Model Settings
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="max-w-4xl h-[90vh] flex flex-col rounded-2xl p-0 overflow-hidden border-2">
-                <DialogHeader className="px-6 py-4 border-b bg-muted/40">
-                  <DialogTitle className="text-xl font-semibold">
-                    Model Settings
-                  </DialogTitle>
-                  <DialogDescription>
-                    Configure optimizer, embeddings, LLM, safety filters, and
-                    output preferences.
-                  </DialogDescription>
-                </DialogHeader>
-                <div className="flex-1 overflow-y-auto px-6 py-4 space-y-8">
-                  <div>
-                    <h3 className="text-lg font-medium mb-2">
-                      Response Control
-                    </h3>
-                    <Separator className="mb-4" />
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                      <div className="space-y-1">
-                        <Label>LLM Model</Label>
-                        <Select
-                          onValueChange={(value) =>
-                            setTempSettings({
-                              ...tempSettings,
-                              llmModel: value,
-                            })
-                          }
-                          disabled={isLoading}
-                        >
-                          <SelectTrigger className="border-2 border-gray-500">
-                            <SelectValue
-                              placeholder={
-                                tempSettings.llmModel !== ""
-                                  ? tempSettings.llmModel
-                                  : "Select LLM"
-                              }
-                            />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {config?.llm_models.map((model) => (
-                              <SelectItem key={model} value={model}>
-                                {model}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
-                      <div className="space-y-1">
-                        <Label>Token Size</Label>
-                        <Input
-                          type="number"
-                          className="border-4 border-gray-200"
-                          min={config?.token_size_options?.min ?? 256}
-                          max={config?.token_size_options?.max ?? 2048}
-                          step={config?.token_size_options?.step ?? 128}
-                          placeholder={`Default: ${
-                            config?.token_size_options?.default ?? 512
-                          }`}
-                          value={tempSettings.tokenSize}
-                          onChange={(e) =>
-                            setTempSettings({
-                              ...tempSettings,
-                              tokenSize: Number(e.target.value),
-                            })
-                          }
-                          disabled={isLoading}
-                        />
-                        <p className="text-xs text-muted-foreground">
-                          Must be between 256 and 2048 tokens (step 128).
-                        </p>
-                      </div>
-                      <div className="space-y-1">
-                        <Label>Guardrails</Label>
-                        <Select
-                          onValueChange={(value) =>
-                            setTempSettings({
-                              ...tempSettings,
-                              guardrailOption: value,
-                            })
-                          }
-                          disabled={isLoading}
-                        >
-                          <SelectTrigger className="border-4 border-gray-200">
-                            <SelectValue
-                              placeholder={
-                                tempSettings.guardrailOption !== ""
-                                  ? tempSettings.guardrailOption
-                                  : "Select Guardrail Level"
-                              }
-                            />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {config?.guardrail_options.map((option) => (
-                              <SelectItem
-                                key={option.value}
-                                value={option.value}
-                              >
-                                {option.label}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
-                      <div className="space-y-2">
-                        <Label>Creativity</Label>
-                        <Slider
-                          min={0}
-                          max={1}
-                          step={0.1}
-                          value={[tempSettings.temperature]}
-                          onValueChange={(val) =>
-                            setTempSettings({
-                              ...tempSettings,
-                              temperature: val[0],
-                            })
-                          }
-                          disabled={isLoading}
-                        />
-                        <p className="text-sm text-muted-foreground">
-                          Temperature: {tempSettings.temperature.toFixed(1)}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                  <div>
-                    <h3 className="text-lg font-medium mb-2">
-                      Advanced Settings
-                    </h3>
-                    <Separator className="mb-4" />
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                      <div className="space-y-1">
-                        <Label>Query Optimizer</Label>
-                        <Select
-                          onValueChange={(value) =>
-                            setTempSettings({
-                              ...tempSettings,
-                              optimizer: value,
-                            })
-                          }
-                          disabled={isLoading}
-                        >
-                          <SelectTrigger className="border-4 border-gray-200">
-                            <SelectValue
-                              placeholder={
-                                tempSettings.optimizer !== ""
-                                  ? tempSettings.optimizer
-                                  : "Select Optimizer"
-                              }
-                            />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {config?.optimizer.map((opt) => (
-                              <SelectItem key={opt.value} value={opt.value}>
-                                {opt.label}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
-        <div className="space-y-1">
-          <Label>Embedding Model</Label>
-          <Select
-            onValueChange={(value) =>
-              setTempSettings({
-                ...tempSettings,
-                embeddingModel: value,
-              })
-            }
-            disabled
-          >
-            <SelectTrigger className="border-4 border-gray-200">
-              <SelectValue
-                placeholder={
-                  tempSettings.embeddingModel !== ""
-                    ? tempSettings.embeddingModel
-                    : "all-MiniLM-L6-v2"
-                }
-              />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all-MiniLM-L6-v2">
-                all-MiniLM-L6-v2
-              </SelectItem>
-              <SelectItem value="sentence-transformers/all-mpnet-base-v2">
-                sentence-transformers
-              </SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-        <div className="space-y-1">
-          <Label>Vector DB</Label>
-          <Select
-            onValueChange={(value) =>
-              setTempSettings({
-                ...tempSettings,
-                vectorDb: value,
-              })
-            }
-            disabled
-          >
-            <SelectTrigger className="border-4 border-gray-200">
-              <SelectValue
-                placeholder={
-                  tempSettings.vectorDb !== ""
-                    ? tempSettings.vectorDb
-                    : "FAISS"
-                }
-              />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="faiss">FAISS</SelectItem>
-              <SelectItem value="chroma">CHROMA</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-        <div className="space-y-1">
-          <Label>Re-ranker</Label>
-          <select
-            className="w-full rounded-lg border-4 border-gray-200 border-input bg-background px-3 py-2 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-ring"
-            value={tempSettings.rerankerOption}
-            onChange={(e) =>
-              setTempSettings({
-                ...tempSettings,
-                rerankerOption: e.target.value,
-              })
-            }
-            disabled={isLoading}
-          >
-            <option value="none">
-              None – Use retriever results directly
-            </option>
-            <option value="cross-encoder">
-              Cross-encoder – Most accurate, but slower
-            </option>
-            <option value="bi-encoder">
-              Bi-encoder – Faster, less accurate
-            </option>
-            <option value="llm-reranker">
-              LLM-based – Uses a language model
-            </option>
-          </select>
-          <p className="text-xs text-muted-foreground">
-            Choose a re-ranking method to reorder retrieved
-            documents.
-          </p>
-        </div>
-      </div >
-    </div >
-                </div >
-  <DialogFooter className="px-6 py-4 border-t bg-muted/40 flex justify-end gap-3">
-    <Button variant="outline" onClick={handleCancel}>
-      Cancel
-    </Button>
-    <Button onClick={() => handleSave()}>Save Settings</Button>
-  </DialogFooter>
-              </DialogContent >
-            </Dialog >
-          </div >
-        </div > */}
+
       </div >
       <div className="flex flex-col gap-4">
         {selectedDocs.length > 0 && (

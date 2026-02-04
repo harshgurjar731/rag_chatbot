@@ -26,3 +26,4 @@ langchain-text-splitters
 pypdf
 openai
 langchain-openai
+mistralai
