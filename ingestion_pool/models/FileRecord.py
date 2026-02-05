@@ -6,6 +6,28 @@ from typing import List, Any
 from sqlmodel import Relationship, ForeignKey, select, Session
 from models.datastore import DataStore
 
+class Folder(SQLModel, table=True):
+    id: Optional[int] = Field(default=None, primary_key=True)
+    name: str
+    parent_id: Optional[int] = Field(
+        default=None,
+        sa_column=Column(ForeignKey("folder.id", ondelete="CASCADE"))
+    )
+    datastore_id: Optional[int] = Field(
+        default=None,
+        sa_column=Column(ForeignKey("datastore.id", ondelete="CASCADE"))
+    )
+    # OPTIONAL but highly recommended for fast subtree queries
+    path: str | None = None   # example: "/1/5/9/"
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+    # relationships
+    parent: Optional["Folder"] = Relationship(
+        sa_relationship_kwargs={"remote_side": "Folder.id"}
+    )
+    children: List["Folder"] = Relationship()
+    documents: List["DocumentRecord"] = Relationship(back_populates="folder")
+
+
 class DocumentRecord(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     filename: str
@@ -24,12 +46,17 @@ class DocumentRecord(SQLModel, table=True):
         # sa_column_kwargs={"ondelete": "CASCADE"}
         sa_column=Column(ForeignKey("datastore.id", ondelete="CASCADE"))
     )
-    datastore: Optional[DataStore] = Relationship(back_populates="documents")
+    # ✅ NEW — folder link
+    folder_id: Optional[int] = Field(
+        default=None,
+        sa_column=Column(ForeignKey("folder.id", ondelete="CASCADE"))
+    )
 
+    folder: Optional["Folder"] = Relationship(back_populates="documents")
+    datastore: Optional[DataStore] = Relationship(back_populates="documents")
     chunks: List["ChunkRecord"] = Relationship(
         back_populates="document", sa_relationship_kwargs={"cascade": "all, delete-orphan"}
     )
-
     model_config = {
         "from_attributes": True   # <- THIS IS REQUIRED
     }

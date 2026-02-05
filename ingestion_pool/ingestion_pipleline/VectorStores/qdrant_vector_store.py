@@ -19,10 +19,8 @@ from qdrant_client import QdrantClient, models
 from qdrant_client.models import VectorParams, Distance, PointStruct, Filter, FieldCondition, MatchValue
 import concurrent.futures
 
-QDRANT_API_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhY2Nlc3MiOiJtIn0.cxNfWC0cJ3ekgS6AgWfaIH68vRu0apXHCnnIw7FzgjA"
-#QDRANT_API_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhY2Nlc3MiOiJtIn0.stqye0XmMsoZUJ-oXkhD8a8UmlibnKSa_JfrRKWAll0"
-#QDRANT_CLUSTER_URL = "https://6c504361-ebbd-4169-ac71-56b10bc167d0.us-east4-0.gcp.cloud.qdrant.io:6333"
-QDRANT_CLUSTER_URL = "https://e53339bc-373e-425a-a9b2-fddccecdd40c.us-east-1-1.aws.cloud.qdrant.io:6333"
+QDRANT_API_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhY2Nlc3MiOiJtIn0.ernM56z1tGICY_kClkY1YatoJDT3cQq1qao_ciK16OU"
+QDRANT_CLUSTER_URL = "https://5c0a81e7-3111-4734-924f-caddc3276aa3.europe-west3-0.gcp.cloud.qdrant.io"
 QDRANT_TIMEOUT = 120
 
 class QDrantVectorDB(VectorStoreProtocol):

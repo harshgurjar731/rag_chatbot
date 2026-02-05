@@ -11,6 +11,8 @@ import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import axios from "axios";
 import { DocumentObj } from "@/pages/DatastoreConfigDetail";
+import CreateFolderDialog from "./CreateFolder";
+import FolderBreadcrumbs from "./FolderBreadcrums";
 
 interface DocumentLoaderConfigFormProps {
   open: boolean;
@@ -40,7 +42,11 @@ export const DocumentLoaderConfigForm = ({
   const [chunks, setChunks] = useState<any[]>([]);
   const [showChunkPreview, setShowChunkPreview] = useState(false);
   const [showCount, setShowCount] = useState(10);
-  const [editMode, setEditMode] = useState<boolean>(false)
+  const [editMode, setEditMode] = useState<boolean>(false);
+  const [currentFolder, setCurrentFolder] = useState(null);
+  const [folders, setFolders] = useState([]);
+  const [files, setFiles] = useState([]);
+  const [breadcrumbs, setBreadcrumbs] = useState([]);
 
   const loaderNames: Record<string, string> = {
     docx: "Docx File",
@@ -63,6 +69,30 @@ export const DocumentLoaderConfigForm = ({
       }
     }
   };
+ 
+  async function loadFolderStructure(datastore_id: number, folderId = null) {
+
+    const url = new URL(
+      `http://127.0.0.1:8000/ingestion/datastore/${datastore_id}/folders`
+    );
+
+    if (folderId !== null && folderId !== undefined) {
+      url.searchParams.append("parent_id", String(folderId));
+    }
+
+    const res = await fetch(url.toString());
+    const data = await res.json();
+    console.log("Folder Data", data);
+    setFolders(data.folders);
+    setFiles(data.files);
+    setCurrentFolder(data.current_folder.id);
+    // load breadcrumbs
+    const breadcrumsRes = await fetch(
+      `http://127.0.0.1:8000/ingestion/folders/${data.current_folder.id}/breadcrumbs`
+    );
+    const breadcrumData = await breadcrumsRes.json();
+    setBreadcrumbs(breadcrumData);
+  }
 
   useEffect(() => {
     if (selectedDocument) {
@@ -77,6 +107,10 @@ export const DocumentLoaderConfigForm = ({
       setSplitterConfig(config)
     }
   }, [selectedDocument])
+
+  useEffect(() => {
+    loadFolderStructure(datastoreId)
+  }, [])
 
   useEffect(() => {
     if (!open) {
@@ -108,6 +142,7 @@ export const DocumentLoaderConfigForm = ({
         textSplitMethod: selectedSplitter || "",
         chunkSize: splitterConfig?.chunkSize || 0,
         chunkOverlap: splitterConfig?.chunkOverlap || 0,
+        folder_id: currentFolder,
     }));
     const chunksResponse = await axios.post(`http://127.0.0.1:8000/ingestion/document/previewChunks?previewLimit=${showCount}`, formData, {
       headers: { "Content-Type": "multipart/form-data" }
@@ -134,6 +169,7 @@ export const DocumentLoaderConfigForm = ({
         textSplitMethod: selectedSplitter || "",
         chunkSize: splitterConfig?.chunkSize || 0,
         chunkOverlap: splitterConfig?.chunkOverlap || 0,
+        folder_id: currentFolder,
       }));
     });
 
@@ -199,6 +235,37 @@ export const DocumentLoaderConfigForm = ({
                           </p>
                         </label>
                       </div>
+                      {selectedFiles.length > 0 && (
+                        <ul className="text-xs text-muted-foreground italic mt-2">
+                          {selectedFiles.map((file, index) => (
+                            <li key={index}>{file.name}</li>
+                          ))}
+                        </ul>
+                      )}
+                       <div>
+                        <p className="text-sm text-muted-foreground"> Selected Folder: </p>
+                        <FolderBreadcrumbs
+                          breadcrumbs={breadcrumbs}
+                          onNavigate={(id) => loadFolderStructure(datastoreId, id)}
+                        />
+                        <div>
+                          {folders.map(f => (
+                            <div
+                              key={f.id}
+                              onClick={() => loadFolderStructure(datastoreId, f.id)}
+                              className="pl-4 text-sm text-muted-foreground cursor-pointer hover:text-foreground"
+                            >
+                              📁 {f.name}
+                            </div>
+                          ))}
+                        </div>
+                        <CreateFolderDialog
+                          currentFolderId={currentFolder}
+                          onCreated={() => loadFolderStructure(datastoreId, currentFolder)}
+                        />
+
+                        <hr />
+                      </div>
                     </>
                   )}
                   {/* {selectedFiles && (
@@ -206,13 +273,6 @@ export const DocumentLoaderConfigForm = ({
                       <p key={index} className="text-xs text-muted-foreground italic">{file.name}</p>
                     ))
                   )} */}
-                  {selectedFiles.length > 0 && (
-                    <ul className="text-xs text-muted-foreground italic mt-2">
-                      {selectedFiles.map((file, index) => (
-                        <li key={index}>{file.name}</li>
-                      ))}
-                    </ul>
-                  )}
                 </div>
 
                 {/* Additional Metadata */}

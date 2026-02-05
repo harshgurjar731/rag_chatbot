@@ -159,3 +159,4 @@ async def process_video(video_path: str):
         # Cleanup audio file
         if os.path.exists(audio_path):
             os.remove(audio_path)
+

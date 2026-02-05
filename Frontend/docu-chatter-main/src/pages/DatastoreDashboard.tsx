@@ -26,7 +26,8 @@ export async function fetchDatastores(): Promise<CreateDatastoreData[]> {
             embeddingProvider: ds.embedding_provider,
             vectorStoreProvider: ds.vector_store_provider,
             similarityMetric: ds.similarity_metric,
-            documentCount: ds.document_count
+            documentCount: ds.document_count,
+            rootFolderId: ds.root_folder_id,
           }
           datastoresFromApi.push(dataStore);
         });
