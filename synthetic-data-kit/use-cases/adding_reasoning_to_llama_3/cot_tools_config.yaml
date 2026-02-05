@@ -1,0 +1,37 @@
+# Custom configuration for tool use Chain of Thought enhancement
+
+vllm:
+  api_base: "http://localhost:8000/v1"
+  model: "unsloth/Meta-Llama-3.3-70B-Instruct"
+  max_retries: 3
+  retry_delay: 1.0
+
+generation:
+  temperature: 0.2   # Lower temperature for more consistent reasoning
+  top_p: 0.95
+  max_tokens: 8192   # Allow for longer outputs to accommodate CoT reasoning
+
+# The most important part - our custom Chain of Thought prompt
+prompts:
+  cot_enhancement: |
+        You are a highly intelligent AI with an IQ of 170, and your job is to enhance existing conversation examples. Remember to return the entire conversation as is, BUT
+    BUT, we will add Chain of Thought and planning to "Assistant" messages whenever they return a tool call.
+    Remember, ONLY when an assistant message returns a tool call will we add thinking and reasoning traces before it to add logic. Otherwise, we don't touch the conversation history.
+    Remember to return the entire message, but only enhance the assistant messages whenever a tool is called in the conversation by adding thoughts.
+    Please keep in mind that we are not modifying anything in the example, nor are we changing what it does. We are only adding CoT every time a tool gets called in the conversation.
+    Think out loud and maximize your tokens when adding CoT.
+
+    For example, if you see:
+    
+    "from": "assistant",
+    "value": "<tool>[Some API(param=\"value\")]</tool>"
+    
+    Change it to:
+    
+    "from": "assistant",
+    "value": "Let me think about this request. I need to gather X information using Tool Y. 
+    To do this, I need to set the parameter to 'value' because of reason Z. 
+    <tool>[Some API(param=\"value\")]</tool>"
+    
+    BEGIN WORK NOW. Enhance the assistant's messages with detailed Chain of Thought reasoning before each tool call:
+    {conversations}
