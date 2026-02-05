@@ -16,112 +16,15 @@ ENV CC=/opt/conda/bin/x86_64-conda-linux-gnu-gcc \
     PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1
 
+# Install uv (optional, helps with speed but using pip for consistency with instructions)
+RUN pip install --no-cache-dir --upgrade pip uv
+
 # Copy requirements first (better caching)
-# COPY requirements.txt .
+COPY requirements.txt .
 
-# Install uv and dependencies
-RUN pip install --no-cache-dir --upgrade pip uv && \
-    uv pip install --system torch --index-url https://download.pytorch.org/whl/cpu
-
-RUN uv pip install --system beautifulsoup4
-RUN uv pip install --system camelot_py
-RUN uv pip install --system chromadb
-RUN uv pip install --system deep_translator
-RUN uv pip install --system Evaluation
-RUN uv pip install --system faiss_cpu
-RUN uv pip install --system fastapi
-RUN uv pip install --system fitz
-RUN uv pip install --system groq
-RUN uv pip install --system langchain_chroma
-RUN uv pip install --system langchain_classic
-RUN uv pip install --system langchain_community
-RUN uv pip install --system langchain_core
-RUN uv pip install --system langchain_experimental
-RUN uv pip install --system langchain_huggingface
-RUN uv pip install --system langchain_openai
-RUN uv pip install --system langchain_qdrant
-RUN uv pip install --system langchain_text_splitters
-RUN uv pip install --system mistralai
-RUN uv pip install --system nemoguardrails
-RUN uv pip install --system numpy
-RUN uv pip install --system openai
-RUN uv pip install --system phoenix
-RUN uv pip install --system Pillow
-RUN uv pip install --system pydantic
-RUN uv pip install --system pymupdf
-RUN uv pip install --system pytesseract
-RUN uv pip install --system python-dotenv
-RUN uv pip install --system qdrant_client
-RUN uv pip install --system Requests
-RUN uv pip install --system sentence_transformers
-RUN uv pip install --system sqlmodel
-RUN uv pip install --system tqdm
-RUN uv pip install --system transformers
-# RUN uv pip install --system openinference
-RUN uv pip install --system openinference.instrumentation.langchain
-RUN uv pip install --system openinference.instrumentation.openai
-RUN uv pip install --system python-multipart
-RUN uv pip install --system guardrails-ai
-RUN uv pip install --system arize-phoenix
-RUN uv pip install --system arize-phoenix-evals
-RUN uv pip install --system langchain-nvidia-ai-endpoints
-RUN uv pip install --system numpy
-RUN uv pip install --system pandas 
-RUN uv pip install --system dotenv
-RUN uv pip install --system python-multipart
-RUN uv pip install --system camelot-py
-RUN uv pip install --system huggingface-hub
-RUN uv pip install --system nvidia-riva-client
-RUN uv pip install --system opencv-python-headless
-RUN uv pip install --system pdf2image
-RUN uv pip install --system pillow
-RUN uv pip install --system pydantic
-RUN uv pip install --system sentence_transformers
-RUN uv pip install --system scikit-learn
-
-
-
-RUN uv pip install --system uvicorn
-RUN uv pip install --system python-multipart
-RUN uv pip install --system pydantic
-RUN uv pip install --system pydantic-settings
-RUN uv pip install --system sqlmodel
-RUN uv pip install --system python-dotenv
-RUN uv pip install --system aiofiles
-RUN uv pip install --system requests
-RUN uv pip install --system langchain
-RUN uv pip install --system langchain-core
-RUN uv pip install --system langchain-community
-RUN uv pip install --system langchain-text-splitters
-RUN uv pip install --system langchain-chroma
-RUN uv pip install --system langchain-openai
-RUN uv pip install --system langchain-experimental
-RUN uv pip install --system langchain-nvidia-ai-endpoints
-RUN uv pip install --system chromadb
-RUN uv pip install --system sentence-transformers
-RUN uv pip install --system PyMuPDF
-RUN uv pip install --system camelot-py
-RUN uv pip install --system pytesseract
-RUN uv pip install --system Pillow
-RUN uv pip install --system opencv-python-headless
-RUN uv pip install --system transformers
-RUN uv pip install --system torch
-RUN uv pip install --system redis
-RUN uv pip install --system psycopg2-binary
-
-
-
-# # --- RAG Pipeline & Safety ---
-# RUN uv pip install --system nemoguardrails
-# RUN uv pip install --system langchain-classic
-# RUN uv pip install --system langchain-qdrant
-
-# # --- Observability & Tracing (Phoenix) ---
-# RUN uv pip install --system opentelemetry-api
-# RUN uv pip install --system opentelemetry-sdk
-# RUN uv pip install --system opentelemetry-exporter-otlp
-# RUN uv pip install --system arize-phoenix-otel
-# RUN uv pip install --system arize-phoenix
+# Install dependencies from requirements.txt
+# Using uv pip install --system for speed as requested in original Dockerfile, but respecting requirements.txt
+RUN uv pip install --system -r requirements.txt
 
 # Stage 2: Runtime - Minimal image with only runtime dependencies
 FROM continuumio/miniconda3:latest
@@ -146,3 +49,26 @@ COPY . .
 ENV PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1 \
     PATH="/opt/conda/bin:${PATH}"
+
+# Command (Assuming main.py is the entrypoint based on previous files, but wait, previous Dockerfile didn't have a CMD? 
+# Ah, it ended without CMD. The original file cut off. 
+# Wait, let me check the original file content again. It ended at line 149 and didn't show CMD. 
+# I will assume `CMD ["python", "main.py"]` or similar based on Ingestion Pool, OR `uvicorn` if it's an API.
+# The `requirement.txt` has `fastapi` and `uvicorn`. 
+# The directory listing specific `main.py` and `worker_wrapper.py`. 
+# I'll default to `CMD ["python", "worker_wrapper.py"]` or `main.py`.
+# Let's check `worker_wrapper.py` size: 13171 bytes. `main.py`: 10523 bytes.
+# Typically workers run a script. I'll add a comment or check `main.py` context if I could, 
+# but simply providing a CMD that mimics a generic python run is safer if unknown, or maybe no CMD is needed if docker-compose defines it.
+# However, Dockerfiles should usually have a CMD. 
+# I will NOT add a CMD if the original didn't have one, to avoid breaking behavior if it is controlled by compose.
+# But wait, the previous file view ended at line 149 with `PATH=...`
+# It might be that the file was truncated or just didn't have CMD.
+# I'll leave CMD out if it wasn't there, or add a comment found in similar files.
+# Actuallly, I should probably check `docker-compose.yml` if I could, but I don't see it open.
+# I will stick to NOT adding a CMD if none was seen, but usually this is an error.
+# Wait, look at the end of the view_file output. "The above content shows the entire, complete file contents...".
+# So there was NO CMD.
+# I will proceed without CMD.)
+
+# No CMD instruction found in original Dockerfile. Relying on external command execution (e.g. docker-compose).

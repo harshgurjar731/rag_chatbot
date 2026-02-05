@@ -19,36 +19,11 @@ ENV CC=/opt/conda/bin/x86_64-conda-linux-gnu-gcc \
 # Install uv
 RUN pip install --no-cache-dir --upgrade pip uv
 
-# Install Core & Light Frameworks (FastAPI, SQLModel, Redis)
-RUN uv pip install --system fastapi
-RUN uv pip install --system uvicorn
-RUN uv pip install --system python-multipart
-RUN uv pip install --system pydantic
-RUN uv pip install --system pydantic-settings
-RUN uv pip install --system sqlmodel
-RUN uv pip install --system python-dotenv
-RUN uv pip install --system aiofiles
-RUN uv pip install --system requests
-RUN uv pip install --system deep-translator
-RUN uv pip install --system redis
-RUN uv pip install --system psycopg2-binary
+# Copy requirements first to leverage Docker cache
+COPY requirements.txt .
 
-# Light LangChain (Core only)
-RUN uv pip install --system langchain-core
-RUN uv pip install --system langchain-text-splitters
-RUN uv pip install --system pypdf
-RUN uv pip install --system openai
-RUN uv pip install --system langchain-openai
-RUN uv pip install --system mistralai
-
-# Observability
-RUN uv pip install --system opentelemetry-api
-RUN uv pip install --system opentelemetry-sdk
-RUN uv pip install --system opentelemetry-exporter-otlp
-RUN uv pip install --system arize-phoenix-otel
-RUN uv pip install --system arize-phoenix
-RUN uv pip install --system openinference-instrumentation-langchain
-RUN uv pip install --system openinference-instrumentation-openai
+# Install dependencies from requirements.txt
+RUN uv pip install --system -r requirements.txt
 
 # Stage 2: Runtime - Minimal image with only runtime dependencies
 FROM continuumio/miniconda3:latest
@@ -59,7 +34,7 @@ WORKDIR /app
 COPY --from=builder /opt/conda/lib/python3.13/site-packages /opt/conda/lib/python3.13/site-packages
 COPY --from=builder /opt/conda/bin /opt/conda/bin
 
-# Copy application code
+# Copy application code (this changes most frequently, so keep it late)
 COPY . .
 
 # Install runtime binary dependencies (ffmpeg)

@@ -21,70 +21,15 @@ ENV CC=/opt/conda/bin/x86_64-conda-linux-gnu-gcc \
     PYTHONDONTWRITEBYTECODE=1 \
     PATH="/opt/conda/bin:${PATH}"
 
-# Install uv
+# Install uv (optional, keeping it if we want to use it, but mainly using pip for safety per previous comments)
 RUN pip install --no-cache-dir --upgrade pip uv
 
-# Install Dependencies with Strict Pinning
-# We group these to ensure the resolver sees all constraints at once
-# Install Dependencies with Strict Pinning
-# Install Dependencies with Strict Pinning
-# Use pip because uv cannot find the packages in the registry
-# 2. Install Core ML Stack with relaxed but safe constraints
-# Relaxing strict equality (==) to ranges prevents dependency hell/backtracking
-RUN pip install --no-cache-dir \
-    "numpy<2" \
-    "huggingface-hub>=0.23.0,<1.0" \
-    "transformers>=4.39.3,<5.0.0" \
-    "sentence-transformers==2.7.0" \
-    "langchain-huggingface" \
-    "onnxruntime"
+# Copy requirements first (better caching)
+COPY requirements.txt .
 
-# 3. Install Vector Stores & Guardrails (Separate step to ease resolution)
-RUN pip install --no-cache-dir \
-    chromadb \
-    qdrant_client \
-    langchain-chroma \
-    langchain-qdrant \
-    nemoguardrails
-
-# File Processing
-RUN uv pip install --system \
-    beautifulsoup4 \
-    camelot_py \
-    fitz \
-    PyMuPDF \
-    pytesseract \
-    Pillow \
-    opencv-python-headless \
-    python-multipart \
-    pdf2image \
-    scikit-learn \
-    ragas
-
-# Common Utils
-RUN uv pip install --system \
-    fastapi \
-    uvicorn \
-    requests \
-    redis \
-    psycopg2-binary \
-    sqlmodel \
-    python-dotenv \
-    aiofiles \
-    pandas \
-    pydantic-settings
-
-# LangChain Basic
-RUN uv pip install --system \
-    langchain \
-    langchain-core \
-    langchain-community \
-    langchain-text-splitters \
-    langchain-openai \
-    langchain-experimental \
-    langchain-nvidia-ai-endpoints \
-    openinference-instrumentation-langchain \
-    openinference-instrumentation-openai
+# Install dependencies from requirements.txt
+# Using pip directly to avoid potential registry issues with uv for some ML packages
+RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy application code
 COPY . .

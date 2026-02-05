@@ -9,6 +9,7 @@ python-dotenv
 aiofiles
 requests
 redis
+psycopg2-binary
 
 # --- LangChain Ecosystem (Lightweight) ---
 langchain-core

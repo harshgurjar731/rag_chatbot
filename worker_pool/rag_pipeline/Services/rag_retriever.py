@@ -12,7 +12,7 @@ from collections import defaultdict
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.output_parsers import StrOutputParser
 from langchain_community.chat_models import ChatOpenAI
-from langchain_classic.retrievers.contextual_compression import ContextualCompressionRetriever
+from langchain.retrievers import ContextualCompressionRetriever
 from langchain_core.documents import Document
 from langchain_community.vectorstores import FAISS, Chroma
 from langchain_core.load import dumps, loads

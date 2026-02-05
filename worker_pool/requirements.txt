@@ -1,0 +1,70 @@
+--extra-index-url https://download.pytorch.org/whl/cpu
+torch
+
+# Core & Utils
+fastapi
+uvicorn
+python-multipart
+pydantic
+pydantic-settings
+sqlmodel
+python-dotenv
+aiofiles
+requests
+psycopg2-binary
+redis
+tqdm
+numpy
+pandas
+scikit-learn
+
+# PDF & Image Processing
+beautifulsoup4
+camelot-py
+
+PyMuPDF
+pytesseract
+Pillow
+opencv-python-headless
+pdf2image
+
+# Vector Stores & AI Models
+chromadb
+qdrant-client
+faiss-cpu
+huggingface-hub
+transformers
+sentence-transformers
+mistralai
+openai
+groq
+nvidia-riva-client
+
+# LangChain Ecosystem
+langchain
+langchain-core
+langchain-community
+langchain-text-splitters
+langchain-chroma
+langchain-openai
+langchain-experimental
+langchain-huggingface
+langchain-qdrant
+langchain-nvidia-ai-endpoints
+
+# Guardrails
+nemoguardrails
+guardrails-ai
+
+# Observability
+opentelemetry-api
+opentelemetry-sdk
+opentelemetry-exporter-otlp
+arize-phoenix-otel
+arize-phoenix
+openinference-instrumentation-langchain
+openinference-instrumentation-openai
+phoenix
+
+# Misc (from Dockerfile)
+deep-translator

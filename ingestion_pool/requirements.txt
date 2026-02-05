@@ -1,36 +1,51 @@
-# --- Core Framework & Utils ---
+# ML Stack with constraints
+numpy<2
+huggingface-hub>=0.23.0,<1.0
+transformers>=4.39.3,<5.0.0
+sentence-transformers==2.7.0
+langchain-huggingface
+onnxruntime
+
+# Vector Stores
+chromadb
+qdrant_client
+langchain-chroma
+langchain-qdrant
+nemoguardrails
+
+# File Processing
+beautifulsoup4
+camelot-py
+
+PyMuPDF
+pytesseract
+Pillow
+opencv-python-headless
 python-multipart
-pydantic
-pydantic-settings
+pdf2image
+scikit-learn
+ragas
+
+# Common Utils & API
+fastapi
+uvicorn
+requests
+redis
+psycopg2-binary
 sqlmodel
 python-dotenv
 aiofiles
-requests
-redis
+pandas
+pydantic-settings
 psutil
 
-# --- LangChain Ecosystem ---
+# LangChain
 langchain
 langchain-core
 langchain-community
 langchain-text-splitters
-langchain-classic
-langchain-chroma
 langchain-openai
 langchain-experimental
 langchain-nvidia-ai-endpoints
-langchain-qdrant
-
-# --- Models & Vector Stores ---
-chromadb
-sentence-transformers
-transformers
-torch
-nemoguardrails
-
-# --- File Processing ---
-PyMuPDF
-camelot-py
-pytesseract
-Pillow
-opencv-python-headless
+openinference-instrumentation-langchain
+openinference-instrumentation-openai

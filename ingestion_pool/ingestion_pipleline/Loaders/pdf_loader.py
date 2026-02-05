@@ -6,7 +6,8 @@ from PIL import Image
 from langchain_core.documents import Document
 import json
 import os
-import fitz  # PyMuPDF
+# import PyMuPDF  # PyMuPDF
+import pymupdf
 import pytesseract
 # pytesseract.pytesseract.tesseract_cmd = r'C:\Program Files\Tesseract-OCR\tesseract.exe'  # Commented out for Linux/Docker
 # In Docker, tesseract is in PATH (installed via apt/conda)
@@ -19,7 +20,7 @@ class PDFLoader(LoaderProtocol):
         file_path = Path(path)
         document_list:List[Document] = []
         try:
-            pdf_document = fitz.open(path)
+            pdf_document = pymupdf.open(path)
             
             # Extract file-level metadata once
             file_metadata = {
