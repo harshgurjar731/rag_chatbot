@@ -78,7 +78,7 @@ import {
   TabsTrigger,
   TabsContent,
 } from "@/components/ui/tabs"
-import { fileToBase64 } from "@/utilities/utils";
+import { fileToBase64, generateUUID } from "@/utilities/utils";
 
 // interface Citation {
 //   source: string;
@@ -450,7 +450,7 @@ export const ChatInterface = ({
   const handleSend = async () => {
     if (!input.trim() || isLoading) return;
     const userMessage: ChatMessage = {
-      id: crypto.randomUUID(),
+      id: generateUUID(),
       content: input.trim(),
       isUser: true,
       timestamp: new Date(),
@@ -517,7 +517,7 @@ export const ChatInterface = ({
       console.log(grouped_citations)
 
       const botMessage: ChatMessage = {
-        id: crypto.randomUUID(),
+        id: generateUUID(),
         content: response["answer"] || "",
         isUser: false,
         timestamp: new Date(),
@@ -541,7 +541,7 @@ export const ChatInterface = ({
       console.error("handleSend error:", error.response.data.detail);
 
       const errorMessage: ChatMessage = {
-        id: crypto.randomUUID(),
+        id: generateUUID(),
         content: errorStr,
         isUser: false,
         timestamp: new Date(),
