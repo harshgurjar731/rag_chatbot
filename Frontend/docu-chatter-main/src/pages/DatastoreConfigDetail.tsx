@@ -67,7 +67,7 @@ export const DatastoreConfigDetail = () => {
     const files = Array.from(e.target.files);
 
     // Use the base URL logic from existing code
-    const baseUrl = import.meta.env.VITE_API_BASE_URL || "http://127.0.0.1:8000";
+    const baseUrl = import.meta.env.VITE_API_BASE_URL || "http://172.200.163.232:8000";
 
     try {
       for (const file of files) {
@@ -104,7 +104,7 @@ export const DatastoreConfigDetail = () => {
 
   async function fetchDocuments(datastore_id: number) {
     try {
-      const response = await axios.get(`http://127.0.0.1:8000/ingestion/datastore/${id}/documents`);
+      const response = await axios.get(`http://172.200.163.232:8000/ingestion/datastore/${id}/documents`);
       var documentFromApi: DocumentObj[] = [];
       response.data.forEach((doc: any) => {
         const document = {
@@ -151,7 +151,7 @@ export const DatastoreConfigDetail = () => {
 
   const deleteDoc = async (id: string) => {
     console.log("Delete Row ", id)
-    const response = await axios.post(`http://127.0.0.1:8000/ingestion/deleteDocument/${id}`);
+    const response = await axios.post(`http://172.200.163.232:8000/ingestion/deleteDocument/${id}`);
     await fetchDocuments(datastore.id);
   }
 

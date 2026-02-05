@@ -14,7 +14,7 @@ import { DatastoreCard } from '@/components/DatastoreCard';
 
 export async function fetchDatastores(): Promise<CreateDatastoreData[]> {
       try {
-        const response = await axios.get('http://127.0.0.1:8000/ingestion/getDatastores');
+        const response = await axios.get('http://172.200.163.232:8000/ingestion/getDatastores');
         var datastoresFromApi: CreateDatastoreData[] = [];
         response.data.forEach((ds: any) => {
           const dataStore = {

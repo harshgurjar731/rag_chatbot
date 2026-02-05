@@ -24,7 +24,7 @@ export const DatastoreCard = ({ data, onClick, onDelete }: DatastoreCardProps) =
 
   const deleteDatastore = async() => {
     console.log("hello Rupali")
-    const response = await axios.post(`http://127.0.0.1:8000/ingestion/deleteDatastore/${data.id}`);
+    const response = await axios.post(`http://172.200.163.232:8000/ingestion/deleteDatastore/${data.id}`);
     console.log(response.data)
     onDelete()
   }

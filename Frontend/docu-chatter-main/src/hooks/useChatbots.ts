@@ -37,7 +37,7 @@ const STORAGE_KEY = 'multi-chatbot-data';
 //   //   useEffect(() => {
 //   // const fetchDatastores = async () => {
 //   //   try {
-//   //     const response = await axios.get<Datastore[]>('http://127.0.0.1:8000/datastore/');
+//   //     const response = await axios.get<Datastore[]>('http://172.200.163.232:8000/datastore/');
 //   //     setDatastores(response.data);
 //   //   } catch (err) {
 //   //     console.error('Failed to fetch datastores:', err);
@@ -56,7 +56,7 @@ export const useChatbots = () => {
   const fetchChatbotsWithFiles = async () => {
     try {
       // Step 1: Get all assistants
-      const res = await axios.get("http://127.0.0.1:8000/rag/getAssistants/");
+      const res = await axios.get("http://172.200.163.232:8000/rag/getAssistants/");
       const assistants = res.data;
 
       const fetchedDatastores = JSON.parse(localStorage.getItem("createdDataStores")
@@ -68,7 +68,7 @@ export const useChatbots = () => {
         let files: DocumentRecord[] = [];
         try {
           const fileRes = await axios.get<DocumentRecord[]>(
-            `http://127.0.0.1:8000/ingestion/datastore/${assistant.datastore_id}/documents`
+            `http://172.200.163.232:8000/ingestion/datastore/${assistant.datastore_id}/documents`
           );
           files = fileRes.data;
          
@@ -110,7 +110,7 @@ export const useChatbots = () => {
   //   setChatbots(bots);
   // };
   // const updateChatbotIdApiCall = async (datastoreId: number, chatbotId: string) => {
-  //   const response = await axios.put(`http://127.0.0.1:8000/datastore/${datastoreId}`, null, {
+  //   const response = await axios.put(`http://172.200.163.232:8000/datastore/${datastoreId}`, null, {
   //     params: {
   //       chatbot_id: chatbotId,
   //     },
@@ -148,7 +148,7 @@ export const useChatbots = () => {
     // const updated = chatbots.filter(bot => bot.id !== id);
     // saveChatbots(updated);
     try {
-      const fileRes = await axios.post(`http://127.0.0.1:8000/rag/deleteAssistant/${id}`);
+      const fileRes = await axios.post(`http://172.200.163.232:8000/rag/deleteAssistant/${id}`);
     } catch (error) {
         console.warn(`Error while deleting chatbot ${id}`, error);
     }
@@ -169,7 +169,7 @@ export const useChatbots = () => {
   //   formData.append("file", file);
 
   //   const response = await axios.post(
-  //     `http://127.0.0.1:8000/datastores/${datastoreId}/upload`,
+  //     `http://172.200.163.232:8000/datastores/${datastoreId}/upload`,
   //     formData,
   //     {
   //       headers: {

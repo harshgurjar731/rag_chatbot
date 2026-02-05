@@ -1,2 +1,0 @@
-include synthetic_data_kit/config.yaml
-recursive-include configs *.yaml

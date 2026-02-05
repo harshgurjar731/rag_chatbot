@@ -674,7 +674,7 @@ export const ChatInterface = ({
     try {
       const encodedName = encodeURIComponent(doc_name)
       // Use configured base_url or fallback
-      const baseUrl = config?.base_url || "http://127.0.0.1:8000";
+      const baseUrl = config?.base_url || "http://172.200.163.232:8000";
       const response = await axios.get(`${baseUrl}/ingestion/download/${chatbot.datastoreId}/${encodedName}`, {
         responseType: "blob", // important: we want the file bytes
       });
@@ -705,7 +705,7 @@ export const ChatInterface = ({
     try {
       const encodedName = encodeURIComponent(doc_name)
       // Use configured base_url or fallback
-      const baseUrl = config?.base_url || "http://127.0.0.1:8000";
+      const baseUrl = config?.base_url || "http://172.200.163.232:8000";
       const response = await axios.get(`${baseUrl}/ingestion/datastore/${chatbot.datastoreId}/secondary_download/${encodedName}`, {
         responseType: "blob",
       });

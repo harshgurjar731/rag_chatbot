@@ -17,7 +17,7 @@ export default function CreateFolderDialog({ currentFolderId, onCreated }: Creat
 
     setLoading(true);
 
-    await fetch("http://127.0.0.1:8000/ingestion/folders", {
+    await fetch("http://172.200.163.232:8000/ingestion/folders", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({

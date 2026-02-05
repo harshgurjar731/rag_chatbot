@@ -45,7 +45,7 @@ export const CreateDatastoreDialog = ({ onCreateDatastore, children }: CreateDat
 
 
   const createDatastoreApiCall = async (data: { name: string; description: string }) => {
-    const response = await axios.post('http://127.0.0.1:8000/ingestion/createDatastore', {
+    const response = await axios.post('http://172.200.163.232:8000/ingestion/createDatastore', {
       name: data.name,
       description: data.description,
     });
@@ -61,7 +61,7 @@ export const CreateDatastoreDialog = ({ onCreateDatastore, children }: CreateDat
 //     formData.append("file", file);
 
 //     const response = await axios.post(
-//       `http://127.0.0.1:8000/datastores/${datastoreId}/upload`,
+//       `http://172.200.163.232:8000/datastores/${datastoreId}/upload`,
 //       formData,
 //       {
 //         headers: {
@@ -82,7 +82,7 @@ export const CreateDatastoreDialog = ({ onCreateDatastore, children }: CreateDat
 //   const scrapeWebsite = async (datastoreId: number, url: string) => {
 //     try {
 //       const { data } = await axios.post(
-//         `http://127.0.0.1:8000/urlscraper/${datastoreId}`,
+//         `http://172.200.163.232:8000/urlscraper/${datastoreId}`,
 //         {}, // empty body
 //         { params: { url } } // URL as query param
 //       );

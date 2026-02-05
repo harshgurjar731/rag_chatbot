@@ -14,7 +14,7 @@ load_dotenv()
 
 CONFIG = {
     # Backend
-    "backend_base_url": os.getenv("BACKEND_BASE_URL", "http://127.0.0.1:8000"),
+    "backend_base_url": os.getenv("BACKEND_BASE_URL", "http://172.200.163.232:8000"),
     "project_root": Path(os.getenv("PROJECT_ROOT", "..")),
 
     # Models

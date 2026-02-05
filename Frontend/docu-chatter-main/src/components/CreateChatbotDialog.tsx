@@ -69,7 +69,7 @@ export const CreateChatbotDialog = ({ onCreateChatbot, children }: CreateChatbot
   }
 
   const createChatbotApiCall = async (data: ChatbotApiData) => {
-    const response = await axios.post('http://127.0.0.1:8000/rag/createAssistant/', {
+    const response = await axios.post('http://172.200.163.232:8000/rag/createAssistant/', {
       name: data.name,
       description: data.description,
       datastore_id: Number(data.datastore_id),

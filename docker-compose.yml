@@ -107,34 +107,6 @@ services:
       - app-db:/app/db
       - rag_data:/app/data_directory # Shared volume for files
 
-  synthetic-data-service:
-    build:
-      context: .
-      dockerfile: synthetic_data_service/Dockerfile
-    container_name: synthetic_data_service
-    environment:
-      - REDIS_HOST=redis
-      - DB_HOST=db
-      - DB_NAME=chatbot_db
-      - DB_USER=user
-      - DB_PASSWORD=password
-      # API Keys for Synthetic Data Generation
-      - MISTRAL_API_KEY=${MISTRAL_API_KEY}
-      - GROQ_API_KEY=${GROQ_API_KEY}
-      - AZURE_API_KEY=${AZURE_API_KEY}
-      - API_ENDPOINT_KEY=${GROQ_API_KEY} # Correct provider mapping for Groq configuration
-    networks:
-      - chatbot_network
-    depends_on:
-      redis:
-        condition: service_started
-      postgres:
-        condition: service_healthy
-    volumes:
-      - app-db:/app/db
-      - rag_data:/app/data_directory # Shared volume for files
-      - ./synthetic-data-kit:/app/synthetic-data-kit # Mount kit for dev
-
   frontend:
     build:
       context: ./Frontend/docu-chatter-main
