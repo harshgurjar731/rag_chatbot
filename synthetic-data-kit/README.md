@@ -160,7 +160,7 @@ llm:
   provider: "vllm"
 
 vllm:
-  api_base: "http://localhost:8000/v1"
+  api_base: "http://172.200.163.232:8000/v1"
   model: "meta-llama/Llama-3.3-70B-Instruct"
   sleep_time: 0.1
 

@@ -19,7 +19,7 @@ llm:
 
 # VLLM server configuration
 vllm:
-  api_base: "http://localhost:8000/v1" # Base URL for VLLM API
+  api_base: "http://172.200.163.232:8000/v1" # Base URL for VLLM API
   port: 8000                           # Port for VLLM server
   model: "meta-llama/Llama-3.3-70B-Instruct" # Default model to use
   max_retries: 3                       # Number of retries for API calls

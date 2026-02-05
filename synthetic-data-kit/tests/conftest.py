@@ -182,7 +182,7 @@ class MockConfigFactory:
         return {
             "llm": {"provider": "vllm"},
             "vllm": {
-                "api_base": "http://localhost:8000",
+                "api_base": "http://172.200.163.232:8000",
                 "model": model,
                 "max_retries": 3,
                 "retry_delay": 1,

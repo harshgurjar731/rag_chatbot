@@ -350,7 +350,7 @@ synthetic-data-kit system-check [OPTIONS]
 synthetic-data-kit system-check
 
 # Check specific server
-synthetic-data-kit system-check --api-base="http://localhost:8000/v1"
+synthetic-data-kit system-check --api-base="http://172.200.163.232:8000/v1"
 ```
 
 ### `ingest` Command
@@ -1556,7 +1556,7 @@ def process_file(...):
 #### VLLM Server Connection Errors
 
 ```
-Error: VLLM server not available at http://localhost:8000/v1
+Error: VLLM server not available at http://172.200.163.232:8000/v1
 ```
 
 **Solution**:
@@ -1645,10 +1645,10 @@ File not found: documents/paper.pdf
 
 ```bash
 # Using the built-in system-check command
-synthetic-data-kit system-check --api-base="http://localhost:8000/v1"
+synthetic-data-kit system-check --api-base="http://172.200.163.232:8000/v1"
 
 # Direct API check
-curl -X GET http://localhost:8000/v1/models
+curl -X GET http://172.200.163.232:8000/v1/models
 ```
 
 #### Inspecting Generated Files

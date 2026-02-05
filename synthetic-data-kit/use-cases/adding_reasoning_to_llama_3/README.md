@@ -72,7 +72,7 @@ First, we'll create a custom configuration file specifically for enhancing tool 
 # cot_tools_config.yaml
 
 vllm:
-  api_base: "http://localhost:8000/v1"
+  api_base: "http://172.200.163.232:8000/v1"
   model: "unsloth/Meta-Llama-3.3-70B-Instruct"
   max_retries: 3
   retry_delay: 1.0

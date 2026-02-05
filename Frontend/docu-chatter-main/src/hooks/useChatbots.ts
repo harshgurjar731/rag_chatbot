@@ -189,7 +189,7 @@ export const useChatbots = () => {
   // ): Promise<void> => {
   //   try {
   //     await axios.get(
-  //       `http://localhost:8000/datastores/${datastoreId}/files/${fileId}/chunk`,
+  //       `http://172.200.163.232:8000/datastores/${datastoreId}/files/${fileId}/chunk`,
   //       {
   //         params: {
   //           method,
@@ -209,7 +209,7 @@ export const useChatbots = () => {
   // const triggerEmbedding = async (datastoreId: number, fileId: number) => {
   //   try {
   //     const response = await axios.post(
-  //       `http://localhost:8000/embedding/store`,
+  //       `http://172.200.163.232:8000/embedding/store`,
   //       null, // No body in POST
   //       {
   //         params: {
@@ -251,7 +251,7 @@ export const useChatbots = () => {
   //     // let loaderType="pdf"
   //     // try {
   //     //   const idRes = await axios.get<{ file_id: number }>(
-  //     //     `http://localhost:8000/datastores/${bot.datastoreId}/files/${encodeURIComponent(file.name)}/id`
+  //     //     `http://172.200.163.232:8000/datastores/${bot.datastoreId}/files/${encodeURIComponent(file.name)}/id`
   //     //   );
   //     //   fileId = idRes.data.file_id;
   //     //   console.log(fileId)

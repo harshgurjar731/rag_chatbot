@@ -33,7 +33,7 @@ class ModelConfig(BaseModel):
 def get_api_base_url() -> str:
     """
     Returns the API base URL from environment variables.
-    Falls back to localhost if not set.
+    Falls back to 172.200.163.232 if not set.
     """
     return CONFIG["backend_base_url"]
 

@@ -52,9 +52,9 @@ For a deep dive into the system architecture, including the Worker Pool pattern 
     ```
 
 4.  **Access the Application**
-    *   **Frontend**: [http://localhost:8080](http://localhost:8080)
-    *   **Backend API Docs**: [http://localhost:8000/docs](http://localhost:8000/docs)
-    *   **Phoenix (Tracing)**: [http://localhost:6006](http://localhost:6006)
+    *   **Frontend**: [http://172.200.163.232:8080](http://172.200.163.232:8080)
+    *   **Backend API Docs**: [http://172.200.163.232:8000/docs](http://172.200.163.232:8000/docs)
+    *   **Phoenix (Tracing)**: [http://172.200.163.232:6006](http://172.200.163.232:6006)
 
 ## 🛠️ Services Overview
 

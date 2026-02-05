@@ -124,7 +124,7 @@ class MockConfigHelper:
                 'provider': 'vllm'
             },
             'vllm': {
-                'api_base': 'http://localhost:8000/v1',
+                'api_base': 'http://172.200.163.232:8000/v1',
                 'model': 'test-model'
             }
         }
