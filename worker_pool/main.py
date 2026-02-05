@@ -12,7 +12,11 @@ import socket
 import subprocess
 import signal
 import sys
-import redis # Added redis import
+import redis
+import threading
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+import uvicorn
 from sqlalchemy.orm import Session
 from db.models import init_db, Bot, BotStatus, WorkerPool
 import psutil
@@ -33,6 +37,18 @@ processes = {}
 
 # Redis Client for cleanup
 r = redis.Redis(host=REDIS_HOST, port=6379, db=0, decode_responses=True)
+
+# Initialize FastAPI app
+app = FastAPI(title="Worker Pool Manager")
+
+# Configure CORS policies
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # Specify domains in production: ["http://localhost:3000"]
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 def get_db():
     """Create a new database session."""
@@ -294,20 +310,91 @@ def main():
     # Restore
     restore_active_bots(db)
     
+    # Start worker pool monitoring in background thread
+    def monitor_pool():
+        try:
+            while True:
+                check_process_health(db)
+                release_orphaned_bots(db)
+                claim_pending_bots(db)
+                update_pool_heartbeat(db)
+                reconcile_active_processes(db)
+                
+                time.sleep(2)
+                
+        except KeyboardInterrupt:
+            print("[*] Worker Pool stopping...")
+            for name in list(processes.keys()):
+                stop_bot_process(name)
+    
+    monitor_thread = threading.Thread(target=monitor_pool, daemon=True)
+    monitor_thread.start()
+    
+    # Start FastAPI server with CORS enabled
+    uvicorn.run(
+        app,
+        host="0.0.0.0",
+        port=8002,
+        log_level="info"
+    )
+
+# API Endpoints with CORS support
+@app.get("/health")
+async def health_check():
+    """Health check endpoint."""
+    redis_status = "connected"
     try:
-        while True:
-            check_process_health(db)
-            release_orphaned_bots(db)
-            claim_pending_bots(db)
-            update_pool_heartbeat(db)
-            reconcile_active_processes(db)
-            
-            time.sleep(2)
-            
-    except KeyboardInterrupt:
-        print("[*] Worker Pool stopping...")
-        for name in list(processes.keys()):
-            stop_bot_process(name)
+        r.ping()
+    except:
+        redis_status = "disconnected"
+    
+    return {
+        "status": "healthy",
+        "hostname": HOSTNAME,
+        "active_bots": len(processes),
+        "redis": redis_status
+    }
+
+@app.get("/status")
+async def get_status():
+    """Get worker pool status."""
+    return {
+        "hostname": HOSTNAME,
+        "total_workers": len(processes),
+        "active_workers": len(processes),
+        "capacity": WORKER_POOL_SIZE,
+        "status": "running",
+        "bots": list(processes.keys())
+    }
+
+@app.get("/bots")
+async def list_bots():
+    """List active bot processes."""
+    db = get_db()
+    try:
+        bots = db.query(Bot).filter(Bot.pool_id == HOSTNAME, Bot.status == BotStatus.ACTIVE).all()
+        bot_list = [
+            {
+                "bot_id": bot.bot_id,
+                "bot_name": bot.bot_name,
+                "status": bot.status.value,
+                "datastore_id": bot.datastore_id,
+                "running": bot.bot_id in processes
+            }
+            for bot in bots
+        ]
+        return {"bots": bot_list, "total": len(bot_list)}
+    finally:
+        db.close()
+
+@app.get("/redis/keys")
+async def get_redis_keys(pattern: str = "bot:*"):
+    """Get Redis keys matching pattern."""
+    try:
+        keys = r.keys(pattern)
+        return {"pattern": pattern, "keys": keys, "count": len(keys)}
+    except Exception as e:
+        return {"error": str(e)}
 
 if __name__ == "__main__":
     main()
