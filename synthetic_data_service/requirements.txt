@@ -1,0 +1,7 @@
+redis
+sqlmodel
+psycopg2-binary
+requests
+typer
+rich
+# We will install synthetic-data-kit from local context in Dockerfile

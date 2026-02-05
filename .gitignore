@@ -1,0 +1,11 @@
+venv
+.venv
+__pycache__
+*.pyc
+.env
+.env.example
+.DS_Store
+data/\ndata/\n*.pdf
+.venv-ci/
+data/
+example_output
