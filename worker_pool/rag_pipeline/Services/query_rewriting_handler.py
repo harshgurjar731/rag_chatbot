@@ -30,9 +30,10 @@ def handle_query_rewriting(
     Returns:
         List[str]: A list of rewritten queries (chunked or stepback variations).
     """
-    if (rewritingType.lower() == "multiquery" or rewritingType.lower() == "ragfusion"):
+    rt = (rewritingType or "").lower()
+    if (rt == "multiquery" or rt == "ragfusion"):
         return multiquery_generator(query=query, llm= llm)
-    elif (rewritingType.lower() == "stepback"):
+    elif (rt == "stepback"):
         return stepback_query_generator(
             query=query,
             llm=llm
@@ -53,9 +54,10 @@ def handle_chunk_union(
     Returns:
         List[str]: A flattened, unique, and optionally re-ranked list of chunks.
     """
-    if (rewritingType.lower() == "multiquery" or rewritingType.lower() == "stepback"):
+    rt = (rewritingType or "").lower()
+    if (rt == "multiquery" or rt == "stepback"):
         return _get_unique_union(retrieved_chunks)
-    elif (rewritingType.lower() == "ragfusion"):
+    elif (rt == "ragfusion"):
         return _reciprocal_rank_fusion(retrieved_chunks, RAG_CONFIG["default_ragfusion_rrf_k"])
     
 

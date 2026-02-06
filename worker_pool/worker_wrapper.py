@@ -77,19 +77,19 @@ async def process_message(message_data):
     
     # Extract other params
     chatbot_id = message_data.get('chatbot_id')
-    use_knowledge_base = message_data.get('use_knowledge_base', True)
-    llm_model_provider = message_data.get('llm_model_provider', RAG_CONFIG["default_llm_provider"])
-    llm_model_name = message_data.get('llm_model_name', RAG_CONFIG["default_llm_model"])
-    temperature = float(message_data.get('temperature', RAG_CONFIG["default_temperature"]))
-    max_token = int(message_data.get('max_token', RAG_CONFIG["default_max_tokens"]))
-    use_reranker = message_data.get('use_reranker', False)
-    reranker_type = message_data.get('reranker_type', RAG_CONFIG["default_reranker_type"])
-    query_rewriting_type = message_data.get('query_rewriting_type', RAG_CONFIG["default_query_rewriting_type"])
-    use_guardrail = message_data.get('use_guardrail', False)
-    guardrail_type = message_data.get('guardrail_type', RAG_CONFIG["default_guardrail_type"])
-    use_citation = message_data.get('use_citation', False)
+    use_knowledge_base = message_data.get('use_knowledge_base') if message_data.get('use_knowledge_base') is not None else True
+    llm_model_provider = message_data.get('llm_model_provider') or RAG_CONFIG["default_llm_provider"]
+    llm_model_name = message_data.get('llm_model_name') or RAG_CONFIG["default_llm_model"]
+    temperature = float(message_data.get('temperature') or RAG_CONFIG["default_temperature"])
+    max_token = int(message_data.get('max_token') or RAG_CONFIG["default_max_tokens"])
+    use_reranker = message_data.get('use_reranker') if message_data.get('use_reranker') is not None else False
+    reranker_type = message_data.get('reranker_type') or RAG_CONFIG["default_reranker_type"]
+    query_rewriting_type = message_data.get('query_rewriting_type') or RAG_CONFIG["default_query_rewriting_type"]
+    use_guardrail = message_data.get('use_guardrail') if message_data.get('use_guardrail') is not None else False
+    guardrail_type = message_data.get('guardrail_type') or RAG_CONFIG["default_guardrail_type"]
+    use_citation = message_data.get('use_citation') if message_data.get('use_citation') is not None else False
     datastore_id = message_data.get('datastore_id') or DATASTORE_ID
-    is_vision_search = message_data.get('is_vision_search', False)
+    is_vision_search = message_data.get('is_vision_search') if message_data.get('is_vision_search') is not None else False
     
     # Reconstruct message history
     raw_history = message_data.get('messages', []) # If passed directly? 

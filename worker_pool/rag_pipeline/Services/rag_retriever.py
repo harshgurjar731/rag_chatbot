@@ -157,7 +157,8 @@ def get_rag_answer_text(
     #     llm= llm,
     # )
     rewritten_queries = [updated_query]
-    if (query_optimizer.lower() == "multiquery" or query_optimizer.lower() == "ragfusion"):
+    qopt = (query_optimizer or "").lower()
+    if (qopt == "multiquery" or qopt == "ragfusion"):
         retrieval_top_k = RAG_CONFIG["default_multiquery_retrieval_top_k"]
     else:
         retrieval_top_k = RAG_CONFIG["default_query_retrieval_top_k"]
@@ -170,7 +171,7 @@ def get_rag_answer_text(
         returned_chunks = all_chunks_array[0]
     else :
         returned_chunks = handle_chunk_union(
-            rewritingType= query_optimizer,
+            rewritingType= qopt,
             retrieved_chunks = all_chunks_array
         )
     if(reranker_type and reranker_type.lower() != "none"): 
