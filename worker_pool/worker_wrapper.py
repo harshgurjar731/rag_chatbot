@@ -48,7 +48,6 @@ from database import engine
 
 # OpenTelemetry
 tracer_provider = register(
-    endpoint="http://20.98.116.35:5000/v1/traces",
     project_name=BOT_NAME,
     auto_instrument=True,
     batch=False
