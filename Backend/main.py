@@ -79,21 +79,28 @@ from ingestion_pipleline.ingestion_chunks_router import router as ingestion_chun
 from ingestion_pipeline.secondary_source_router import router as secondary_source_router # Added
 from rag_pipeline.rag_router import router as rag_knowledge_asst_router
 from routes import translate, frontend_config, embedding
+from fastapi.responses import Response
 
 
 app = FastAPI(title="RAG Document Store")
 
-# Add CORS middleware IMMEDIATELY after app creation (BEFORE routers)
-# This ensures it intercepts all requests including preflight OPTIONS
+# Add CORS middleware BEFORE anything else
+# Important: middleware added last executes first (LIFO order)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
     allow_credentials=True,
-    allow_methods=["*"],
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
     allow_headers=["*"],
     expose_headers=["*"],
     max_age=3600,
 )
+
+# Add explicit OPTIONS handler for root and all paths
+@app.options("/{full_path:path}")
+async def preflight_handler(full_path: str):
+    """Handle preflight requests for all routes"""
+    return Response(status_code=200)
 
 
 # # Include all the different API routers
