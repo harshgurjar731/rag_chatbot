@@ -83,15 +83,16 @@ from routes import translate, frontend_config, embedding
 
 app = FastAPI(title="RAG Document Store")
 
-
-
-# Add CORS middleware to allow all origins
+# Add CORS middleware IMMEDIATELY after app creation (BEFORE routers)
+# This ensures it intercepts all requests including preflight OPTIONS
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
+    expose_headers=["*"],
+    max_age=3600,
 )
 
 
