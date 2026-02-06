@@ -333,7 +333,7 @@ def main():
     # Start FastAPI server with CORS enabled
     uvicorn.run(
         app,
-        host="172.200.163.232",
+        host="0.0.0.0",
         port=8002,
         log_level="info"
     )
