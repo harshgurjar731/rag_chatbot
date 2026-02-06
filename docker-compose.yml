@@ -136,16 +136,16 @@ services:
         aliases:
           - chromadb
 
-  phoenix:
-    image: arizephoenix/phoenix
-    ports:
-      - "6006:6006"
-      - "4317:4317" # OTLP gRPC collector
-      - "9090:9090"
-    environment:
-      - PHOENIX_PORT=6006
-      - PHOENIX_GRPC_PORT=4317
-      - PHOENIX_WORKING_DIR=/mnt/data
+  # phoenix:
+  #   image: arizephoenix/phoenix
+  #   ports:
+  #     - "6006:6006"
+  #     - "4317:4317" # OTLP gRPC collector
+  #     - "9090:9090"
+  #   environment:
+  #     - PHOENIX_PORT=6006
+  #     - PHOENIX_GRPC_PORT=4317
+  #     - PHOENIX_WORKING_DIR=/mnt/data
 
     volumes:
       - phoenix_data:/mnt/data

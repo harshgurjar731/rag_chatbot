@@ -14,7 +14,7 @@ import uuid
 import sys
 from sqlmodel import create_engine, Session, select
 from opentelemetry import trace
-# from phoenix.otel import register
+from phoenix.otel import register
 
 # Ensure we can import from Backend
 # transform path to include root rag_chatbot folder if running from there
@@ -47,11 +47,12 @@ r = redis.Redis(host=REDIS_HOST, port=6379, db=0, decode_responses=True)
 from database import engine
 
 # OpenTelemetry
-# tracer_provider = register(
-#     project_name=BOT_NAME,
-#     auto_instrument=True,
-#     batch=False
-# )
+tracer_provider = register(
+    endpoint="http://20.98.116.35:5000/v1/traces",
+    project_name=BOT_NAME,
+    auto_instrument=True,
+    batch=False
+)
 
 async def process_message(message_data):
     """
