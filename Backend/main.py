@@ -78,7 +78,6 @@ from ingestion_pipleline.ingestion_document_loader_router import router as inges
 from ingestion_pipleline.ingestion_chunks_router import router as ingestion_chunking_router
 from ingestion_pipeline.secondary_source_router import router as secondary_source_router # Added
 from rag_pipeline.rag_router import router as rag_knowledge_asst_router
-from routes import translate, frontend_config, embedding
 from fastapi.responses import Response
 
 
@@ -102,7 +101,7 @@ async def preflight_handler(full_path: str):
     """Handle preflight requests for all routes"""
     return Response(status_code=200)
 
-
+from routes import translate, frontend_config, embedding
 # # Include all the different API routers
 # app.include_router(datastore.router, prefix="/datastore")
 # app.include_router(upload.router)
