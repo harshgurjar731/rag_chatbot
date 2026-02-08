@@ -64,7 +64,6 @@ arize-phoenix-otel
 arize-phoenix
 openinference-instrumentation-langchain
 openinference-instrumentation-openai
-phoenix
 
 # Misc (from Dockerfile)
 deep-translator
