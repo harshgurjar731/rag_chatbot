@@ -11,10 +11,11 @@ import { CreateDatastoreDialog } from '@/components/CreateDatastoreDialog';
 import { CreateDatastoreData } from '@/types/chatbot';
 import { set } from 'date-fns';
 import { DatastoreCard } from '@/components/DatastoreCard';
+import { API_BASE_URL } from '@/constants';
 
 export async function fetchDatastores(): Promise<CreateDatastoreData[]> {
       try {
-        const response = await axios.get('http://172.200.163.232:8000/ingestion/getDatastores');
+        const response = await axios.get(`${API_BASE_URL}/ingestion/getDatastores`);
         var datastoresFromApi: CreateDatastoreData[] = [];
         response.data.forEach((ds: any) => {
           const dataStore = {

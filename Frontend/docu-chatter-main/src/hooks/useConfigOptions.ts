@@ -1,3 +1,4 @@
+import { API_BASE_URL } from "@/constants";
 import { useEffect, useState } from "react"
 
 export interface ConfigOptions {
@@ -28,7 +29,7 @@ export const useConfigOptions = () => {
     const fetchConfig = async () => {
       try {
         setLoading(true)
-        const res = await fetch("http://172.200.163.232:8000/frontend/config")
+        const res = await fetch(`${API_BASE_URL}/frontend/config`)
         if (!res.ok) throw new Error("Failed to fetch config")
         const data = await res.json()
         if (isMounted) {

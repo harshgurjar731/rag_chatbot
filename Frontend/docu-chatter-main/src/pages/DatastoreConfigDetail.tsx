@@ -26,6 +26,7 @@ import {
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea"
+import { API_BASE_URL } from "@/constants";
 
 export interface DocumentObj {
   id: string;
@@ -66,9 +67,6 @@ export const DatastoreConfigDetail = () => {
     setIsVideoUploading(true);
     const files = Array.from(e.target.files);
 
-    // Use the base URL logic from existing code
-    const baseUrl = import.meta.env.VITE_API_BASE_URL || "http://172.200.163.232:8000";
-
     try {
       for (const file of files) {
         const formData = new FormData();
@@ -76,7 +74,7 @@ export const DatastoreConfigDetail = () => {
 
         console.log(`Uploading video: ${file.name}`);
 
-        await axios.post(`${baseUrl}/ingestion/datastore/${id}/upload_video_source`, formData, {
+        await axios.post(`${API_BASE_URL}/ingestion/datastore/${id}/upload_video_source`, formData, {
           headers: { "Content-Type": "multipart/form-data" }
         });
 
@@ -104,7 +102,7 @@ export const DatastoreConfigDetail = () => {
 
   async function fetchDocuments(datastore_id: number) {
     try {
-      const response = await axios.get(`http://172.200.163.232:8000/ingestion/datastore/${id}/documents`);
+      const response = await axios.get(`${API_BASE_URL}/ingestion/datastore/${id}/documents`);
       var documentFromApi: DocumentObj[] = [];
       response.data.forEach((doc: any) => {
         const document = {
@@ -151,7 +149,7 @@ export const DatastoreConfigDetail = () => {
 
   const deleteDoc = async (id: string) => {
     console.log("Delete Row ", id)
-    const response = await axios.post(`http://172.200.163.232:8000/ingestion/deleteDocument/${id}`);
+    const response = await axios.post(`${API_BASE_URL}/ingestion/deleteDocument/${id}`);
     await fetchDocuments(datastore.id);
   }
 

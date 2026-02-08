@@ -131,9 +131,9 @@ class QDrantVectorDB(VectorStoreProtocol):
         print("Embedded Queries: ", queries_embedded)
 
         def search(q_emb):
-            return self.client.search(
+            return self.client.query_points(
                 collection_name=collection,
-                query_vector=q_emb,
+                query=q_emb,
                 limit=topk,
                 query_filter=filter
             )
@@ -151,13 +151,14 @@ class QDrantVectorDB(VectorStoreProtocol):
         documents_for_query: List[List[Document]] = []
         for i, result_set in enumerate(all_results):
             print(f"\nResults for query: {queryList[i]}")
-            for point in result_set:
-                print(
-                    "ID:", point.id,
-                    "Score:", point.score,
-                    "Metadata:", point.payload    # <-- HERE
-                )
-            documents_for_query.append([scored_point_to_document(p) for p in result_set])
+            for point in result_set.points:
+                print(point)
+                # print(
+                #     "ID:", point.id,
+                #     "Score:", point.score,
+                #     "Metadata:", point.payload    # <-- HERE
+                # )
+            documents_for_query.append([scored_point_to_document(p) for p in result_set.points])
 
 
         print("Outside For Loop", len(documents_for_query))
@@ -201,9 +202,9 @@ class QDrantVectorDB(VectorStoreProtocol):
         print("Embedded Queries: ", queries_embedded)
 
         def search(q_emb):
-            return self.client.search(
+            return self.client.query_points(
                 collection_name=collection,
-                query_vector=q_emb,
+                query=q_emb,
                 limit=topk,
                 query_filter=filter
             )

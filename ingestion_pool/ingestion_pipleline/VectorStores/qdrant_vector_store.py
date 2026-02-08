@@ -131,9 +131,9 @@ class QDrantVectorDB(VectorStoreProtocol):
         print("Embedded Queries: ", queries_embedded)
 
         def search(q_emb):
-            return self.client.search(
+            return self.client.query_points(
                 collection_name=collection,
-                query_vector=q_emb,
+                query=q_emb,
                 limit=topk,
                 query_filter=filter
             )
@@ -201,9 +201,9 @@ class QDrantVectorDB(VectorStoreProtocol):
         print("Embedded Queries: ", queries_embedded)
 
         def search(q_emb):
-            return self.client.search(
+            return self.client.query_points(
                 collection_name=collection,
-                query_vector=q_emb,
+                query=q_emb,
                 limit=topk,
                 query_filter=filter
             )

@@ -3,6 +3,7 @@ import { Chatbot, CreateChatbotDataResponse, QnAPair, RawDatastore, FileRecord, 
 import axios from 'axios';
 import { toast } from "@/components/ui/use-toast";
 import { IdCard } from 'lucide-react';
+import { API_BASE_URL } from '@/constants';
 
 
 const STORAGE_KEY = 'multi-chatbot-data';
@@ -56,7 +57,7 @@ export const useChatbots = () => {
   const fetchChatbotsWithFiles = async () => {
     try {
       // Step 1: Get all assistants
-      const res = await axios.get("http://172.200.163.232:8000/rag/getAssistants/");
+      const res = await axios.get(`${API_BASE_URL}/rag/getAssistants`);
       const assistants = res.data;
 
       const fetchedDatastores = JSON.parse(localStorage.getItem("createdDataStores")
@@ -68,7 +69,7 @@ export const useChatbots = () => {
         let files: DocumentRecord[] = [];
         try {
           const fileRes = await axios.get<DocumentRecord[]>(
-            `http://172.200.163.232:8000/ingestion/datastore/${assistant.datastore_id}/documents`
+            `${API_BASE_URL}/ingestion/datastore/${assistant.datastore_id}/documents`
           );
           files = fileRes.data;
          
@@ -148,7 +149,7 @@ export const useChatbots = () => {
     // const updated = chatbots.filter(bot => bot.id !== id);
     // saveChatbots(updated);
     try {
-      const fileRes = await axios.post(`http://172.200.163.232:8000/rag/deleteAssistant/${id}`);
+      const fileRes = await axios.post(`${API_BASE_URL}/rag/deleteAssistant/${id}`);
     } catch (error) {
         console.warn(`Error while deleting chatbot ${id}`, error);
     }

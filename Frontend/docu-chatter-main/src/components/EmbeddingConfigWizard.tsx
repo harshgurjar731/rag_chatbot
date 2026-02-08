@@ -11,6 +11,7 @@ import axios from "axios";
 import { fetchDatastores } from "@/pages/DatastoreDashboard";
 import { CreateDatastoreData } from "@/types/chatbot";
 import { ChunkPreviewDialog } from "./ChunkPreviewDialog";
+import { API_BASE_URL } from "@/constants";
 
 interface EmbeddingConfigWizardProps {
   open: boolean;
@@ -67,7 +68,7 @@ export const EmbeddingConfigWizard = ({
     }
     try {
       setLoading(true)
-      const upsertResponse = await axios.post(`http://172.200.163.232:8000/ingestion/datastore/${datastoreId}/upsertDocs`, upsertRequest);
+      const upsertResponse = await axios.post(`${API_BASE_URL}/ingestion/datastore/${datastoreId}/upsertDocs`, upsertRequest);
       console.log(upsertResponse)
       if (step <= 2) {
         setStep(step + 1)
@@ -99,7 +100,7 @@ export const EmbeddingConfigWizard = ({
 
     try {
       setLoading(true)
-      const testRetreiverResponse = await axios.post(`http://172.200.163.232:8000/ingestion/datastore/${datastoreId}/testRetrieval`, retrieverRequest);
+      const testRetreiverResponse = await axios.post(`${API_BASE_URL}/ingestion/datastore/${datastoreId}/testRetrieval`, retrieverRequest);
       const chunkTexts = testRetreiverResponse.data.map(chunk => chunk.page_content);
       console.log("Test Resp:", chunkTexts)
       setPreviewChunks(chunkTexts)

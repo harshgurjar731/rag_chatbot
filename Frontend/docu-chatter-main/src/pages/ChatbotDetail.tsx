@@ -16,6 +16,7 @@ import { Trash } from "lucide-react"; // Make sure Trash icon is imported
 import axios from 'axios';
 import qs from "qs";
 import { useConfigOptions } from '@/hooks/useConfigOptions';
+import { API_BASE_URL } from '@/constants';
 
 
 type FileRecord = {
@@ -365,7 +366,7 @@ const ChatbotDetail = () => {
               selected_documents: selectedDocuments,
               search_image: searchImage
             }
-            const response = await axios.post(`http://172.200.163.232:8000/rag/query/${chatbot.id}`, data, {
+            const response = await axios.post(`${API_BASE_URL}/rag/query/${chatbot.id}`, data, {
               // const response = await axios.get(`http://172.200.163.232:8000/retriever/query/${chatbot.name}`, {
               params: {
                 chatbot_id: chatbot.id,

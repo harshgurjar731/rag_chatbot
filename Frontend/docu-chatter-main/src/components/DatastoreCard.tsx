@@ -5,6 +5,7 @@ import { Chatbot, CreateDatastoreData } from '@/types/chatbot';
 import { cn } from '@/lib/utils';
 import { useEffect } from 'react';
 import axios from 'axios';
+import { API_BASE_URL } from '@/constants';
 
 interface DatastoreCardProps {
   data: CreateDatastoreData;
@@ -24,7 +25,7 @@ export const DatastoreCard = ({ data, onClick, onDelete }: DatastoreCardProps) =
 
   const deleteDatastore = async() => {
     console.log("hello Rupali")
-    const response = await axios.post(`http://172.200.163.232:8000/ingestion/deleteDatastore/${data.id}`);
+    const response = await axios.post(`${API_BASE_URL}/ingestion/deleteDatastore/${data.id}`);
     console.log(response.data)
     onDelete()
   }

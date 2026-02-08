@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { FolderPlus } from "lucide-react";
+import { API_BASE_URL } from "@/constants";
 
 type CreateFolderProps = {
   currentFolderId: number;
@@ -17,7 +18,7 @@ export default function CreateFolderDialog({ currentFolderId, onCreated }: Creat
 
     setLoading(true);
 
-    await fetch("http://172.200.163.232:8000/ingestion/folders", {
+    await fetch(`${API_BASE_URL}/ingestion/folders`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({

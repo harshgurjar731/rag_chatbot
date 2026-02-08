@@ -13,6 +13,7 @@ import axios from "axios";
 import { DocumentObj } from "@/pages/DatastoreConfigDetail";
 import CreateFolderDialog from "./CreateFolder";
 import FolderBreadcrumbs from "./FolderBreadcrums";
+import { API_BASE_URL } from "@/constants";
 
 interface DocumentLoaderConfigFormProps {
   open: boolean;
@@ -73,7 +74,7 @@ export const DocumentLoaderConfigForm = ({
   async function loadFolderStructure(datastore_id: number, folderId = null) {
 
     const url = new URL(
-      `http://172.200.163.232:8000/ingestion/datastore/${datastore_id}/folders`
+      `${API_BASE_URL}/ingestion/datastore/${datastore_id}/folders`
     );
 
     if (folderId !== null && folderId !== undefined) {
@@ -88,7 +89,7 @@ export const DocumentLoaderConfigForm = ({
     setCurrentFolder(data.current_folder.id);
     // load breadcrumbs
     const breadcrumsRes = await fetch(
-      `http://172.200.163.232:8000/ingestion/folders/${data.current_folder.id}/breadcrumbs`
+      `${API_BASE_URL}/ingestion/folders/${data.current_folder.id}/breadcrumbs`
     );
     const breadcrumData = await breadcrumsRes.json();
     setBreadcrumbs(breadcrumData);
@@ -129,7 +130,7 @@ export const DocumentLoaderConfigForm = ({
       datastoreId:selectedDocument.datastore_id,
       id: Number(selectedDocument.id)
     }
-    const chunksResponse = await axios.post(`http://172.200.163.232:8000/ingestion/document/getChunks?previewLimit=${showCount}`, requestData);
+    const chunksResponse = await axios.post(`${API_BASE_URL}/ingestion/document/getChunks?previewLimit=${showCount}`, requestData);
     setChunks(chunksResponse.data.chunks)
   }
 
@@ -144,7 +145,7 @@ export const DocumentLoaderConfigForm = ({
         chunkOverlap: splitterConfig?.chunkOverlap || 0,
         folder_id: currentFolder,
     }));
-    const chunksResponse = await axios.post(`http://172.200.163.232:8000/ingestion/document/previewChunks?previewLimit=${showCount}`, formData, {
+    const chunksResponse = await axios.post(`${API_BASE_URL}/ingestion/document/previewChunks?previewLimit=${showCount}`, formData, {
       headers: { "Content-Type": "multipart/form-data" }
     });
     console.log("Final Resp:", chunksResponse.data)
@@ -173,11 +174,11 @@ export const DocumentLoaderConfigForm = ({
       }));
     });
 
-    const response = await axios.post(`http://172.200.163.232:8000/ingestion/datastore/${datastoreId}/upload`, formData, {
+    const response = await axios.post(`${API_BASE_URL}/ingestion/datastore/${datastoreId}/upload`, formData, {
       headers: { "Content-Type": "multipart/form-data" }
     });
     console.log("Starting processing after upload")
-    const processResponse = await axios.post(`http://172.200.163.232:8000/ingestion/document/process`, response.data);
+    const processResponse = await axios.post(`${API_BASE_URL}/ingestion/document/process`, response.data);
     console.log("Processed Docs ", processResponse.data)
     onOpenChange(false)
   };

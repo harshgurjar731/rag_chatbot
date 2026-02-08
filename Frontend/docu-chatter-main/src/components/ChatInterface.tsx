@@ -79,6 +79,7 @@ import {
   TabsContent,
 } from "@/components/ui/tabs"
 import { fileToBase64, generateUUID } from "@/utilities/utils";
+import { API_BASE_URL } from "@/constants";
 
 // interface Citation {
 //   source: string;
@@ -674,8 +675,7 @@ export const ChatInterface = ({
     try {
       const encodedName = encodeURIComponent(doc_name)
       // Use configured base_url or fallback
-      const baseUrl = config?.base_url || "http://172.200.163.232:8000";
-      const response = await axios.get(`${baseUrl}/ingestion/download/${chatbot.datastoreId}/${encodedName}`, {
+      const response = await axios.get(`${API_BASE_URL}/ingestion/download/${chatbot.datastoreId}/${encodedName}`, {
         responseType: "blob", // important: we want the file bytes
       });
 
@@ -705,8 +705,7 @@ export const ChatInterface = ({
     try {
       const encodedName = encodeURIComponent(doc_name)
       // Use configured base_url or fallback
-      const baseUrl = config?.base_url || "http://172.200.163.232:8000";
-      const response = await axios.get(`${baseUrl}/ingestion/datastore/${chatbot.datastoreId}/secondary_download/${encodedName}`, {
+      const response = await axios.get(`${API_BASE_URL}/ingestion/datastore/${chatbot.datastoreId}/secondary_download/${encodedName}`, {
         responseType: "blob",
       });
 

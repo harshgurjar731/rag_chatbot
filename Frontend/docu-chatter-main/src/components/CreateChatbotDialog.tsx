@@ -24,6 +24,7 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { fetchDatastores } from '@/pages/DatastoreDashboard';
+import { API_BASE_URL } from '@/constants';
 
 interface CreateChatbotDialogProps {
   onCreateChatbot: (data: CreateChatbotDataResponse) => void
@@ -69,7 +70,8 @@ export const CreateChatbotDialog = ({ onCreateChatbot, children }: CreateChatbot
   }
 
   const createChatbotApiCall = async (data: ChatbotApiData) => {
-    const response = await axios.post('http://172.200.163.232:8000/rag/createAssistant/', {
+    
+    const response = await axios.post(`${API_BASE_URL}/rag/createAssistant/`, {
       name: data.name,
       description: data.description,
       datastore_id: Number(data.datastore_id),

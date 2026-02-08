@@ -17,6 +17,7 @@ import { CreateDatastoreData } from '@/types/chatbot';
 import { useChatbots } from '@/hooks/useChatbots';
 import axios from 'axios';
 import { useNavigate } from "react-router-dom"; // for redirection
+import { API_BASE_URL } from '@/constants';
 
 interface CreateDatastoreDialogProps {
   onCreateDatastore: (data: CreateDatastoreData) => void
@@ -45,7 +46,8 @@ export const CreateDatastoreDialog = ({ onCreateDatastore, children }: CreateDat
 
 
   const createDatastoreApiCall = async (data: { name: string; description: string }) => {
-    const response = await axios.post('http://172.200.163.232:8000/ingestion/createDatastore', {
+    console.log("API_Base_URL", API_BASE_URL)
+    const response = await axios.post(`${API_BASE_URL}/ingestion/createDatastore`, {
       name: data.name,
       description: data.description,
     });
