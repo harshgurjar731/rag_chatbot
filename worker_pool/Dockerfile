@@ -6,6 +6,7 @@ WORKDIR /build
 
 # Install build dependencies via conda (no apt needed)
 RUN conda install -y -c conda-forge \
+    python=3.12 \
     gcc_linux-64 \
     gxx_linux-64 \
     && conda clean -a -y
@@ -33,13 +34,14 @@ WORKDIR /app
 
 # Install only runtime system dependencies via conda
 RUN conda install -y -c conda-forge \
+    python=3.12 \
     tesseract \
     poppler \
     ghostscript \
     && conda clean -a -y
 
 # Copy installed packages from builder
-COPY --from=builder /opt/conda/lib/python3.13/site-packages /opt/conda/lib/python3.13/site-packages
+COPY --from=builder /opt/conda/lib/python3.12/site-packages /opt/conda/lib/python3.12/site-packages
 COPY --from=builder /opt/conda/bin /opt/conda/bin
 
 # Copy application code
