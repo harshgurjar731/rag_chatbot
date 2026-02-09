@@ -83,18 +83,18 @@ app = FastAPI(title="RAG Document Store")
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
-    allow_credentials=True,
+    allow_credentials=False,
     allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
     allow_headers=["*"],
     expose_headers=["*"],
     max_age=3600,
 )
 
-# Add explicit OPTIONS handler for root and all paths
-@app.options("/{full_path:path}")
-async def preflight_handler(full_path: str):
-    """Handle preflight requests for all routes"""
-    return Response(status_code=200)
+# # Add explicit OPTIONS handler for root and all paths
+# @app.options("/{full_path:path}")
+# async def preflight_handler(full_path: str):
+#     """Handle preflight requests for all routes"""
+#     return Response(status_code=200)
 
 from ingestion_pipleline.ingestion_datastore_router import router as ingestion_datastore_router
 from ingestion_pipleline.ingestion_document_loader_router import router as ingestion_document_router
