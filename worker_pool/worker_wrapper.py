@@ -32,11 +32,14 @@ BOT_NAME = os.getenv("BOT_NAME", "default")
 BOT_ID = os.getenv("BOT_ID", "-1")
 DATASTORE_ID = os.getenv("DATASTORE_ID", "-1")
 REDIS_HOST = os.getenv("REDIS_HOST", "redis")
+OTLP_ENDPOINT = os.getenv("OTEL_EXPORTER_OTLP_ENDPOINT", "http://20.98.116.35:5000/v1/traces") 
+#Default value for Local Phoenix endpoint - http://phoenix:6006/v1/traces
 
 print(f'BOT_NAME = {BOT_NAME}')
 print(f'BOT_ID = {BOT_ID}')
 print(f'DATASTORE_ID = {DATASTORE_ID}')
 print(f'REDIS_HOST = {REDIS_HOST}')
+print(f'OTLP_ENDPOINT = {OTLP_ENDPOINT}')
 
 # Redis Connection
 r = redis.Redis(host=REDIS_HOST, port=6379, db=0, decode_responses=True)
@@ -48,9 +51,10 @@ from database import engine
 
 # OpenTelemetry
 tracer_provider = register(
+    endpoint=OTLP_ENDPOINT,
     project_name=BOT_NAME,
     auto_instrument=True,
-    batch=False
+    batch=True
 )
 
 async def process_message(message_data):

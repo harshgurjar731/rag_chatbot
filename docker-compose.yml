@@ -17,8 +17,10 @@ services:
       - CHROMA_SERVER_HOST=chromadb
       - CHROMA_SERVER_PORT=8000
       - DEFAULT_VECTOR_DB=Chroma
-      - PHOENIX_COLLECTOR_ENDPOINT=http://phoenix:6006
-      - OTEL_EXPORTER_OTLP_ENDPOINT=http://phoenix:6006/v1/traces
+      - PHOENIX_COLLECTOR_ENDPOINT=http://20.98.116.35:5000
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://20.98.116.35:5000/v1/traces
+      # - PHOENIX_COLLECTOR_ENDPOINT=http://phoenix:6006
+      # - OTEL_EXPORTER_OTLP_ENDPOINT=http://phoenix:6006/v1/traces
       - OTEL_PROJECT_NAME="RAGBOT_API"
       - NVIDIA_API_KEY=${NVIDIA_API_KEY}
       - GROQ_API_KEY=${GROQ_API_KEY}
@@ -49,7 +51,9 @@ services:
       - DB_USER=user
       - DB_PASSWORD=password
       - INGESTION_POOL_SIZE=2
-      - PHOENIX_COLLECTOR_ENDPOINT=http://phoenix:6006
+      - PHOENIX_COLLECTOR_ENDPOINT=http://20.98.116.35:5000
+      # - PHOENIX_COLLECTOR_ENDPOINT=http://phoenix:6006
+      # - OTEL_EXPORTER_OTLP_ENDPOINT=http://phoenix:6006/v1/traces
       - CHROMA_SERVER_HOST=chromadb
       - CHROMA_SERVER_PORT=8000
       # API Keys for embeddings which now happen here
@@ -84,7 +88,10 @@ services:
       - CHROMA_SERVER_PORT=8000
       - DEFAULT_VECTOR_DB=Chroma
       # - GOOGLE_API_KEY=${GOOGLE_API_KEY}
-      - PHOENIX_COLLECTOR_ENDPOINT=http://phoenix:6006
+      - PHOENIX_COLLECTOR_ENDPOINT=http://20.98.116.35:5000
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://20.98.116.35:5000/v1/traces
+      # - PHOENIX_COLLECTOR_ENDPOINT=http://phoenix:6006
+      # - OTEL_EXPORTER_OTLP_ENDPOINT=http://phoenix:6006/v1/traces
       - PYTHONPATH=/app
       # API Keys for Generation/Reranking
       - MISTRAL_API_KEY=${MISTRAL_API_KEY}
