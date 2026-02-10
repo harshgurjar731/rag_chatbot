@@ -658,10 +658,39 @@ export const ChatInterface = ({
 
   useEffect(() => {
     if (!chatbot?.id) return;
-    const saved = localStorage.getItem(`model-settings-${chatbot.id}`);
-    if (saved) {
-      setTempSettings(JSON.parse(saved));
-    }
+
+    const fetchSettings = async () => {
+      try {
+        const response = await axios.get(`${API_BASE_URL}/rag/settings/${chatbot.id}`);
+        const settings = response.data;
+
+        // Normalize backend names to frontend names if different
+        const normalizedSettings = {
+          optimizer: settings.optimizer === "None" ? "" : settings.optimizer,
+          embeddingModel: "", // Handled by datastore
+          llmModel: settings.llm_model,
+          llmProvider: settings.llm_provider,
+          vectorDb: "", // Handled by datastore
+          guardrailOption: settings.guardrail_option === "off" ? "" : settings.guardrail_option,
+          temperature: settings.temperature,
+          tokenSize: settings.token_size,
+          showSources: settings.show_sources,
+          rerankerOption: settings.reranker_option,
+        };
+
+        setTempSettings(normalizedSettings);
+        localStorage.setItem(`model-settings-${chatbot.id}`, JSON.stringify(normalizedSettings));
+      } catch (err) {
+        console.error("Error fetching settings from backend:", err);
+        // Fallback to localStorage
+        const saved = localStorage.getItem(`model-settings-${chatbot.id}`);
+        if (saved) {
+          setTempSettings(JSON.parse(saved));
+        }
+      }
+    };
+
+    fetchSettings();
   }, [chatbot?.id]);
 
   const viewDocument = async (doc_name: string) => {
@@ -727,17 +756,42 @@ export const ChatInterface = ({
       });
     }
   };
-  const handleSave = (overrides: Partial<typeof tempSettings> = {}) => {
+  const handleSave = async (overrides: Partial<typeof tempSettings> = {}) => {
     const settings = { ...tempSettings, ...overrides };
     try {
+      // 1. Save to backend
+      const payload = {
+        llm_provider: settings.llmProvider,
+        llm_model: settings.llmModel,
+        temperature: settings.temperature,
+        optimizer: settings.optimizer || "None",
+        token_size: settings.tokenSize,
+        guardrail_option: settings.guardrailOption || "off",
+        reranker_option: settings.rerankerOption || "none",
+        show_sources: settings.showSources,
+      };
+
+      await axios.post(`${API_BASE_URL}/rag/settings/${chatbot.id}`, payload);
+
+      // 2. Save locally
       localStorage.setItem(
         `model-settings-${chatbot.id}`,
         JSON.stringify(settings)
       );
       setTempSettings(settings);
       setOpen(false);
+
+      toast({
+        title: "Settings Saved",
+        description: "Configurations have been persisted to the database.",
+      });
     } catch (err) {
       console.error("Error saving settings:", err);
+      toast({
+        title: "Error Saving Settings",
+        description: "Failed to persist configurations to the database.",
+        variant: "destructive",
+      });
     }
   };
 

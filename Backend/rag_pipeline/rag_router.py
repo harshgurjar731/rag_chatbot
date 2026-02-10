@@ -9,7 +9,7 @@ from typing import List
 from models.datastore import KnowledgeAssistant, DataStore
 from models.FileRecord import DocumentRecord
 import json
-from rag_pipeline.rag_models import CreateAssitantRequest, KnowledgeAssistantResponse, ChatInterfaceDetails, FeedbackRequest
+from rag_pipeline.rag_models import CreateAssitantRequest, KnowledgeAssistantResponse, ChatInterfaceDetails, FeedbackRequest, SaveSettingsRequest
 
 from rag_pipeline.Config.rag_config import RAG_CONFIG
 # from rag_pipeline.Services.retrieve_service import retrieve_documents
@@ -74,6 +74,7 @@ async def createAssistant(
 @router.get("/getAssistants" , response_model=List[KnowledgeAssistantResponse])
 async def get_assistants(user: User = Depends(get_current_user), 
                          session: Session = Depends(get_session)):
+    from models.FileRecord import QuestionAnswerV2
     print("Get Assistant User details", user)
     query = select(KnowledgeAssistant)
 
@@ -87,12 +88,29 @@ async def get_assistants(user: User = Depends(get_current_user),
         
     
     return_assistants: List[KnowledgeAssistantResponse] = []
+    
     for assistant in assistants:
+        
+        # Calculate Q&A count
+        qna_count = 0
+        if assistant.datastore_id:
+            # Count Q&A pairs for this datastore
+            # Note: Using len() on list is simple for now. 
+            # For large datasets, use select(func.count()).select_from(...)
+            qas = session.exec(
+                select(QuestionAnswerV2).where(QuestionAnswerV2.datastore_id == assistant.datastore_id)
+            ).all()
+            qna_count = len(qas)
+
         # docs = session.exec(select(DocumentRecord.id).where(DocumentRecord.datastore_id == datastore.id)).all()
         # datastore["documentCount"] = len(docs)
         print("Model Dump", assistant.model_dump())
+        
+        assistant_data = assistant.model_dump()
+        assistant_data["qna_count"] = qna_count
+        
         return_assistants.append( KnowledgeAssistantResponse(
-            **assistant.model_dump(),
+            **assistant_data
         ))
 
     print(f"Found Assistants - ", return_assistants)
@@ -105,10 +123,24 @@ async def delete_assistant(
     session: Session = Depends(get_session)):
 
     try:
+        from models.datastore import ChatbotSettings, RAGResponse
+        
         assistant = session.exec(select(KnowledgeAssistant).where(KnowledgeAssistant.id == assistant_id)).first()
         if not assistant:
              raise HTTPException(status_code=404, detail="Assistant not found")
              
+        # 1️⃣ Cleanup related database records
+        # Delete ChatbotSettings
+        settings = session.exec(select(ChatbotSettings).where(ChatbotSettings.chatbot_id == assistant_id)).all()
+        for setting in settings:
+            session.delete(setting)
+            
+        # Delete RAGResponses
+        responses = session.exec(select(RAGResponse).where(RAGResponse.chatbot_id == assistant_id)).all()
+        for response in responses:
+            session.delete(response)
+            
+        # 2️⃣ Delete KnowledgeAssistant record
         session.delete(assistant)
         session.commit()
 
@@ -129,6 +161,66 @@ async def delete_assistant(
         print(f"Error deleting assistant: {e}")
         raise HTTPException(status_code=500, detail=f"Failed to delete assistant: {str(e)}")
 
+
+
+@router.get("/settings/{chatbot_id}")
+async def get_chatbot_settings(
+    chatbot_id: str,
+    session: Session = Depends(get_session)
+):
+    """Fetch settings for a specific chatbot. Returns defaults if not found."""
+    from models.datastore import ChatbotSettings
+    
+    # Fetch the latest settings (ordered by id descending)
+    settings = session.exec(
+        select(ChatbotSettings)
+        .where(ChatbotSettings.chatbot_id == chatbot_id)
+        .order_by(ChatbotSettings.id.desc())
+    ).first()
+    
+    if not settings:
+        # Return defaults from RAG_CONFIG
+        return {
+            "llm_provider": RAG_CONFIG["default_llm_provider"],
+            "llm_model": RAG_CONFIG["default_llm_model"],
+            "temperature": RAG_CONFIG["default_temperature"],
+            "optimizer": RAG_CONFIG["default_query_rewriting_type"],
+            "token_size": RAG_CONFIG["default_max_tokens"],
+            "guardrail_option": RAG_CONFIG["default_guardrail_type"],
+            "reranker_option": RAG_CONFIG["default_reranker_type"],
+            "show_sources": True
+        }
+    
+    return settings
+
+@router.post("/settings/{chatbot_id}")
+async def save_chatbot_settings(
+    chatbot_id: str,
+    data: SaveSettingsRequest,
+    session: Session = Depends(get_session)
+):
+    """Create or update settings for a specific chatbot."""
+    from models.datastore import ChatbotSettings
+    import datetime
+    
+    # Always create a new version to maintain history
+    settings = ChatbotSettings(
+        chatbot_id=chatbot_id,
+        llm_provider=data.llm_provider,
+        llm_model=data.llm_model,
+        temperature=data.temperature,
+        optimizer=data.optimizer,
+        token_size=data.token_size,
+        guardrail_option=data.guardrail_option,
+        reranker_option=data.reranker_option,
+        show_sources=data.show_sources,
+        updated_at=datetime.datetime.utcnow()
+    )
+    
+    session.add(settings)
+    session.commit()
+    session.refresh(settings)
+    return settings
 
 
 @router.post("/query/{chatbot_id}", response_model=dict)
@@ -208,33 +300,44 @@ async def retrieve(
     full_response = ""
     
     try:
-        # Stream response from bot
-        # for chunk in bot_comm.send_message_streaming(
-        #     bot_name=chatbot_id,
-        #     message_text=query,
-        #     timeout=60,
-        #     use_knowledge_base=use_knowledge_base,
-        #     llm_model_provider=llm_model_provider,
-        #     llm_model_name=llm_model_name,
-        #     temperature=temperature,
-        #     max_token=max_token,
-        #     use_reranker=use_reranker,
-        #     reranker_type=reranker_type,
-        #     query_rewriting_type=query_rewriting_type,
-        #     use_guardrail=use_guardrail,
-        #     guardrail_type=guardrail_type,
-        #     use_citation=use_citation,
-        #     datastore_id=datastore_id,
-        #     query=query,
-        #     is_vision_search=is_vision_search,
-        #     messages=[m.dict() for m in data.messages] if data.messages else [],
-        #     selected_documents=data.selected_documents if data.selected_documents else []
-            
-        # ):
-        #     print("2")  
-        #     full_response += chunk
-        #     print(f"full_response: {full_response}")
+        from models.datastore import ChatbotSettings
         
+        # 1️⃣ Fetch saved settings for this chatbot
+        saved_settings = session.exec(select(ChatbotSettings).where(ChatbotSettings.chatbot_id == chatbot_id)).first()
+        
+        # 2️⃣ Merge settings: Priority Request Params > Saved Settings > RAG_CONFIG Defaults
+        # Note: FastAPI injects default values into parameters if not provided in URL.
+        # We only override if the parameter is at its default value AND we have a saved setting.
+        
+        effective_llm_provider = llm_model_provider
+        effective_llm_model = llm_model_name
+        effective_temperature = temperature
+        effective_token_size = max_token
+        effective_optimizer = query_rewriting_type
+        effective_guardrail = guardrail_type
+        effective_reranker = reranker_type
+        effective_citation = use_citation
+        
+        if saved_settings:
+            # Check if current value is default to decide if we should override with saved
+            if llm_model_provider == RAG_CONFIG["default_llm_provider"]:
+                effective_llm_provider = saved_settings.llm_provider
+            if llm_model_name == RAG_CONFIG["default_llm_model"]:
+                effective_llm_model = saved_settings.llm_model
+            if temperature == RAG_CONFIG["default_temperature"]:
+                effective_temperature = saved_settings.temperature
+            if max_token == RAG_CONFIG["default_max_tokens"]:
+                effective_token_size = saved_settings.token_size
+            if query_rewriting_type == RAG_CONFIG["default_query_rewriting_type"]:
+                effective_optimizer = saved_settings.optimizer
+            if guardrail_type == RAG_CONFIG["default_guardrail_type"]:
+                effective_guardrail = saved_settings.guardrail_option
+            if reranker_type == RAG_CONFIG["default_reranker_type"]:
+                effective_reranker = saved_settings.reranker_option
+            # Citation is tricky since it's a bool param, usually false by default
+            if use_citation == False and saved_settings.show_sources == True:
+                effective_citation = True
+
         # Fetch the assistant to get intents
         assistant = session.exec(select(KnowledgeAssistant).where(KnowledgeAssistant.id == chatbot_id)).first()
         
@@ -262,16 +365,16 @@ async def retrieve(
             message_text=query,
             timeout=0,
             use_knowledge_base=use_knowledge_base,
-            llm_model_provider=llm_model_provider,
-            llm_model_name=llm_model_name,
-            temperature=temperature,
-            max_token=max_token,
+            llm_model_provider=effective_llm_provider,
+            llm_model_name=effective_llm_model,
+            temperature=effective_temperature,
+            max_token=effective_token_size,
             use_reranker=use_reranker,
-            reranker_type=reranker_type,
-            query_rewriting_type=query_rewriting_type,
+            reranker_type=effective_reranker,
+            query_rewriting_type=effective_optimizer,
             use_guardrail=use_guardrail,
-            guardrail_type=guardrail_type,
-            use_citation=use_citation,
+            guardrail_type=effective_guardrail,
+            use_citation=effective_citation,
             datastore_id=datastore_id,
             query=query,
             is_vision_search=is_vision_search,

@@ -1,7 +1,7 @@
 # rag_app/backend/db/database.py
 import os
 from sqlmodel import SQLModel, create_engine, Session, text
-from models.datastore import DataStore, SecondarySource, KnowledgeAssistant
+from models.datastore import DataStore, SecondarySource, KnowledgeAssistant, RAGResponse, ChatbotSettings
 from models.FileRecord import FileRecord, DocumentRecord, ChunkRecord, QuestionAnswer
 
 # Use Environment variables for DB connection (PostgreSQL)

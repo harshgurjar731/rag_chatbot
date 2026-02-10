@@ -29,6 +29,8 @@ INGESTION_CONFIG = {
     "AZURE_OPENAI_API_KEY": "GHjMpAUMjqSYSuVPp4oHkI1bhAAsWQlihigch0uTWxoCI0kdRhQdJQQJ99BKACYeBjFXJ3w3AAABACOGu0tn",
     "AZURE_OPENAI_API_VERSION": "2024-02-01",
 
+    "AZURE_DOCUMENT_INTELLIGENCE_ENDPOINT": os.getenv("AZURE_DOCUMENT_INTELLIGENCE_ENDPOINT"),
+    "AZURE_DOCUMENT_INTELLIGENCE_KEY": os.getenv("AZURE_DOCUMENT_INTELLIGENCE_KEY"),
 
     # Models
     "default_embedding_model": os.getenv("DEFAULT_EMBEDDING_MODEL", "all-MiniLM-L6-v2"),
@@ -60,6 +62,9 @@ INGESTION_CONFIG = {
     # Data Folders
     "datastore_data_folder": os.getenv("DATASTORE_DATA_FOLDER", "Data"),
     "chunks_folder": os.getenv("CHUNKS_FOLDER", "Data"),
+
+    # Loader Configuration
+    "pdf_loader_type": os.getenv("PDF_LOADER_TYPE", "local"), # local or azure-document-intelligence
 
     # Translation
     "default_translation_source": os.getenv("DEFAULT_TRANSLATION_SOURCE", "auto"),

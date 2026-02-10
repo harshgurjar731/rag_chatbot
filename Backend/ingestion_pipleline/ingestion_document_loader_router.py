@@ -297,3 +297,44 @@ async def delete_document(
         session.rollback()
         print(f"Error deleting document: {e}")
         raise HTTPException(status_code=500, detail=f"Failed to delete document: {str(e)}")
+
+@router.get("/datastore/{datastore_id}/documents/{document_id}/name")
+def get_document_name(
+    datastore_id: int, 
+    document_id: int, 
+    session: Session = Depends(get_session)
+):
+    doc = session.get(DocumentRecord, document_id)
+    if not doc or doc.datastore_id != datastore_id:
+        raise HTTPException(status_code=404, detail="Document not found")
+    return {"file_name": doc.filename}
+
+@router.get("/datastore/{datastore_id}/files/{file_id}/name")
+def get_file_name_by_id(
+    datastore_id: int, 
+    file_id: int, 
+    session: Session = Depends(get_session)
+):
+    # Assuming file_id maps to DocumentRecord.id as hinted by the frontend code
+    doc = session.get(DocumentRecord, file_id)
+    if not doc or doc.datastore_id != datastore_id:
+         raise HTTPException(status_code=404, detail="File (Document) not found")
+    return {"file_name": doc.filename}
+
+@router.get("/datastore/{datastore_id}/files/{filename}/id")
+def get_file_id_by_name(
+    datastore_id: int, 
+    filename: str, 
+    session: Session = Depends(get_session)
+):
+    safe_filename = urllib.parse.unquote(filename)
+    doc = session.exec(
+        select(DocumentRecord).where(
+            DocumentRecord.datastore_id == datastore_id,
+            DocumentRecord.filename == safe_filename
+        )
+    ).first()
+    
+    if not doc:
+         raise HTTPException(status_code=404, detail="File not found")
+    return {"file_id": doc.id}

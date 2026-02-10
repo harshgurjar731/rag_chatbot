@@ -11,6 +11,7 @@ from langchain_core.documents import Document
 from ingestion_pipleline.Loaders.pdf_loader import PDFLoader
 from ingestion_pipleline.Loaders.image_loader import ImageLoader
 from ingestion_pipleline.Loaders.loader_protocol import LoaderProtocol
+from ingestion_pipleline.Loaders.azure_document_loader import AzureDocumentLoader
 import mimetypes
 
 def load_document_with_metadata(doc: DocumentRecord) -> List[Document]:
@@ -24,8 +25,17 @@ def load_document_with_metadata(doc: DocumentRecord) -> List[Document]:
     # Automatically determine file type if not provided
     print("LoaderType: ", doc.loaderType)
     if doc.loaderType == 'pdf':
-        loaded_documents = PDFLoader().load(doc.filePath)
-        return loaded_documents
+        from ingestion_pipleline.Config.Config import INGESTION_CONFIG
+        pdf_loader_type = INGESTION_CONFIG.get("pdf_loader_type", "local")
+        
+        if pdf_loader_type == "azure-document-intelligence":
+            from ingestion_pipleline.Loaders.azure_document_loader import AzureDocumentLoader
+            print(f"[*] Using AzureDocumentLoader for {doc.filePath}")
+            return AzureDocumentLoader().load(doc.filePath)
+        else:
+            print(f"[*] Using local PDFLoader for {doc.filePath}")
+            loaded_documents = PDFLoader().load(doc.filePath)
+            return loaded_documents
     elif doc.loaderType == 'img':
         return ImageLoader().load(doc.filePath)
 

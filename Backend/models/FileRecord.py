@@ -120,3 +120,12 @@ class QuestionAnswer(SQLModel, table=True):
 
     datastore_id: int = Field(foreign_key="datastore.id")
     file_id: Optional[int] = Field(default=None, foreign_key="filerecord.id")
+
+class QuestionAnswerV2(SQLModel, table=True):
+    __tablename__ = "question_answer_v2"
+    question_id: Optional[int] = Field(default=None, primary_key=True)
+    question: str
+    answer: str
+    datastore_id: int = Field(foreign_key="datastore.id")
+    document_id: int = Field(foreign_key="documentrecord.id")
+    file_name: str # storing filename for easy display
