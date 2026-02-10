@@ -109,9 +109,9 @@ export const DocumentLoaderConfigForm = ({
     }
   }, [selectedDocument])
 
-  useEffect(() => {
-    loadFolderStructure(datastoreId)
-  }, [])
+  // useEffect(() => {
+  //   loadFolderStructure(datastoreId)
+  // }, [])
 
   useEffect(() => {
     if (!open) {
@@ -243,7 +243,7 @@ export const DocumentLoaderConfigForm = ({
                           ))}
                         </ul>
                       )}
-                       <div>
+                       {/* <div>
                         <p className="text-sm text-muted-foreground"> Selected Folder: </p>
                         <FolderBreadcrumbs
                           breadcrumbs={breadcrumbs}
@@ -266,7 +266,7 @@ export const DocumentLoaderConfigForm = ({
                         />
 
                         <hr />
-                      </div>
+                      </div> */}
                     </>
                   )}
                   {/* {selectedFiles && (

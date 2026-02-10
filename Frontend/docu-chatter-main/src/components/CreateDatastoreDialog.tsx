@@ -287,6 +287,7 @@ export const CreateDatastoreDialog = ({ onCreateDatastore, children }: CreateDat
               <Input
                 id="name"
                 placeholder="Enter datastore name"
+                autoComplete="off"
                 value={formData.name}
                 onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
                 className="mt-1.5"
@@ -300,6 +301,7 @@ export const CreateDatastoreDialog = ({ onCreateDatastore, children }: CreateDat
               <Input
                 id="description"
                 placeholder="Brief description of the datastore"
+                autoComplete="off"
                 value={formData.description}
                 onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
                 className="mt-1.5"

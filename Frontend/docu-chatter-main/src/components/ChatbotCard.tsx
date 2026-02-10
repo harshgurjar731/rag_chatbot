@@ -11,9 +11,10 @@ interface ChatbotCardProps {
   onClick: () => void;
   onDelete: () => void;
   className?: string;
+  allowDelete: boolean;
 }
 
-export const ChatbotCard = ({ chatbot, onClick, onDelete, className }: ChatbotCardProps) => {
+export const ChatbotCard = ({ chatbot, onClick, onDelete, className, allowDelete = false }: ChatbotCardProps) => {
   const { deleteChatbot } = useChatbots()
   const formatDate = (date: Date) => {
     return new Intl.DateTimeFormat('en-US', {
@@ -32,7 +33,7 @@ export const ChatbotCard = ({ chatbot, onClick, onDelete, className }: ChatbotCa
       onClick={onClick}
     >
       {/* ✅ DELETE ICON */}
-      <div className='relative'>
+     { allowDelete && <div className='relative'>
       <button
         onClick={async(e) => {
           e.stopPropagation(); // prevent card click
@@ -44,7 +45,7 @@ export const ChatbotCard = ({ chatbot, onClick, onDelete, className }: ChatbotCa
       >
         <TrashIcon className="w-4 h-4 text-chatbot-primary" />
       </button>
-      </div>
+      </div> }
       <CardHeader className="pb-3">
         <div className="flex items-start justify-between">
           <div className="flex items-center gap-3">
