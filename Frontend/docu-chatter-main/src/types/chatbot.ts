@@ -46,6 +46,8 @@ export interface Chatbot {
   createdAt: Date;
   datastoreId: number;
   datastoreName: string;
+  qna?: QnAPair[];
+  updatedAt?: Date;
 }
 
 export interface CreateChatbotDataResponse {

@@ -1,0 +1,94 @@
+api-endpoint:
+  api_base: https://api.groq.com/openai/v1
+  api_key: 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
+  max_retries: 3
+  model: openai/gpt-oss-20b
+  retry_delay: 1.0
+azure-openai:
+  api_key: GHjMpAUMjqSYSuVPp4oHkI1bhAAsWQlihigch0uTWxoCI0kdRhQdJQQJ99BKACYeBjFXJ3w3AAABACOGu0tn
+  api_version: 2025-01-01-preview
+  azure_endpoint: https://knowledgesynthesis.openai.azure.com/
+  deployment_name: gpt-4o-mini
+  max_retries: 3
+  retry_delay: 1.0
+curate:
+  batch_size: 5
+  inference_batch: 5
+  temperature: 0.1
+  threshold: 6.0
+format:
+  default: jsonl
+  include_metadata: true
+  pretty_json: true
+generation:
+  batch_size: 2
+  chunk_size: 4000
+  enable_deduplication: true
+  max_tokens: 4096
+  num_cot_enhance_examples: null
+  num_cot_examples: 2
+  num_pairs: 4
+  overlap: 200
+  processing_strategy: auto
+  similarity_threshold: 0.8
+  single_call_max_size: 8000
+  temperature: 0.7
+  top_p: 0.95
+ingest:
+  default_format: txt
+  youtube_captions: auto
+llm:
+  provider: api-endpoint
+paths:
+  input: data/input
+  output:
+    curated: data/curated
+    final: data/final
+    generated: data/generated
+    parsed: data/parsed
+prompts:
+  cot_enhancement: "You are an expert reasoning assistant. Your task is to enhance\
+    \ the given conversations by adding chain-of-thought reasoning.\n\nFor each conversation,\
+    \ add detailed step-by-step reasoning to the assistant's responses while preserving\
+    \ the original answer.\n\n{include_simple_steps} = Whether to add reasoning to\
+    \ simple responses too. If false, only add reasoning to complex responses.\n\n\
+    Return the enhanced conversations as a JSON array matching this format:\n[\n \
+    \ [\n    {{\"role\": \"system\", \"content\": \"System message\"}},\n    {{\"\
+    role\": \"user\", \"content\": \"User question\"}},\n    {{\"role\": \"assistant\"\
+    , \"content\": \"Let me think through this step by step:\\n\\n1. First, I need\
+    \ to consider...\\n2. Then...\\n\\nTherefore, [original answer]\"}}\n  ],\n  [\n\
+    \    {{\"role\": \"system\", \"content\": \"System message\"}},\n    {{\"role\"\
+    : \"user\", \"content\": \"Another user question\"}},\n    {{\"role\": \"assistant\"\
+    , \"content\": \"Let me work through this:\\n\\n1. I'll start by...\\n2. Next...\\\
+    n\\nIn conclusion, [original answer]\"}}\n  ]\n]\n\nOriginal conversations:\n\
+    {conversations}\n"
+  cot_generation: "Create complex reasoning examples from this text that demonstrate\
+    \ chain-of-thought thinking.\n\nEach example should have:\n1. A challenging question\
+    \ that requires step-by-step reasoning\n2. Detailed reasoning steps that break\
+    \ down the problem\n3. A concise final answer\n\nReturn JSON format only:\n\n\
+    [\n  {{\n    \"question\": \"Complex question about the text?\",\n    \"reasoning\"\
+    : \"Step 1: First, I need to consider...\\nStep 2: Then, I analyze...\\nStep 3:\
+    \ Finally, I can conclude...\",\n    \"answer\": \"Final answer based on the reasoning.\"\
+    \n  }},\n  {{\n    \"question\": \"Another complex question?\",\n    \"reasoning\"\
+    : \"Step 1: First, I'll analyze...\\nStep 2: Next, I need to determine...\\nStep\
+    \ 3: Based on this analysis...\",\n    \"answer\": \"Final answer drawn from the\
+    \ reasoning.\"\n  }}\n]\n\nText:\n{text}\n"
+  qa_generation: "Create question-answer pairs from this text for LLM training.\n\n\
+    Rules:\n1. Questions must be about important facts in the text\n2. Answers must\
+    \ be directly supported by the text\n3. Return JSON format only:\n\n[\n  {{\n\
+    \    \"question\": \"Question 1?\",\n    \"answer\": \"Answer 1.\"\n  }},\n  {{\n\
+    \    \"question\": \"Question 2?\",\n    \"answer\": \"Answer 2.\"\n  }}\n]\n\n\
+    Text:\n{text}\n"
+  qa_rating: "Rate each question-answer pair on a scale from 1-10, based on:\n- Accuracy\
+    \ (0-3): factual correctness\n- Relevance (0-2): relevance to content\n- Clarity\
+    \ (0-2): clear language\n- Usefulness (0-3): value for model learning\n\nYOU MUST\
+    \ RETURN A VALID JSON OBJECT OR ARRAY WITH THIS EXACT SCHEMA:\n{{\n  \"question\"\
+    : \"Exact question text\",\n  \"answer\": \"Exact answer text\",\n  \"rating\"\
+    : 8\n}}\n\nOR FOR MULTIPLE PAIRS:\n[\n  {{\"question\": \"Q1\", \"answer\": \"\
+    A1\", \"rating\": 8}},\n  {{\"question\": \"Q2\", \"answer\": \"A2\", \"rating\"\
+    : 9}}\n]\n\n*** YOUR RESPONSE MUST BE VALID JSON AND NOTHING ELSE - NO EXPLANATION,\
+    \ NO MARKDOWN ***\n\nQA pairs to rate:\n{pairs}\n"
+  summary: 'Summarize this document in 3-5 sentences, focusing on the main topic and
+    key concepts.
+
+    '

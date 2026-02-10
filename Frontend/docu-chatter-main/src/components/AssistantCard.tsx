@@ -1,7 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { FileText, MessageSquare, Clock } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+// import { useNavigate } from "react-router-dom";
 import { Chatbot } from '@/types/chatbot';
 
 
@@ -12,14 +12,19 @@ interface ChatbotCardProps {
 }
 
 export const AssistantCard = ({ chatbot, onClick, className }: ChatbotCardProps) => {
-  const navigate = useNavigate();
+  // const navigate = useNavigate(); // Removed unused hook
 
   const handleCardClick = () => {
-    navigate(`/evaluation-selection/${chatbot.id}`);
+    onClick();
   };
 
+  // Safe access to properties with fallbacks
+  const documentCount = chatbot.documents?.length || 0;
+  const qnaCount = chatbot.qna?.length || 0;
+  const status = "Active"; // Default status since it's not in the chatbot object
+
   return (
-    <Card 
+    <Card
       className="group hover:shadow-elegant transition-all duration-300 hover:scale-[1.02] cursor-pointer"
       onClick={handleCardClick}
     >
@@ -36,20 +41,20 @@ export const AssistantCard = ({ chatbot, onClick, className }: ChatbotCardProps)
           <div className="flex items-center space-x-2">
             <FileText className="h-4 w-4 text-muted-foreground" />
             <span className="text-sm text-muted-foreground">
-              {chatbot.documents.length} documents
+              {documentCount} documents
             </span>
           </div>
           <div className="flex items-center space-x-2">
             <MessageSquare className="h-4 w-4 text-muted-foreground" />
             <span className="text-sm text-muted-foreground">
-              {chatbot.qna.length} Q&A
+              {qnaCount} Q&A
             </span>
           </div>
         </div>
-        
+
         <div className="flex items-center space-x-2 text-sm text-muted-foreground">
           <Clock className="h-4 w-4" />
-          <span>Updated {chatbot.updatedAt.toLocaleDateString()}</span>
+          <span>Updated {chatbot.updatedAt?.toLocaleDateString?.() || chatbot.createdAt?.toLocaleDateString?.() || 'N/A'}</span>
         </div>
       </CardContent>
     </Card>

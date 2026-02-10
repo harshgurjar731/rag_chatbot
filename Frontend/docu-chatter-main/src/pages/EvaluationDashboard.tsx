@@ -1,4 +1,4 @@
-import { AssistantCard } from "@/components/AssistantCard";
+﻿import { AssistantCard } from "@/components/AssistantCard";
 import { Bot } from "lucide-react";
 import { Outlet } from "react-router-dom";
 import { ChatbotCard } from '@/components/ChatbotCard';

@@ -102,6 +102,7 @@ from ingestion_pipleline.ingestion_chunks_router import router as ingestion_chun
 from ingestion_pipeline.secondary_source_router import router as secondary_source_router # Added
 from rag_pipeline.rag_router import router as rag_knowledge_asst_router
 from routes import translate, frontend_config, embedding
+from routes.evaluation import router as evaluation_router
 # # Include all the different API routers
 # app.include_router(datastore.router, prefix="/datastore")
 # app.include_router(upload.router)
@@ -113,7 +114,7 @@ app.include_router(embedding.router, prefix="/datastore")
 # app.include_router(url_scraper.router, prefix="/urlscraper")
 app.include_router(translate.router, prefix="/translate")
 app.include_router(frontend_config.router, prefix="/frontend")
-# app.include_router(evaluation.router, prefix="/evaluation")
+app.include_router(evaluation_router, prefix="/evaluation", tags=["Evaluation"])
 
 
 

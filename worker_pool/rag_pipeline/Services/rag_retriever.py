@@ -264,22 +264,19 @@ def get_rag_answer_text(
     # Convert to JSON string
     source_json_string = json.dumps(unique_list, indent=2)
     print("source_json_string:", source_json_string)
-    # if include_sources and "Sources:" in final_answer:
-    #     parts = final_answer.split("Sources:")
-    #     answer_text = parts[0].strip()
-    #     sources_text = parts[1].strip() if len(parts) > 1 else ""
-    #     return {
-    #         "answer": answer_text + "\n\nSources: " + str(sources_text.split("\n") if sources_text else [])
-    #     }
 
-
+    # Capture raw context text for evaluation (RAGAS)
+    context_text_list = [chunk.page_content for chunk in used_chunks]
+    context_text_json = json.dumps(context_text_list)
+    
     answer_text = final_response_obj["response"]
     if isinstance(answer_text, dict) or isinstance(answer_text, list):
         answer_text = json.dumps(answer_text)
     
     return {"answer": str(answer_text).strip(),
             "images": [],
-            "citations": source_json_string}
+            "citations": source_json_string,
+            "context_text": context_text_json}
 
 
 def get_rag_answer_image(

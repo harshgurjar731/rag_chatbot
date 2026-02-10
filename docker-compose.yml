@@ -106,6 +106,39 @@ services:
     volumes:
       - app-db:/app/db
       - rag_data:/app/data_directory # Shared volume for files
+      - ./worker_pool:/app
+
+  evaluation-pool:
+    build:
+      context: ./evaluation_pool
+      dockerfile: Dockerfile
+    container_name: evaluation_pool
+    environment:
+      - REDIS_HOST=redis
+      - DB_HOST=db
+      - DB_NAME=chatbot_db
+      - DB_USER=user
+      - DB_PASSWORD=password
+      - PHOENIX_COLLECTOR_ENDPOINT=http://phoenix:6006
+      - DATA_DIRECTORY=/app/data_directory
+      # API Keys for RAGAS evaluation
+      - MISTRAL_API_KEY=${MISTRAL_API_KEY}
+      - GROQ_API_KEY=${GROQ_API_KEY}
+      - AZURE_API_KEY=${AZURE_API_KEY}
+    networks:
+      - chatbot_network
+    depends_on:
+      redis:
+        condition: service_started
+      postgres:
+        condition: service_healthy
+    volumes:
+      - app-db:/app/db
+      - rag_data:/app/data_directory
+      - ./synthetic_data_kit:/opt/conda/lib/python3.11/site-packages/synthetic_data_kit
+      - ./data:/app/data
+      - ./evaluation_pool:/app
+      - ./Backend/models:/app/models # Map models directory for import compatibility
 
   frontend:
     build:
@@ -118,7 +151,8 @@ services:
       - ./Frontend/docu-chatter-main:/app
       - /app/node_modules
     environment:
-      - VITE_API_BASE_URL=http://172.200.163.232:8000
+      # - VITE_API_BASE_URL=http://172.200.163.232:8000
+      - VITE_API_BASE_URL=http://localhost:8000
     networks:
       - chatbot_network
 
