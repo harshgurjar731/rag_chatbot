@@ -1,0 +1,39 @@
+# ML Stack
+numpy<2
+huggingface-hub>=0.23.0,<1.0
+transformers>=4.39.3,<5.0.0
+sentence-transformers==2.7.0
+langchain-huggingface
+onnxruntime
+
+# Vector Stores
+chromadb
+langchain-chroma
+
+# Evaluation Frameworks
+ragas
+datasets
+arize-phoenix-evals
+
+# Common Utils & API
+fastapi
+uvicorn
+requests
+redis
+psycopg2-binary
+sqlmodel
+python-dotenv
+aiofiles
+pandas
+pydantic-settings
+psutil
+
+# LangChain
+langchain
+langchain-core
+langchain-community
+langchain-text-splitters
+langchain-openai
+langchain-experimental
+openinference-instrumentation-langchain
+openinference-instrumentation-openai

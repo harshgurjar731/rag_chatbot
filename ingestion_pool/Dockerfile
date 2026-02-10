@@ -31,6 +31,9 @@ COPY requirements.txt .
 # Using pip directly to avoid potential registry issues with uv for some ML packages
 RUN pip install --no-cache-dir -r requirements.txt
 
+# Install Azure Document Intelligence separately to leverage cache for requirements.txt
+RUN pip install --no-cache-dir azure-ai-documentintelligence
+
 # Copy application code
 COPY . .
 

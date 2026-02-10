@@ -25,14 +25,14 @@ RAG_CONFIG = {
     "default_query_rewriting_type": os.getenv("DEFAULT_QUERY_REWRITING_TYPE", "None"),
     "default_guardrail_type": os.getenv("DEFAULT_GUARDRAIL_TYPE", "None"),
 
-     #Azure Open AI configs
-    "AZURE_OPENAI_ENDPOINT": "https://knowledgesynthesis.openai.azure.com/",
-    "AZURE_OPENAI_API_KEY": "239wAP9aB98yqPnlsfsIJEyUhYLq7dW254TkygU4q7w7swGzqMhbJQQJ99BLACYeBjFXJ3w3AAABACOGJ103",
-    "AZURE_OPENAI_API_VERSION": "2025-01-01-preview",
+    #Azure Open AI configs
+    "AZURE_OPENAI_ENDPOINT": os.getenv("AZURE_API_BASE", ""),
+    "AZURE_OPENAI_API_KEY": os.getenv("AZURE_API_KEY", ""),
+    "AZURE_OPENAI_API_VERSION": os.getenv("AZURE_API_VERSION", "2025-01-01-preview"),
 
     #GROQ OPEN AI configs
-    "GROQ_API_KEY": "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",
-    "GROQ_API_BASE": "https://api.groq.com/openai/v1",
+    "GROQ_API_KEY": os.getenv("GROQ_API_KEY", ""),
+    "GROQ_API_BASE": os.getenv("GROQ_API_BASE", "https://api.groq.com/openai/v1"),
 
     "default_conversation_history_count": int(os.getenv("DEFAULT_CONVERSATION_HISTORY_COUNT", "10")),
     "default_ragfusion_rrf_k": int(os.getenv("DEFAULT_RAGFUSION_RRF_K", "60")),
@@ -76,7 +76,7 @@ RAG_CONFIG = {
        # Azure OpenAI
     "azure_api_key": os.getenv("AZURE_API_KEY", ""),
     "azure_api_base": os.getenv("AZURE_API_BASE", ""),
-    "azure_api_version": os.getenv("AZURE_API_VERSION", "2024-12-01-preview"),
+    "azure_api_version": os.getenv("AZURE_API_VERSION", "2025-01-01-preview"),
 
     # Guardrail
     "default_guardrail_level": os.getenv("DEFAULT_GUARDRAIL_OPTION", "none"),

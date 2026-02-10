@@ -16,6 +16,7 @@ class KnowledgeAssistantResponse(BaseModel):
     description: str
     created_at: Any
     datastore_id: int
+    qna_count: int = 0
     # intents removed
 
 
@@ -36,3 +37,13 @@ class FeedbackRequest(BaseModel):
     trace_id: str
     span_id: Optional[str] = ""
     feedback: str
+
+class SaveSettingsRequest(BaseModel):
+    llm_provider: str
+    llm_model: str
+    temperature: float
+    optimizer: str
+    token_size: int
+    guardrail_option: str
+    reranker_option: str
+    show_sources: bool

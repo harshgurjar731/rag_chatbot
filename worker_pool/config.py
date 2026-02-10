@@ -67,7 +67,7 @@ CONFIG = {
        # Azure OpenAI
     "azure_api_key": os.getenv("AZURE_API_KEY", ""),
     "azure_api_base": os.getenv("AZURE_API_BASE", ""),
-    "azure_api_version": os.getenv("AZURE_API_VERSION", "2024-12-01-preview"),
+    "azure_api_version": os.getenv("AZURE_API_VERSION", "2025-01-01-preview"),
 
     # Guardrail
     "default_guardrail_level": os.getenv("DEFAULT_GUARDRAIL_OPTION", "none"),

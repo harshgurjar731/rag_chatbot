@@ -264,22 +264,29 @@ def get_rag_answer_text(
     # Convert to JSON string
     source_json_string = json.dumps(unique_list, indent=2)
     print("source_json_string:", source_json_string)
-    # if include_sources and "Sources:" in final_answer:
-    #     parts = final_answer.split("Sources:")
-    #     answer_text = parts[0].strip()
-    #     sources_text = parts[1].strip() if len(parts) > 1 else ""
-    #     return {
-    #         "answer": answer_text + "\n\nSources: " + str(sources_text.split("\n") if sources_text else [])
-    #     }
 
-
+    # Capture raw context text for evaluation (RAGAS)
+    # Use ALL retrieved chunks for evaluation context, not just the ones LLM claimed to use
+    # This ensures RAGAS always has context even if LLM citation is broken
+    all_context_text_list = [chunk.page_content for chunk in returned_chunks]
+    all_context_text_json = json.dumps(all_context_text_list)
+    
+    # Also keep the "used" chunks context for comparison/debugging
+    used_context_text_list = [chunk.page_content for chunk in used_chunks]
+    used_context_text_json = json.dumps(used_context_text_list)
+    
+    print(f"[DEBUG] Retrieved {len(returned_chunks)} chunks, LLM used {len(used_chunks)} chunks")
+    print(f"[DEBUG] all_context_text has {len(all_context_text_list)} items")
+    print(f"[DEBUG] used_context_text has {len(used_context_text_list)} items")
+    
     answer_text = final_response_obj["response"]
     if isinstance(answer_text, dict) or isinstance(answer_text, list):
         answer_text = json.dumps(answer_text)
     
     return {"answer": str(answer_text).strip(),
             "images": [],
-            "citations": source_json_string}
+            "citations": source_json_string,
+            "context_text": all_context_text_json}  # Use ALL chunks for evaluation
 
 
 def get_rag_answer_image(
