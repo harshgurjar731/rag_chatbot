@@ -998,24 +998,24 @@ export const ChatInterface = ({
                                   )}
                                 </Button>
 
-                                <Button
+                                { message.id !== "1" && <Button
                                   size="icon"
                                   variant="ghost"
                                   className="h-6 w-6 rounded-full text-[11px] border border-border/40 text-green-500 hover:bg-muted/70 transition-colors"
                                   onClick={() => onFeedback(message.id, "Positive")}
                                 >
                                   <ThumbsUp size={14} />
-                                </Button>
+                                </Button> }
 
 
-                                <Button
+                                { message.id !== "1" && <Button
                                   size="icon"
                                   variant="ghost"
                                   className="h-6 w-6 rounded-full text-[11px] border border-border/40 text-red-500 hover:bg-muted/70 transition-colors"
                                   onClick={() => onFeedback(message.id, "Negative")}
                                 >
                                   <ThumbsDown size={14} />
-                                </Button>
+                                </Button> }
 
 
                                 <Popover
@@ -1101,7 +1101,7 @@ export const ChatInterface = ({
               ))}
               {isLoading && (
                 <div className="flex justify-start">
-                  <Card className="bg-chatbot-secondary border-chatbot-primary/20">
+                  <Card className="border-chatbot-primary/20">
                     <CardContent className="p-3">
                       <div className="flex items-center gap-2">
                         <div className="flex gap-1">
