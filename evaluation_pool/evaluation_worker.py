@@ -104,6 +104,7 @@ def process_run_evaluation(job_data: dict):
     """Process evaluation job using RAGAS or Phoenix."""
     from ragaas_evaluator import perform_ragaas_evaluation
     from phoenix_evaluator import perform_phoenix_evaluation
+    from rag_response_generator import ensure_rag_responses_for_evaluation
     
     evaluation_id = job_data.get("evaluation_id")
     datastore_id = job_data.get("datastore_id")
@@ -118,6 +119,24 @@ def process_run_evaluation(job_data: dict):
         # First generate Q&A if needed
         update_evaluation_status(evaluation_id, "generating_qa", 15, metrics=metrics, framework=framework)
         qa_result = process_generate_qa(job_data)
+        
+        # CRITICAL: Ensure RAG responses exist BEFORE running any evaluation framework
+        # This prevents Phoenix from failing due to missing responses
+        update_evaluation_status(evaluation_id, "preparing_rag_responses", 40, metrics=metrics, framework=framework)
+        print(f"[INFO] Ensuring RAG responses are available for evaluation...")
+        
+        with Session(engine) as session:
+            try:
+                rag_results, rag_stats = ensure_rag_responses_for_evaluation(
+                    datastore_id=datastore_id,
+                    chatbot_id=chatbot_id,
+                    session=session
+                )
+                print(f"[INFO] RAG responses ready: {len(rag_results)} available")
+            except Exception as e:
+                error_msg = f"Failed to prepare RAG responses: {str(e)}"
+                print(f"[ERROR] {error_msg}")
+                raise ValueError(error_msg)
         
         update_evaluation_status(evaluation_id, "running_evaluation", 60, metrics=metrics, framework=framework)
         

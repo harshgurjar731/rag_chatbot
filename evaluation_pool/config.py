@@ -28,4 +28,8 @@ CONFIG = {
     
     # Paths
     "data_directory": os.getenv("DATA_DIRECTORY", "/app/data_directory"),
+    
+    # Evaluation Configuration
+    "evaluation_llm_provider": os.getenv("EVALUATION_LLM_PROVIDER", "groq"),
+    "evaluation_llm_model": os.getenv("EVALUATION_LLM_MODEL", "llama-3.3-70b-versatile"),
 }

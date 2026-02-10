@@ -92,8 +92,11 @@ def get_phoenix_model(provider: str = "groq", model_name: str = "llama-3.3-70b-v
         )
 
 
-# Default model instance (Groq)
-model = get_phoenix_model(provider="groq", model_name="llama-3.3-70b-versatile")
+# Default model instance (from CONFIG)
+model = get_phoenix_model(
+    provider=CONFIG.get("evaluation_llm_provider", "groq"),
+    model_name=CONFIG.get("evaluation_llm_model", "llama-3.3-70b-versatile")
+)
 
 
 
@@ -188,8 +191,15 @@ def evaluate_records(
         print(f"[INFO] Fetching evaluation data from DB for ChatbotID: {chatbot_id}")
         df = fetch_evaluation_data_from_db(session, chatbot_id)
         if df.empty:
-            print("[WARN] No RAG Responses found in DB for this chatbot. Evaluation might be empty.")
-            request_obj = EvaluationRequest(data=[])  # Empty
+            error_msg = (
+                f"No RAG Responses found in DB for chatbot {chatbot_id}. "
+                "RAG responses should have been generated before evaluation. "
+                "This indicates a workflow issue - ensure RAG response generation "
+                "completes successfully before running Phoenix evaluation."
+            )
+            print(f"[ERROR] {error_msg}")
+            raise ValueError(error_msg)
+        print(f"[INFO] Loaded {len(df)} RAG responses for evaluation")
         provide_explanation = True
     else:
         # Fallback to existing logic

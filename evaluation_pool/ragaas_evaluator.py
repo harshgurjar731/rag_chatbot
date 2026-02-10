@@ -7,6 +7,7 @@ import json
 import traceback
 from pathlib import Path
 from typing import List, Dict, Any
+from collections import defaultdict
 
 
 from ragas.metrics import faithfulness, answer_relevancy, context_precision, context_recall
@@ -70,9 +71,10 @@ def perform_ragaas_evaluation(
         from sqlmodel import select
         from sqlmodel import select 
         
-        # Default values
-        llm_model = "llama-3.3-70b-versatile" # Default for evaluation if no settings
-        llm_provider = "groq"
+        
+        # Default values from CONFIG
+        llm_model = CONFIG.get("evaluation_llm_model", "llama-3.3-70b-versatile")
+        llm_provider = CONFIG.get("evaluation_llm_provider", "groq")
         temperature = 0.0
 
         latest_settings_id = None
@@ -150,66 +152,27 @@ def perform_ragaas_evaluation(
             raise ValueError(f"No Q&A pairs found for Datastore {datastore_id}. Generate Q&A first.")
 
         # -------------------- Ensure RAG Responses exist --------------------
-        from rag_client import RAGClient
-        rag_client = RAGClient(timeout=120) # 2 min timeout for RAG
+        from rag_response_generator import ensure_rag_responses_for_evaluation
         
-        print(f"[INFO] Checking for RAG Responses for chatbot {chatbot_id} on datastore {datastore_id}")
+        print(f"[INFO] Loading RAG Responses for chatbot {chatbot_id} on datastore {datastore_id}")
         
-        final_results = []
-        for qna in qnas:
-            # Check if RAGResponse already exists for THIS settings version
-            rag_resp = session.exec(
-                select(RAGResponse).where(
-                    RAGResponse.question_id == qna.question_id,
-                    RAGResponse.chatbot_id == str(chatbot_id),
-                    RAGResponse.settings_id == latest_settings_id
-                )
-            ).first()
-            
-            if not rag_resp:
-                print(f"[INFO] RAG Response missing for Question ID {qna.question_id}. Generating...")
-                try:
-                    # Generate response via worker-pool
-                    resp_data = rag_client.get_rag_response(
-                        chatbot_id=str(chatbot_id),
-                        question=qna.question,
-                        datastore_id=datastore_id,
-                        llm_model_provider=llm_provider,
-                        llm_model_name=llm_model
-                    )
-                    
-                    if "error" in resp_data:
-                         print(f"[ERROR] Failed to generate RAG response: {resp_data['error']}")
-                         continue
-                         
-                    # Save to DB
-                    rag_resp = RAGResponse(
-                        question_id=qna.question_id,
-                        chatbot_id=str(chatbot_id),
-                        user_query=qna.question,
-                        generated_answer=resp_data.get("generated_answer", ""),
-                        citations=resp_data.get("citations", "[]"),
-                        context_text=resp_data.get("context_text", "[]"),
-                        settings_id=latest_settings_id
-                    )
-                    session.add(rag_resp)
-                    session.commit()
-                    session.refresh(rag_resp)
-                    print(f"[INFO] Successfully generated and saved RAG response for Question ID {qna.question_id}")
-                    
-                except Exception as e:
-                    print(f"[ERROR] Exception during RAG generation for Question ID {qna.question_id}: {e}")
-                    continue
-            
-            final_results.append((rag_resp, qna))
+        # Use shared RAG response generator
+        results, rag_stats = ensure_rag_responses_for_evaluation(
+            datastore_id=datastore_id,
+            chatbot_id=chatbot_id,
+            session=session,
+            llm_provider=llm_provider,
+            llm_model=llm_model,
+            settings_id=latest_settings_id
+        )
+        
+        print(f"[INFO] Loaded {len(results)} RAG responses for evaluation")
 
-        if not final_results:
-             raise ValueError(f"No RAG Responses found for Datastore {datastore_id} and generation failed.")
-
-        results = final_results
 
         # -------------------- Combine DB Results into Ragas Rows --------------------
         ragas_rows = []
+        skipped_reasons = defaultdict(int)
+        
         for rag_resp, qna in results:
             question_text = qna.question.strip()
             answer_text = rag_resp.generated_answer.replace("\n", " ").strip() if rag_resp.generated_answer else ""
@@ -220,30 +183,75 @@ def perform_ragaas_evaluation(
             context_raw = rag_resp.context_text
             contexts = []
             
-            if context_raw and context_raw != "[]":
+            print(f"[DEBUG] Processing Question ID {qna.question_id}")
+            print(f"[DEBUG]   context_raw: {repr(context_raw)}")
+            print(f"[DEBUG]   reference (citations): {repr(reference)}")
+            
+            # Try to extract contexts from context_text first
+            if context_raw and context_raw not in ["[]", "", None]:
                 try:
                     parsed = json.loads(context_raw)
-                    if isinstance(parsed, list):
-                        contexts = [str(ctx).strip() for ctx in parsed if ctx]
-                    else:
-                        contexts = [str(parsed).strip()]
+                    if isinstance(parsed, list) and len(parsed) > 0:
+                        contexts = [str(ctx).strip() for ctx in parsed if ctx and str(ctx).strip()]
+                        print(f"[DEBUG]   Parsed {len(contexts)} contexts from context_text")
+                    elif parsed:  # Non-empty non-list
+                        ctx_str = str(parsed).strip()
+                        if ctx_str:
+                            contexts = [ctx_str]
+                            print(f"[DEBUG]   Using single context from context_text")
                 except json.JSONDecodeError:
-                    contexts = [context_raw.strip()]
-            elif reference:
-                try:
-                    # Fallback to citations if context_text is missing (old records)
-                    parsed = json.loads(reference)
-                    if isinstance(parsed, list):
-                        contexts = [str(ctx).strip() for ctx in parsed if ctx]
-                    else:
-                        contexts = [str(parsed).replace("\n", " ").strip()]
-                except json.JSONDecodeError:
-                    contexts = [reference.replace("\n", " ").strip()]
+                    ctx_str = context_raw.strip()
+                    if ctx_str:
+                        contexts = [ctx_str]
+                        print(f"[DEBUG]   Using raw context_text as single context")
             
-            # Skip incomplete rows
-            if not question_text or not answer_text or not contexts or not ground_truth_text:
+            # Fallback to citations if context_text didn't yield results
+            if not contexts and reference and reference not in ["[]", "", None]:
+                try:
+                    parsed = json.loads(reference)
+                    if isinstance(parsed, list) and len(parsed) > 0:
+                        # Citations are usually [{"source": "...", "page_number": "..."}]
+                        # Extract source info as context fallback
+                        contexts = [
+                            f"Source: {item.get('source', 'Unknown')}, Page: {item.get('page_number', 'N/A')}"
+                            for item in parsed
+                            if isinstance(item, dict)
+                        ]
+                        if contexts:
+                            print(f"[DEBUG]   Extracted {len(contexts)} citation-based contexts")
+                    elif parsed:
+                        ctx_str = str(parsed).replace("\n", " ").strip()
+                        if ctx_str:
+                            contexts = [ctx_str]
+                            print(f"[DEBUG]   Using single context from citations")
+                except json.JSONDecodeError:
+                    ctx_str = reference.replace("\n", " ").strip()
+                    if ctx_str:
+                        contexts = [ctx_str]
+                        print(f"[DEBUG]   Using raw citations as single context")
+            
+            print(f"[DEBUG]   Final contexts: {len(contexts)} items")
+            print(f"[DEBUG]   question_text: {'OK' if question_text else 'EMPTY'}")
+            print(f"[DEBUG]   answer_text: {'OK' if answer_text else 'EMPTY'}")
+            print(f"[DEBUG]   ground_truth_text: {'OK' if ground_truth_text else 'EMPTY'}")
+            
+            # Track why rows are skipped
+            skip_reason = None
+            if not question_text:
+                skip_reason = "missing_question"
+            elif not answer_text:
+                skip_reason = "missing_answer"
+            elif not ground_truth_text:
+                skip_reason = "missing_ground_truth"
+            elif not contexts:
+                skip_reason = "missing_contexts"
+            
+            if skip_reason:
+                skipped_reasons[skip_reason] += 1
+                print(f"[DEBUG]   ❌ SKIPPING row - reason: {skip_reason}")
                 continue
-
+            
+            print(f"[DEBUG]   ✅ ADDING row to ragas_rows")
             ragas_rows.append(
                 {
                     "question": question_text,
@@ -254,7 +262,9 @@ def perform_ragaas_evaluation(
             )
 
         if not ragas_rows:
-            raise ValueError("No valid rows found for RAGAS evaluation after filtering.")
+            skip_summary = ", ".join([f"{reason}: {count}" for reason, count in skipped_reasons.items()])
+            error_msg = f"No valid rows found for RAGAS evaluation after filtering. Skipped {sum(skipped_reasons.values())} rows: {skip_summary}"
+            raise ValueError(error_msg)
 
         # -------------------- Prepare Dataset --------------------
         ds = Dataset.from_list(ragas_rows)
