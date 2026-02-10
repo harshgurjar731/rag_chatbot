@@ -481,9 +481,15 @@ const RAGOutput: React.FC = () => {
     (a, b) => b[1] - a[1]
   )[0];
 
-  const factualCount = globalCounts["factual"] || 0;
-  const factualRate = totalLabels
-    ? ((factualCount / totalLabels) * 100).toFixed(1)
+  // Define positive labels for various metrics
+  const POSITIVE_LABELS = ["factual", "correct", "relevant", "non-toxic"];
+
+  const positiveCount = Object.keys(globalCounts)
+    .filter(label => POSITIVE_LABELS.includes(String(label).toLowerCase()))
+    .reduce((acc, label) => acc + (globalCounts[label] || 0), 0);
+
+  const accuracyRate = totalLabels
+    ? ((positiveCount / totalLabels) * 100).toFixed(1)
     : "0";
 
   // Data for Charts
@@ -610,11 +616,11 @@ const RAGOutput: React.FC = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             <StatCard
               title="Overall Accuracy"
-              value={`${factualRate}%`}
-              subtext="Based on factual consistency"
+              value={`${accuracyRate}%`}
+              subtext="Average across all metrics"
               icon={Target}
               color="text-primary"
-              trend={Number(factualRate) > 80 ? "Excellent" : "Needs Review"}
+              trend={Number(accuracyRate) > 80 ? "Excellent" : "Needs Review"}
               delay={100}
             />
             <StatCard

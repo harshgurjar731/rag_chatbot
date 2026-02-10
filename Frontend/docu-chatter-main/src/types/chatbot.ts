@@ -47,6 +47,7 @@ export interface Chatbot {
   datastoreId: number;
   datastoreName: string;
   qna?: QnAPair[];
+  qna_count?: number; // Added qna_count
   updatedAt?: Date;
 }
 

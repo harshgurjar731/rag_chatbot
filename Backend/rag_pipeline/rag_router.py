@@ -70,14 +70,32 @@ async def createAssistant(
 
 @router.get("/getAssistants" , response_model=List[KnowledgeAssistantResponse])
 async def get_assistants(session: Session = Depends(get_session)):
+    from models.FileRecord import QuestionAnswerV2
     assistants = session.exec(select(KnowledgeAssistant)).all()
     return_assistants: List[KnowledgeAssistantResponse] = []
+    
     for assistant in assistants:
+        
+        # Calculate Q&A count
+        qna_count = 0
+        if assistant.datastore_id:
+            # Count Q&A pairs for this datastore
+            # Note: Using len() on list is simple for now. 
+            # For large datasets, use select(func.count()).select_from(...)
+            qas = session.exec(
+                select(QuestionAnswerV2).where(QuestionAnswerV2.datastore_id == assistant.datastore_id)
+            ).all()
+            qna_count = len(qas)
+
         # docs = session.exec(select(DocumentRecord.id).where(DocumentRecord.datastore_id == datastore.id)).all()
         # datastore["documentCount"] = len(docs)
         print("Model Dump", assistant.model_dump())
+        
+        assistant_data = assistant.model_dump()
+        assistant_data["qna_count"] = qna_count
+        
         return_assistants.append( KnowledgeAssistantResponse(
-            **assistant.model_dump(),
+            **assistant_data
         ))
 
     print(f"Found datastores.", return_assistants)

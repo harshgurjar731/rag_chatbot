@@ -20,7 +20,7 @@ export const AssistantCard = ({ chatbot, onClick, className }: ChatbotCardProps)
 
   // Safe access to properties with fallbacks
   const documentCount = chatbot.documents?.length || 0;
-  const qnaCount = chatbot.qna?.length || 0;
+  const qnaCount = chatbot.qna_count ?? (chatbot.qna?.length || 0); // Use qna_count from API if available
   const status = "Active"; // Default status since it's not in the chatbot object
 
   return (

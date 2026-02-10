@@ -8,7 +8,7 @@ import { API_BASE_URL } from '@/constants';
 const STEP_INFO = [
   { label: "Initializing", desc: "Setting up environment", icon: Loader2 },
   { label: "Fetching Data", desc: "Retrieving context & Q&A", icon: Database },
-  { label: "Running Evaluation", desc: "Calculating Ragas metrics", icon: BrainCircuit },
+  { label: "Running Evaluation", desc: "Calculating  metrics", icon: BrainCircuit },
   { label: "Finalizing", desc: "Formatting results", icon: Sparkles },
 ];
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';

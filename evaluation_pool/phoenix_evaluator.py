@@ -137,12 +137,18 @@ def fetch_evaluation_data_from_db(session: Session, chatbot_id: str) -> pd.DataF
     
     data = []
     for rag_resp, qna in results:
+        # Use context_text (raw text) if available, otherwise fallback to citations (metadata)
+        # Phoenix expects the retrieved text content for hallucination/relevancy checks.
+        context_data = rag_resp.context_text
+        if not context_data or context_data == "[]":
+            context_data = rag_resp.citations
+
         data.append({
-            "reference": rag_resp.citations,
+            "reference": context_data,
             "input": qna.question,
             "text": qna.question,
             "output": rag_resp.generated_answer,
-            "context": rag_resp.citations
+            "context": context_data
         })
     
     if not data:
@@ -165,6 +171,17 @@ def evaluate_records(
     Returns structured Pydantic response.
     Prioritizes DB fetch if session and chatbot_id are provided.
     """
+    # --- Normalize Metric Name ---
+    original_metric = metric
+    metric = metric.lower().replace(" ", "_")
+    
+    # Map synonyms/aliases
+    if metric in ["answer_relevance", "answer_relevancy", "qa", "q&a"]:
+        metric = "qna"
+    elif metric in ["faithfulness", "groundedness"]:
+        metric = "hallucination"
+    elif metric in ["context_relevance", "context_relevancy", "relevancy"]:
+        metric = "rag_relevancy"
 
     # --- Fetch Data (DB or Request) ---
     if session and chatbot_id:

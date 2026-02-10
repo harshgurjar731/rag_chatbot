@@ -16,6 +16,7 @@ class KnowledgeAssistantResponse(BaseModel):
     description: str
     created_at: Any
     datastore_id: int
+    qna_count: int = 0
     # intents removed
 
 

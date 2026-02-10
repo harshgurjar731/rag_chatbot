@@ -86,7 +86,8 @@ export const useChatbots = () => {
           documents: files.map((file) => file.filename),
           createdAt: new Date(assistant.created_at),
           datastoreId: assistant.datastore_id,
-          datastoreName: fetchedDatastore?.name || assistant.name || 'Unknown'
+          datastoreName: fetchedDatastore?.name || assistant.name || 'Unknown',
+          qna_count: assistant.qna_count || 0 // Map qna_count
         };
       });
 
