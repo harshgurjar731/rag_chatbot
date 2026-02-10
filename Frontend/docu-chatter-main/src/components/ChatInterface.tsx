@@ -80,6 +80,7 @@ import {
 } from "@/components/ui/tabs"
 import { fileToBase64, generateUUID } from "@/utilities/utils";
 import { API_BASE_URL } from "@/constants";
+import { useAuth } from "@/auth-context/AuthContext";
 
 // interface Citation {
 //   source: string;
@@ -143,6 +144,7 @@ export const ChatInterface = ({
   localStorage.setItem(storageKey, "")
   const [inputImageBase64, setInputImageBase64] = useState<string>("")
   const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const { isAdmin } = useAuth();
   const [messages, setMessages] = useState<ChatMessage[]>(() => {
     const saved = localStorage.getItem(storageKey);
     console.log("Saved", saved)
@@ -736,7 +738,16 @@ export const ChatInterface = ({
       );
       setTempSettings(settings);
       setOpen(false);
+      toast({
+        title: "Settings updated",
+        description: "",
+      });
     } catch (err) {
+      toast({
+        title: "Failed to updated Settings",
+        description: "",
+        variant: "destructive",
+      });
       console.error("Error saving settings:", err);
     }
   };
@@ -1187,19 +1198,19 @@ export const ChatInterface = ({
           </div>
         </div >
         <div className="flex flex-col w-[30%] justify-between px-4 py-2 bg-gradient-surface rounded-lg border border-chatbot-primary/20">
-          <Tabs defaultValue="documents" className="w-full">
+          <Tabs defaultValue= { isAdmin ? "documents" : "settings"} className="w-full">
             {/* Tab Buttons */}
             <TabsList className="flex gap-2">
-              <TabsTrigger value="documents" className="flex-1">
+              {isAdmin && <TabsTrigger value="documents" className="flex-1">
                 Documents
-              </TabsTrigger>
+              </TabsTrigger>}
               <TabsTrigger value="settings" className="flex-1">
                 Model Settings
               </TabsTrigger>
             </TabsList>
 
             {/* ---------- Documents Tab ---------- */}
-            <TabsContent value="documents" className="space-y-4 mt-4">
+            { isAdmin &&  <TabsContent value="documents" className="space-y-4 mt-4">
               {/* <div className="space-y-2">
                 <Label>Select Documents</Label>
                 <SelectMulti
@@ -1251,7 +1262,7 @@ export const ChatInterface = ({
                                 transition-all
                                 hover:bg-chatbot-primary/15 hover:scale-110"
                           >
-                            <Eye className="w-4 h-4 text-chatbot-secondary" />
+                            <Eye className="w-4 h-4 text-chatbot-primary" />
                           </button>
                         </div>
                       </div>
@@ -1259,55 +1270,31 @@ export const ChatInterface = ({
                   })}
                 </div>
               </div>
-            </TabsContent>
+            </TabsContent>}
 
             {/* ---------- Model Settings Tab ---------- */}
-            <TabsContent value="settings" className="mt-4 space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {/* Column 1: Model Configuration */}
-                <Card className="p-4 space-y-4 border-chatbot-primary/10 bg-chatbot-surface/50">
-                  <div className="flex items-center gap-2 mb-2">
-                    <DatabaseIcon className="h-4 w-4 text-chatbot-primary" />
-                    <h3 className="font-semibold text-sm text-foreground">Model Configuration</h3>
-                  </div>
-
-                  <div className="space-y-1.5">
-                    <Label className="text-xs font-medium text-muted-foreground">LLM Provider</Label>
+            <TabsContent value="settings" className="space-y-8 mt-4">
+              <div>
+                <div className="grid grid-cols-1 md:grid-cols-1 gap-2">
+                  {/* LLM Provider */}
+                  <div className="space-y-1">
+                    <Label>LLM Provider</Label>
                     <Select
-                      value={tempSettings.llmProvider}
                       onValueChange={(value) =>
                         setTempSettings({ ...tempSettings, llmProvider: value })
                       }
-                      disabled={isLoading}
+                      disabled={isLoading || !isAdmin}
                     >
-                      <SelectTrigger className="h-9 text-sm border-chatbot-primary/20 bg-background">
-                        <SelectValue placeholder={tempSettings.llmProvider || "Select LLM Provider"} />
+                      <SelectTrigger className="border border-chatbot-primary/20">
+                        <SelectValue
+                          placeholder={
+                            tempSettings.llmProvider || "Select LLM Provider"
+                          }
+                        />
                       </SelectTrigger>
                       <SelectContent>
-                        {config?.llm_providers.map((provider) => (
-                          <SelectItem key={provider} value={provider} className="text-sm">
-                            {provider}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  <div className="space-y-1.5">
-                    <Label className="text-xs font-medium text-muted-foreground">LLM Model</Label>
-                    <Select
-                      value={tempSettings.llmModel}
-                      onValueChange={(value) =>
-                        setTempSettings({ ...tempSettings, llmModel: value })
-                      }
-                      disabled={isLoading}
-                    >
-                      <SelectTrigger className="h-9 text-sm border-chatbot-primary/20 bg-background">
-                        <SelectValue placeholder={tempSettings.llmModel || "Select LLM"} />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {config?.llm_models.map((model) => (
-                          <SelectItem key={model} value={model} className="text-sm">
+                        {config?.llm_providers.map((model) => (
+                          <SelectItem key={model} value={model}>
                             {model}
                           </SelectItem>
                         ))}
@@ -1315,15 +1302,41 @@ export const ChatInterface = ({
                     </Select>
                   </div>
 
-                  <div className="space-y-1.5">
-                    <Label className="text-xs font-medium text-muted-foreground">Token Size</Label>
+                  {/* LLM Model */}
+                  <div className="space-y-1">
+                    <Label>LLM Model</Label>
+                    <Select
+                      onValueChange={(value) =>
+                        setTempSettings({ ...tempSettings, llmModel: value })
+                      }
+                      disabled={isLoading || !isAdmin}
+                    >
+                      <SelectTrigger className="border border-chatbot-primary/20">
+                        <SelectValue
+                          placeholder={tempSettings.llmModel || "Select LLM"}
+                        />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {config?.llm_models.map((model) => (
+                          <SelectItem key={model} value={model}>
+                            {model}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  {/* Token Size */}
+                  <div className="space-y-1">
+                    <Label>Token Size</Label>
                     <Input
                       type="number"
-                      className="h-9 text-sm border-chatbot-primary/20 bg-background"
+                      className="border border-chatbot-primary/20"
                       min={config?.token_size_options?.min ?? 256}
                       max={config?.token_size_options?.max ?? 2048}
                       step={config?.token_size_options?.step ?? 128}
-                      placeholder={`Default: ${config?.token_size_options?.default ?? 512}`}
+                      placeholder={`Default: ${config?.token_size_options?.default ?? 512
+                        }`}
                       value={tempSettings.tokenSize}
                       onChange={(e) =>
                         setTempSettings({
@@ -1334,9 +1347,82 @@ export const ChatInterface = ({
                       disabled={isLoading}
                     />
                   </div>
-
-                  <div className="space-y-1.5">
-                    <Label className="text-xs font-medium text-muted-foreground">Query Optimizer</Label>
+                  { isAdmin && <div className="flex items-center justify-between">
+                    <Label htmlFor="guardrails-switch">Guardrails</Label>
+                    <Switch
+                      id="guardrails-switch"
+                      className="
+                        border
+                        border-chatbot-primary
+                        data-[state=checked]:bg-chatbot-primary
+                        [&>span]:border
+                        [&>span]:bg-white
+                      "
+                      checked={tempSettings.guardrailOption === "on"}
+                      disabled={isLoading}
+                      onCheckedChange={(checked) =>
+                        setTempSettings({
+                          ...tempSettings,
+                          guardrailOption: checked ? "on" : "off",
+                        })
+                      }
+                    />
+                  </div>}
+                  {/* <div className="space-y-1">
+                    <Label>Guardrails</Label>
+                    <Select
+                      onValueChange={(value) =>
+                        setTempSettings({
+                          ...tempSettings,
+                          guardrailOption: value,
+                        })
+                      }
+                      disabled={isLoading}
+                    >
+                      <SelectTrigger className="border border-chatbot-primary/20">
+                        <SelectValue
+                          placeholder={
+                            tempSettings.guardrailOption !== ""
+                              ? tempSettings.guardrailOption
+                              : "Select Guardrail Level"
+                          }
+                        />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {config?.guardrail_options.map((option) => (
+                          <SelectItem key={option.value} value={option.value}>
+                            {option.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div> */}
+                  <div className="space-y-1">
+                    <Label>Creativity</Label>
+                    <Slider
+                      min={0}
+                      max={1}
+                      step={0.1}
+                      className="
+    [&_[role=slider]]:border-2
+    [&_[role=slider]]:border-chatbot-primary
+    [&_[role=slider]]:bg-white
+  "
+                      value={[tempSettings.temperature]}
+                      onValueChange={(val) =>
+                        setTempSettings({
+                          ...tempSettings,
+                          temperature: val[0],
+                        })
+                      }
+                      disabled={isLoading}
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      Temperature: {tempSettings.temperature.toFixed(1)}
+                    </p>
+                  </div>
+                  { isAdmin && <div className="space-y-1">
+                    <Label>Query Optimizer</Label>
                     <Select
                       onValueChange={(value) =>
                         setTempSettings({
@@ -1346,7 +1432,7 @@ export const ChatInterface = ({
                       }
                       disabled={isLoading}
                     >
-                      <SelectTrigger className="h-9 text-sm border-chatbot-primary/20 bg-background">
+                      <SelectTrigger className="border border-chatbot-primary/20">
                         <SelectValue
                           placeholder={
                             tempSettings.optimizer !== ""
@@ -1357,63 +1443,15 @@ export const ChatInterface = ({
                       </SelectTrigger>
                       <SelectContent>
                         {config?.optimizer.map((opt) => (
-                          <SelectItem key={opt.value} value={opt.value} className="text-sm">
+                          <SelectItem key={opt.value} value={opt.value}>
                             {opt.label}
                           </SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
-                  </div>
-                </Card>
-
-                {/* Column 2: Generation Parameters */}
-                <Card className="p-4 space-y-4 border-chatbot-primary/10 bg-chatbot-surface/50">
-                  <div className="flex items-center gap-2 mb-2">
-                    <Sparkles className="h-4 w-4 text-chatbot-primary" />
-                    <h3 className="font-semibold text-sm text-foreground">Generation Parameters</h3>
-                  </div>
-
-                  <div className="space-y-3">
-                    <div className="flex justify-between items-center">
-                      <Label className="text-xs font-medium text-muted-foreground">Creativity (Temp)</Label>
-                      <span className="text-xs font-mono text-chatbot-primary bg-chatbot-primary/10 px-1.5 py-0.5 rounded">
-                        {tempSettings.temperature.toFixed(1)}
-                      </span>
-                    </div>
-                    <Slider
-                      min={0}
-                      max={1}
-                      step={0.1}
-                      className="py-2 [&_[role=slider]]:h-4 [&_[role=slider]]:w-4 [&_[role=slider]]:border-chatbot-primary [&_[role=slider]]:bg-white [&_[role=track]]:bg-chatbot-primary/20 [&_[role=range]]:bg-chatbot-primary"
-                      value={[tempSettings.temperature]}
-                      onValueChange={(val) =>
-                        setTempSettings({
-                          ...tempSettings,
-                          temperature: val[0],
-                        })
-                      }
-                      disabled={isLoading}
-                    />
-                  </div>
-
-                  <div className="flex items-center justify-between py-1">
-                    <Label htmlFor="guardrails-switch" className="text-sm cursor-pointer">Guardrails</Label>
-                    <Switch
-                      id="guardrails-switch"
-                      className="data-[state=checked]:bg-chatbot-primary"
-                      checked={tempSettings.guardrailOption === "on"}
-                      disabled={isLoading}
-                      onCheckedChange={(checked) =>
-                        setTempSettings({
-                          ...tempSettings,
-                          guardrailOption: checked ? "on" : "off",
-                        })
-                      }
-                    />
-                  </div>
-
-                  <div className="space-y-1.5">
-                    <Label className="text-xs font-medium text-muted-foreground">Re-ranker</Label>
+                  </div>}
+                  { isAdmin && <div className="space-y-1">
+                    <Label>Re-ranker</Label>
                     <Select
                       onValueChange={(value) =>
                         setTempSettings({
@@ -1423,7 +1461,7 @@ export const ChatInterface = ({
                       }
                       disabled={isLoading}
                     >
-                      <SelectTrigger className="h-9 text-sm border-chatbot-primary/20 bg-background">
+                      <SelectTrigger className="border border-chatbot-primary/20">
                         <SelectValue
                           placeholder={
                             tempSettings.rerankerOption !== ""
@@ -1433,33 +1471,37 @@ export const ChatInterface = ({
                         />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem key={"none"} value={"none"} className="text-sm">
+                        <SelectItem key={"none"} value={"none"}>
                           {"None – Use retriever results directly"}
                         </SelectItem>
-                        <SelectItem key={"cross-encoder"} value={"cross-encoder"} className="text-sm">
+                        <SelectItem
+                          key={"cross-encoder"}
+                          value={"cross-encoder"}
+                        >
                           {"Cross-encoder – Most accurate, but slower"}
                         </SelectItem>
-                        <SelectItem key={"bi-encoder"} value={"bi-encoder"} className="text-sm">
+                        <SelectItem key={"bi-encoder"} value={"bi-encoder"}>
                           {"Bi-encoder – Faster, less accurate"}
                         </SelectItem>
-                        <SelectItem key={"llm-reranker"} value={"llm-reranker"} className="text-sm">
+                        <SelectItem key={"llm-reranker"} value={"llm-reranker"}>
                           {"LLM-based – Uses a language model"}
                         </SelectItem>
                       </SelectContent>
                     </Select>
-                  </div>
-                </Card>
+                  </div>}
+                </div>
               </div>
-
-              <div className="flex justify-end gap-3 pt-2 border-t border-border/40 mt-2">
-                <Button variant="outline" onClick={handleCancel} className="text-muted-foreground hover:text-foreground">
+              <div className="flex justify-end gap-3">
+                {/* <Button variant="outline"  className="text-muted-foreground hover:text-foreground" onClick={handleCancel}>
                   Cancel
-                </Button>
-                <Button onClick={() => handleSave()} className="bg-chatbot-primary hover:bg-chatbot-primary/90 text-white shadow-sm">
-                  Save Changes
-                </Button>
+                </Button> */}
+                <Button 
+                  onClick={() => handleSave()}
+                  variant="chatbot"
+                  className="hover:bg-chatbot-primary">Save Changes</Button>
               </div>
             </TabsContent>
+            
           </Tabs>
         </div>
 
