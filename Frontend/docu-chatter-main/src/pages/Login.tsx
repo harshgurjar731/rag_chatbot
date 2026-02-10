@@ -124,6 +124,7 @@ export default function Login() {
                     <Input
                       id="username"
                       placeholder="Enter your username"
+                      autoComplete="off"
                       value={username}
                       onChange={(e) => setUsername(e.target.value)}
                       className="mt-1.5"

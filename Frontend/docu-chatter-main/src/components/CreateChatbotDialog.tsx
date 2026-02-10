@@ -266,6 +266,7 @@ export const CreateChatbotDialog = ({ onCreateChatbot, children }: CreateChatbot
               <Input
                 id="name"
                 placeholder="e.g., Income Tax Assistant"
+                autoComplete="off"
                 value={formData.name}
                 onChange={(e) =>
                   setFormData((prev) => ({ ...prev, name: e.target.value }))
@@ -281,6 +282,7 @@ export const CreateChatbotDialog = ({ onCreateChatbot, children }: CreateChatbot
               <Input
                 id="description"
                 placeholder="e.g., Tax Policies 2024"
+                autoComplete="off"
                 value={formData.description}
                 onChange={(e) =>
                   setFormData((prev) => ({ ...prev, description: e.target.value }))
@@ -299,7 +301,7 @@ export const CreateChatbotDialog = ({ onCreateChatbot, children }: CreateChatbot
                 }
               >
                 <SelectTrigger className="mt-1.5 w-full">
-                  <SelectValue placeholder="Select a datastore" />
+                  <SelectValue placeholder="Select a department" />
                 </SelectTrigger>
                 <SelectContent>
                   {config?.user_departments?.map((ds) => (
