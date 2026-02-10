@@ -68,5 +68,6 @@ class KnowledgeAssistant(SQLModel, table=True):
     description: Optional[str] = ""
     created_at: datetime = Field(default_factory=datetime.utcnow)
     datastore_id:Optional[int]
+    department: Optional[str] = ""
     # intents removed as they are now part of datastore secondary sources
 

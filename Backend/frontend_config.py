@@ -2,6 +2,7 @@
 from pydantic import BaseModel
 from typing import List,Dict
 from config import CONFIG  # ✅ centralized config
+from models.User import DepartmentEnum
 # ---------------------------
 # Pydantic Models
 # ---------------------------
@@ -24,6 +25,7 @@ class ModelConfig(BaseModel):
     show_sources_default: bool
     languages: List[Language]
     eval_framworks:Dict[str, List[str]]
+    user_departments: List[DepartmentEnum]
 
 
 # ---------------------------
@@ -169,5 +171,6 @@ def get_config() -> ModelConfig:
         token_size_options=get_token_size_options(),
         show_sources_default=get_show_sources_default(),
         languages=get_languages(),
-        eval_framworks=get_evaluation_frameworks()
+        eval_framworks=get_evaluation_frameworks(),
+        user_departments=[dept.value for dept in DepartmentEnum]
     )

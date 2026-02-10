@@ -7,10 +7,12 @@ import { useChatbots } from '@/hooks/useChatbots';
 import { useNavigate } from 'react-router-dom';
 
 import axios from 'axios';
+import { useAuth } from '@/auth-context/AuthContext';
 
 
 export const Dashboard = () => {
   const { chatbots, createChatbot, refetchChatbots } = useChatbots();
+  const { isAdmin } = useAuth();
   const navigate = useNavigate();
 
   const handleCreateChatbot = (data: any) => {
@@ -46,7 +48,7 @@ export const Dashboard = () => {
               </div>
             </div>
             
-            {chatbots.length !== 0 && (<CreateChatbotDialog onCreateChatbot={handleCreateChatbot}>
+            {chatbots.length !== 0 && isAdmin && (<CreateChatbotDialog onCreateChatbot={handleCreateChatbot}>
               <Button variant="chatbot" size="lg" className="hidden md:flex">
                 <Plus className="h-5 w-5" />
                 Create Assistant

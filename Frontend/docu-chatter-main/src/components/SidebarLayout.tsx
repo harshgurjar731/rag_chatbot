@@ -1,20 +1,42 @@
 // src/components/SidebarLayout.tsx
 import { useState } from "react"
-import { Menu, X, Home, Settings, Info, Database } from "lucide-react"
-import { Outlet, Link, useLocation } from "react-router-dom"
+import { Menu, X, Home, Settings, Info, Database, LogOut } from "lucide-react"
+import { Outlet, Link, useLocation, useNavigate } from "react-router-dom"
+import { useAuth } from "@/auth-context/AuthContext"
+import { LogoutDialog } from "./LogoutDialog"
 
 export default function SidebarLayout() {
     const [isOpen, setIsOpen] = useState(false) // mobile toggle
     const [collapsed, setCollapsed] = useState(true) // desktop collapse
+    const [showLogoutDialog, setShowLogoutDialog] = useState(false);
     const location = useLocation()
+    const navigate = useNavigate();
+    const { isAdmin, logout } = useAuth();
+
+    const handleLogout = () => {
+        logout();
+        setShowLogoutDialog(false);
+        navigate("/login", { replace: true });
+    };
 
     const navItems = [
-        { to: "/", label: "Dashboard", icon: <Home size={18} /> },
-        { to: "/evaluation", label: "Evaluation", icon: <Settings size={18} /> },
-        // { to: "/datastore", label: "Datastore", icon: <Database size={18} /> },
-        { to: "/datastore2", label: "Datastore", icon: <Database size={18} /> },
-        { to: "/about", label: "About", icon: <Info size={18} /> },
-    ]
+      { to: "/", label: "Dashboard", icon: <Home size={18} /> },
+      ...(isAdmin
+        ? [
+            {
+              to: "/evaluation",
+              label: "Evaluation",
+              icon: <Settings size={18} />,
+            },
+            {
+              to: "/datastore2",
+              label: "Datastore",
+              icon: <Database size={18} />,
+            },
+          ]
+        : []),
+      { to: "/about", label: "About", icon: <Info size={18} /> },
+    ];
 
     return (
         <div className="flex h-screen">
@@ -55,6 +77,17 @@ export default function SidebarLayout() {
                         )
                     })}
                 </nav>
+                {/* Logout (Bottom) */}
+                <div className="px-2 pb-4">
+                <button
+                    onClick={() => setShowLogoutDialog(true)}
+                    className="flex w-full items-center gap-3 rounded-md px-3 py-2 text-sm text-gray-300 hover:bg-gray-800 hover:text-red-400 transition-colors"
+                    title={collapsed ? "Logout" : ""}
+                >
+                    <LogOut size={18} />
+                    {!collapsed && <span>Logout</span>}
+                </button>
+                </div>
             </div>
 
             {/* Overlay for mobile */}
@@ -73,6 +106,13 @@ export default function SidebarLayout() {
                     <Outlet />
                 </main>
             </div>
+
+            {/* Logout Confirmation Dialog */}
+            <LogoutDialog
+                open={showLogoutDialog}
+                onOpenChange={setShowLogoutDialog}
+                onConfirm={handleLogout}
+            />
         </div>
     )
 }

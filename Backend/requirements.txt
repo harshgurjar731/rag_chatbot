@@ -10,6 +10,9 @@ aiofiles
 requests
 redis
 psycopg2-binary
+passlib[bcrypt]
+bcrypt<4.0
+python-jose[cryptography]
 
 # --- LangChain Ecosystem (Lightweight) ---
 langchain-core

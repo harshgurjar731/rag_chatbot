@@ -8,6 +8,7 @@ class CreateAssitantRequest(BaseModel):
     name: str
     description: str
     datastore_id: int
+    department: str
     # intents removed
 
 class KnowledgeAssistantResponse(BaseModel):
@@ -16,6 +17,7 @@ class KnowledgeAssistantResponse(BaseModel):
     description: str
     created_at: Any
     datastore_id: int
+    department: str
     # intents removed
 
 

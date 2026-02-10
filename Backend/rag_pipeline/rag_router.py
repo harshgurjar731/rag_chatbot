@@ -20,6 +20,8 @@ import datetime
 from rag_pipeline.bot_manager import BotManager
 from rag_pipeline.bot_communication import BotCommunicator
 from rag_pipeline.bot_utils import validate_bot_name, sanitize_bot_name
+from models.User import User, DepartmentEnum
+from authentication.auth_token_parser import get_current_user
 
 from rag_pipeline.Services.intent_service import IntentDetectionService
 import asyncio
@@ -49,7 +51,8 @@ async def createAssistant(
         new_assistant = KnowledgeAssistant(
             name=data.name, 
             description=data.description, 
-            datastore_id=data.datastore_id
+            datastore_id=data.datastore_id,
+            department=data.department
         )
         session.add(new_assistant)
         session.commit()
@@ -69,8 +72,20 @@ async def createAssistant(
         raise HTTPException(status_code=500, detail=f"Failed to create assistant: {str(e)}")
 
 @router.get("/getAssistants" , response_model=List[KnowledgeAssistantResponse])
-async def get_assistants(session: Session = Depends(get_session)):
-    assistants = session.exec(select(KnowledgeAssistant)).all()
+async def get_assistants(user: User = Depends(get_current_user), 
+                         session: Session = Depends(get_session)):
+    print("Get Assistant User details", user)
+    query = select(KnowledgeAssistant)
+
+    # Non-admins only see their department
+    if user.department != DepartmentEnum.Admin:
+        query = query.where(
+            KnowledgeAssistant.department == user.department
+        )
+
+    assistants = session.exec(query).all()
+        
+    
     return_assistants: List[KnowledgeAssistantResponse] = []
     for assistant in assistants:
         # docs = session.exec(select(DocumentRecord.id).where(DocumentRecord.datastore_id == datastore.id)).all()
@@ -80,7 +95,7 @@ async def get_assistants(session: Session = Depends(get_session)):
             **assistant.model_dump(),
         ))
 
-    print(f"Found datastores.", return_assistants)
+    print(f"Found Assistants - ", return_assistants)
     return return_assistants
 
 

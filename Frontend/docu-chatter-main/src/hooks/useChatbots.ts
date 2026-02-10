@@ -56,8 +56,13 @@ export const useChatbots = () => {
 
   const fetchChatbotsWithFiles = async () => {
     try {
-      // Step 1: Get all assistants
-      const res = await axios.get(`${API_BASE_URL}/rag/getAssistants`);
+      // Step 1: Get all assistants localStorage.setItem("access_token", "");
+      const token = localStorage.getItem("access_token")
+      const res = await axios.get(`${API_BASE_URL}/rag/getAssistants`, {
+        headers: token
+          ? { Authorization: `Bearer ${token}` }
+          : {},
+      });
       const assistants = res.data;
 
       const fetchedDatastores = JSON.parse(localStorage.getItem("createdDataStores")
@@ -86,7 +91,8 @@ export const useChatbots = () => {
           documents: files.map((file) => file.filename),
           createdAt: new Date(assistant.created_at),
           datastoreId: assistant.datastore_id,
-          datastoreName: fetchedDatastore.name
+          datastoreName: fetchedDatastore.name,
+          department: assistant.department
         };
       });
 

@@ -15,6 +15,7 @@ export interface ConfigOptions {
   show_sources_default: boolean
   languages: { code: string; name: string }[] ,
   eval_framworks: { [framework: string]: string[] }
+  user_departments: string[]
 
 }
 

@@ -25,6 +25,7 @@ import {
 } from "@/components/ui/select"
 import { fetchDatastores } from '@/pages/DatastoreDashboard';
 import { API_BASE_URL } from '@/constants';
+import { useConfigOptions } from '@/hooks/useConfigOptions';
 
 interface CreateChatbotDialogProps {
   onCreateChatbot: (data: CreateChatbotDataResponse) => void
@@ -34,10 +35,12 @@ interface CreateChatbotDialogProps {
 export const CreateChatbotDialog = ({ onCreateChatbot, children }: CreateChatbotDialogProps) => {
   const [open, setOpen] = useState(false);
   const [datastores, setDatastores] = useState<CreateDatastoreData[]>([]);
+  const { config } = useConfigOptions();
   const [formData, setFormData] = useState({
     name: '',
     description: '',
-    datastore_id: ''
+    datastore_id: '',
+    department: '',
   });
   const [file, setFile] = useState<File | null>(null);
   const [files, setFiles] = useState([]);
@@ -58,7 +61,7 @@ export const CreateChatbotDialog = ({ onCreateChatbot, children }: CreateChatbot
   // Reset state when dialog closes
   useEffect(() => {
     if (!open) {
-      setFormData({ name: '', description: '', datastore_id: '' });
+      setFormData({ name: '', description: '', datastore_id: '', department: '' });
       setFiles([]);
     }
   }, [open]);
@@ -67,6 +70,7 @@ export const CreateChatbotDialog = ({ onCreateChatbot, children }: CreateChatbot
     name: string;
     description: string;
     datastore_id: string;
+    department: string;
   }
 
   const createChatbotApiCall = async (data: ChatbotApiData) => {
@@ -75,6 +79,7 @@ export const CreateChatbotDialog = ({ onCreateChatbot, children }: CreateChatbot
       name: data.name,
       description: data.description,
       datastore_id: Number(data.datastore_id),
+      department: data.department,
     });
     return response.data;
   };
@@ -99,7 +104,8 @@ export const CreateChatbotDialog = ({ onCreateChatbot, children }: CreateChatbot
     const chatbotData: ChatbotApiData = {
       name: formData.name.trim(),
       description: formData.description.trim(),
-      datastore_id: formData.datastore_id.trim()
+      datastore_id: formData.datastore_id.trim(),
+      department: formData.department.trim(),
     };
 
     setLoading(true);
@@ -116,7 +122,7 @@ export const CreateChatbotDialog = ({ onCreateChatbot, children }: CreateChatbot
       });
 
       // Reset form and state
-      setFormData({ name: "", description: "", datastore_id: "" });
+      setFormData({ name: "", description: "", datastore_id: "", department: "" });
       setFiles([]);
       setOpen(false);
 
@@ -282,7 +288,28 @@ export const CreateChatbotDialog = ({ onCreateChatbot, children }: CreateChatbot
                 className="mt-1.5"
               />
             </div>
-
+            <div>
+              <Label htmlFor="category" className="text-sm font-medium">
+                Department
+              </Label>
+              <Select
+                value={formData.department}
+                onValueChange={(value) =>
+                  setFormData((prev) => ({ ...prev, department: value }))
+                }
+              >
+                <SelectTrigger className="mt-1.5 w-full">
+                  <SelectValue placeholder="Select a datastore" />
+                </SelectTrigger>
+                <SelectContent>
+                  {config?.user_departments?.map((ds) => (
+                    <SelectItem key={ds} value={String(ds)}>
+                      {ds}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
             <div>
               <Label htmlFor="category" className="text-sm font-medium">
                 Datastore

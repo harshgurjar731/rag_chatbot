@@ -40,19 +40,15 @@ export const CreateDatastoreDialog = ({ onCreateDatastore, children }: CreateDat
 
   const [dragActive, setDragActive] = useState(false);
   const { toast } = useToast();
-  const { addDocument } = useChatbots();
   const [loading, setLoading] = useState(false);
   const [url, setUrl] = useState<string>("")
 
 
   const createDatastoreApiCall = async (data: { name: string; description: string }) => {
-    console.log("API_Base_URL", API_BASE_URL)
     const response = await axios.post(`${API_BASE_URL}/ingestion/createDatastore`, {
       name: data.name,
       description: data.description,
     });
-    console.log("Create Datastore Response:", response.data);
-    console.log("Create Datastore Response Date:", response.data.created_at);
     return {id: response.data.id, name: response.data.name, description: response.data.description, updatedAt: response.data.created_at}; // { id, name, description }
   };
 
