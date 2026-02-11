@@ -20,6 +20,7 @@ from frontend_config import (
     get_show_sources_default,
     get_api_base_url,
     get_evaluation_frameworks,
+    get_languages,
 )
 
 router = APIRouter()

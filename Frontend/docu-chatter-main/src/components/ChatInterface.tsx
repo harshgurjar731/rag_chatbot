@@ -217,7 +217,7 @@ export const ChatInterface = ({
     targetLang: string
   ): Promise<void> => {
     try {
-      const res = await fetch(`${config?.base_url}/translate`, {
+      const res = await fetch(`${API_BASE_URL}/translate`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -846,7 +846,7 @@ export const ChatInterface = ({
 
 
   const onFeedback = async (messageId: string, feedback: string) => {
-    if (!config?.base_url) return;
+    // if (!config?.base_url) return; // Removed dependency on config.base_url
     const message = messages.find((m) => m.id === messageId);
     if (!message || !message.traceId) {
       toast({
@@ -857,7 +857,7 @@ export const ChatInterface = ({
       return;
     }
     try {
-      await axios.post(`${config.base_url}/rag/feedback`, {
+      await axios.post(`${API_BASE_URL}/rag/feedback`, {
         trace_id: message.traceId,
         span_id: message.spanId || "",
         feedback: feedback,
