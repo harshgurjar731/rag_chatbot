@@ -10,6 +10,7 @@ import os
 import redis
 import asyncio
 import json
+import requests
 import uuid
 import sys
 from sqlmodel import create_engine, Session, select
@@ -20,13 +21,6 @@ from phoenix.otel import register
 # transform path to include root rag_chatbot folder if running from there
 sys.path.append(os.getcwd())
 
-# Imports from Backend
-from models.datastore import DataStore
-from models.FileRecord import DocumentRecord
-from rag_pipeline.Services.retrieve_service import retrieve_documents
-from rag_pipeline.Config.rag_config import RAG_CONFIG
-from rag_pipeline.rag_models import Message
-
 # Configuration
 BOT_NAME = os.getenv("BOT_NAME", "default")
 BOT_ID = os.getenv("BOT_ID", "-1")
@@ -34,6 +28,65 @@ DATASTORE_ID = os.getenv("DATASTORE_ID", "-1")
 REDIS_HOST = os.getenv("REDIS_HOST", "redis")
 
 print(f'BOT_NAME = {BOT_NAME}')
+
+from phoenix.otel import register
+# OpenTelemetry: Register BEFORE other imports to ensure it captures everything and uses correct project name
+tracer_provider = register(
+    project_name=BOT_NAME,
+    auto_instrument=True,
+    batch=False
+)
+
+async def handle_feedback(feedback_data):
+    """
+    Process feedback message and log directly to Phoenix using the request span_id.
+    """
+    print(f"Processing feedback: {feedback_data}")
+    
+    try:
+        # Use REST API to log annotation
+        # We use strict environment variable for collector endpoint or default to internal dns
+        # In docker-compose, phoenix is at http://phoenix:6006
+        phoenix_base_url = os.getenv('PHOENIX_COLLECTOR_ENDPOINT', 'http://phoenix:6006')
+        phoenix_url = f"{phoenix_base_url}/v1/span_annotations" 
+        
+        # Map feedback to score
+        score = 1.0 if feedback_data.get("feedback") == "Positive" else 0.0
+        
+        payload = {
+            "data": [
+                {
+                    "span_id": feedback_data.get("span_id"),
+                    "name": "feedback", 
+                    "annotator_kind": "HUMAN",
+                    "result": {
+                        "label": feedback_data.get("feedback"),
+                        "score": score,
+                        "explanation": "User feedback from chat interface"
+                    }
+                }
+            ]
+        }
+
+        # Run blocking request in executor to avoid blocking async loop
+        loop = asyncio.get_event_loop()
+        response = await loop.run_in_executor(None, lambda: requests.post(phoenix_url, json=payload, params={"sync": "false"}))
+        
+        if response.status_code >= 200 and response.status_code < 300:
+             print("✅ Feedback logged to Phoenix via REST from Worker")
+        else:
+             print(f"⚠️ Failed to log feedback: {response.status_code} {response.text}")
+             
+    except Exception as e:
+        print(f"Error handling feedback in worker: {e}")
+
+# Imports from Backend
+from models.datastore import DataStore
+from models.FileRecord import DocumentRecord
+from rag_pipeline.Services.retrieve_service import retrieve_documents
+from rag_pipeline.Config.rag_config import RAG_CONFIG
+from rag_pipeline.rag_models import Message
+
 print(f'BOT_ID = {BOT_ID}')
 print(f'DATASTORE_ID = {DATASTORE_ID}')
 print(f'REDIS_HOST = {REDIS_HOST}')
@@ -45,13 +98,6 @@ r = redis.Redis(host=REDIS_HOST, port=6379, db=0, decode_responses=True)
 # Using absolute path to ensure we find the DB
 # Database Setup
 from database import engine
-
-# OpenTelemetry
-tracer_provider = register(
-    project_name=BOT_NAME,
-    auto_instrument=True,
-    batch=False
-)
 
 async def process_message(message_data):
     """
@@ -284,7 +330,10 @@ async def message_loop():
             if result:
                 _, message_json = result
                 message_data = json.loads(message_json)
-                await process_message(message_data)
+                if message_data.get("type") == "feedback":
+                    await handle_feedback(message_data)
+                else:
+                    await process_message(message_data)
             else:
                 await asyncio.sleep(0.1)
                 

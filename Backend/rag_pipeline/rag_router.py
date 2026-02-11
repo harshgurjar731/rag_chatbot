@@ -419,9 +419,17 @@ async def retrieve(
                          json_response["detected_intent"] = detected_intent
                          json_response["witty_hook"] = witty_hook
                          json_response["intent_source"] = intent_source
-                         # Inject Trace ID
-                         json_response["traceId"] = trace_id
-                         json_response["spanId"] = span_id
+                         
+                         # Prefer trace ID from worker (contains correct project info)
+                         if "traceId" not in json_response or not json_response["traceId"]:
+                             json_response["traceId"] = trace_id
+                             print(f"Using local trace_id: {trace_id}")
+                         else:
+                             print(f"Using worker trace_id: {json_response['traceId']}")
+
+                         if "spanId" not in json_response or not json_response["spanId"]:
+                             json_response["spanId"] = span_id
+                             
                          return json_response
                 except json.JSONDecodeError:
                     pass
@@ -542,41 +550,29 @@ async def log_feedback(
 ):
     print(f"Received feedback: {feedback_data}")
     
-    # Use REST API to log annotation since phoenix client is not available in broken env
-    phoenix_base_url = os.getenv('PHOENIX_COLLECTOR_ENDPOINT', '')
-    phoenix_url = f"{phoenix_base_url}/v1/span_annotations" # or /v1/traces/{trace_id}/annotations?
-    # Correct endpoint for Arize Phoenix (local) from research seems to be /v1/span_annotations
-    
-    # Map feedback to score
-    score = 1.0 if feedback_data.feedback == "Positive" else 0.0
-    
-    # Phoenix /v1/span_annotations expects a list of annotations wrapped in "data"
-    payload = {
-        "data": [
-            {
-                "span_id": feedback_data.span_id,
-                "name": "feedback", # Evaluation name changed from thumbs_up
-                "annotator_kind": "HUMAN",
-                "result": {
-                    "label": feedback_data.feedback,
-                    "score": score,
-                    "explanation": "User feedback from chat interface"
-                }
-            }
-        ]
-    }
-
+    # Forward feedback to the worker via Redis
     try:
-        response = requests.post(phoenix_url, json=payload, params={"sync": "false"})
-        if response.status_code >= 200 and response.status_code < 300:
-             print("✅ Feedback logged to Phoenix via REST")
-             return {"status": "success"}
-        else:
-             print(f"⚠️ Failed to log feedback: {response.status_code} {response.text}")
-             # Try fallback to trace_id based endpoint if span_id fails? 
-             pass
+        # Construct message payload
+        message = {
+            "type": "feedback",
+            "trace_id": feedback_data.trace_id,
+            "span_id": feedback_data.span_id,
+            "feedback": feedback_data.feedback,
+            "chatbot_id": feedback_data.chatbot_id
+        }
+        
+        # Push to bot's inbox
+        # bot_comm.redis_client is the raw redis client
+        bot_id = feedback_data.chatbot_id
+        # We need to make sure we push to the correct queue. 
+        # worker_wrapper listens on f"bot:{BOT_ID}:inbox"
+        queue_key = f"bot:{bot_id}:inbox"
+        
+        bot_comm.redis_client.rpush(queue_key, json.dumps(message))
+        print(f"✅ Feedback forwarded to worker queue: {queue_key}")
              
     except Exception as e:
         print(f"Error logging feedback: {e}")
+        # Return success anyway to avoid frontend error, as this is fire-and-forget
     
     return {"status": "submitted"}
