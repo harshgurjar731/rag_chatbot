@@ -130,7 +130,7 @@ def perform_ragaas_evaluation(
         # -------------------- Initialize LLM based on Settings --------------------
         token_size = 2048 
         
-        if llm_provider == "azure-openai":
+        if llm_provider == "azure-openai" or llm_provider == "azureopenai":
              # Load Azure Config
              azure_api_key = CONFIG.get("azure_api_key")
              azure_endpoint = CONFIG.get("azure_api_base")
