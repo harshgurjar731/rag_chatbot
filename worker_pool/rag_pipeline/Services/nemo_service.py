@@ -75,7 +75,6 @@ class NemoService:
         Raises:
             HTTPException: If the query triggers a safety violation, topic control block, or jailbreak detection.
         """
-        print("In generate_response")
         response = await self.rails.generate_async(messages=[{"role": "user", "content": query}])
         final_answer = response.get("content", "") if isinstance(response, dict) else str(response)
         

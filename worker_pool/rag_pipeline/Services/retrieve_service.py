@@ -87,7 +87,6 @@ async def retrieve_documents(
 
     if (guardrailOption == "on"):
         answer = await nemo_service.generate_response(query)
-        print("Answer112", answer)
     # -----------------------------
     # Case 1: No files -> plain LLM answer
     # -----------------------------
