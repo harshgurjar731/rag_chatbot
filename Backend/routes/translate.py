@@ -15,7 +15,7 @@ class TranslateRequest(BaseModel):
     target: str
     format: str = "text"
 
-@router.post("/")
+@router.post("")
 def translate_text(request: TranslateRequest):
     """
     Translate text using deep_translator (Google Translate).

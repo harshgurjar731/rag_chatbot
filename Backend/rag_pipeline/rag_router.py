@@ -359,76 +359,99 @@ async def retrieve(
         print(f"Detected {len(intents_list)} secondary sources (intents).")
 
         # Execute RAG generation and Intent Detection in parallel
-        rag_response_task = asyncio.to_thread(
-            bot_comm.send_message,
-            bot_name=chatbot_id,
-            message_text=query,
-            timeout=0,
-            use_knowledge_base=use_knowledge_base,
-            llm_model_provider=effective_llm_provider,
-            llm_model_name=effective_llm_model,
-            temperature=effective_temperature,
-            max_token=effective_token_size,
-            use_reranker=use_reranker,
-            reranker_type=effective_reranker,
-            query_rewriting_type=effective_optimizer,
-            use_guardrail=use_guardrail,
-            guardrail_type=effective_guardrail,
-            use_citation=effective_citation,
-            datastore_id=datastore_id,
-            query=query,
-            is_vision_search=is_vision_search,
-            messages=[m.dict() for m in data.messages] if data.messages else [],
-            selected_documents=data.selected_documents if data.selected_documents else []
-        )
+        # Manually start a span since FastAPI instrumentation might be missing or incomplete
+        tracer = trace.get_tracer(__name__)
+        with tracer.start_as_current_span("rag_query_handler") as span:
+            
+            rag_response_task = asyncio.to_thread(
+                bot_comm.send_message,
+                bot_name=chatbot_id,
+                message_text=query,
+                timeout=0,
+                use_knowledge_base=use_knowledge_base,
+                llm_model_provider=effective_llm_provider,
+                llm_model_name=effective_llm_model,
+                temperature=effective_temperature,
+                max_token=effective_token_size,
+                use_reranker=use_reranker,
+                reranker_type=effective_reranker,
+                query_rewriting_type=effective_optimizer,
+                use_guardrail=use_guardrail,
+                guardrail_type=effective_guardrail,
+                use_citation=effective_citation,
+                datastore_id=datastore_id,
+                query=query,
+                is_vision_search=is_vision_search,
+                messages=[m.dict() for m in data.messages] if data.messages else [],
+                selected_documents=data.selected_documents if data.selected_documents else []
+            )
 
-        intent_detection_task = intent_service.detect_intent(query, intents_list)
+            intent_detection_task = intent_service.detect_intent(query, intents_list)
 
-        full_response, intent_result = await asyncio.gather(rag_response_task, intent_detection_task)
-        
-        detected_intent = None
-        witty_hook = None
-        intent_source = None
-        
-        if intent_result and isinstance(intent_result, dict):
-            detected_intent = intent_result.get("title", "").strip()
-            witty_hook = intent_result.get("witty_hook")
+            full_response, intent_result = await asyncio.gather(rag_response_task, intent_detection_task)
             
-            print(f"DEBUG: Detected Intent: '{detected_intent}'")
-            print(f"DEBUG: Available Sources: {[(s.intent, s.file_path) for s in secondary_sources]}")
-            
-            # Find the source file path (normalize both sides)
-            matched_source = next((s for s in secondary_sources if s.intent.strip() == detected_intent), None)
-            
-            if matched_source:
-                intent_source = matched_source.file_path
-                print(f"DEBUG: Found match. Source: {intent_source}")
+            # Set attributes for Phoenix to display Input/Output
+            span.set_attribute("input.value", query)
+            span.set_attribute("output.value", full_response[:1000] if full_response else "") # Limit size
+
+            # Get the traceId to send back to the frontend for the feedback feature.
+            span_context = span.get_span_context()
+            trace_id = ""
+            span_id = ""
+            if span_context.is_valid:
+                trace_id = format(span_context.trace_id, '032x')
+                span_id = format(span_context.span_id, '016x')
+                print(f"✅ Successfully captured Phoenix trace_id: {trace_id}, span_id: {span_id}")
             else:
-                 print(f"DEBUG: No source match found for intent '{detected_intent}'")
+                print(f"⚠️ WARNING: Could not find a valid span context.")
 
-        if full_response and not full_response.startswith("Error:"):
+            detected_intent = None
+            witty_hook = None
+            intent_source = None
             
-            # Try to parse as JSON first
-            try:
-                json_response = json.loads(full_response)
-                if isinstance(json_response, dict):
-                     json_response["detected_intent"] = detected_intent
-                     json_response["witty_hook"] = witty_hook
-                     json_response["intent_source"] = intent_source
-                     return json_response
-            except json.JSONDecodeError:
-                pass
-            
-            # Fallback for plain text
-            return {
-                "answer": full_response, 
-                "detected_intent": detected_intent,
-                "witty_hook": witty_hook,
-                "intent_source": intent_source
-            }
-        else:
-            
-            raise HTTPException(status_code=400, detail=full_response or "⚠️ No reply received. The bot may be offline.")
+            if intent_result and isinstance(intent_result, dict):
+                detected_intent = intent_result.get("title", "").strip()
+                witty_hook = intent_result.get("witty_hook")
+                
+                print(f"DEBUG: Detected Intent: '{detected_intent}'")
+                # print(f"DEBUG: Available Sources: {[(s.intent, s.file_path) for s in secondary_sources]}")
+                
+                # Find the source file path (normalize both sides)
+                matched_source = next((s for s in secondary_sources if s.intent.strip() == detected_intent), None)
+                
+                if matched_source:
+                    intent_source = matched_source.file_path
+                    print(f"DEBUG: Found match. Source: {intent_source}")
+                else:
+                     print(f"DEBUG: No source match found for intent '{detected_intent}'")
+
+            if full_response and not full_response.startswith("Error:"):
+                
+                # Try to parse as JSON first
+                try:
+                    json_response = json.loads(full_response)
+                    if isinstance(json_response, dict):
+                         json_response["detected_intent"] = detected_intent
+                         json_response["witty_hook"] = witty_hook
+                         json_response["intent_source"] = intent_source
+                         # Inject Trace ID
+                         json_response["traceId"] = trace_id
+                         json_response["spanId"] = span_id
+                         return json_response
+                except json.JSONDecodeError:
+                    pass
+                
+                # Fallback for plain text
+                return {
+                    "answer": full_response, 
+                    "detected_intent": detected_intent,
+                    "witty_hook": witty_hook,
+                    "intent_source": intent_source,
+                    "traceId": trace_id,
+                    "spanId": span_id
+                }
+            else:
+                raise HTTPException(status_code=400, detail=full_response or "⚠️ No reply received. The bot may be offline.")
     except Exception as e:
         error_msg = f"⚠️ Error processing query: {str(e)}"
         print(f"Query Error: {e}")
