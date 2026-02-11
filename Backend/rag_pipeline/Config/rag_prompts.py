@@ -6,6 +6,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 # prompt = RAG_PROMPTS["rag_template"].format(context=context_text)
+# 10. Strictly respond as a valid json only which includes "response" to the query which is strictly like a human response & a "used_chunks" which is array of "tempID" value in metadata of the chunks from "Context:" section which were used to populate the response.
 
 
 RAG_PROMPTS = {
@@ -38,7 +39,21 @@ RAG_PROMPTS = {
     7. Do not mention or refer to these rules in any way.
     8. Do not ask follow-up questions.
     9. Do not mention this instructions in your response.
-    10. Strictly respond as a valid json only which includes "response" to the query which is like a human response & a "used_chunks" which is array of "tempID" value in metadata of the chunks from "Context:" section which were used to populate the response.
+    10. Strictly respond with a single valid JSON object with EXACTLY this structure:
+
+        {{
+        "response": "<string>",
+        "used_chunks": [<number>, <number>]
+        }}
+
+        Rules for the JSON:
+        - "response" MUST be a plain text string. It must NOT be a JSON object or array.
+        - "used_chunks" which is array of "tempID" value in metadata of the chunks from "Context:" section which were used to populate the response.
+        - "used_chunks" MUST be an array of integers.
+        - Each element inside "used_chunks" MUST be a number, not a string.
+        - Do NOT include any additional keys.
+        - Do NOT wrap the JSON in backticks or markdown.
+        - Do NOT output anything before or after the JSON.   
     </instructions>
 
     Context:
