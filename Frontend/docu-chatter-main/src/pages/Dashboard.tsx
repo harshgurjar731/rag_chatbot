@@ -123,6 +123,7 @@ export const Dashboard = () => {
                   chatbot={chatbot}
                   onClick={() => handleChatbotClick(chatbot.id)}
                   onDelete={refetchChatbots}
+                  allowDelete={isAdmin}
                 />
               ))}
             </div>
