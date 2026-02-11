@@ -66,12 +66,13 @@ def get_llm_providers() -> List[str]:
 
 def get_llm_models() -> List[str]:
     return [
+        "gpt-4o-mini",
+        "gpt-5.2-chat",
         "llama-3.3-70b-versatile",
         "deepseek-r1-distill-llama-70b",
         "gemma2-9b-it",
         "llama-3.1-8b-instant",
         "openai/gpt-oss-20b",
-        "gpt-4o-mini",
     ]
 
 def get_evaluation_frameworks() -> Dict[str, List[str]]:

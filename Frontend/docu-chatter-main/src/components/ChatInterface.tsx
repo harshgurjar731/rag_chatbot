@@ -141,7 +141,6 @@ export const ChatInterface = ({
   type StoredChatMessage = Omit<ChatMessage, "timestamp"> & {
     timestamp: string;
   };
-  localStorage.setItem(storageKey, "")
   const [inputImageBase64, setInputImageBase64] = useState<string>("")
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const { isAdmin } = useAuth();
