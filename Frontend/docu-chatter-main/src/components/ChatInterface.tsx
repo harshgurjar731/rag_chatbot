@@ -535,13 +535,31 @@ export const ChatInterface = ({
       console.log("Bot message with citations:", botMessage.Citation);
       setMessages((prev) => [...prev, botMessage]);
     } catch (error: any) {
-      var errorStr = error?.message ||
+      let errorStr =
+        error?.message ||
         String(error) ||
         "Failed to send message or fetch file ID.";
-      if (error.response.data.detail && JSON.parse(error.response.data.detail).safe == false) {
-        errorStr = JSON.parse(error.response.data.detail).reason
+
+      const detail = error?.response?.data?.detail;
+
+      if (typeof detail === "string") {
+        const start = detail.indexOf("{");
+
+        if (start !== -1) {
+          const jsonCandidate = detail.slice(start);
+
+          try {
+            const parsed = JSON.parse(jsonCandidate);
+
+            if (parsed?.safe === false && typeof parsed.reason === "string") {
+              errorStr = parsed.reason;
+            }
+          } catch {
+            // Invalid JSON → ignore and fall back to default errorStr
+          }
+        }
       }
-      console.error("handleSend error:", error.response.data.detail);
+
 
       const errorMessage: ChatMessage = {
         id: generateUUID(),

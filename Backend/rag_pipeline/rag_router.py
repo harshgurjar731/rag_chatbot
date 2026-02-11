@@ -432,7 +432,7 @@ async def retrieve(
     except Exception as e:
         error_msg = f"⚠️ Error processing query: {str(e)}"
         print(f"Query Error: {e}")
-        raise HTTPException(status_code=500, detail=error_msg)
+        raise e
 
     # Call your existing service logic.
     print("In rag router /query", data, is_vision_search)

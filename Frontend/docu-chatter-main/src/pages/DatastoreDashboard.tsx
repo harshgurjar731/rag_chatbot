@@ -46,6 +46,7 @@ export const DatastoreDashboard = () => {
   const { chatbots, createChatbot } = useChatbots();
   const navigate = useNavigate();
   const [datastores, setDatastores] = useState<CreateDatastoreData[]>([]);
+  const [loadingData, setLoadingData] = useState(true)
 
   const handleCreateDatastore = (data: any) => {
     //localStorage.setItem("createdDataStores", JSON.stringify([]));
@@ -58,6 +59,7 @@ export const DatastoreDashboard = () => {
   useEffect(() => {
     const fetchStore = async() =>  {
       setDatastores(await fetchDatastores());
+      setLoadingData(false)
     }
     fetchStore()
   }, []);
@@ -66,8 +68,9 @@ export const DatastoreDashboard = () => {
     navigate(`/datastore/${id}`);
   };
 
-  const refreshDashboard=async()=>{
+  const refreshDashboard=async() => {
     setDatastores(await fetchDatastores());
+    setLoadingData(false)
   };
 
   return (
@@ -97,7 +100,7 @@ export const DatastoreDashboard = () => {
 
       {/* Main Content */}
       <div className="container mx-auto px-4 py-8">
-        {datastores.length === 0 ? (
+        { !loadingData && datastores.length === 0 ? (
           <div className="flex flex-col items-center justify-center min-h-[500px] text-center">
             <div className="p-6 rounded-full bg-gradient-primary/10 mb-6">
               <DatabaseIcon className="h-16 w-16 text-chatbot-primary" />

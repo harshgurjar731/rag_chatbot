@@ -33,7 +33,7 @@ models:
     model: meta-llama/llama-prompt-guard-2-86m
     parameters:
       base_url: "https://api.groq.com/openai/v1"
-      api_key: "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"
+      api_key: "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"
     
   # # ADD THIS for jailbreak detection
   # - type: llm
@@ -46,11 +46,11 @@ rails:
     flows:
       - check jailbreak groq
       # - jailbreak detection model
-      - content safety check input $model=content_safety
+      #- content safety check input $model=content_safety
       # - topic control check
       # - check jailbreak groq
       # - self check input
-      # - check content safety groq
+      - check content safety groq
 
   output:
     flows:

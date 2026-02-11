@@ -85,6 +85,9 @@ async def retrieve_documents(
     print("In retrieve service:",query, llm_model_name, temperature, token_size, sources, guardrailOption,  )
     print("Message_History", message_history)
 
+    if (guardrailOption == "on"):
+        answer = await nemo_service.generate_response(query)
+        print("Answer112", answer)
     # -----------------------------
     # Case 1: No files -> plain LLM answer
     # -----------------------------

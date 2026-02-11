@@ -75,6 +75,7 @@ class NemoService:
         Raises:
             HTTPException: If the query triggers a safety violation, topic control block, or jailbreak detection.
         """
+        print("In generate_response")
         response = await self.rails.generate_async(messages=[{"role": "user", "content": query}])
         final_answer = response.get("content", "") if isinstance(response, dict) else str(response)
         
@@ -127,7 +128,7 @@ class NemoService:
             error_detail = {
                 "safe": False,
                 "model": "nemoguard-jailbreak-detect",
-                "reason": "I can't help with that request. Please ask a straightforward question.",
+                "reason": "I'm not able to help with that request. If you have a different question or need help with an allowed topic, feel free to ask.",
                 "raw_output": "jailbreak detected",
                 "rail": "jailbreak"
             }

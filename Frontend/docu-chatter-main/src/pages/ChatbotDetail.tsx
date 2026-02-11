@@ -1,6 +1,6 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Trash2, Upload, Plus, FileText, MessageSquarePlus, Settings } from 'lucide-react';
+import { ArrowLeft, Trash2, Upload, Plus, FileText, MessageSquarePlus, Settings, LoaderCircleIcon, Loader, LoaderIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -29,10 +29,10 @@ type FileRecord = {
 
 
 const ChatbotDetail = () => {
-  const { config, loading } = useConfigOptions()
+  const { config } = useConfigOptions()
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { getChatbot, deleteChatbot } = useChatbots();
+  const { getChatbot, deleteChatbot, loading } = useChatbots();
   const { toast } = useToast();
 
   const [newQuestion, setNewQuestion] = useState('');
@@ -44,6 +44,16 @@ const ChatbotDetail = () => {
   const [isDragging, setIsDragging] = useState(false);
   const chatbot = id ? getChatbot(id) : null;
 
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-surface flex items-center justify-center">
+        <div className="text-center">
+          <LoaderIcon className="w-4 h-4 mr-2 animate-spin" />
+        </div>
+      </div>
+    )
+  }
   if (!chatbot) {
     return (
       <div className="min-h-screen bg-gradient-surface flex items-center justify-center">
@@ -206,41 +216,41 @@ const ChatbotDetail = () => {
 
 
 
-  const handleAddQnA = () => {
-    if (!newQuestion.trim() || !newAnswer.trim()) {
-      toast({
-        title: "Missing Information",
-        description: "Please fill in both question and answer fields.",
-        variant: "destructive",
-      });
-      return;
-    }
+  // const handleAddQnA = () => {
+  //   if (!newQuestion.trim() || !newAnswer.trim()) {
+  //     toast({
+  //       title: "Missing Information",
+  //       description: "Please fill in both question and answer fields.",
+  //       variant: "destructive",
+  //     });
+  //     return;
+  //   }
 
-    addQnA(chatbot.id, {
-      question: newQuestion.trim(),
-      answer: newAnswer.trim(),
-    });
+  //   addQnA(chatbot.id, {
+  //     question: newQuestion.trim(),
+  //     answer: newAnswer.trim(),
+  //   });
 
-    setNewQuestion('');
-    setNewAnswer('');
+  //   setNewQuestion('');
+  //   setNewAnswer('');
 
-    toast({
-      title: "Q&A Added",
-      description: "New question and answer pair has been saved.",
-    });
-  };
+  //   toast({
+  //     title: "Q&A Added",
+  //     description: "New question and answer pair has been saved.",
+  //   });
+  // };
 
 
 
-  const handleFileUpload = (file: File) => {
-    addDocument(chatbot.id, file);
-    setNewFile(null);
+  // const handleFileUpload = (file: File) => {
+  //   addDocument(chatbot.id, file);
+  //   setNewFile(null);
 
-    toast({
-      title: "Document Added",
-      description: `${file.name} has been uploaded successfully.`,
-    });
-  };
+  //   toast({
+  //     title: "Document Added",
+  //     description: `${file.name} has been uploaded successfully.`,
+  //   });
+  // };
 
 
 

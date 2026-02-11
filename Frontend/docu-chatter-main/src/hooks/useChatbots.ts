@@ -56,6 +56,7 @@ export const useChatbots = () => {
 
   const fetchChatbotsWithFiles = async () => {
     try {
+      setLoading(true);
       // Step 1: Get all assistants localStorage.setItem("access_token", "");
       const token = localStorage.getItem("access_token")
       const res = await axios.get(`${API_BASE_URL}/rag/getAssistants`, {
@@ -312,6 +313,6 @@ export const useChatbots = () => {
     refetchChatbots: fetchChatbotsWithFiles,
     // triggerEmbedding,
     // triggerChunking,
-
+    loading,
   };
 };

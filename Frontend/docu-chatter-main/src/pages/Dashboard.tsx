@@ -11,7 +11,7 @@ import { useAuth } from '@/auth-context/AuthContext';
 
 
 export const Dashboard = () => {
-  const { chatbots, createChatbot, refetchChatbots } = useChatbots();
+  const { chatbots, refetchChatbots, loading } = useChatbots();
   const { isAdmin } = useAuth();
   const navigate = useNavigate();
 
@@ -60,7 +60,7 @@ export const Dashboard = () => {
 
       {/* Main Content */}
       <div className="container mx-auto px-4 py-8">
-        {chatbots.length === 0 ? (
+        {(!loading && chatbots.length === 0) ? (
           /* Empty State */
           <div className="flex flex-col items-center justify-center min-h-[500px] text-center">
             <div className="p-6 rounded-full bg-gradient-primary/10 mb-6">
