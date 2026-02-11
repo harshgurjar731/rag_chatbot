@@ -878,6 +878,7 @@ export const ChatInterface = ({
     }
     try {
       await axios.post(`${API_BASE_URL}/rag/feedback`, {
+        chatbot_id: chatbot.id,
         trace_id: message.traceId,
         span_id: message.spanId || "",
         feedback: feedback,

@@ -117,6 +117,10 @@ def spawn_bot_process(bot):
     env["DATASTORE_ID"] = str(bot.datastore_id)
     # PYTHONPATH to include root so imports work
     env["PYTHONPATH"] = os.getcwd() 
+    
+    # Explicitly set project name for Phoenix/OTEL
+    env["OTEL_PROJECT_NAME"] = bot.bot_name
+    env["PHOENIX_PROJECT_NAME"] = bot.bot_name 
 
     try:
         # Run worker_wrapper.py

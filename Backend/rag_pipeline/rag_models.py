@@ -36,6 +36,7 @@ class Prompt(BaseModel):
     llm_temperature: float
 
 class FeedbackRequest(BaseModel):
+    chatbot_id: str
     trace_id: str
     span_id: Optional[str] = ""
     feedback: str
