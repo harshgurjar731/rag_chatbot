@@ -1063,7 +1063,7 @@ export const ChatInterface = ({
                                 </Button> }
 
 
-                                <Popover
+                                { message.id !== "1" && <Popover
                                   open={openPopoverId === message.id}
                                   onOpenChange={(isOpen) =>
                                     setOpenPopoverId(isOpen ? message.id : null)
@@ -1102,7 +1102,7 @@ export const ChatInterface = ({
 
                                     </div>
                                   </PopoverContent>
-                                </Popover>
+                                </Popover> }
                                 <DropdownMenu>
                                   <DropdownMenuTrigger asChild>
                                     <Button
@@ -1319,7 +1319,7 @@ export const ChatInterface = ({
 
             {/* ---------- Model Settings Tab ---------- */}
             <TabsContent value="settings" className="space-y-8 mt-4">
-              <div>
+              <div className="mb-14">
                 <div className="grid grid-cols-1 md:grid-cols-1 gap-2">
                   {/* LLM Provider */}
                   <div className="space-y-1">
@@ -1536,7 +1536,7 @@ export const ChatInterface = ({
                   </div>}
                 </div>
               </div>
-              <div className="flex justify-end gap-3">
+              { isAdmin && <div className="flex justify-end gap-3">
                 {/* <Button variant="outline"  className="text-muted-foreground hover:text-foreground" onClick={handleCancel}>
                   Cancel
                 </Button> */}
@@ -1544,7 +1544,7 @@ export const ChatInterface = ({
                   onClick={() => handleSave()}
                   variant="chatbot"
                   className="hover:bg-chatbot-primary">Save Changes</Button>
-              </div>
+              </div> }
             </TabsContent>
             
           </Tabs>
@@ -1553,7 +1553,8 @@ export const ChatInterface = ({
 
       </div >
       <div className="flex flex-col gap-4">
-        {selectedDocs.length > 0 && (
+        {/* Hiding this section as showing document in the side panel */}
+        {false && selectedDocs.length > 0 && (
           <div className="flex flex-wrap gap-1 mt-2 items-center">
             <Label className="text-sm text-muted-foreground">Selected:</Label>
             {selectedDocs.map((doc) => (
