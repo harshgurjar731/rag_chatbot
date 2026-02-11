@@ -8,6 +8,9 @@ export default defineConfig(({ mode }) => ({
   server: {
     host: "::",
     port: 8080,
+    allowedHosts: [
+      'knowledgesynthesis.eastus2.cloudapp.azure.com'
+    ]
   },
   plugins: [
     react(),
