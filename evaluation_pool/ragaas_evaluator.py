@@ -26,17 +26,51 @@ from langchain_community.embeddings import HuggingFaceEmbeddings
 
 class AzureChatOpenAIWrapper(AzureChatOpenAI):
     """Wrapper to force n=1 for Azure OpenAI compatibility with Ragas."""
+    def _strip_markdown(self, result):
+        if result and result.generations:
+            for generation in result.generations:
+                # Handle both ChatResult (flat list) and LLMResult (nested list) structures
+                if isinstance(generation, list):
+                    for gen in generation:
+                        self._clean_generation(gen)
+                else:
+                    self._clean_generation(generation)
+        return result
+
+    def _clean_generation(self, generation):
+        # Strip markdown code blocks if present
+        if not hasattr(generation, "text"):
+            return
+            
+        text = generation.text.strip()
+        if text.startswith("```json"):
+            text = text[7:]
+            if text.endswith("```"):
+                text = text[:-3]
+            generation.text = text.strip()
+            if hasattr(generation, "message"):
+                generation.message.content = generation.text
+        elif text.startswith("```"):
+            text = text[3:]
+            if text.endswith("```"):
+                text = text[:-3]
+            generation.text = text.strip()
+            if hasattr(generation, "message"):
+                generation.message.content = generation.text
+
     def _generate(self, *args, **kwargs):
         if "n" in kwargs and kwargs["n"] > 1:
-            print(f"[DEBUG] Intercepting n={kwargs['n']} and forcing n=1 for Azure compatibility.")
+            # print(f"[DEBUG] Intercepting n={kwargs['n']} and forcing n=1 for Azure compatibility.")
             kwargs["n"] = 1
-        return super()._generate(*args, **kwargs)
+        result = super()._generate(*args, **kwargs)
+        return self._strip_markdown(result)
 
     async def _agenerate(self, *args, **kwargs):
         if "n" in kwargs and kwargs["n"] > 1:
-            print(f"[DEBUG] Intercepting async n={kwargs['n']} and forcing n=1 for Azure compatibility.")
+            # print(f"[DEBUG] Intercepting async n={kwargs['n']} and forcing n=1 for Azure compatibility.")
             kwargs["n"] = 1
-        return await super()._agenerate(*args, **kwargs)
+        result = await super()._agenerate(*args, **kwargs)
+        return self._strip_markdown(result)
 
     def generate(self, *args, **kwargs):
         if "n" in kwargs and kwargs["n"] > 1:
@@ -113,6 +147,8 @@ def perform_ragaas_evaluation(
                 temperature=temperature,
                 max_completion_tokens=token_size,
                 n=1,
+                max_retries=5,
+                request_timeout=60.0,
             )
         
         elif llm_provider == "groq":

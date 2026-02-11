@@ -67,6 +67,7 @@ def get_phoenix_model(provider: str = "groq", model_name: str = "llama-3.3-70b-v
     if provider == "azure-openai":
         azure_api_key = CONFIG.get("azure_api_key")
         azure_endpoint = CONFIG.get("azure_api_base")
+        azure_api_version = CONFIG.get("azure_api_version", "2024-02-15-preview")
         
         if not azure_api_key or not azure_endpoint:
             raise ValueError("Azure OpenAI credentials not configured. Please set AZURE_API_KEY and AZURE_API_BASE in .env")
@@ -75,6 +76,7 @@ def get_phoenix_model(provider: str = "groq", model_name: str = "llama-3.3-70b-v
             model=model_name,
             api_key=azure_api_key,
             azure_endpoint=azure_endpoint,
+            api_version=azure_api_version,
             temperature=0.0,
         )
     else:  # Default to Groq
@@ -163,6 +165,42 @@ def fetch_evaluation_data_from_db(session: Session, chatbot_id: str) -> pd.DataF
 # -----------------------------
 # Core evaluation functions
 # -----------------------------
+import time
+import random
+
+# --- Helper: Retry Logic ---
+def run_with_retry(func, *args, max_retries=10, **kwargs):
+    """
+    Run a function with exponential backoff for RateLimitErrors.
+    """
+    
+    for attempt in range(max_retries):
+        try:
+            return func(*args, **kwargs)
+        except Exception as e:
+            # Check for rate limit error (by type name or message string)
+            error_type = type(e).__name__
+            error_msg = str(e).lower()
+            
+            is_rate_limit = (
+                "RateLimitError" in error_type 
+                or "rate limit" in error_msg 
+                or "429" in error_msg
+                or "throttling" in error_msg
+            )
+            
+            if is_rate_limit:
+                if attempt == max_retries - 1:
+                    print(f"[ERROR] Max retries ({max_retries}) exhausted for rate limit.")
+                    raise e
+                
+                # Exponential backoff: 2s, 4s, 8s, 16s... + jitter
+                wait_time = (2 ** (attempt + 1)) + random.uniform(0, 1)
+                print(f"[WARN] Rate limited ({error_type}). Retrying in {wait_time:.2f}s (Attempt {attempt + 1}/{max_retries})...")
+                time.sleep(wait_time)
+            else:
+                # Not a rate limit error, re-raise immediately
+                raise e
 def evaluate_records(
     request: Union[EvaluationRequest, dict, list] = None,
     metric: str = "hallucination",
@@ -219,7 +257,8 @@ def evaluate_records(
 
     # --- Run evaluation based on selected metric ---
     if metric.lower() == "hallucination":
-        classifications = llm_classify(
+        classifications = run_with_retry(
+            llm_classify,
             dataframe=df,
             template=HALLUCINATION_PROMPT_TEMPLATE,
             model=model,
@@ -229,7 +268,8 @@ def evaluate_records(
         df["hallucination_eval"] = classifications["label"]
 
     elif metric.lower() == "qna":
-        classifications = llm_classify(
+        classifications = run_with_retry(
+            llm_classify,
             dataframe=df,
             template=QA_PROMPT_TEMPLATE,
             model=model,
@@ -239,7 +279,8 @@ def evaluate_records(
         df["qna_eval"] = classifications["label"]
 
     elif metric.lower() == "rag_relevancy":
-        classifications = llm_classify(
+        classifications = run_with_retry(
+            llm_classify,
             dataframe=df,
             template=RAG_RELEVANCY_PROMPT_TEMPLATE,
             model=model,
@@ -249,7 +290,8 @@ def evaluate_records(
         df["rag_relevancy_eval"] = classifications["label"]
 
     elif metric.lower() == "toxicity":
-        classifications = llm_classify(
+        classifications = run_with_retry(
+            llm_classify,
             dataframe=df,
             template=TOXICITY_PROMPT_TEMPLATE,
             model=model,
