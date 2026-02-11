@@ -67,6 +67,7 @@ def get_llm_providers() -> List[str]:
 def get_llm_models() -> List[str]:
     return [
         "gpt-4o-mini",
+        "gpt-4o",
         "gpt-5.2-chat",
         "llama-3.3-70b-versatile",
         "deepseek-r1-distill-llama-70b",
