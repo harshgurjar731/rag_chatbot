@@ -2,7 +2,9 @@
 import os
 from sqlmodel import SQLModel, create_engine, Session, text
 from models.datastore import DataStore, SecondarySource, KnowledgeAssistant, RAGResponse, ChatbotSettings
-from models.FileRecord import FileRecord, DocumentRecord, ChunkRecord, QuestionAnswer
+from models.FileRecord import FileRecord, DocumentRecord, ChunkRecord, QuestionAnswer, QuestionAnswerV2
+from models.EvaluationResult import EvaluationResult
+from models.User import User  # Must be imported so SQLModel creates the user table
 
 # Use Environment variables for DB connection (PostgreSQL)
 DB_USER = os.getenv("DB_USER", "user")
@@ -54,14 +56,20 @@ def list_tables_content():
     """
     Lists the content of the 'datastore' table for debugging purposes.
     """
-    with Session(engine) as session:
-        result = session.exec(text("SELECT * FROM datastore;"))
-        print("Datastore Content:", result.all())
+    try:
+        with Session(engine) as session:
+            result = session.exec(text("SELECT * FROM datastore;"))
+            print("Datastore Content:", result.all())
+    except Exception as e:
+        print(f"Note: Could not list datastore content: {e}")
 
 def list_file_content():
     """
-    Lists the content of the 'FileRecord' table for debugging purposes.
+    Lists the content of the 'filerecord' table for debugging purposes.
     """
-    with Session(engine) as session:
-        result = session.exec(text("SELECT * FROM FileRecord;"))
-        print("FileRecord Content:", result.all())
+    try:
+        with Session(engine) as session:
+            result = session.exec(text("SELECT * FROM filerecord;"))
+            print("FileRecord Content:", result.all())
+    except Exception as e:
+        print(f"Note: Could not list filerecord content: {e}")

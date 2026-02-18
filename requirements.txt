@@ -1,0 +1,97 @@
+# ============================================================================
+# Consolidated Requirements for RAG Chatbot
+# Includes dependencies for: Backend, Ingestion Pool, Worker Pool, Evaluation Pool
+# ============================================================================
+
+# --- PyTorch (CPU version for worker_pool) ---
+--extra-index-url https://download.pytorch.org/whl/cpu
+torch
+
+# --- Core Framework & Web Server ---
+fastapi>=0.115.0,<0.116.0
+uvicorn>=0.32.0,<0.33.0
+python-multipart>=0.0.20,<0.1.0
+pydantic>=2.0.0,<3.0.0
+pydantic-settings>=2.0.0,<3.0.0
+sqlmodel
+python-dotenv
+aiofiles
+requests
+redis
+psycopg2-binary
+tqdm
+
+# --- Authentication & Security ---
+passlib[bcrypt]
+bcrypt
+python-jose[cryptography]
+
+# --- Data Processing & Analysis ---
+numpy<2
+pandas
+scikit-learn
+datasets
+
+# --- ML & AI Models ---
+huggingface-hub>=0.23.0,<1.0
+transformers>=4.39.3,<5.0.0
+sentence-transformers==2.7.0
+onnxruntime
+
+# --- LLM Providers ---
+openai
+mistralai
+groq
+nvidia-riva-client
+
+# --- LangChain Ecosystem ---
+langchain>=0.3.0,<0.4.0
+langchain-core>=0.3.0,<0.4.0
+langchain-community>=0.3.0,<0.4.0
+langchain-text-splitters>=0.3.0,<0.4.0
+langchain-openai>=0.2.0,<0.3.0
+langchain-experimental>=0.3.0,<0.4.0
+langchain-huggingface>=0.1.0,<0.2.0
+langchain-chroma>=0.1.0,<0.2.0
+langchain-qdrant>=0.2.0,<0.3.0
+langchain-nvidia-ai-endpoints>=0.3.0,<0.4.0
+
+# --- Vector Stores ---
+chromadb>=0.5.0,<0.6.0
+qdrant-client>=1.12.0,<2.0.0
+faiss-cpu>=1.9.0,<2.0.0
+
+# --- Guardrails ---
+nemoguardrails
+guardrails-ai
+
+# --- Observability & Tracing (Phoenix) ---
+opentelemetry-api
+opentelemetry-sdk
+opentelemetry-exporter-otlp
+arize-phoenix-otel
+arize-phoenix
+openinference-instrumentation-langchain
+openinference-instrumentation-openai
+
+# --- Evaluation Frameworks ---
+ragas>=0.2.0,<0.3.0
+arize-phoenix-evals>=0.18.0,<0.19.0
+
+# --- PDF & Document Processing ---
+pypdf
+PyMuPDF
+pdf2image
+pytesseract
+camelot-py
+
+# --- Image Processing ---
+Pillow
+opencv-python-headless
+
+# --- Web Scraping & Parsing ---
+beautifulsoup4
+
+# --- Utilities ---
+deep-translator
+psutil

@@ -105,6 +105,9 @@ def process_run_evaluation(job_data: dict):
     from ragaas_evaluator import perform_ragaas_evaluation
     from phoenix_evaluator import perform_phoenix_evaluation
     from rag_response_generator import ensure_rag_responses_for_evaluation
+    from database_models import EvaluationResult, ChatbotSettings
+    from sqlmodel import select
+    import time
     
     evaluation_id = job_data.get("evaluation_id")
     datastore_id = job_data.get("datastore_id")
@@ -112,9 +115,60 @@ def process_run_evaluation(job_data: dict):
     chatbot_id = job_data.get("chatbot_id")
     framework = job_data.get("framework", "ragaas").lower()
     metrics = job_data.get("metrics", ["faithfulness", "answer_relevancy"])
+    force_rerun = job_data.get("force_rerun", False)
     
     try:
         update_evaluation_status(evaluation_id, "initializing", 5)
+        
+        # Check for cached results unless force_rerun is True
+        if not force_rerun:
+            with Session(engine) as session:
+                # Get the latest chatbot settings if chatbot_id provided
+                settings_id = None
+                if chatbot_id:
+                    settings = session.exec(
+                        select(ChatbotSettings)
+                        .where(ChatbotSettings.chatbot_id == chatbot_id)
+                        .order_by(ChatbotSettings.id.desc())
+                    ).first()
+                    if settings:
+                        settings_id = settings.id
+                
+                # Query for cached evaluation
+                query = (
+                    select(EvaluationResult)
+                    .where(EvaluationResult.datastore_id == datastore_id)
+                    .where(EvaluationResult.framework == framework)
+                    .where(EvaluationResult.is_valid == True)
+                )
+                
+                if chatbot_id:
+                    query = query.where(EvaluationResult.chatbot_id == chatbot_id)
+                    if settings_id:
+                        query = query.where(EvaluationResult.settings_id == settings_id)
+                
+                # Check if metrics match (convert both to sorted lists for comparison)
+                cached_results = session.exec(query.order_by(EvaluationResult.created_at.desc())).all()
+                
+                for cached_result in cached_results:
+                    cached_metrics = sorted(json.loads(cached_result.metrics))
+                    requested_metrics = sorted(metrics)
+                    
+                    if cached_metrics == requested_metrics:
+                        print(f"[INFO] Using cached evaluation results: {cached_result.evaluation_id}")
+                        results = json.loads(cached_result.results)
+                        update_evaluation_status(
+                            evaluation_id, 
+                            "completed", 
+                            100, 
+                            results=results, 
+                            metrics=metrics, 
+                            framework=framework
+                        )
+                        return results
+        
+        # No cache found or force_rerun is True - proceed with evaluation
+        start_time = time.time()
         
         # First generate Q&A if needed
         update_evaluation_status(evaluation_id, "generating_qa", 15, metrics=metrics, framework=framework)
@@ -125,8 +179,19 @@ def process_run_evaluation(job_data: dict):
         update_evaluation_status(evaluation_id, "preparing_rag_responses", 40, metrics=metrics, framework=framework)
         print(f"[INFO] Ensuring RAG responses are available for evaluation...")
         
+        settings_id = None
         with Session(engine) as session:
             try:
+                # Get settings_id for saving with results
+                if chatbot_id:
+                    settings = session.exec(
+                        select(ChatbotSettings)
+                        .where(ChatbotSettings.chatbot_id == chatbot_id)
+                        .order_by(ChatbotSettings.id.desc())
+                    ).first()
+                    if settings:
+                        settings_id = settings.id
+                
                 rag_results, rag_stats = ensure_rag_responses_for_evaluation(
                     datastore_id=datastore_id,
                     chatbot_id=chatbot_id,
@@ -161,6 +226,39 @@ def process_run_evaluation(job_data: dict):
         else:
             results = {"error": f"Unsupported framework: {framework}"}
         
+        execution_time = time.time() - start_time
+        
+        # Save results to database
+        update_evaluation_status(evaluation_id, "saving_results", 95, metrics=metrics, framework=framework)
+        
+        with Session(engine) as session:
+            try:
+                evaluation_result = EvaluationResult(
+                    evaluation_id=evaluation_id,
+                    datastore_id=datastore_id,
+                    chatbot_id=chatbot_id,
+                    settings_id=settings_id,
+                    framework=framework,
+                    metrics=json.dumps(metrics),
+                    results=json.dumps(results),
+                    metadata=json.dumps({
+                        "datastore_name": datastore_name,
+                        "qa_result": qa_result
+                    }),
+                    execution_time_seconds=execution_time,
+                    qa_count=qa_result.get("count", 0) if qa_result else 0,
+                    is_valid=True
+                )
+                
+                session.add(evaluation_result)
+                session.commit()
+                print(f"[INFO] Saved evaluation results to database: {evaluation_id}")
+                
+            except Exception as e:
+                print(f"[WARN] Failed to save evaluation results to database: {str(e)}")
+                traceback.print_exc()
+                # Don't fail the entire evaluation if saving fails
+        
         update_evaluation_status(evaluation_id, "completed", 100, results=results, metrics=metrics, framework=framework)
         return results
         
@@ -170,6 +268,7 @@ def process_run_evaluation(job_data: dict):
         traceback.print_exc()
         update_evaluation_status(evaluation_id, "failed", 0, error=error_msg)
         return None
+
 
 
 def process_job(job_data: dict):

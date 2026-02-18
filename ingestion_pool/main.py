@@ -15,7 +15,7 @@ import redis
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 import uvicorn
-from config import INGESTION_POOL_SIZE, REDIS_HOST
+from config import INGESTION_POOL_SIZE, INGESTION_POOL_PORT, REDIS_HOST
 
 HOSTNAME = socket.gethostname()
 processes = []
@@ -91,7 +91,7 @@ def main():
     uvicorn.run(
         app,
         host="0.0.0.0",
-        port=8001,
+        port=INGESTION_POOL_PORT,
         log_level="info"
     )
 

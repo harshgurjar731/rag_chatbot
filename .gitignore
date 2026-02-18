@@ -1,7 +1,10 @@
 venv
 .venv
 __pycache__
+.pyc
 *.pyc
+__pycache__/
+
 .env
 .env.example
 .DS_Store

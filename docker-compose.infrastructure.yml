@@ -1,0 +1,65 @@
+# Infrastructure-Only Docker Compose
+# For hybrid development: Run infrastructure in Docker, Python services in venv
+
+services:
+  redis:
+    image: redis:alpine
+    command: redis-server --appendonly yes
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - chatbot_network
+
+  postgres:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: chatbot_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - chatbot_network
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U user -d chatbot_db" ]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  chromadb:
+    image: chromadb/chroma
+    ports:
+      - "8001:8000"
+    volumes:
+      - chroma_data:/data
+    networks:
+      - chatbot_network
+
+  phoenix:
+    image: arizephoenix/phoenix
+    ports:
+      - "6006:6006"
+      - "4317:4317"
+      - "9090:9090"
+    environment:
+      - PHOENIX_PORT=6006
+      - PHOENIX_GRPC_PORT=4317
+      - PHOENIX_WORKING_DIR=/mnt/data
+    volumes:
+      - phoenix_data:/mnt/data
+    networks:
+      - chatbot_network
+
+networks:
+  chatbot_network:
+    driver: bridge
+
+volumes:
+  redis_data:
+  postgres_data:
+  chroma_data:
+  phoenix_data:

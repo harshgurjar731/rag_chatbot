@@ -24,7 +24,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Trash } from "lucide-react"; // Make sure Trash icon is imported
 import axios from 'axios';
 import qs from "qs";
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -97,7 +97,11 @@ const EvaluationSelection = () => {
   const [timelineStatus, setTimelineStatus] = useState("");
   const [progress, setProgress] = useState(0);
 
-  // Γ£à Call the hook once at the top level
+  // Cache state
+  const [cachedEvaluation, setCachedEvaluation] = useState<any>(null);
+  const [checkingCache, setCheckingCache] = useState(false);
+
+  // ✅ Call the hook once at the top level
   const { config } = useConfigOptions();
 
   // Γ£à Safely extract frameworks
@@ -242,6 +246,38 @@ const EvaluationSelection = () => {
       fetchGeneratedQA(chatbot.datastoreId);
     }
   }, [chatbot?.datastoreId]);
+
+  // Check for cached evaluation when framework and chatbot are ready
+  const checkCachedEvaluation = useCallback(async () => {
+    if (!selectedFramework || !chatbot?.datastoreId) return;
+
+    setCheckingCache(true);
+    try {
+      const response = await fetch(
+        `${API_BASE_URL}/evaluation/check-cache/${chatbot.datastoreId}?framework=${selectedFramework}&chatbot_id=${chatbot.id}`
+      );
+      if (!response.ok) throw new Error("Failed to check cache");
+
+      const data = await response.json();
+      if (data.has_cache) {
+        setCachedEvaluation(data);
+        console.log("Found cached evaluation:", data);
+      } else {
+        setCachedEvaluation(null);
+      }
+    } catch (error) {
+      console.error("Error checking cache:", error);
+      setCachedEvaluation(null);
+    } finally {
+      setCheckingCache(false);
+    }
+  }, [selectedFramework, chatbot?.datastoreId, chatbot?.id]);
+
+  // Check cache when framework or chatbot changes
+  useEffect(() => {
+    checkCachedEvaluation();
+  }, [checkCachedEvaluation]);
+
 
 
 
@@ -507,7 +543,7 @@ const EvaluationSelection = () => {
     toast({ title: "Evaluation Completed", description: "Results are ready!" });
   };
 
-  const startEvaluationApi = async () => {
+  const startEvaluationApi = async (forceRerun: boolean = false) => {
     try {
       setLoading(true);
       const response = await fetch(`${API_BASE_URL}/evaluation/start-evaluation`, {
@@ -518,7 +554,8 @@ const EvaluationSelection = () => {
           datastore_name: chatbot.name,
           framework: selectedFramework,
           metrics: selectedMetrics,
-          chatbot_id: chatbot.id, // Added chatbot_id
+          chatbot_id: chatbot.id,
+          force_rerun: forceRerun,
         }),
       });
 
@@ -527,6 +564,48 @@ const EvaluationSelection = () => {
     } catch (err) {
       console.error("Error starting evaluation:", err);
       throw err;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // View cached results
+  const handleViewCachedResults = async () => {
+    if (!cachedEvaluation?.evaluation_id) return;
+
+    try {
+      setLoading(true);
+      const response = await fetch(
+        `${API_BASE_URL}/evaluation/cached-results/${cachedEvaluation.evaluation_id}`
+      );
+      if (!response.ok) throw new Error("Failed to fetch cached results");
+
+      const data = await response.json();
+
+      // Flatten results for UI (same format as live evaluation)
+      const flattenedResults = Object.entries(data.results || {}).flatMap(
+        ([metric, metricData]: [string, any]) =>
+          (Array.isArray(metricData) ? metricData : metricData.results || []).map((r: any) => ({
+            metric,
+            ...r,
+          }))
+      );
+
+      setEvaluationResult(flattenedResults);
+      setIsCompleted(true);
+      setEvaluationStarted(true);
+
+      toast({
+        title: "Cached Results Loaded",
+        description: `Loaded evaluation from ${new Date(data.created_at).toLocaleDateString()}`,
+      });
+    } catch (error) {
+      console.error("Error loading cached results:", error);
+      toast({
+        title: "Error",
+        description: "Failed to load cached results",
+        variant: "destructive",
+      });
     } finally {
       setLoading(false);
     }
@@ -542,12 +621,13 @@ const EvaluationSelection = () => {
   };
 
   // --- Handle start evaluation ---
-  const handleStartEvaluation = async () => {
+  const handleStartEvaluation = async (forceRerun: boolean = false) => {
     try {
       setEvaluationStarted(true);
+      setCachedEvaluation(null); // Clear cache when starting new evaluation
 
       // call backend to start evaluation
-      const startRes = await startEvaluationApi();
+      const startRes = await startEvaluationApi(forceRerun);
       if (!startRes?.evaluation_id) return;
 
       // save ID for polling
@@ -555,6 +635,7 @@ const EvaluationSelection = () => {
 
       // reset UI
       setIsCompleted(false);
+      setEvaluationResult(null);
       setTimelineSteps([
         "Initializing",
         "Fetching Data",
@@ -795,43 +876,107 @@ const EvaluationSelection = () => {
                     />
                   </div>
 
-                  <div className="pt-4">
-                    <Button
-                      onClick={() => {
-                        if (!selectedFramework) {
-                          toast({
-                            title: "Framework Required",
-                            description: "Please select a framework first.",
-                            variant: "destructive",
-                          });
-                          return;
-                        }
-                        if (selectedMetrics.length === 0) {
-                          toast({
-                            title: "Metrics Required",
-                            description: "Please select at least one metric.",
-                            variant: "destructive",
-                          });
-                          return;
-                        }
-                        handleStartEvaluation();
-                      }}
-                      disabled={loading || evaluationStarted}
-                      className={`w-full h-12 rounded-xl text-md font-semibold font-medium transition-all duration-300 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white shadow-lg hover:shadow-indigo-500/25 ring-0 border-0 
-                        ${loading ? "opacity-70" : "hover:scale-[1.02]"}`}
-                    >
-                      {loading ? (
-                        <div className="flex items-center gap-2">
-                          <span className="w-4 h-4 rounded-full border-2 border-white/30 border-t-white animate-spin" />
-                          Starting...
+                  <div className="pt-4 space-y-3">
+                    {checkingCache ? (
+                      <div className="flex items-center justify-center py-3 text-gray-400">
+                        <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                        Checking for cached results...
+                      </div>
+                    ) : cachedEvaluation ? (
+                      // Show "View Results" and "Re-run" buttons when cache exists
+                      <>
+                        <div className="p-3 rounded-lg bg-indigo-500/10 border border-indigo-500/20">
+                          <div className="flex items-center gap-2 text-sm text-indigo-300">
+                            <CheckCircle className="h-4 w-4" />
+                            <span>Cached results available from {new Date(cachedEvaluation.created_at).toLocaleDateString()}</span>
+                          </div>
                         </div>
-                      ) : (
-                        <div className="flex items-center gap-2">
-                          <Play className="h-4 w-4 fill-white" />
-                          Start Evaluation
-                        </div>
-                      )}
-                    </Button>
+                        <Button
+                          onClick={handleViewCachedResults}
+                          disabled={loading || evaluationStarted}
+                          className="w-full h-12 rounded-xl text-md font-semibold transition-all duration-300 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-500 hover:to-emerald-500 text-white shadow-lg hover:shadow-green-500/25 hover:scale-[1.02]"
+                        >
+                          <div className="flex items-center gap-2">
+                            <Eye className="h-4 w-4" />
+                            View Cached Results
+                          </div>
+                        </Button>
+                        <Button
+                          onClick={() => {
+                            if (!selectedFramework) {
+                              toast({
+                                title: "Framework Required",
+                                description: "Please select a framework first.",
+                                variant: "destructive",
+                              });
+                              return;
+                            }
+                            if (selectedMetrics.length === 0) {
+                              toast({
+                                title: "Metrics Required",
+                                description: "Please select at least one metric.",
+                                variant: "destructive",
+                              });
+                              return;
+                            }
+                            handleStartEvaluation(true); // force_rerun = true
+                          }}
+                          disabled={loading || evaluationStarted}
+                          variant="outline"
+                          className="w-full h-12 rounded-xl text-md font-semibold transition-all duration-300 border-white/10 bg-white/5 hover:bg-white/10 text-white hover:scale-[1.02]"
+                        >
+                          {loading ? (
+                            <div className="flex items-center gap-2">
+                              <span className="w-4 h-4 rounded-full border-2 border-white/30 border-t-white animate-spin" />
+                              Starting...
+                            </div>
+                          ) : (
+                            <div className="flex items-center gap-2">
+                              <Play className="h-4 w-4" />
+                              Re-run Evaluation
+                            </div>
+                          )}
+                        </Button>
+                      </>
+                    ) : (
+                      // Show "Start Evaluation" button when no cache
+                      <Button
+                        onClick={() => {
+                          if (!selectedFramework) {
+                            toast({
+                              title: "Framework Required",
+                              description: "Please select a framework first.",
+                              variant: "destructive",
+                            });
+                            return;
+                          }
+                          if (selectedMetrics.length === 0) {
+                            toast({
+                              title: "Metrics Required",
+                              description: "Please select at least one metric.",
+                              variant: "destructive",
+                            });
+                            return;
+                          }
+                          handleStartEvaluation(false);
+                        }}
+                        disabled={loading || evaluationStarted}
+                        className={`w-full h-12 rounded-xl text-md font-semibold font-medium transition-all duration-300 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white shadow-lg hover:shadow-indigo-500/25 ring-0 border-0 
+                          ${loading ? "opacity-70" : "hover:scale-[1.02]"}`}
+                      >
+                        {loading ? (
+                          <div className="flex items-center gap-2">
+                            <span className="w-4 h-4 rounded-full border-2 border-white/30 border-t-white animate-spin" />
+                            Starting...
+                          </div>
+                        ) : (
+                          <div className="flex items-center gap-2">
+                            <Play className="h-4 w-4 fill-white" />
+                            Start Evaluation
+                          </div>
+                        )}
+                      </Button>
+                    )}
                   </div>
                 </CardContent>
               </Card>

@@ -1,0 +1,53 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Backend",
+            "type": "debugpy",
+            "request": "launch",
+            "module": "uvicorn",
+            "args": [
+                "main:app",
+                "--reload",
+                "--port",
+                "8000",
+                "--host",
+                "0.0.0.0"
+            ],
+            "cwd": "${workspaceFolder}/Backend",
+            "envFile": "${workspaceFolder}/.env.local",
+            "console": "integratedTerminal",
+            "justMyCode": false
+        },
+        {
+            "name": "Worker Pool",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/worker_pool/main.py",
+            "cwd": "${workspaceFolder}/worker_pool",
+            "envFile": "${workspaceFolder}/.env.local",
+            "console": "integratedTerminal",
+            "justMyCode": false
+        },
+        {
+            "name": "Ingestion Pool",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/ingestion_pool/main.py",
+            "cwd": "${workspaceFolder}/ingestion_pool",
+            "envFile": "${workspaceFolder}/.env.local",
+            "console": "integratedTerminal",
+            "justMyCode": false
+        },
+        {
+            "name": "Evaluation Pool",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/evaluation_pool/evaluation_worker.py",
+            "cwd": "${workspaceFolder}/evaluation_pool",
+            "envFile": "${workspaceFolder}/.env.local",
+            "console": "integratedTerminal",
+            "justMyCode": false
+        }
+    ]
+}

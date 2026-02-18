@@ -15,3 +15,4 @@ DATABASE_URL = f"postgresql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}/{DB_NAME}"
 
 # Ingestion Config
 INGESTION_POOL_SIZE = int(os.getenv("INGESTION_POOL_SIZE", "2"))
+INGESTION_POOL_PORT = int(os.getenv("INGESTION_POOL_PORT", "8003"))

@@ -90,6 +90,23 @@ app.add_middleware(
     max_age=3600,
 )
 
+# Global exception handler to ensure CORS headers are always present
+# (FastAPI's CORSMiddleware doesn't add headers to unhandled 500 errors)
+from fastapi import Request
+from fastapi.responses import JSONResponse
+
+@app.exception_handler(Exception)
+async def global_exception_handler(request: Request, exc: Exception):
+    return JSONResponse(
+        status_code=500,
+        content={"detail": str(exc)},
+        headers={
+            "Access-Control-Allow-Origin": "*",
+            "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS, PATCH",
+            "Access-Control-Allow-Headers": "*",
+        },
+    )
+
 # # Add explicit OPTIONS handler for root and all paths
 # @app.options("/{full_path:path}")
 # async def preflight_handler(full_path: str):
