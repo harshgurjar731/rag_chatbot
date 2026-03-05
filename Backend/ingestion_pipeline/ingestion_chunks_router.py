@@ -13,8 +13,8 @@ import json
 import redis
 from typing import List
 from config import CONFIG
-from ingestion_pipleline.ingestion_models import DataStoreCreate, ChunkTextResponse, GetDocumentDetailsRequest, ProcessDocumentResponse, UpsertRequestData, TestRetrievalRequestData
-from ingestion_pipleline.Config.Config import INGESTION_CONFIG
+from ingestion_pipeline.ingestion_models import DataStoreCreate, ChunkTextResponse, GetDocumentDetailsRequest, ProcessDocumentResponse, UpsertRequestData, TestRetrievalRequestData
+from ingestion_pipeline.Config.Config import INGESTION_CONFIG
 import base64
 from io import BytesIO
 
@@ -123,28 +123,47 @@ async def preview_chunks(
     import pypdf
     from io import BytesIO
 
-    # 1. Read file content
+    # 1. Parse details first to get filename
+    details = json.loads(documentDetails)
+    filename = details.get("filename", "").lower()
+    chunkSize = details.get("chunkSize", 1000)
+    chunkOverlap = details.get("chunkOverlap", 200)
+
+    # 2. Read file content
     content = await file.read()
     text_content = ""
     
     # Try text decode first
     try:
         text_content = content.decode("utf-8")
-    except:
-        # If decode fails, assume binary/PDF and try pypdf
-        try:
-            pdf_file = BytesIO(content)
-            reader = pypdf.PdfReader(pdf_file)
-            for page in reader.pages:
-                text_content += page.extract_text() + "\n"
-        except Exception as e:
-            # If both fail
-            return {"status": "error", "message": f"Preview failed. Could not decode text or parse PDF: {str(e)}"}
-    
-    # 2. Parse details
-    details = json.loads(documentDetails)
-    chunkSize = details.get("chunkSize", 1000)
-    chunkOverlap = details.get("chunkOverlap", 200)
+    except UnicodeDecodeError:
+        # If decode fails, check file extension
+        if filename.endswith(".pdf"):
+            try:
+                pdf_file = BytesIO(content)
+                reader = pypdf.PdfReader(pdf_file)
+                for page in reader.pages:
+                    extracted = page.extract_text()
+                    if extracted:
+                        text_content += extracted + "\n"
+            except Exception as e:
+                return {"status": "error", "message": f"Preview failed. Could not decode text or parse PDF: {str(e)}"}
+        elif filename.endswith((".png", ".jpg", ".jpeg", ".bmp", ".webp")):
+            try:
+                from langchain_community.document_loaders import ImageCaptionLoader
+                import tempfile
+                with tempfile.NamedTemporaryFile(delete=False, suffix=Path(filename).suffix) as tp:
+                    tp.write(content)
+                    tp.flush()
+                    loader = ImageCaptionLoader(tp.name)
+                    image_docs = loader.load()
+                    if image_docs:
+                        text_content += image_docs[0].page_content
+                os.unlink(tp.name)
+            except Exception as e:
+                return {"status": "error", "message": f"Preview failed for image {filename}: {str(e)}"}
+        else:
+            text_content = f"Preview not fully supported for binary file type '{filename}'. The file will be processed normally by the ingestion workers."
 
     # 3. Split
     splitter = RecursiveCharacterTextSplitter(

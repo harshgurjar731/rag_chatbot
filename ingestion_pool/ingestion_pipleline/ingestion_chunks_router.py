@@ -98,15 +98,20 @@ async def upsertDocs(
             embedding=embeddingModel
         )
         list_img_uri: List[str] = []
+        list_img_texts: List[str] = []
         list_metadata: List[dict] = []
         for id, imageDoc in enumerate(list_of_img_documents):
             list_img_uri.append(imageDoc.metadata["source"])
+            list_img_texts.append(imageDoc.page_content)
             list_metadata.append({"page_content": imageDoc.page_content, "metadata": imageDoc.metadata})
 
-        embeddingVectors = embeddingModel.embed_image(uris=list_img_uri)
+        if hasattr(embeddingModel, "embed_image"):
+            embeddingVectors = embeddingModel.embed_image(uris=list_img_uri)
+        else:
+            embeddingVectors = embeddingModel.embed_documents(list_img_texts)
         print("After Create Collection", embeddingVectors)
         insert_success = vectordb.insert_vectors(
-            collection=str(datastore_id) + "_image",
+            collection=f"datastore_{datastore_id}_image",
             vectors=embeddingVectors,
             metadata=list_metadata,
             chunk_ids=img_chunk_ids
@@ -150,7 +155,13 @@ async def test_retrieval(
             temp_file = tempfile.NamedTemporaryFile(delete=False, suffix=".png")  
             temp_file.write(image_bytes)
             temp_file.close()
-            queries_embedded = embeddingModel.embed_image([temp_file.name])
+            if hasattr(embeddingModel, "embed_image"):
+                queries_embedded = embeddingModel.embed_image([temp_file.name])
+            else:
+                # Need to run text embedding on nothing essentially, or fallback.
+                # Assuming Vision Search on a text model would fail to retrieve images 
+                # meaningfully unless OCR was used at search time. Let's provide a safe fallback.
+                queries_embedded = embeddingModel.embed_documents(["Image query fallback"])
         else:
             queries_embedded = embeddingModel.embed_documents([data.query_str])
     else:
@@ -161,7 +172,7 @@ async def test_retrieval(
         queries_embedded = embeddingModel.embed_documents([data.query_str])
 
     vectordb = create_vector_store(provider=data.vector_store_provider)
-    collection_name = str(datastore_id) if data.is_vision_search == False else str(datastore_id) + "_image"
+    collection_name = f"datastore_{datastore_id}" if data.is_vision_search == False else f"datastore_{datastore_id}_image"
     # vector_store already initialized earlier (same collection & embedding)
     print("Collection Name", collection_name)
     results = vectordb.retrieve_docs_for_embeddings(collection=collection_name, embeddings=queries_embedded, topk= data.top_k)
@@ -173,55 +184,7 @@ async def test_retrieval(
 
     return results
 
-#@router.post("/document/process", response_model=ProcessDocumentResponse)
-# async def process_document(
-#     data: DocumentRecord,
-#     session: Session = Depends(get_session)
-#     ):
-#     document = session.exec(select(DocumentRecord).where(DocumentRecord.id == data.id)).first()
 
-#     file_extension = document.filename.lower().split('.')[-1]
-
-#     if (file_extension in ["jpg", "jpeg", "png", "bmp"]):
-#         return ProcessDocumentResponse(success=True, chunks=[])
-#     else:
-#         chunks = process_text_document(document=document, session=session)
-#         return ProcessDocumentResponse(success=True, chunks=chunks)
-
-    
-# @router.post("/document/process", response_model=List[ProcessDocumentResponse])
-# async def process_document(
-#     documentRecord: List[DocumentRecord],
-#     session: Session = Depends(get_session)
-#     ) -> List[str]:
-
-#     processed_doc_responses = []
-#     for idx, doc in enumerate(documentRecord):    
-#         document = session.exec(select(DocumentRecord).where(DocumentRecord.id == doc.id)).first()
-#         print("Received document details:", document)   
-
-#         list_of_documets = load_document_with_metadata(document)
-#         splitted_chunks = split_document(document, list_of_documets)
-        
-
-#         chunk_texts: List[str] = []
-#         chunk_ids = [str(uuid.uuid4()) for _ in range(len(splitted_chunks))]
-
-#         # 4️⃣ Store in SQL DB too
-#         for idx, chunk in enumerate(splitted_chunks):
-#             chunk_record = ChunkRecord(
-#                 datastore_id=document.datastore_id,
-#                 document_id=document.id,
-#                 chunk_index=chunk_ids[idx],
-#                 text=chunk.page_content,
-#                 metadatas=chunk.metadata
-#             )
-#             chunk_texts.append(chunk.page_content)
-#             print("CHUNK_RECORD", chunk_record)
-#             session.add(chunk_record)
-#         session.commit()
-#         processed_doc_responses.append(ProcessDocumentResponse(success=True, chunks=chunk_texts))
-#     return processed_doc_responses
 
 @router.post("/document/process", response_model=List[ProcessDocumentResponse])
 async def process_document(

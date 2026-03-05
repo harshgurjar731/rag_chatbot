@@ -13,18 +13,19 @@ import os
 from dotenv import load_dotenv
 
 
-load_dotenv()
+load_dotenv(override=True)
 
-# Initialize the NVIDIA API client
-nvidia_client = AsyncOpenAI(
-    base_url="https://integrate.api.nvidia.com/v1",
-    api_key=os.getenv("NVIDIA_API_KEY")
-)
+# Lazy client factories — initialized on first use to avoid startup errors when API keys are not set
+def _get_nvidia_client():
+    return AsyncOpenAI(
+        base_url="https://integrate.api.nvidia.com/v1",
+        api_key=os.getenv("NVIDIA_API_KEY", "dummy-key")
+    )
 
-
-groq_client = AsyncGroq(
-    api_key=os.getenv("GROQ_API_KEY")
-)
+def _get_groq_client():
+    return AsyncGroq(
+        api_key=os.getenv("GROQ_API_KEY", "")
+    )
 
 def get_model_name_from_config(context, config_name, default_model):
     """
@@ -68,6 +69,7 @@ async def check_jailbreak_groq(context: dict):
     if not user_message: return False
 
     try:
+        groq_client = _get_groq_client()
         completion = await groq_client.chat.completions.create(
             model=model_name,
             messages=[{"role": "user", "content": user_message}],
@@ -111,6 +113,7 @@ async def check_nvidia_content_safety(context: dict):
     if not user_message: return "safe"
 
     try:
+        nvidia_client = _get_nvidia_client()
         response = await nvidia_client.chat.completions.create(
             model="nvidia/llama-3.1-nemoguard-8b-content-safety",
             messages=[{"role": "user", "content": user_message}],
@@ -180,6 +183,7 @@ async def topic_control_check(context: dict):
     try:
         # Call NVIDIA's topic control model
         # This model expects the system instruction and conversation context
+        nvidia_client = _get_nvidia_client()
         response = await nvidia_client.chat.completions.create(
             model="nvidia/llama-3.1-nemoguard-8b-topic-control",
             messages=[

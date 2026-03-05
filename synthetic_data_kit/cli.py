@@ -1,4 +1,4 @@
-# Copyright (c) Meta Platforms, Inc. and affiliates.
+﻿# Copyright (c) Meta Platforms, Inc. and affiliates.
 # All rights reserved.
 #
 # This source code is licensed under the terms described in the LICENSE file in
@@ -149,7 +149,7 @@ def system_check(
         
         # Check for placeholder values
         if "YOUR_" in str(api_key) or "YOUR_" in str(api_base):
-             console.print("⚠️  Azure OpenAI configuration appears to contain placeholder values.", style="yellow")
+             console.print("  Azure OpenAI configuration appears to contain placeholder values.", style="yellow")
              console.print("   Please update config.yaml with your actual Azure OpenAI credentials.", style="yellow")
         
         with console.status(f"Checking Azure OpenAI access..."):
@@ -190,7 +190,7 @@ def system_check(
 
     else:
         # Default fallback or error
-        console.print(f"⚠️  Unknown provider selected: {selected_provider}", style="yellow")
+        console.print(f"  Unknown provider selected: {selected_provider}", style="yellow")
         console.print("   Please select 'api-endpoint' or 'azure-openai'.", style="yellow")
         return 1
 
@@ -245,27 +245,27 @@ def ingest(
                 stats = get_directory_stats(input, INGEST_EXTENSIONS)
                 
                 if "error" in stats:
-                    console.print(f"❌ {stats['error']}", style="red")
+                    console.print(f" {stats['error']}", style="red")
                     return 1
                 
-                console.print(f"\n📁 Directory: {input}")
-                console.print(f"📄 Total files: {stats['total_files']}")
-                console.print(f"✅ Supported files: {stats['supported_files']}")
-                console.print(f"❌ Unsupported files: {stats['unsupported_files']}")
+                console.print(f"\n Directory: {input}")
+                console.print(f" Total files: {stats['total_files']}")
+                console.print(f" Supported files: {stats['supported_files']}")
+                console.print(f" Unsupported files: {stats['unsupported_files']}")
                 
                 if stats['supported_files'] > 0:
-                    console.print(f"\n📋 Files that would be processed:")
+                    console.print(f"\n Files that would be processed:")
                     for ext, count in stats['by_extension'].items():
                         console.print(f"  {ext}: {count} file(s)")
                     
-                    console.print(f"\n📝 File list:")
+                    console.print(f"\n File list:")
                     for filename in stats['file_list']:
-                        console.print(f"  • {filename}")
+                        console.print(f"   {filename}")
                     
-                    console.print(f"\n💡 To process these files, run:")
+                    console.print(f"\n To process these files, run:")
                     console.print(f"   synthetic-data-kit ingest {input} --output-dir {output_dir}", style="bold blue")
                 else:
-                    console.print(f"\n⚠️  No supported files found.", style="yellow")
+                    console.print(f"\n  No supported files found.", style="yellow")
                     console.print(f"   Supported extensions: {', '.join(INGEST_EXTENSIONS)}", style="yellow")
                 
                 return 0
@@ -281,10 +281,10 @@ def ingest(
             
             # Return appropriate exit code
             if results["failed"] > 0:
-                console.print(f"⚠️  Completed with {results['failed']} errors", style="yellow")
+                console.print(f"  Completed with {results['failed']} errors", style="yellow")
                 return 1
             else:
-                console.print("✅ All files processed successfully!", style="green")
+                console.print(" All files processed successfully!", style="green")
                 return 0
         else:
             # Process single file (existing logic)
@@ -299,11 +299,11 @@ def ingest(
                     config=ctx.config,
                     multimodal=multimodal,
                 )
-            console.print(f"✅ Text successfully extracted to [bold]{output_path}[/bold]", style="green")
+            console.print(f"Text successfully extracted to [bold]{output_path}[/bold]", style="green")
             return 0
             
     except Exception as e:
-        console.print(f"❌ Error: {e}", style="red")
+        console.print(f"Error: {e}", style="red")
         return 1
 
 
@@ -363,7 +363,7 @@ def create(
     
     # Check the LLM provider from config
     provider = get_llm_provider(ctx.config)
-    console.print(f"🔗 Using {provider} provider", style="green")
+    console.print(f" Using {provider} provider", style="green")
     
     if provider == "api-endpoint":
         # Use API endpoint config
@@ -377,7 +377,7 @@ def create(
         api_base = api_base or azure_config.get("azure_endpoint")
         model = model or azure_config.get("deployment_name")
     else:
-        console.print(f"❌ Error: Unknown provider '{provider}'", style="red")
+        console.print(f" Error: Unknown provider '{provider}'", style="red")
         return 1
     
     # Get output directory from args, then config, then default
@@ -396,27 +396,27 @@ def create(
                 stats = get_directory_stats(input, extensions)
                 
                 if "error" in stats:
-                    console.print(f"❌ {stats['error']}", style="red")
+                    console.print(f" {stats['error']}", style="red")
                     return 1
                 
-                console.print(f"\n📁 Directory: {input}")
-                console.print(f"📄 Total files: {stats['total_files']}")
-                console.print(f"✅ Supported files: {stats['supported_files']}")
-                console.print(f"❌ Unsupported files: {stats['unsupported_files']}")
+                console.print(f"\n Directory: {input}")
+                console.print(f" Total files: {stats['total_files']}")
+                console.print(f" Supported files: {stats['supported_files']}")
+                console.print(f" Unsupported files: {stats['unsupported_files']}")
                 
                 if stats['supported_files'] > 0:
-                    console.print(f"\n📋 Files that would be processed for {content_type}:")
+                    console.print(f"\n Files that would be processed for {content_type}:")
                     for ext, count in stats['by_extension'].items():
                         console.print(f"  {ext}: {count} file(s)")
                     
-                    console.print(f"\n📝 File list:")
+                    console.print(f"\n File list:")
                     for filename in stats['file_list']:
-                        console.print(f"  • {filename}")
+                        console.print(f"   {filename}")
                     
-                    console.print(f"\n💡 To process these files, run:")
+                    console.print(f"\n To process these files, run:")
                     console.print(f"   synthetic-data-kit create {input} --type {content_type} --output-dir {output_dir}", style="bold blue")
                 else:
-                    console.print(f"\n⚠️  No supported files found for {content_type}.", style="yellow")
+                    console.print(f"\n  No supported files found for {content_type}.", style="yellow")
                     if content_type == "cot-enhance":
                         console.print(f"   Looking for: .json files", style="yellow")
                     else:
@@ -441,10 +441,10 @@ def create(
             
             # Return appropriate exit code
             if results["failed"] > 0:
-                console.print(f"⚠️  Completed with {results['failed']} errors", style="yellow")
+                console.print(f"  Completed with {results['failed']} errors", style="yellow")
                 return 1
             else:
-                console.print("✅ All files processed successfully!", style="green")
+                console.print(" All files processed successfully!", style="green")
                 return 0
         else:
             # Process single file (existing logic)
@@ -466,11 +466,11 @@ def create(
                     chunk_overlap=chunk_overlap
                 )
             if output_path:
-                console.print(f"✅ Content saved to [bold]{output_path}[/bold]", style="green")
+                console.print(f" Content saved to [bold]{output_path}[/bold]", style="green")
             return 0
             
     except Exception as e:
-        console.print(f"❌ Error: {e}", style="red")
+        console.print(f" Error: {e}", style="red")
         return 1
 
 
@@ -512,7 +512,7 @@ def curate(
     # Check the LLM provider from config
     provider = get_llm_provider(ctx.config)
     
-    console.print(f"🔗 Using {provider} provider", style="green")
+    console.print(f" Using {provider} provider", style="green")
     
     if provider == "api-endpoint":
         # Use API endpoint config
@@ -526,7 +526,7 @@ def curate(
         api_base = api_base or azure_config.get("azure_endpoint")
         model = model or azure_config.get("deployment_name")
     else:
-        console.print(f"❌ Error: Unknown provider '{provider}'", style="red")
+        console.print(f" Error: Unknown provider '{provider}'", style="red")
         return 1
     
     try:
@@ -538,28 +538,28 @@ def curate(
                 stats = get_directory_stats(input, CURATE_EXTENSIONS)
                 
                 if "error" in stats:
-                    console.print(f"❌ {stats['error']}", style="red")
+                    console.print(f" {stats['error']}", style="red")
                     return 1
                 
-                console.print(f"\n📁 Directory: {input}")
-                console.print(f"📄 Total files: {stats['total_files']}")
-                console.print(f"✅ Supported files: {stats['supported_files']}")
-                console.print(f"❌ Unsupported files: {stats['unsupported_files']}")
+                console.print(f"\n Directory: {input}")
+                console.print(f" Total files: {stats['total_files']}")
+                console.print(f" Supported files: {stats['supported_files']}")
+                console.print(f" Unsupported files: {stats['unsupported_files']}")
                 
                 if stats['supported_files'] > 0:
-                    console.print(f"\n📋 Files that would be curated:")
+                    console.print(f"\n Files that would be curated:")
                     for ext, count in stats['by_extension'].items():
                         console.print(f"  {ext}: {count} file(s)")
                     
-                    console.print(f"\n📝 File list:")
+                    console.print(f"\n File list:")
                     for filename in stats['file_list']:
-                        console.print(f"  • {filename}")
+                        console.print(f"   {filename}")
                     
                     default_output = get_path_config(ctx.config, "output", "curated")
-                    console.print(f"\n💡 To process these files, run:")
+                    console.print(f"\n To process these files, run:")
                     console.print(f"   synthetic-data-kit curate {input} --threshold {threshold or 7.0} --output {output or default_output}", style="bold blue")
                 else:
-                    console.print(f"\n⚠️  No supported files found for curation.", style="yellow")
+                    console.print(f"\n  No supported files found for curation.", style="yellow")
                     console.print(f"   Looking for: .json files with QA pairs", style="yellow")
                 
                 return 0
@@ -582,10 +582,10 @@ def curate(
             
             # Return appropriate exit code
             if results["failed"] > 0:
-                console.print(f"⚠️  Completed with {results['failed']} errors", style="yellow")
+                console.print(f"  Completed with {results['failed']} errors", style="yellow")
                 return 1
             else:
-                console.print("✅ All files processed successfully!", style="green")
+                console.print(" All files processed successfully!", style="green")
                 return 0
         else:
             # Process single file (existing logic)
@@ -610,11 +610,11 @@ def curate(
                     verbose,
                     provider=provider
                 )
-            console.print(f"✅ Cleaned content saved to [bold]{result_path}[/bold]", style="green")
+            console.print(f" Cleaned content saved to [bold]{result_path}[/bold]", style="green")
             return 0
             
     except Exception as e:
-        console.print(f"❌ Error: {e}", style="red")
+        console.print(f" Error: {e}", style="red")
         return 1
 
 
@@ -671,28 +671,28 @@ def save_as(
                 stats = get_directory_stats(input, SAVE_AS_EXTENSIONS)
                 
                 if "error" in stats:
-                    console.print(f"❌ {stats['error']}", style="red")
+                    console.print(f" {stats['error']}", style="red")
                     return 1
                 
-                console.print(f"\n📁 Directory: {input}")
-                console.print(f"📄 Total files: {stats['total_files']}")
-                console.print(f"✅ Supported files: {stats['supported_files']}")
-                console.print(f"❌ Unsupported files: {stats['unsupported_files']}")
+                console.print(f"\n Directory: {input}")
+                console.print(f" Total files: {stats['total_files']}")
+                console.print(f" Supported files: {stats['supported_files']}")
+                console.print(f" Unsupported files: {stats['unsupported_files']}")
                 
                 if stats['supported_files'] > 0:
-                    console.print(f"\n📋 Files that would be converted to {format} format:")
+                    console.print(f"\n Files that would be converted to {format} format:")
                     for ext, count in stats['by_extension'].items():
                         console.print(f"  {ext}: {count} file(s)")
                     
-                    console.print(f"\n📝 File list:")
+                    console.print(f"\n File list:")
                     for filename in stats['file_list']:
-                        console.print(f"  • {filename}")
+                        console.print(f"   {filename}")
                     
                     default_output = get_path_config(ctx.config, "output", "final")
-                    console.print(f"\n💡 To process these files, run:")
+                    console.print(f"\n To process these files, run:")
                     console.print(f"   synthetic-data-kit save-as {input} --format {format} --storage {storage} --output {output or default_output}", style="bold blue")
                 else:
-                    console.print(f"\n⚠️  No supported files found for format conversion.", style="yellow")
+                    console.print(f"\n  No supported files found for format conversion.", style="yellow")
                     console.print(f"   Looking for: .json files with curated QA pairs", style="yellow")
                 
                 return 0
@@ -713,10 +713,10 @@ def save_as(
             
             # Return appropriate exit code
             if results["failed"] > 0:
-                console.print(f"⚠️  Completed with {results['failed']} errors", style="yellow")
+                console.print(f"  Completed with {results['failed']} errors", style="yellow")
                 return 1
             else:
-                console.print("✅ All files converted successfully!", style="green")
+                console.print(" All files converted successfully!", style="green")
                 return 0
         else:
             # Process single file (existing logic)
@@ -749,13 +749,13 @@ def save_as(
                 )
             
             if storage == "hf":
-                console.print(f"✅ Converted to {format} format and saved as HF dataset to [bold]{output_path}[/bold]", style="green")
+                console.print(f" Converted to {format} format and saved as HF dataset to [bold]{output_path}[/bold]", style="green")
             else:
-                console.print(f"✅ Converted to {format} format and saved to [bold]{output_path}[/bold]", style="green")
+                console.print(f" Converted to {format} format and saved to [bold]{output_path}[/bold]", style="green")
             return 0
             
     except Exception as e:
-        console.print(f"❌ Error: {e}", style="red")
+        console.print(f" Error: {e}", style="red")
         return 1
 
 
@@ -787,5 +787,8 @@ def server(
     run_server(host=host, port=port, debug=debug)
 
 
-if __name__ == "__main__":
+def main():
     app()
+
+if __name__ == "__main__":
+    main()

@@ -13,13 +13,17 @@ from database_models import DocumentRecord, QuestionAnswerV2
 import yaml
 import synthetic_data_kit
 
+# Auto-detect if running in Docker
+IS_DOCKER = os.path.exists('/.dockerenv') or os.path.exists('/proc/self/cgroup') and 'docker' in open('/proc/self/cgroup').read()
+
 # Base paths
-DATA_DIRECTORY = os.getenv("DATA_DIRECTORY", "/app/data_directory")
+PROJECT_ROOT = Path(__file__).parent.parent
+DATA_DIRECTORY = os.getenv("DATA_DIRECTORY", "/app/data_directory" if IS_DOCKER else os.path.join(PROJECT_ROOT, "data_directory"))
 
 # DB Connection
 DB_USER = os.getenv("DB_USER", "user")
 DB_PASSWORD = os.getenv("DB_PASSWORD", "password")
-DB_HOST = os.getenv("DB_HOST", "db")
+DB_HOST = os.getenv("DB_HOST", "db" if IS_DOCKER else "localhost")
 DB_NAME = os.getenv("DB_NAME", "chatbot_db")
 DATABASE_URL = f"postgresql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}/{DB_NAME}"
 
@@ -105,24 +109,33 @@ def process_document_for_qa(file_path: str, output_dir: str) -> Dict[str, Any]:
     Process a document through synthetic-data-kit pipeline.
     """
     filename = get_filename_without_ext(file_path)
-    
-    # Define intermediate file paths
-    parsed_dir = os.path.join(output_dir, "parsed")
-    generated_dir = os.path.join(output_dir, "generated")
-    curated_dir = os.path.join(output_dir, "curated")
-    
+
+    # Use ABSOLUTE paths to avoid CWD-relative path issues
+    output_dir_abs = os.path.abspath(output_dir)
+    parsed_dir   = os.path.join(output_dir_abs, "parsed")
+    generated_dir = os.path.join(output_dir_abs, "generated")
+    curated_dir  = os.path.join(output_dir_abs, "curated")
+
     Path(parsed_dir).mkdir(parents=True, exist_ok=True)
     Path(generated_dir).mkdir(parents=True, exist_ok=True)
     Path(curated_dir).mkdir(parents=True, exist_ok=True)
 
-    # Note: 'ingest' produces .lance for extraction in this version
-    parsed_file = os.path.join(parsed_dir, f"{filename}.lance")
+    # Absolute paths for the intermediate files
+    parsed_file   = os.path.join(parsed_dir,   f"{filename}.lance")
     generated_file = os.path.join(generated_dir, f"{filename}_qa_pairs.json")
-    curated_file = os.path.join(curated_dir, f"{filename}_qa_pairs_cleaned.json")
-    
+    curated_file  = os.path.join(curated_dir,  f"{filename}_qa_pairs_cleaned.json")
+
+    # Normalize source file path (critical for Windows paths with spaces / mixed separators)
+    file_path = os.path.normpath(file_path)
+
+    # Pre-flight: verify source file exists before starting
+    if not os.path.exists(file_path):
+        print(f"[ERROR] Source file does not exist: {file_path}")
+        return {"status": "failed", "error": f"Source file not found: {file_path}"}
+
     # Load configuration from config.yaml
     config = load_sdk_config()
-    
+
     # Get the provider from config
     provider = config.get('llm', {}).get('provider')
     if not provider:
@@ -173,44 +186,51 @@ def process_document_for_qa(file_path: str, output_dir: str) -> Dict[str, Any]:
         print(f"[ERROR] Unsupported provider: {provider}")
         return {"status": "failed", "error": f"Unsupported provider: {provider}"}
 
-    
-    # Relative paths for command arguments (simpler log output)
-    parsed_file_rel = f"data/parsed/{filename}.lance"
-    generated_file_rel = f"data/generated/{filename}_qa_pairs.json"
-    curated_file_rel = f"data/curated/{filename}_qa_pairs_cleaned.json"
-    
-    # Ensure relative dirs exist in CWD (which is /app in Docker)
-    Path("data/parsed").mkdir(parents=True, exist_ok=True)
-    Path("data/generated").mkdir(parents=True, exist_ok=True)
-    Path("data/curated").mkdir(parents=True, exist_ok=True)
 
+    import sys
+
+    # Build steps with ABSOLUTE paths so output locations are predictable regardless of CWD.
+    # --output-dir tells each SDK command exactly where to write its files.
+    # Original Docker steps (kept for reference):
+    # steps = [
+    #     (["synthetic-data-kit", "ingest", file_path], "Ingesting document"),
+    #     (["synthetic-data-kit", "create", parsed_file_rel, "--type", "qa"], "Generating Q&A"),
+    #     (["synthetic-data-kit", "curate", generated_file_rel], "Curating Q&A"),
+    # ]
     steps = [
-        (["synthetic-data-kit", "ingest", file_path], "Ingesting document"),
-        (["synthetic-data-kit", "create", parsed_file_rel, "--type", "qa"], "Generating Q&A"),
-        (["synthetic-data-kit", "curate", generated_file_rel], "Curating Q&A"),
+        # ingest: --output-dir sets the directory; SDK names the file after the input basename
+        ([sys.executable, "-m", "synthetic_data_kit", "ingest", file_path, "--output-dir", parsed_dir], "Ingesting document"),
+        # create: --output-dir sets the directory; SDK names the file {base_name}_qa_pairs.json
+        ([sys.executable, "-m", "synthetic_data_kit", "create", parsed_file, "--type", "qa", "--output-dir", generated_dir], "Generating Q&A"),
+        # curate: uses --output (full path) not --output-dir; SDK names the file {base_name}_cleaned.json
+        ([sys.executable, "-m", "synthetic_data_kit", "curate", generated_file, "--output", curated_file], "Curating Q&A"),
     ]
-    
+
     for cmd, description in steps:
         print(f"[STEP] {description}...")
         if not run_command(cmd, env=env_vars):
             return {"status": "failed", "error": f"Failed at: {description}"}
-            
-    # Check output
-    if os.path.exists(curated_file_rel):
+
+        # After ingest, verify the lance file was actually produced before continuing
+        if description == "Ingesting document" and not os.path.exists(parsed_file):
+            print(f"[ERROR] Ingest step completed but lance file not found at: {parsed_file}")
+            return {"status": "failed", "error": "Ingest produced no output (lance file missing)"}
+
+    # Check final output
+    if os.path.exists(curated_file):
         try:
-            with open(curated_file_rel, "r", encoding="utf-8") as f:
+            with open(curated_file, "r", encoding="utf-8") as f:
                 qa_data = json.load(f)
-                
+
             return {
                 "status": "success",
                 "qa_pairs": qa_data.get("qa_pairs", []),
                 "count": len(qa_data.get("qa_pairs", []))
             }
         except Exception as e:
-             return {"status": "failed", "error": f"Failed to parse output: {e}"}
-        
-    return {"status": "failed", "error": "Output file not found"}
+            return {"status": "failed", "error": f"Failed to parse output: {e}"}
 
+    return {"status": "failed", "error": "Output file not found"}
 
 def generate_qa_for_datastore(datastore_id: int, datastore_name: str) -> Dict[str, Any]:
     """
@@ -245,18 +265,50 @@ def generate_qa_for_datastore(datastore_id: int, datastore_name: str) -> Dict[st
                      print(f"[INFO] Document {doc.id} ({doc.filename}) already has {len(existing_qa_count)} Q&A pairs. Skipping generation.")
                      continue
                 
-                # Verify file existence
-                if not os.path.exists(doc.filePath):
-                    # Try constructing path if absolute path is missing/wrong container
-                    # Assuming /app/data_directory/{datastore_name}/{filename}
-                    alt_path = os.path.join(DATA_DIRECTORY, datastore_name, doc.filename)
-                    if os.path.exists(alt_path):
-                        file_path = alt_path
-                    else:
-                        print(f"[WARN] File not found: {doc.filePath} or {alt_path}. Skipping.")
-                        continue
-                else:
-                    file_path = doc.filePath
+                # Resolve file path — handle Docker paths, local paths, and the local ingestion layout
+                raw_path = doc.filePath
+                file_path = None
+
+                # 1. Docker-style path mapping: /app/data_directory/... or \app\data_directory\...
+                # We check this FIRST because on Windows, \app\... might accidentally exist
+                # (pointing to root of drive) but we ALWAYS want to map it if it has this prefix.
+                if raw_path:
+                    norm = raw_path.replace('\\', '/')
+                    if norm.startswith('/app/data_directory'):
+                        rel_path = norm[len('/app/data_directory'):].lstrip('/')
+                        candidate = os.path.normpath(os.path.join(DATA_DIRECTORY, rel_path))
+                        if os.path.exists(candidate):
+                            file_path = candidate
+                            print(f"[INFO] Mapped Docker path {raw_path} -> {file_path}")
+
+                # 2. Try the path exactly as stored in DB (works for newly-uploaded local files)
+                if file_path is None and raw_path and os.path.exists(raw_path):
+                    file_path = raw_path
+
+                # 3. Fallback: reconstruct from local ingestion_root layout
+                #    ingestion_root = DATA_DIRECTORY/../  (i.e. parent of data_directory)
+                #    files saved to: ingestion_root/data_directory/{datastore_name}/{filename}
+                if file_path is None:
+                    ingestion_root = os.path.dirname(DATA_DIRECTORY)
+                    candidate = os.path.normpath(os.path.join(ingestion_root, "data_directory", datastore_name, doc.filename))
+                    if os.path.exists(candidate):
+                        file_path = candidate
+                        print(f"[INFO] Located file via ingestion layout: {file_path}")
+
+                if file_path is None:
+                    print(f"[WARN] File not found for document {doc.id} ({doc.filename}). Tried: {raw_path}")
+                    errors.append(f"{doc.filename}: file not found on disk")
+                    continue
+
+                file_path = os.path.normpath(file_path)
+                
+                # Permanently update the database record with the resolved local path
+                # if it differs from the current stored path (e.g. Docker paths)
+                if doc.filePath != file_path:
+                    print(f"[INFO] Updating database record for {doc.filename} with local path: {file_path}")
+                    doc.filePath = file_path
+                    session.add(doc)
+                    # We commit at the end of the loop, but adding to session here is enough
                 
                 print(f"[INFO] Processing file: {file_path}")
                 

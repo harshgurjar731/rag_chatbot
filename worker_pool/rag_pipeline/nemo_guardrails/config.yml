@@ -33,7 +33,7 @@ models:
     model: meta-llama/llama-prompt-guard-2-86m
     parameters:
       base_url: "https://api.groq.com/openai/v1"
-      api_key: "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"
+      api_key: ${GROQ_API_KEY}
     
   # # ADD THIS for jailbreak detection
   # - type: llm

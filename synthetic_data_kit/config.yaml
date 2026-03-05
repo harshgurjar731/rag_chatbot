@@ -1,6 +1,6 @@
 api-endpoint:
   api_base: https://api.groq.com/openai/v1
-  api_key: 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
+  api_key: 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
   max_retries: 3
   model: openai/gpt-oss-20b
   retry_delay: 1.0

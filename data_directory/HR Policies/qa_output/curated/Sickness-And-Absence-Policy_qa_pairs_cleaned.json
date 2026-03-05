@@ -1,0 +1,32 @@
+{
+  "summary": "The document is a comprehensive Sickness and Absence Policy that outlines how the company manages employee sickness, ensures timely notification, and handles certification requirements. Employees must inform their manager personally before their scheduled start time, provide reasons and expected return dates, and submit self\u2011certification forms for short absences or medical certificates for longer ones. The policy defines long\u2011term and persistent absences, detailing procedures for regular contact, medical assessments, potential job adjustments, and the possibility of treating the situation as a capability or conduct issue. It also covers sickness occurring during pre\u2011booked holidays, allowing replacement leave subject to proper notification and certification. Throughout, the policy emphasizes lawful handling of sensitive health data, confidentiality, and that dismissal is a last resort.",
+  "qa_pairs": [
+    {
+      "question": "What is the purpose of the Sickness and Absence Policy?",
+      "answer": "This policy is designed to assist the Company in effectively managing sickness-related and other staff absence.",
+      "rating": 10
+    }
+  ],
+  "conversations": [
+    [
+      {
+        "role": "system",
+        "content": "You are a helpful AI assistant that provides accurate, detailed responses."
+      },
+      {
+        "role": "user",
+        "content": "What is the purpose of the Sickness and Absence Policy?"
+      },
+      {
+        "role": "assistant",
+        "content": "This policy is designed to assist the Company in effectively managing sickness-related and other staff absence."
+      }
+    ]
+  ],
+  "metrics": {
+    "total": 1,
+    "filtered": 1,
+    "retention_rate": 1.0,
+    "avg_score": 10.0
+  }
+}

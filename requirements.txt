@@ -1,97 +1,403 @@
 # ============================================================================
-# Consolidated Requirements for RAG Chatbot
+# Complete Requirements for RAG Chatbot (generated from venv via pip freeze)
 # Includes dependencies for: Backend, Ingestion Pool, Worker Pool, Evaluation Pool
+# Generated on: 2026-03-05
 # ============================================================================
 
-# --- PyTorch (CPU version for worker_pool) ---
+# --- PyTorch (CPU version) ---
 --extra-index-url https://download.pytorch.org/whl/cpu
-torch
+torch==2.10.0+cpu
+torchaudio==2.10.0+cpu
+torchvision==0.25.0+cpu
 
 # --- Core Framework & Web Server ---
-fastapi>=0.115.0,<0.116.0
-uvicorn>=0.32.0,<0.33.0
-python-multipart>=0.0.20,<0.1.0
-pydantic>=2.0.0,<3.0.0
-pydantic-settings>=2.0.0,<3.0.0
-sqlmodel
-python-dotenv
-aiofiles
-requests
-redis
-psycopg2-binary
-tqdm
+fastapi==0.129.0
+uvicorn==0.41.0
+starlette==0.52.1
+python-multipart==0.0.22
+pydantic==2.12.5
+pydantic-settings==2.13.0
+pydantic_core==2.41.5
+sqlmodel==0.0.34
+SQLAlchemy==2.0.46
+python-dotenv==1.2.1
+aiofiles==25.1.0
+requests==2.32.5
+redis==7.2.0
+psycopg2-binary==2.9.11
+tqdm==4.67.3
+click==8.3.1
+h11==0.16.0
+httptools==0.7.1
+watchfiles==1.1.1
+websockets==16.0
+anyio==4.12.1
+sniffio==1.3.1
+orjson==3.11.7
 
 # --- Authentication & Security ---
-passlib[bcrypt]
-bcrypt
-python-jose[cryptography]
+passlib==1.7.4
+bcrypt==5.0.0
+python-jose==3.5.0
+cryptography==46.0.5
+PyJWT==2.11.0
+Authlib==1.6.8
+oauthlib==3.3.1
+requests-oauthlib==2.0.0
 
 # --- Data Processing & Analysis ---
-numpy<2
-pandas
-scikit-learn
-datasets
+numpy==1.26.4
+pandas==2.3.3
+scikit-learn==1.8.0
+scipy==1.17.0
+datasets==4.5.0
+pyarrow==23.0.1
+openpyxl==3.1.5
+xlsxwriter==3.2.9
+tabulate==0.9.0
 
 # --- ML & AI Models ---
-huggingface-hub>=0.23.0,<1.0
-transformers>=4.39.3,<5.0.0
+huggingface_hub==0.36.2
+hf-xet==1.3.0
+transformers==4.46.3
 sentence-transformers==2.7.0
-onnxruntime
+tokenizers==0.20.3
+safetensors==0.7.0
+onnxruntime==1.24.2
+sympy==1.14.0
+mpmath==1.3.0
 
 # --- LLM Providers ---
-openai
-mistralai
-groq
-nvidia-riva-client
+openai==1.109.1
+mistralai==1.12.2
+groq==1.0.0
+nvidia-riva-client==2.24.0
+litellm==1.80.0
+tiktoken==0.12.0
 
 # --- LangChain Ecosystem ---
-langchain>=0.3.0,<0.4.0
-langchain-core>=0.3.0,<0.4.0
-langchain-community>=0.3.0,<0.4.0
-langchain-text-splitters>=0.3.0,<0.4.0
-langchain-openai>=0.2.0,<0.3.0
-langchain-experimental>=0.3.0,<0.4.0
-langchain-huggingface>=0.1.0,<0.2.0
-langchain-chroma>=0.1.0,<0.2.0
-langchain-qdrant>=0.2.0,<0.3.0
-langchain-nvidia-ai-endpoints>=0.3.0,<0.4.0
+langchain==0.3.27
+langchain-core==0.3.83
+langchain-community==0.3.31
+langchain-text-splitters==0.3.11
+langchain-openai==0.2.14
+langchain-experimental==0.3.4
+langchain-huggingface==0.1.2
+langchain-chroma==0.1.4
+langchain-qdrant==0.2.1
+langchain-nvidia-ai-endpoints==0.3.19
+langsmith==0.7.6
+langdetect==1.0.9
+
+# --- LlamaIndex ---
+llama-index-core==0.14.15
+llama-index-instrumentation==0.4.2
+llama-index-workflows==2.14.2
+llama-cloud==0.1.46
+llama-cloud-services==0.6.94
+llama-parse==0.6.94
 
 # --- Vector Stores ---
-chromadb>=0.5.0,<0.6.0
-qdrant-client>=1.12.0,<2.0.0
-faiss-cpu>=1.9.0,<2.0.0
+chromadb==0.5.23
+chroma-hnswlib==0.7.6
+qdrant-client==1.16.2
+faiss-cpu==1.13.2
+pylance==2.0.1
+lance-namespace==0.5.2
+lance-namespace-urllib3-client==0.5.2
+duckdb==1.4.4
 
 # --- Guardrails ---
-nemoguardrails
-guardrails-ai
+nemoguardrails==0.20.0
+guardrails-ai==0.6.8
+guardrails-api-client==0.4.0
+guardrails_hub_types==0.0.4
+lark==1.3.1
 
-# --- Observability & Tracing (Phoenix) ---
-opentelemetry-api
-opentelemetry-sdk
-opentelemetry-exporter-otlp
-arize-phoenix-otel
-arize-phoenix
-openinference-instrumentation-langchain
-openinference-instrumentation-openai
+# --- Observability & Tracing (Phoenix / OpenTelemetry) ---
+opentelemetry-api==1.39.1
+opentelemetry-sdk==1.39.1
+opentelemetry-exporter-otlp==1.39.1
+opentelemetry-exporter-otlp-proto-common==1.39.1
+opentelemetry-exporter-otlp-proto-grpc==1.39.1
+opentelemetry-exporter-otlp-proto-http==1.39.1
+opentelemetry-instrumentation==0.60b1
+opentelemetry-instrumentation-asgi==0.60b1
+opentelemetry-instrumentation-fastapi==0.60b1
+opentelemetry-proto==1.39.1
+opentelemetry-semantic-conventions==0.60b1
+opentelemetry-util-http==0.60b1
+arize-phoenix==13.0.3
+arize-phoenix-client==1.29.0
+arize-phoenix-otel==0.14.0
+openinference-instrumentation==0.1.44
+openinference-instrumentation-langchain==0.1.59
+openinference-instrumentation-openai==0.1.41
+openinference-semantic-conventions==0.1.26
 
 # --- Evaluation Frameworks ---
-ragas>=0.2.0,<0.3.0
-arize-phoenix-evals>=0.18.0,<0.19.0
+ragas==0.2.15
+arize-phoenix-evals==0.18.1
 
 # --- PDF & Document Processing ---
-pypdf
-PyMuPDF
-pdf2image
-pytesseract
-camelot-py
+pypdf==6.7.2
+PyMuPDF==1.25.3
+pdf2image==1.17.0
+pdfminer.six==20260107
+pytesseract==0.3.13
+camelot-py==1.0.9
+python-docx==1.2.0
+python-pptx==1.0.2
+docx2txt==0.9
+pypdfium2==5.4.0
+unstructured==0.21.2
+unstructured-client==0.42.10
 
-# --- Image Processing ---
-Pillow
-opencv-python-headless
+# --- Image & Media Processing ---
+pillow==11.3.0
+opencv-python-headless==4.13.0.92
+imageio-ffmpeg==0.6.0
+tinytag==2.2.0
 
 # --- Web Scraping & Parsing ---
-beautifulsoup4
+beautifulsoup4==4.14.3
+soupsieve==2.8.3
+html5lib==1.1
+webencodings==0.5.1
+lxml==6.0.2
+
+# --- Azure ---
+azure-ai-documentintelligence==1.0.2
+azure-core==1.38.1
+
+# --- NLP & Text Processing ---
+spacy==3.8.11
+spacy-legacy==3.0.12
+spacy-loggers==1.0.5
+nltk==3.9.3
+thinc==8.3.10
+blis==1.3.3
+cymem==2.0.13
+preshed==3.0.12
+murmurhash==1.0.15
+srsly==2.5.2
+wasabi==1.1.3
+catalogue==2.0.10
+confection==0.1.5
+weasel==0.4.3
+cloudpathlib==0.23.0
+smart_open==7.5.1
+
+# --- Async & Networking ---
+aiohttp==3.13.3
+aiohappyeyeballs==2.6.1
+aiosignal==1.4.0
+aiosqlite==0.22.1
+aioitertools==0.13.0
+httpx==0.28.1
+httpcore==1.0.9
+httpx-sse==0.4.3
+httplib2==0.31.2
+h2==4.3.0
+hpack==4.1.0
+hyperframe==6.1.0
+urllib3==2.6.3
+websocket-client==1.9.0
+multidict==6.7.1
+yarl==1.22.0
+frozenlist==1.8.0
+propcache==0.4.1
+
+# --- gRPC & Protobuf ---
+grpcio==1.78.1
+grpcio-tools==1.67.1
+grpc-interceptor==0.15.4
+protobuf==6.33.5
+googleapis-common-protos==1.72.0
+
+# --- GraphQL ---
+strawberry-graphql==0.287.3
+graphql-core==3.2.7
+
+# --- Flask (for synthetic_data_kit) ---
+Flask==3.1.3
+flask-cors==6.0.2
+Flask-WTF==1.2.2
+WTForms==3.2.1
+Werkzeug==3.1.6
+itsdangerous==2.2.0
+
+# --- JSON & Schema ---
+jsonschema==4.26.0
+jsonschema-specifications==2025.9.1
+jsonpatch==1.33
+jsonpointer==3.0.0
+jsonpath-ng==1.7.0
+jsonref==1.1.0
+dataclasses-json==0.6.7
+simplejson==3.20.2
+dirtyjson==1.0.8
+jiter==0.13.0
+
+# --- Template & Markup ---
+Jinja2==3.1.6
+MarkupSafe==3.0.3
+pystache==0.6.8
+Pygments==2.19.2
+markdown-it-py==4.0.0
+mdurl==0.1.2
+docutils==0.22.4
+
+# --- Kubernetes & Infrastructure ---
+kubernetes==35.0.0
+durationpy==0.10
 
 # --- Utilities ---
-deep-translator
-psutil
+deep-translator==1.11.4
+psutil==7.2.2
+colorama==0.4.6
+rich==14.3.3
+regex==2026.1.15
+six==1.17.0
+python-dateutil==2.9.0.post0
+pytz==2025.2
+tzdata==2025.3
+packaging==25.0
+filelock==3.24.3
+platformdirs==4.9.2
+certifi==2026.1.4
+charset-normalizer==3.4.4
+idna==3.11
+attrs==25.4.0
+typing_extensions==4.15.0
+typing-inspect==0.9.0
+typing-inspection==0.4.2
+annotated-types==0.7.0
+eval_type_backport==0.3.1
+pydash==8.0.6
+wrapt==1.17.3
+Deprecated==1.3.1
+tenacity==9.1.4
+backoff==2.2.1
+nest-asyncio==1.6.0
+overrides==7.7.0
+portalocker==3.2.0
+shellingham==1.5.4
+rpds-py==0.30.0
+referencing==0.37.0
+arrow==1.4.0
+cffi==2.0.0
+pycparser==3.0
+pyasn1==0.6.2
+rsa==4.9.1
+ecdsa==0.19.1
+appdirs==1.4.4
+
+# --- Misc / Project-specific ---
+acres==0.5.0
+annotated-doc==0.0.4
+annoy==1.17.3
+asgiref==3.11.1
+banks==2.4.1
+build==1.4.0
+cachetools==7.0.1
+chardet==5.2.0
+ci-info==0.4.0
+configobj==5.0.9
+configparser==7.2.0
+cross-web==0.4.1
+diff-match-patch==20241021
+dill==0.4.0
+diskcache==5.6.3
+distro==1.9.0
+dnspython==2.8.0
+email-validator==2.3.0
+emoji==2.15.0
+et_xmlfile==2.0.0
+etelemetry==0.3.1
+Faker==37.12.0
+fastembed==0.7.4
+fastuuid==0.14.0
+filetype==1.2.0
+fqdn==1.5.1
+frontend==0.0.3
+fsspec==2026.2.0
+greenlet==3.3.1
+griffe==2.0.0
+griffecli==2.0.0
+griffelib==2.0.0
+importlib_metadata==8.7.1
+importlib_resources==6.5.2
+installer==0.7.0
+invoke==2.2.1
+isodate==0.7.2
+isoduration==20.11.0
+jmespath==1.1.0
+joblib==1.5.3
+lazy_imports==1.2.0
+ldap3==2.9.1
+lia-web==0.3.1
+llvmlite==0.46.0
+loguru==0.7.3
+looseversion==1.3.0
+Mako==1.3.10
+marshmallow==3.26.2
+mmh3==5.2.0
+multiprocess==0.70.18
+mypy_extensions==1.1.0
+networkx==3.6.1
+nibabel==5.3.3
+nipype==1.10.0
+numba==0.64.0
+olefile==0.47
+pathlib==1.0.1
+ply==3.11
+posthog==5.4.0
+prometheus_client==0.24.1
+prompt_toolkit==3.0.52
+prov==2.1.1
+puremagic==2.0.0
+py_rust_stemmers==0.1.5
+pybase64==1.4.3
+pydot==4.0.1
+pyparsing==3.3.2
+PyPika==0.51.1
+pyproject_hooks==1.2.0
+python-iso639==2026.1.31
+python-magic==0.4.27
+python-oxmsg==0.0.2
+pywin32==311
+pyxnat==1.6.4
+PyYAML==6.0.3
+RapidFuzz==3.14.3
+rdflib==7.6.0
+requests-toolbelt==1.0.0
+rfc3339-validator==0.1.4
+rfc3986-validator==0.1.1
+rfc3987-syntax==1.1.0
+rstr==3.2.2
+semver==3.0.4
+setuptools==78.1.1
+simpleeval==1.0.3
+sqlean.py==3.49.1
+tika-client==0.10.0
+traits==7.1.0
+typer==0.24.1
+typer-slim==0.24.0
+uri-template==1.3.0
+uuid_utils==0.14.1
+validators==0.35.0
+watchdog==6.0.0
+wcwidth==0.6.0
+webcolors==25.10.0
+win32_setctime==1.2.0
+xxhash==3.6.0
+zipp==3.23.0
+zstandard==0.25.0
+flatbuffers==25.12.19
+alembic==1.18.4
+blinker==1.9.0
+
+# --- Editable / Dev installs ---
+# synthetic_data_kit (installed in editable mode from git)
+# -e git+https://github.com/harshgurjar731/rag_chatbot.git@c9f7779bf918bd3837508e52d282f97908128198#egg=synthetic_data_kit&subdirectory=synthetic_data_kit

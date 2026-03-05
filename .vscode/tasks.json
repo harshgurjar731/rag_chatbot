@@ -1,0 +1,83 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "Start Infrastructure",
+            "type": "shell",
+            "command": ".\\start-infrastructure.ps1",
+            "group": "none",
+            "presentation": {
+                "reveal": "always",
+                "panel": "dedicated"
+            }
+        },
+        {
+            "label": "Run Backend",
+            "type": "shell",
+            "command": ".\\run-backend.ps1",
+            "group": "none",
+            "presentation": {
+                "reveal": "always",
+                "panel": "dedicated"
+            }
+        },
+        {
+            "label": "Run Worker Pool",
+            "type": "shell",
+            "command": ".\\run-worker-pool.ps1",
+            "group": "none",
+            "presentation": {
+                "reveal": "always",
+                "panel": "dedicated"
+            }
+        },
+        {
+            "label": "Run Ingestion Pool",
+            "type": "shell",
+            "command": ".\\run-ingestion-pool.ps1",
+            "group": "none",
+            "presentation": {
+                "reveal": "always",
+                "panel": "dedicated"
+            }
+        },
+        {
+            "label": "Run Evaluation Pool",
+            "type": "shell",
+            "command": ".\\run-evaluation-pool.ps1",
+            "group": "none",
+            "presentation": {
+                "reveal": "always",
+                "panel": "dedicated"
+            }
+        },
+        {
+            "label": "Run Frontend",
+            "type": "shell",
+            "command": "cd Frontend/docu-chatter-main; npm run dev",
+            "group": "none",
+            "presentation": {
+                "reveal": "always",
+                "panel": "dedicated"
+            }
+        },
+        {
+            "label": "Run All Services",
+            "dependsOn": [
+                "Run Backend",
+                "Run Worker Pool",
+                "Run Ingestion Pool",
+                "Run Evaluation Pool",
+                "Run Frontend"
+            ],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "presentation": {
+                "reveal": "always",
+                "panel": "dedicated"
+            }
+        }
+    ]
+}

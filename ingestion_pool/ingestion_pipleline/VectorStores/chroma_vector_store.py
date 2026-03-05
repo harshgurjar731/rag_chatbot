@@ -5,8 +5,10 @@ from chromadb.config import Settings
 from langchain_core.documents import Document
 from langchain_community.embeddings import HuggingFaceEmbeddings, OpenAIEmbeddings
 import os
+from pathlib import Path
+from ingestion_pipleline.Config.Config import INGESTION_CONFIG
 
-CHROMA_PERSIST_DIRECTORY = "./chroma_db"
+CHROMA_PERSIST_DIRECTORY = str(INGESTION_CONFIG.get("ingestion_root", Path(".")) / "chroma_db")
 
 class ChromaVectorDB(VectorStoreProtocol):
     def __init__(self, persist_directory: str = CHROMA_PERSIST_DIRECTORY):
@@ -36,11 +38,11 @@ class ChromaVectorDB(VectorStoreProtocol):
             print(f"Error deleting collection '{name}': {e}")
             return False
 
-    def insert_vectors(self, collection: str, vectors: List[List[float]], metadata: List[Dict[str, Any]], ids: List[str] = None) -> List[str]:
+    def insert_vectors(self, collection: str, vectors: List[List[float]], metadata: List[Dict[str, Any]], chunk_ids: List[str] = None) -> List[str]:
         chroma_coll = self.client.get_collection(name=collection)
-        if ids is None:
+        if chunk_ids is None:
             import uuid
-            ids = [str(uuid.uuid4()) for _ in range(len(vectors))]
+            chunk_ids = [str(uuid.uuid4()) for _ in range(len(vectors))]
         
         # Chroma expects metadata to be flat (Dict[str, str | int | float | bool])
         # We might need to flatten or JSON stringify nested metadata if necessary.
@@ -57,9 +59,9 @@ class ChromaVectorDB(VectorStoreProtocol):
         chroma_coll.add(
             embeddings=vectors,
             metadatas=processed_metadata,
-            ids=ids
+            ids=chunk_ids
         )
-        return ids
+        return chunk_ids
 
     def query(self, collection: str, vector: List[float], top_k: int = 5, filters: Dict[str, Any] = None) -> List[Dict]:
         chroma_coll = self.client.get_collection(name=collection)

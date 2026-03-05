@@ -1,0 +1,27 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "synthetic-data-kit"
+version = "0.1.0"
+description = "Synthetic Data Generation Toolkit"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "pydantic",
+    "pyyaml",
+    "wtforms",
+    "flask-wtf",
+    "validators",
+    "rich",
+    "pillow",
+    "typer",
+]
+
+[project.scripts]
+synthetic-data-kit = "synthetic_data_kit.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["synthetic_data_kit*"]

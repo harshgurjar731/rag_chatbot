@@ -1,0 +1,7 @@
+pydantic
+pyyaml
+click
+openai
+langchain
+pandas
+numpy

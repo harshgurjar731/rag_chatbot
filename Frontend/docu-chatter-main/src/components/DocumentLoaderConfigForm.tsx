@@ -34,7 +34,7 @@ export const DocumentLoaderConfigForm = ({
 }: DocumentLoaderConfigFormProps) => {
   const { toast } = useToast();
   const [selectedFiles, setSelectedFiles] = useState<File[] | null>([]);
-  const [selectedFileName, setSelectedFileName] = useState<string|null>(null);
+  const [selectedFileName, setSelectedFileName] = useState<string | null>(null);
   const [metadata, setMetadata] = useState("{}");
   const [omitKeys, setOmitKeys] = useState("key1, key2, key3.nestedKey1");
   const [selectedSplitter, setSelectedSplitter] = useState<string>("");
@@ -70,7 +70,7 @@ export const DocumentLoaderConfigForm = ({
       }
     }
   };
- 
+
   async function loadFolderStructure(datastore_id: number, folderId = null) {
 
     const url = new URL(
@@ -101,9 +101,9 @@ export const DocumentLoaderConfigForm = ({
       setSelectedFileName(selectedDocument.filename)
       setSelectedSplitter(selectedDocument.textSplitMethod)
       const config = {
-      chunkSize: selectedDocument.chunkSize,
-      chunkOverlap: selectedDocument.chunkOverlap,
-      customSeparators: "",
+        chunkSize: selectedDocument.chunkSize,
+        chunkOverlap: selectedDocument.chunkOverlap,
+        customSeparators: "",
       }
       setSplitterConfig(config)
     }
@@ -125,31 +125,31 @@ export const DocumentLoaderConfigForm = ({
     }
   }, [open])
 
-  const handleExistingFilePreviewChunks = async() => {
+  const handleExistingFilePreviewChunks = async () => {
     const requestData = {
-      datastoreId:selectedDocument.datastore_id,
+      datastoreId: selectedDocument.datastore_id,
       id: Number(selectedDocument.id)
     }
     const chunksResponse = await axios.post(`${API_BASE_URL}/ingestion/document/getChunks?previewLimit=${showCount}`, requestData);
-    setChunks(chunksResponse.data.chunks)
+    setChunks(chunksResponse.data.chunks || [])
   }
 
-  const handleNewFilePreviewChunks = async() => {
+  const handleNewFilePreviewChunks = async () => {
     const formData = new FormData();
     formData.append("file", selectedFiles?.[0]);
-    formData.append("documentDetails", JSON.stringify({ 
-        filename: selectedFiles?.[0].name || "",
-        loaderType: loaderType,
-        textSplitMethod: selectedSplitter || "",
-        chunkSize: splitterConfig?.chunkSize || 0,
-        chunkOverlap: splitterConfig?.chunkOverlap || 0,
-        folder_id: currentFolder,
+    formData.append("documentDetails", JSON.stringify({
+      filename: selectedFiles?.[0].name || "",
+      loaderType: loaderType,
+      textSplitMethod: selectedSplitter || "",
+      chunkSize: splitterConfig?.chunkSize || 0,
+      chunkOverlap: splitterConfig?.chunkOverlap || 0,
+      folder_id: currentFolder,
     }));
     const chunksResponse = await axios.post(`${API_BASE_URL}/ingestion/document/previewChunks?previewLimit=${showCount}`, formData, {
       headers: { "Content-Type": "multipart/form-data" }
     });
     console.log("Final Resp:", chunksResponse.data)
-    setChunks(chunksResponse.data.chunks)
+    setChunks(chunksResponse.data.chunks || [])
   };
 
   const handleProcess = async () => {
@@ -164,7 +164,7 @@ export const DocumentLoaderConfigForm = ({
       formData.append("files", file);
 
       // FastAPI expects documentDetails[i] to be a JSON string
-      formData.append("documentDetails", JSON.stringify({ 
+      formData.append("documentDetails", JSON.stringify({
         filename: file.name || "",
         loaderType: loaderType,
         textSplitMethod: selectedSplitter || "",
@@ -243,7 +243,7 @@ export const DocumentLoaderConfigForm = ({
                           ))}
                         </ul>
                       )}
-                       {/* <div>
+                      {/* <div>
                         <p className="text-sm text-muted-foreground"> Selected Folder: </p>
                         <FolderBreadcrumbs
                           breadcrumbs={breadcrumbs}
@@ -373,7 +373,7 @@ export const DocumentLoaderConfigForm = ({
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
                   <h3 className="text-lg font-semibold">
-                    {chunks.length > 0
+                    {chunks?.length > 0
                       ? `${chunks.length} of ${chunks.length} Chunks`
                       : "Preview"}
                   </h3>
@@ -394,7 +394,7 @@ export const DocumentLoaderConfigForm = ({
                   </div>
                 </div>
 
-                {chunks.length === 0 ? (
+                {!chunks || chunks.length === 0 ? (
                   <div className="border-2 border-dashed rounded-lg p-12 text-center">
                     <Eye className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
                     <Button
@@ -456,7 +456,7 @@ export const DocumentLoaderConfigForm = ({
                 selectedFiles.length == 0 ||
                 (loaderType == "pdf" &&
                   !selectedSplitter &&
-                  chunks.length === 0)
+                  (!chunks || chunks.length === 0))
               }
             >
               <Database className="h-4 w-4 mr-2" />

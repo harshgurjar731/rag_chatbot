@@ -1,19 +1,9 @@
 from ingestion_pipleline.Loaders.loader_protocol import LoaderProtocol
-from langchain_community.document_loaders import UnstructuredImageLoader
 from pathlib import Path
 from typing import List
-from PIL import Image
 from langchain_core.documents import Document
-import json
-import os
-# import PyMuPDF  # PyMuPDF
 import pymupdf
-import pytesseract
-# pytesseract.pytesseract.tesseract_cmd = r'C:\Program Files\Tesseract-OCR\tesseract.exe'  # Commented out for Linux/Docker
-# In Docker, tesseract is in PATH (installed via apt/conda)
 import camelot
-import csv
-import io
 
 class PDFLoader(LoaderProtocol):
     def load(self, path: str) -> List[Document]:
@@ -68,23 +58,7 @@ class PDFLoader(LoaderProtocol):
                 #         print(f"⚠️ Embedded image error (page {page_num+1}): {e}")
                 #         stats["errors"] += 1
                 
-                
-                
-                # image_list = page.get_images(full=True)
-                # for img_index, img_info in enumerate(image_list):
-                #     xref = img_info[0]
-                #     base_image = pdf_document.extract_image(xref)
-                #     image_bytes = base_image["image"]
-                    
-                #     try:
-                #         ocr_text = pytesseract.image_to_string(Image.open(io.BytesIO(image_bytes)), lang='eng')
-                #         if ocr_text.strip():
-                #             document_list.append(Document(
-                #                 page_content=ocr_text,
-                #                 metadata={**file_metadata, "page_number": page_num + 1, "content_type": "ocr_image", "image_index": img_index + 1}
-                #             ))
-                #     except Exception as e:
-                #         print(f"Warning: Failed to OCR image on page {page_num + 1}: {e}")
+
         except Exception as e:
             raise RuntimeError(f"Failed to load PDF file {file_path}: {e}")
         

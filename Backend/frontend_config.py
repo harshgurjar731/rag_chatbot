@@ -103,10 +103,7 @@ def get_reranker_options() -> List[str]:
 
 def get_guardrail_options() -> List[Dict[str, str]]:
     return [
-        {"value": "none", "label": "None - No filtering"},
-        {"value": "basic", "label": "Basic - Mild safety filtering"},
-        {"value": "strict", "label": "Strict - High safety filtering"},
-        {"value": "custom", "label": "Custom - Use project-defined rules"},
+        {"value": "none", "label": "Default (NeMo Safe)"}
     ]
 
 def get_default_temperature() -> float:

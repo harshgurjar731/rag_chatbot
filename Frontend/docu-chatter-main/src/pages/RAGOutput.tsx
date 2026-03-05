@@ -14,6 +14,8 @@ import {
   Layers,
   Target,
   FileJson,
+  ChevronDown,
+  ChevronUp,
 } from "lucide-react";
 import {
   Dialog,
@@ -22,6 +24,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import { Badge } from "@/components/ui/badge";
 import {
   Table,
   TableBody,
@@ -33,8 +36,114 @@ import {
 
 // ... existing imports ...
 
+// New Component: Expandable Record Card
+const ExpandableRecord = ({ record, metrics, index }: { record: any, metrics: string[], index: number }) => {
+  const [expanded, setExpanded] = useState(false);
+
+  const getLabelStyle = (label: string) => {
+    const l = String(label).toLowerCase();
+    if (["factual", "relevant", "correct", "non-toxic"].includes(l))
+      return "bg-success/10 text-success border-success/20";
+    if (["hallucinated", "irrelevant", "incorrect", "toxic"].includes(l))
+      return "bg-destructive/10 text-destructive border-destructive/20";
+    return "bg-secondary/10 text-secondary border-secondary/20";
+  };
+
+  return (
+    <Card className="mb-4 bg-black/40 border-white/10 hover:border-white/20 transition-all overflow-hidden rounded-xl shadow-lg">
+      <div
+        className="p-5 cursor-pointer flex flex-col lg:flex-row gap-4 items-start justify-between bg-white/5 hover:bg-white/10 transition-colors"
+        onClick={() => setExpanded(!expanded)}
+      >
+        <div className="flex-1 space-y-4 w-full">
+          <div className="flex items-start gap-3">
+            <span className="bg-primary/20 text-primary px-2 py-0.5 rounded text-[11px] font-bold shrink-0 mt-0.5 uppercase tracking-wide">Q{index + 1}</span>
+            <h4 className="font-semibold text-foreground text-sm leading-relaxed">{record.question}</h4>
+          </div>
+          <div className="flex items-start gap-3">
+            <span className="bg-secondary/20 text-secondary px-2 py-0.5 rounded text-[11px] font-bold shrink-0 mt-0.5 uppercase tracking-wide">Ans</span>
+            <p className="text-muted-foreground text-sm line-clamp-2 leading-relaxed">{record.response}</p>
+          </div>
+        </div>
+
+        <div className="flex flex-col lg:items-end gap-4 shrink-0 lg:max-w-[300px] w-full lg:w-auto mt-2 lg:mt-0">
+          <div className="flex flex-wrap gap-2 lg:justify-end">
+            {metrics.map(m => {
+              const info = record.metrics[m];
+              return (
+                <span key={m} className={`px-2 py-1 rounded-md text-[10px] uppercase font-bold tracking-wider border ${getLabelStyle(info.label)}`}>
+                  {m.substring(0, 4)}: {info.label} {info.score !== null ? `(${typeof info.score === 'number' ? info.score.toFixed(2) : info.score})` : ''}
+                </span>
+              );
+            })}
+          </div>
+          <div className="flex items-center text-xs text-muted-foreground font-medium gap-1 bg-black/20 px-3 py-1.5 rounded-full hover:text-white transition-colors">
+            {expanded ? "Hide Details" : "View Details"}
+            {expanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+          </div>
+        </div>
+      </div>
+
+      {expanded && (
+        <CardContent className="pt-5 pb-6 px-6 border-t border-white/10 bg-black/20 space-y-6">
+          {/* Full Answer */}
+          <div>
+            <h5 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2 flex items-center gap-2">
+              <Target className="w-4 h-4 text-secondary" /> Full Response
+            </h5>
+            <div className="bg-black/40 rounded-lg p-4 border border-white/5 text-sm text-foreground/90 leading-relaxed whitespace-pre-wrap">
+              {record.response}
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+            <div>
+              <h5 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2 flex items-center gap-2">
+                <Layers className="w-4 h-4 text-primary" /> Retrieved Contexts
+              </h5>
+              <div className="bg-black/40 rounded-lg p-4 border border-white/5 text-xs text-muted-foreground/80 leading-relaxed whitespace-pre-wrap max-h-[250px] overflow-y-auto custom-scrollbar">
+                {Array.isArray(record.contexts) ? record.contexts.join('\n\n---\n\n') : record.contexts}
+              </div>
+            </div>
+
+            <div>
+              <h5 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2 flex items-center gap-2">
+                <CheckCircle2 className="w-4 h-4 text-success" /> Ground Truth
+              </h5>
+              <div className="bg-black/40 rounded-lg p-4 border border-white/5 text-xs text-foreground/90 leading-relaxed whitespace-pre-wrap max-h-[250px] overflow-y-auto custom-scrollbar">
+                {record.ground_truth}
+              </div>
+            </div>
+          </div>
+
+          {/* Metrics Explanations */}
+          {metrics.some(m => record.metrics[m]?.explanation) && (
+            <div className="pt-2 border-t border-white/5">
+              <h5 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-4 mt-4">Metric Explanations</h5>
+              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
+                {metrics.map(m => {
+                  const info = record.metrics[m];
+                  if (!info.explanation) return null;
+                  return (
+                    <div key={m} className="bg-black/40 rounded-lg p-4 border border-white/5 shadow-sm">
+                      <h6 className="text-[10px] font-bold text-primary uppercase tracking-wider mb-2 flex items-center gap-1.5">
+                        <AlertCircle className="w-3.5 h-3.5" /> {m}
+                      </h6>
+                      <p className="text-xs text-muted-foreground leading-relaxed">{info.explanation}</p>
+                    </div>
+                  )
+                })}
+              </div>
+            </div>
+          )}
+        </CardContent>
+      )}
+    </Card>
+  )
+}
+
 // New Component: Detailed Records Modal
-const RecordsTableModal = ({
+const RecordsModal = ({
   apiResponse,
   chatbotName,
 }: {
@@ -47,24 +156,29 @@ const RecordsTableModal = ({
   if (metrics.length === 0) return null;
 
   // Aggregate Data
-  // Assumption: All metrics return results in the same order (aligned by row index)
-  // We'll take the first metric's results as the base for questions/responses
   const baseMetric = metrics[0];
   const baseResults = apiResponse.results[baseMetric]?.results || [];
 
   const aggregatedRecords = baseResults.map((record: any, idx: number) => {
     const row: any = {
-      question: record.query || record.question || "N/A",
-      response: record.response || record.answer || "N/A",
+      question: record.query || record.question || record.user_input || "N/A",
+      response: record.response || record.answer || record.output || "N/A",
+      contexts: record.contexts || record.context || record.retrieved_contexts || record.reference || [],
+      ground_truth: record.ground_truth || record.ground_truths || record.reference || "N/A",
       metrics: {},
     };
 
     metrics.forEach((m) => {
       const mResults = apiResponse.results[m]?.results;
       if (mResults && mResults[idx]) {
-        row.metrics[m] = mResults[idx].label || "N/A";
+        const r = mResults[idx];
+        row.metrics[m] = {
+          label: r.label || r.result || "N/A",
+          score: r.score ?? r.value ?? null,
+          explanation: r.explanation || r.reason || null,
+        };
       } else {
-        row.metrics[m] = "N/A";
+        row.metrics[m] = { label: "N/A", score: null, explanation: null };
       }
     });
 
@@ -74,71 +188,27 @@ const RecordsTableModal = ({
   return (
     <Dialog>
       <DialogTrigger asChild>
-        <Button variant="outline" size="sm" className="gap-2">
-          <FileJson className="w-3.5 h-3.5" />
-          View Records
+        <Button variant="outline" size="sm" className="gap-2 shrink-0 border-white/10 hover:border-primary/50 hover:bg-primary/5 shadow-sm">
+          <FileJson className="w-4 h-4 text-primary" />
+          <span className="font-semibold">View Records</span>
         </Button>
       </DialogTrigger>
-      <DialogContent className="max-w-[90vw] w-full max-h-[85vh] flex flex-col bg-background/95 backdrop-blur-md border-white/10">
-        <DialogHeader>
-          <DialogTitle>Evaluation Records - {chatbotName}</DialogTitle>
+      <DialogContent className="max-w-5xl w-full max-h-[90vh] flex flex-col bg-background/95 backdrop-blur-xl border-white/10 p-0 overflow-hidden shadow-2xl">
+        <DialogHeader className="p-6 border-b border-white/10 bg-black/40">
+          <DialogTitle className="text-xl font-bold flex items-center gap-3">
+            <div className="p-2 rounded-lg bg-primary/10">
+              <FileText className="w-5 h-5 text-primary" />
+            </div>
+            Evaluation Records
+            <Badge variant="outline" className="ml-2 font-mono font-normal border-white/10 text-muted-foreground">{chatbotName}</Badge>
+          </DialogTitle>
         </DialogHeader>
-        <div className="flex-1 overflow-auto mt-4 border rounded-md border-white/10 custom-scrollbar">
-          <Table>
-            <TableHeader className="sticky top-0 bg-background z-10">
-              <TableRow className="hover:bg-transparent border-white/10">
-                <TableHead className="w-[300px] text-foreground font-semibold">
-                  Question
-                </TableHead>
-                <TableHead className="w-[400px] text-foreground font-semibold">
-                  Response
-                </TableHead>
-                {metrics.map((m) => (
-                  <TableHead
-                    key={m}
-                    className="capitalize text-foreground font-semibold min-w-[120px]"
-                  >
-                    {m.replace(/_/g, " ")}
-                  </TableHead>
-                ))}
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {aggregatedRecords.map((row: any, i: number) => (
-                <TableRow
-                  key={i}
-                  className="border-white/5 hover:bg-white/5 transition-colors"
-                >
-                  <TableCell className="font-medium align-top py-4">
-                    {row.question}
-                  </TableCell>
-                  <TableCell className="text-muted-foreground align-top py-4">
-                    <div className="max-h-[100px] overflow-y-auto custom-scrollbar pr-2 text-sm">
-                      {row.response}
-                    </div>
-                  </TableCell>
-                  {metrics.map((m) => (
-                    <TableCell key={m} className="align-top py-4">
-                      <span
-                        className={cn(
-                          "px-2 py-1 rounded-md text-xs font-medium border",
-                          row.metrics[m] === "factual" ||
-                            row.metrics[m] === "relevant"
-                            ? "bg-success/10 text-success border-success/20"
-                            : row.metrics[m] === "hallucinated" ||
-                              row.metrics[m] === "irrelevant"
-                              ? "bg-destructive/10 text-destructive border-destructive/20"
-                              : "bg-secondary/10 text-secondary border-secondary/20"
-                        )}
-                      >
-                        {row.metrics[m]}
-                      </span>
-                    </TableCell>
-                  ))}
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+        <div className="flex-1 overflow-y-auto p-6 md:p-8 custom-scrollbar bg-gradient-to-b from-transparent to-black/20">
+          <div className="max-w-4xl mx-auto">
+            {aggregatedRecords.map((record: any, idx: number) => (
+              <ExpandableRecord key={idx} record={record} metrics={metrics} index={idx} />
+            ))}
+          </div>
         </div>
       </DialogContent>
     </Dialog>
@@ -244,7 +314,7 @@ const MetricFlipCard = ({
 
   return (
     <div
-      className="group relative h-[300px] perspective-1000 animate-in zoom-in-50 fade-in fill-mode-backwards"
+      className="group relative h-[380px] perspective-1000 animate-in zoom-in-50 fade-in fill-mode-backwards"
       style={{ animationDelay: `${500 + index * 100}ms` }}
       onClick={() => setIsFlipped(!isFlipped)}
     >
@@ -308,7 +378,7 @@ const MetricFlipCard = ({
         </Card>
 
         {/* BACK FACE */}
-        <Card className="absolute inset-0 backface-hidden rotate-y-180 bg-gradient-to-br from-gray-900 to-black border-primary/20 flex flex-col justify-center items-center text-center p-6">
+        <Card className="absolute inset-0 backface-hidden rotate-y-180 bg-gradient-to-br from-gray-900 to-black border-primary/20 flex flex-col justify-center items-center text-center p-6 overflow-y-auto">
           <div className="mb-4 p-3 bg-primary/10 rounded-full">
             <Activity className="w-8 h-8 text-primary" />
           </div>
@@ -553,60 +623,61 @@ const RAGOutput: React.FC = () => {
 
       <div className="relative z-10 flex flex-col min-h-screen">
         {/* HEADER */}
-        <header className="sticky top-0 z-50 bg-background/80 backdrop-blur-xl border-b border-border/50 supports-[backdrop-filter]:bg-background/60">
-          <div className="max-w-[1600px] mx-auto px-6 h-16 flex items-center justify-between">
-            <div className="flex items-center gap-4">
+        <header className="sticky top-0 z-50 bg-background/80 backdrop-blur-xl border-b border-white/10 supports-[backdrop-filter]:bg-background/60">
+          <div className="max-w-[1600px] mx-auto px-8 h-20 flex items-center justify-between">
+            <div className="flex items-center gap-5">
               <Button
                 variant="ghost"
                 size="icon"
                 onClick={() => navigate(`/evaluation-selection/${id}`)}
-                className="hover:bg-primary/10 hover:text-primary transition-colors"
+                className="hover:bg-primary/10 hover:text-primary transition-colors rounded-xl w-10 h-10"
               >
                 <ArrowLeft className="w-5 h-5" />
               </Button>
               <div className="flex flex-col">
-                <h1 className="text-xl font-bold text-foreground tracking-tight">
+                <h1 className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-white via-gray-100 to-gray-400 tracking-tight">
                   {chatbot.name}
                 </h1>
-                <span className="text-xs text-muted-foreground">
+                <span className="text-sm text-muted-foreground font-medium tracking-wide">
                   Evaluation Report
                 </span>
               </div>
             </div>
 
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-3">
               <Button
                 variant="outline"
                 size="sm"
                 onClick={exportCSV}
-                className="hidden sm:flex border-border/50 hover:border-primary/50 text-xs gap-2"
+                className="hidden sm:flex border-white/10 hover:border-primary/50 hover:bg-primary/5 text-sm gap-2 rounded-xl px-4 h-9"
               >
-                <BarChart2 className="w-3.5 h-3.5" />
+                <BarChart2 className="w-4 h-4" />
                 Export CSV
               </Button>
               <Button
                 variant="outline"
                 size="sm"
                 onClick={exportJSON}
-                className="hidden sm:flex border-border/50 hover:border-secondary/50 text-xs gap-2"
+                className="hidden sm:flex border-white/10 hover:border-secondary/50 hover:bg-secondary/5 text-sm gap-2 rounded-xl px-4 h-9"
               >
-                <FileText className="w-3.5 h-3.5" />
+                <FileText className="w-4 h-4" />
                 Export JSON
               </Button>
-              <RecordsTableModal
+              <RecordsModal
                 apiResponse={apiResponse}
                 chatbotName={chatbot.name}
               />
               <Button
                 variant="default"
                 size="sm"
-                onClick={() => navigate("/evaluation")}
-                className="bg-primary text-primary-foreground hover:bg-primary/90 shadow-lg shadow-primary/20 text-xs"
+                onClick={() => navigate(`/evaluation-selection/${id}`)}
+                className="bg-primary text-primary-foreground hover:bg-primary/90 shadow-lg shadow-primary/20 text-sm font-semibold rounded-xl px-5 h-9"
               >
-                Done
+                Back to Evaluation
               </Button>
             </div>
           </div>
+          <div className="h-[1px] w-full bg-gradient-to-r from-transparent via-primary/30 to-transparent" />
         </header>
 
         {/* MAIN CONTENT */}

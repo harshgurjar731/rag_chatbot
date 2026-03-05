@@ -504,10 +504,29 @@ export const ChatInterface = ({
         rerankerOption: tempSettings.rerankerOption,
         isVisionSearch: true,
       });
-      // console.log("Response Citations JSON:", JSON.parse(response.citations));
-      console.log("Response ImagePaths JSON:", response.images)
+      // Safely parse citations
+      let parsedCitations: any[] = [];
+      try {
+        if (response["citations"]) {
+          parsedCitations = JSON.parse(response["citations"]);
+        }
+      } catch (e) {
+        console.warn("Could not parse citations JSON:", e);
+      }
+
+      // Safely parse images
+      let parsedImages: any[] = [];
+      try {
+        if (response["images"]) {
+          // Sometimes it might already be an array if the backend didn't stringify it
+          parsedImages = typeof response["images"] === "string" ? JSON.parse(response["images"]) : response["images"];
+        }
+      } catch (e) {
+        console.warn("Could not parse images JSON:", e);
+      }
+
       const grouped_citations: Citation[] = Object.values(
-        JSON.parse(response["citations"]).reduce((acc, { source, page_number }) => {
+        parsedCitations.reduce((acc, { source, page_number }) => {
           if (!acc[source]) {
             acc[source] = { source, pages: [] };
           }
@@ -526,10 +545,11 @@ export const ChatInterface = ({
         traceId: response["traceId"],
         spanId: response["spanId"],
         Citation: grouped_citations || [],
-        images: response["images"],
+        images: parsedImages,
         detected_intent: response["detected_intent"],
         witty_hook: response["witty_hook"],
         intent_source: response["intent_source"],
+        secondary_intents: response["secondary_intents"],
       };
       console.log("Bot message with citations:", botMessage.Citation);
       setMessages((prev) => [...prev, botMessage]);
@@ -937,35 +957,47 @@ export const ChatInterface = ({
                         </p>
 
                         {/* Witty Hook and Intent Source Link */}
-                        {!message.isUser && message.witty_hook && (
-                          <div className="mt-4 pt-3 border-t border-border/40">
-                            {/* Integrated Intent Badge */}
-                            {message.detected_intent && (
-                              <div className="flex items-center gap-2 mb-1">
-                                <span className="text-[10px] uppercase tracking-widest text-muted-foreground font-medium">
-                                  {message.detected_intent}
-                                </span>
-                              </div>
-                            )}
+                        {/* Witty Hook and Intent Source Link */}
+                        {!message.isUser && (
+                          ((message.secondary_intents && message.secondary_intents.length > 0)
+                            ? message.secondary_intents
+                            : (message.witty_hook ? [{
+                                detected_intent: message.detected_intent,
+                                witty_hook: message.witty_hook,
+                                intent_source: message.intent_source
+                              }] : [])
+                          ).map((intentItem, idx) => (
+                            <div key={idx} className={`mt-4 pt-3 ${idx === 0 ? 'border-t border-border/40' : 'border-t border-border/20'}`}>
+                              {/* Integrated Intent Badge */}
+                              {intentItem.detected_intent && (
+                                <div className="flex items-center gap-2 mb-1">
+                                  <span className="text-[10px] uppercase tracking-widest text-muted-foreground font-medium">
+                                    {intentItem.detected_intent}
+                                  </span>
+                                </div>
+                              )}
 
-                            <div className="text-sm text-foreground/80 italic mb-2 pl-2 border-l-2 border-primary/20">
-                              {message.witty_hook}
+                              {intentItem.witty_hook && (
+                                <div className="text-sm text-foreground/80 italic mb-2 pl-2 border-l-2 border-primary/20">
+                                  {intentItem.witty_hook}
+                                </div>
+                              )}
+
+                              {intentItem.intent_source && (
+                                <button
+                                  onClick={(e) => {
+                                    e.preventDefault();
+                                    const fname = getFilenameFromPath(intentItem.intent_source || "");
+                                    viewSecondarySource(fname);
+                                  }}
+                                  className="text-xs text-primary hover:text-primary/80 hover:underline flex items-center gap-1 transition-colors group"
+                                >
+                                  <span>Open Related Source</span>
+                                  <ArrowRight className="w-3 h-3 transition-transform group-hover:translate-x-0.5" />
+                                </button>
+                              )}
                             </div>
-
-                            {message.intent_source && (
-                              <button
-                                onClick={(e) => {
-                                  e.preventDefault();
-                                  const fname = getFilenameFromPath(message.intent_source || "");
-                                  viewSecondarySource(fname);
-                                }}
-                                className="text-xs text-primary hover:text-primary/80 hover:underline flex items-center gap-1 transition-colors group"
-                              >
-                                <span>Open Related Source</span>
-                                <ArrowRight className="w-3 h-3 transition-transform group-hover:translate-x-0.5" />
-                              </button>
-                            )}
-                          </div>
+                          ))
                         )}
 
                         {!message.isUser && (
@@ -1061,27 +1093,27 @@ export const ChatInterface = ({
                                   )}
                                 </Button>
 
-                                { message.id !== "1" && <Button
+                                {message.id !== "1" && <Button
                                   size="icon"
                                   variant="ghost"
                                   className="h-6 w-6 rounded-full text-[11px] border border-border/40 text-green-500 hover:bg-muted/70 transition-colors"
                                   onClick={() => onFeedback(message.id, "Positive")}
                                 >
                                   <ThumbsUp size={14} />
-                                </Button> }
+                                </Button>}
 
 
-                                { message.id !== "1" && <Button
+                                {message.id !== "1" && <Button
                                   size="icon"
                                   variant="ghost"
                                   className="h-6 w-6 rounded-full text-[11px] border border-border/40 text-red-500 hover:bg-muted/70 transition-colors"
                                   onClick={() => onFeedback(message.id, "Negative")}
                                 >
                                   <ThumbsDown size={14} />
-                                </Button> }
+                                </Button>}
 
 
-                                { message.id !== "1" && <Popover
+                                {message.id !== "1" && <Popover
                                   open={openPopoverId === message.id}
                                   onOpenChange={(isOpen) =>
                                     setOpenPopoverId(isOpen ? message.id : null)
@@ -1120,7 +1152,7 @@ export const ChatInterface = ({
 
                                     </div>
                                   </PopoverContent>
-                                </Popover> }
+                                </Popover>}
                                 <DropdownMenu>
                                   <DropdownMenuTrigger asChild>
                                     <Button
@@ -1260,8 +1292,8 @@ export const ChatInterface = ({
             </div>
           </div>
         </div >
-        <div className="flex flex-col w-[30%] justify-between px-4 py-2 bg-gradient-surface rounded-lg border border-chatbot-primary/20">
-          <Tabs defaultValue= { isAdmin ? "documents" : "settings"} className="w-full">
+        <div className="flex flex-col w-[30%] justify-between px-4 py-2 bg-gradient-surface rounded-lg border border-chatbot-primary/20 overflow-y-auto">
+          <Tabs defaultValue={isAdmin ? "documents" : "settings"} className="w-full">
             {/* Tab Buttons */}
             <TabsList className="flex gap-2">
               {isAdmin && <TabsTrigger value="documents" className="flex-1">
@@ -1273,7 +1305,7 @@ export const ChatInterface = ({
             </TabsList>
 
             {/* ---------- Documents Tab ---------- */}
-            { isAdmin &&  <TabsContent value="documents" className="space-y-4 mt-4">
+            {isAdmin && <TabsContent value="documents" className="space-y-4 mt-4">
               {/* <div className="space-y-2">
                 <Label>Select Documents</Label>
                 <SelectMulti
@@ -1336,8 +1368,8 @@ export const ChatInterface = ({
             </TabsContent>}
 
             {/* ---------- Model Settings Tab ---------- */}
-            <TabsContent value="settings" className="space-y-8 mt-4">
-              <div className="mb-14">
+            <TabsContent value="settings" className="space-y-4 mt-4">
+              <div className="pb-4">
                 <div className="grid grid-cols-1 md:grid-cols-1 gap-2">
                   {/* LLM Provider */}
                   <div className="space-y-1">
@@ -1410,7 +1442,7 @@ export const ChatInterface = ({
                       disabled={isLoading}
                     />
                   </div>
-                  { isAdmin && <div className="flex items-center justify-between">
+                  {isAdmin && <div className="flex items-center justify-between">
                     <Label htmlFor="guardrails-switch">Guardrails</Label>
                     <Switch
                       id="guardrails-switch"
@@ -1431,6 +1463,7 @@ export const ChatInterface = ({
                       }
                     />
                   </div>}
+
                   {/* <div className="space-y-1">
                     <Label>Guardrails</Label>
                     <Select
@@ -1484,7 +1517,7 @@ export const ChatInterface = ({
                       Temperature: {tempSettings.temperature.toFixed(1)}
                     </p>
                   </div>
-                  { isAdmin && <div className="space-y-1">
+                  {isAdmin && <div className="space-y-1">
                     <Label>Query Optimizer</Label>
                     <Select
                       onValueChange={(value) =>
@@ -1513,7 +1546,7 @@ export const ChatInterface = ({
                       </SelectContent>
                     </Select>
                   </div>}
-                  { isAdmin && <div className="space-y-1">
+                  {isAdmin && <div className="space-y-1">
                     <Label>Re-ranker</Label>
                     <Select
                       onValueChange={(value) =>
@@ -1554,17 +1587,17 @@ export const ChatInterface = ({
                   </div>}
                 </div>
               </div>
-              { isAdmin && <div className="flex justify-end gap-3">
+              {isAdmin && <div className="flex justify-end gap-3">
                 {/* <Button variant="outline"  className="text-muted-foreground hover:text-foreground" onClick={handleCancel}>
                   Cancel
                 </Button> */}
-                <Button 
+                <Button
                   onClick={() => handleSave()}
                   variant="chatbot"
                   className="hover:bg-chatbot-primary">Save Changes</Button>
-              </div> }
+              </div>}
             </TabsContent>
-            
+
           </Tabs>
         </div>
 
@@ -1675,6 +1708,7 @@ export const ChatInterface = ({
                   </button>
                 </span>
               )}
+
               {tempSettings.tokenSize && (
                 <span className="flex items-center gap-1 text-xs text-foreground border border-chatbot-primary/20 rounded-md px-2 py-1">
                   Token Size: {tempSettings.tokenSize}

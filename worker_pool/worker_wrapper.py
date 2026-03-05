@@ -6,6 +6,8 @@ It listens for messages on Redis, processes them using the RAG pipeline, and
 streams responses back.
 """
 
+import logging
+import traceback
 import os
 import redis
 import asyncio
@@ -17,6 +19,11 @@ from sqlmodel import create_engine, Session, select
 from opentelemetry import trace
 from phoenix.otel import register
 
+# Suppress noisy connection errors from the OTel background span exporter
+# These appear when Phoenix tracing server is not running locally
+logging.getLogger("opentelemetry.sdk._shared_internal").setLevel(logging.CRITICAL)
+logging.getLogger("opentelemetry.exporter.otlp.proto.http.trace_exporter").setLevel(logging.CRITICAL)
+
 # Ensure we can import from Backend
 # transform path to include root rag_chatbot folder if running from there
 sys.path.append(os.getcwd())
@@ -26,8 +33,9 @@ BOT_NAME = os.getenv("BOT_NAME", "default")
 BOT_ID = os.getenv("BOT_ID", "-1")
 DATASTORE_ID = os.getenv("DATASTORE_ID", "-1")
 REDIS_HOST = os.getenv("REDIS_HOST", "redis")
-OTLP_ENDPOINT = os.getenv("OTEL_EXPORTER_OTLP_ENDPOINT", "http://20.98.116.35:5000/v1/traces") 
-#Default value for Local Phoenix endpoint - http://phoenix:6006/v1/traces
+OTLP_ENDPOINT = os.getenv("OTEL_EXPORTER_OTLP_ENDPOINT", "http://localhost:5000/v1/traces") 
+# Original remote Phoenix server: http://20.98.116.35:5000/v1/traces
+# Default value for Local Phoenix endpoint - http://phoenix:6006/v1/traces (in Docker)
 
 print(f'BOT_NAME = {BOT_NAME}')
 print(f'BOT_ID = {BOT_ID}')
@@ -35,13 +43,17 @@ print(f'DATASTORE_ID = {DATASTORE_ID}')
 print(f'REDIS_HOST = {REDIS_HOST}')
 print(f'OTLP_ENDPOINT = {OTLP_ENDPOINT}')
 
-# OpenTelemetry
-tracer_provider = register(
-    endpoint=OTLP_ENDPOINT,
-    project_name=BOT_NAME,
-    auto_instrument=True,
-    batch=True
-)
+# OpenTelemetry — optional, silently disabled if Phoenix is not reachable
+try:
+    tracer_provider = register(
+        endpoint=OTLP_ENDPOINT,
+        project_name=BOT_NAME,
+        auto_instrument=True,
+        batch=True
+    )
+    print(f"[*] Phoenix tracing enabled → {OTLP_ENDPOINT}")
+except Exception as e:
+    print(f"[*] Phoenix tracing disabled (Phoenix not reachable: {e})")
 
 async def handle_feedback(feedback_data):
     """
@@ -297,6 +309,7 @@ async def process_message(message_data):
                 
     except Exception as e:
         print(f"[!] Error processing message: {e}")
+        traceback.print_exc()  # print full stack trace
         r.publish(response_channel, f"Error: {str(e)}")
         
     finally:

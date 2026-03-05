@@ -42,7 +42,6 @@ class EvaluationRequest(BaseModel):
     framework: str = "ragaas"  # Supported: "ragaas", "ragas", "phoenix"
     metrics: List[str] = ["faithfulness", "answer_relevancy"]  # RAGAS: faithfulness, answer_relevancy, context_precision, context_recall | Phoenix: hallucination, qna, rag_relevancy, toxicity
     chatbot_id: str = None
-    force_rerun: bool = False  # Set to True to bypass cache and run fresh evaluation
 
 
 class EvaluationResponse(BaseModel):
@@ -98,6 +97,25 @@ def add_qna_pair(
         "question_id": qa_entry.question_id,
         "datastore_id": datastore_id
     }
+
+
+@router.get("/datastore/qna/id")
+def get_question_id(
+    question: str,
+    file_id: int,
+    session: Session = Depends(get_session)
+):
+    """Get question_id from question text and document_id (file_id)."""
+    qa = session.exec(
+        select(QuestionAnswerV2)
+        .where(QuestionAnswerV2.question == question)
+        .where(QuestionAnswerV2.document_id == file_id)
+    ).first()
+
+    if not qa:
+        raise HTTPException(status_code=404, detail="Question not found")
+
+    return {"question_id": qa.question_id}
 
 
 @router.delete("/datastore/qna/{question_id}", status_code=status.HTTP_200_OK)
@@ -248,177 +266,93 @@ def trigger_qa_generation(
     }
 
 
-# --- Cached Evaluation Endpoints ---
+# --- Evaluation Results Endpoints ---
 
-@router.get("/check-cache/{datastore_id}")
-def check_cached_evaluation(
+@router.get("/results/{evaluation_id}")
+def get_evaluation_results(
+    evaluation_id: str,
+    session: Session = Depends(get_session),
+):
+    """
+    Retrieve evaluation results by evaluation_id.
+    Used by the History modal to load past results.
+    """
+    try:
+        result = session.exec(
+            select(EvaluationResult)
+            .where(EvaluationResult.evaluation_id == evaluation_id)
+        ).first()
+        
+        if not result:
+            raise HTTPException(status_code=404, detail="Evaluation not found")
+        
+        return {
+            "evaluation_id": result.evaluation_id,
+            "datastore_id": result.datastore_id,
+            "chatbot_id": result.chatbot_id,
+            "framework": result.framework,
+            "metrics": json.loads(result.metrics),
+            "results": json.loads(result.results),
+            "meta_info": json.loads(result.meta_info) if result.meta_info else {},
+            "created_at": result.created_at.isoformat(),
+            "execution_time_seconds": result.execution_time_seconds,
+            "qa_count": result.qa_count,
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to retrieve evaluation results: {str(e)}"
+        )
+
+
+@router.get("/history/{datastore_id}")
+def get_evaluation_history(
     datastore_id: int,
-    framework: str,
     chatbot_id: str = None,
     session: Session = Depends(get_session),
 ):
     """
-    Check if cached evaluation results exist for the given configuration.
-    Returns the most recent cached evaluation if available.
+    Return the last 5 evaluation results per framework for a given datastore + chatbot.
+    Response shape: { "ragas": [...], "phoenix": [...] }
     """
     try:
-        # Get the latest chatbot settings if chatbot_id provided
-        settings_id = None
-        if chatbot_id:
-            settings = session.exec(
-                select(ChatbotSettings)
-                .where(ChatbotSettings.chatbot_id == chatbot_id)
-                .order_by(ChatbotSettings.id.desc())
-            ).first()
-            if settings:
-                settings_id = settings.id
-        
-        # Query for cached evaluation
         query = (
             select(EvaluationResult)
             .where(EvaluationResult.datastore_id == datastore_id)
-            .where(EvaluationResult.framework == framework.lower())
             .where(EvaluationResult.is_valid == True)
         )
-        
         if chatbot_id:
             query = query.where(EvaluationResult.chatbot_id == chatbot_id)
-            if settings_id:
-                query = query.where(EvaluationResult.settings_id == settings_id)
-        
-        query = query.order_by(EvaluationResult.created_at.desc())
-        
-        cached_result = session.exec(query).first()
-        
-        if cached_result:
-            return {
-                "has_cache": True,
-                "evaluation_id": cached_result.evaluation_id,
-                "framework": cached_result.framework,
-                "metrics": json.loads(cached_result.metrics),
-                "created_at": cached_result.created_at.isoformat(),
-                "qa_count": cached_result.qa_count,
-            }
-        else:
-            return {
-                "has_cache": False,
-                "message": "No cached evaluation found for this configuration"
-            }
-            
-    except Exception as e:
-        raise HTTPException(
-            status_code=500,
-            detail=f"Failed to check cache: {str(e)}"
-        )
 
-
-@router.get("/cached-results/{evaluation_id}")
-def get_cached_results(
-    evaluation_id: str,
-    session: Session = Depends(get_session),
-):
-    """
-    Retrieve cached evaluation results by evaluation_id.
-    """
-    try:
-        cached_result = session.exec(
-            select(EvaluationResult)
-            .where(EvaluationResult.evaluation_id == evaluation_id)
-        ).first()
-        
-        if not cached_result:
-            raise HTTPException(status_code=404, detail="Cached evaluation not found")
-        
-        if not cached_result.is_valid:
-            raise HTTPException(status_code=410, detail="Cached evaluation has been invalidated")
-        
-        return {
-            "evaluation_id": cached_result.evaluation_id,
-            "datastore_id": cached_result.datastore_id,
-            "chatbot_id": cached_result.chatbot_id,
-            "framework": cached_result.framework,
-            "metrics": json.loads(cached_result.metrics),
-            "results": json.loads(cached_result.results),
-            "metadata": json.loads(cached_result.eval_metadata) if cached_result.eval_metadata else {},
-            "created_at": cached_result.created_at.isoformat(),
-            "execution_time_seconds": cached_result.execution_time_seconds,
-            "qa_count": cached_result.qa_count,
-        }
-        
-    except HTTPException:
-        raise
-    except Exception as e:
-        raise HTTPException(
-            status_code=500,
-            detail=f"Failed to retrieve cached results: {str(e)}"
-        )
-
-
-@router.get("/cached-list/{datastore_id}")
-def list_cached_evaluations(
-    datastore_id: int,
-    session: Session = Depends(get_session),
-):
-    """
-    List all cached evaluations for a datastore.
-    """
-    try:
-        cached_results = session.exec(
-            select(EvaluationResult)
-            .where(EvaluationResult.datastore_id == datastore_id)
-            .where(EvaluationResult.is_valid == True)
-            .order_by(EvaluationResult.created_at.desc())
+        all_results = session.exec(
+            query.order_by(EvaluationResult.created_at.desc())
         ).all()
-        
-        return [
-            {
-                "evaluation_id": result.evaluation_id,
-                "framework": result.framework,
-                "metrics": json.loads(result.metrics),
-                "created_at": result.created_at.isoformat(),
-                "chatbot_id": result.chatbot_id,
-                "qa_count": result.qa_count,
-            }
-            for result in cached_results
-        ]
-        
+
+        # Group by framework, keep last 5 per group
+        grouped: Dict[str, list] = {}
+        for result in all_results:
+            fw = result.framework
+            if fw not in grouped:
+                grouped[fw] = []
+            if len(grouped[fw]) < 5:
+                grouped[fw].append({
+                    "evaluation_id": result.evaluation_id,
+                    "framework": fw,
+                    "metrics": json.loads(result.metrics),
+                    "created_at": result.created_at.isoformat(),
+                    "qa_count": result.qa_count,
+                    "execution_time_seconds": result.execution_time_seconds,
+                })
+
+        return grouped
+
     except Exception as e:
         raise HTTPException(
             status_code=500,
-            detail=f"Failed to list cached evaluations: {str(e)}"
+            detail=f"Failed to fetch evaluation history: {str(e)}"
         )
 
-
-@router.delete("/cached-results/{evaluation_id}")
-def invalidate_cached_result(
-    evaluation_id: str,
-    session: Session = Depends(get_session),
-):
-    """
-    Invalidate a cached evaluation result.
-    """
-    try:
-        cached_result = session.exec(
-            select(EvaluationResult)
-            .where(EvaluationResult.evaluation_id == evaluation_id)
-        ).first()
-        
-        if not cached_result:
-            raise HTTPException(status_code=404, detail="Cached evaluation not found")
-        
-        cached_result.is_valid = False
-        session.add(cached_result)
-        session.commit()
-        
-        return {
-            "message": f"Cached evaluation {evaluation_id} invalidated successfully"
-        }
-        
-    except HTTPException:
-        raise
-    except Exception as e:
-        raise HTTPException(
-            status_code=500,
-            detail=f"Failed to invalidate cached result: {str(e)}"
-        )
 

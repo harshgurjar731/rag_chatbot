@@ -86,7 +86,7 @@ async def retrieve_documents(
     print("Message_History", message_history)
 
     if (guardrailOption == "on"):
-        answer = await nemo_service.generate_response(query)
+        answer = await nemo_service().generate_response(query)
     # -----------------------------
     # Case 1: No files -> plain LLM answer
     # -----------------------------

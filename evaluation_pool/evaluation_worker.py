@@ -11,11 +11,12 @@ from datetime import datetime, timezone
 from dotenv import load_dotenv
 
 # Load environment variables
-load_dotenv()
+load_dotenv(override=True)
+from config import CONFIG
 
 # Redis connection
-REDIS_HOST = os.getenv("REDIS_HOST", "redis")
-REDIS_PORT = int(os.getenv("REDIS_PORT", 6379))
+REDIS_HOST = CONFIG["redis_host"]
+REDIS_PORT = int(CONFIG["redis_port"])
 r = redis.Redis(host=REDIS_HOST, port=REDIS_PORT, decode_responses=True)
 
 # Queue names
@@ -25,10 +26,10 @@ EVALUATION_STATUS_PREFIX = "evaluation:status:"
 # DB Connection
 from sqlmodel import create_engine, Session
 
-DB_USER = os.getenv("DB_USER", "user")
-DB_PASSWORD = os.getenv("DB_PASSWORD", "password")
-DB_HOST = os.getenv("DB_HOST", "db")
-DB_NAME = os.getenv("DB_NAME", "chatbot_db")
+DB_USER = CONFIG["db_user"]
+DB_PASSWORD = CONFIG["db_password"]
+DB_HOST = CONFIG["db_host"]
+DB_NAME = CONFIG["db_name"]
 DATABASE_URL = f"postgresql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}/{DB_NAME}"
 
 engine = create_engine(DATABASE_URL)
@@ -100,6 +101,23 @@ def process_generate_qa(job_data: dict):
         return None
 
 
+def _count_qa(qa_result, results):
+    """Derive Q&A count from qa_result or from actual evaluation results."""
+    # Try qa generator count first
+    if qa_result and qa_result.get("count"):
+        return qa_result["count"]
+    # Fallback: count records from evaluation results dict
+    if isinstance(results, dict):
+        for metric_key, metric_data in results.items():
+            if isinstance(metric_data, dict):
+                recs = metric_data.get("results", [])
+                if recs:
+                    return len(recs)
+            elif isinstance(metric_data, list):
+                return len(metric_data)
+    return 0
+
+
 def process_run_evaluation(job_data: dict):
     """Process evaluation job using RAGAS or Phoenix."""
     from ragaas_evaluator import perform_ragaas_evaluation
@@ -115,59 +133,10 @@ def process_run_evaluation(job_data: dict):
     chatbot_id = job_data.get("chatbot_id")
     framework = job_data.get("framework", "ragaas").lower()
     metrics = job_data.get("metrics", ["faithfulness", "answer_relevancy"])
-    force_rerun = job_data.get("force_rerun", False)
     
     try:
         update_evaluation_status(evaluation_id, "initializing", 5)
         
-        # Check for cached results unless force_rerun is True
-        if not force_rerun:
-            with Session(engine) as session:
-                # Get the latest chatbot settings if chatbot_id provided
-                settings_id = None
-                if chatbot_id:
-                    settings = session.exec(
-                        select(ChatbotSettings)
-                        .where(ChatbotSettings.chatbot_id == chatbot_id)
-                        .order_by(ChatbotSettings.id.desc())
-                    ).first()
-                    if settings:
-                        settings_id = settings.id
-                
-                # Query for cached evaluation
-                query = (
-                    select(EvaluationResult)
-                    .where(EvaluationResult.datastore_id == datastore_id)
-                    .where(EvaluationResult.framework == framework)
-                    .where(EvaluationResult.is_valid == True)
-                )
-                
-                if chatbot_id:
-                    query = query.where(EvaluationResult.chatbot_id == chatbot_id)
-                    if settings_id:
-                        query = query.where(EvaluationResult.settings_id == settings_id)
-                
-                # Check if metrics match (convert both to sorted lists for comparison)
-                cached_results = session.exec(query.order_by(EvaluationResult.created_at.desc())).all()
-                
-                for cached_result in cached_results:
-                    cached_metrics = sorted(json.loads(cached_result.metrics))
-                    requested_metrics = sorted(metrics)
-                    
-                    if cached_metrics == requested_metrics:
-                        print(f"[INFO] Using cached evaluation results: {cached_result.evaluation_id}")
-                        results = json.loads(cached_result.results)
-                        update_evaluation_status(
-                            evaluation_id, 
-                            "completed", 
-                            100, 
-                            results=results, 
-                            metrics=metrics, 
-                            framework=framework
-                        )
-                        return results
-        
-        # No cache found or force_rerun is True - proceed with evaluation
         start_time = time.time()
         
         # First generate Q&A if needed
@@ -241,18 +210,33 @@ def process_run_evaluation(job_data: dict):
                     framework=framework,
                     metrics=json.dumps(metrics),
                     results=json.dumps(results),
-                    metadata=json.dumps({
+                    meta_info=json.dumps({
                         "datastore_name": datastore_name,
                         "qa_result": qa_result
                     }),
                     execution_time_seconds=execution_time,
-                    qa_count=qa_result.get("count", 0) if qa_result else 0,
+                    qa_count=_count_qa(qa_result, results),
                     is_valid=True
                 )
                 
                 session.add(evaluation_result)
                 session.commit()
                 print(f"[INFO] Saved evaluation results to database: {evaluation_id}")
+                
+                # ---- Prune: keep only last 5 per (datastore + chatbot + framework) ----
+                all_for_group = session.exec(
+                    select(EvaluationResult)
+                    .where(EvaluationResult.datastore_id == datastore_id)
+                    .where(EvaluationResult.chatbot_id == chatbot_id)
+                    .where(EvaluationResult.framework == framework)
+                    .order_by(EvaluationResult.created_at.desc())
+                ).all()
+                
+                if len(all_for_group) > 5:
+                    for old_record in all_for_group[5:]:
+                        session.delete(old_record)
+                    session.commit()
+                    print(f"[INFO] Pruned {len(all_for_group) - 5} old evaluation record(s) for framework '{framework}'")
                 
             except Exception as e:
                 print(f"[WARN] Failed to save evaluation results to database: {str(e)}")

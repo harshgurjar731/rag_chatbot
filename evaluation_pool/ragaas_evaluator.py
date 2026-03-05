@@ -12,6 +12,8 @@ from collections import defaultdict
 
 from ragas.metrics import faithfulness, answer_relevancy, context_precision, context_recall
 from ragas import evaluate
+from ragas.llms import LangchainLLMWrapper
+from ragas.embeddings import LangchainEmbeddingsWrapper
 from langchain_openai import ChatOpenAI
 from datasets import Dataset
 from config import CONFIG
@@ -150,7 +152,8 @@ def perform_ragaas_evaluation(
                 max_retries=5,
                 request_timeout=60.0,
             )
-        
+             llm = LangchainLLMWrapper(llm)
+             
         elif llm_provider == "groq":
              GROQ_API_KEY = CONFIG.get("groq_api_key")
              GROQ_API_BASE = CONFIG.get("groq_api_base")
@@ -166,12 +169,13 @@ def perform_ragaas_evaluation(
                 max_tokens=token_size,
                 n=1,
              )
+             llm = LangchainLLMWrapper(llm)
              
         else:
              # Default generic OpenAI or fallback
              raise ValueError(f"Unsupported LLM provider '{llm_provider}' for RAGAS evaluation. Supported: 'azure-openai', 'groq'")
         # embeddings = SentenceTransformer("BAAI/bge-small-en-v1.5")
-        embeddings = HuggingFaceEmbeddings(model_name="BAAI/bge-small-en-v1.5")
+        embeddings = LangchainEmbeddingsWrapper(HuggingFaceEmbeddings(model_name="BAAI/bge-small-en-v1.5"))
 
         # -------------------- Load Datastore Info --------------------
         # Imports now handled in LLM setup block or at module level
@@ -328,7 +332,7 @@ def perform_ragaas_evaluation(
 
         for metric_name, metric_obj in selected_metrics:
             try:
-                # Explicitly assign the wrapper to each metric to ensure it uses the overridden generate methods
+                # Assign wrapped LLM directly to metric so ragas uses it internally
                 metric_obj.llm = llm
                 
                 res = evaluate(ds, metrics=[metric_obj], llm=llm, embeddings=embeddings)

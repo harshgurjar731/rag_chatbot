@@ -13,7 +13,7 @@ from fastapi import HTTPException
 from rag_pipeline.nemo_guardrails.actions import topic_control_check, check_nvidia_content_safety, format_safety_violation, check_jailbreak_groq  # <--- ADD THIS
 import os
 from dotenv import load_dotenv
-load_dotenv() 
+load_dotenv(override=True) 
 
 
 NVIDIA_SAFETY_MAP = {
@@ -51,7 +51,9 @@ class NemoService:
         
         print("[DEBUG] Loading NeMo Config...")
         print("[DEBUG] NVIDIA_API_KEY loaded:", "NVIDIA_API_KEY" in os.environ)
-        config = RailsConfig.from_path("rag_pipeline/nemo_guardrails")
+        # Use absolute path so it works regardless of cwd
+        config_path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "nemo_guardrails")
+        config = RailsConfig.from_path(config_path)
         # print("*****************************************************************")
         # print("Config:::", config)
         # print("*****************************************************************")
@@ -138,4 +140,15 @@ class NemoService:
 
         return final_answer
 
-nemo_service = NemoService()
+# Lazy singleton — initialized on first use, not at import time
+_nemo_service_instance = None
+
+def nemo_service():
+    """Return the shared NemoService instance, initializing it on first call."""
+    global _nemo_service_instance
+    if _nemo_service_instance is None:
+        try:
+            _nemo_service_instance = NemoService()
+        except Exception as e:
+            print(f"[WARNING] NemoService failed to initialize: {e}. Guardrails will be disabled.")
+    return _nemo_service_instance

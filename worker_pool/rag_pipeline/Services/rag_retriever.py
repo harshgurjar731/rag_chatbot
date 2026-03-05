@@ -206,14 +206,12 @@ def get_rag_answer_text(
     with tracer.start_as_current_span("Unified_RAG_Chain") as span:
         span.set_attribute("query", updated_query)
         final_response = chatbot_chain.invoke({"question": updated_query, "context": returned_chunks})
-        span.set_attribute("response_length", len(final_response))
+        span.set_attribute("response_length", len(final_response))    # ✅ Apply guardrails
+    validated = validate_output(final_response, guardrail_level)
+    if "⚠️ Response blocked" in validated["answer"]:
+        return validated
 
-    # # ✅ Apply guardrails
-    # validated = validate_output(final_answer, guardrail_level)
-    # if "⚠️ Response blocked" in validated["answer"]:
-    #     return validated
-
-    # final_answer = validated["answer"]
+    final_response = validated["answer"]
 
     # ✅ Handle sources
     print("LLM Answer:", final_response)
@@ -284,8 +282,8 @@ def get_rag_answer_text(
         answer_text = json.dumps(answer_text)
     
     return {"answer": str(answer_text).strip(),
-            "images": [],
-            "citations": source_json_string,
+            "images": "[]",
+            "citations": source_json_string if source_json_string else "[]",
             "context_text": all_context_text_json}  # Use ALL chunks for evaluation
 
 
@@ -362,7 +360,10 @@ def get_rag_answer_image(
         temp_file = tempfile.NamedTemporaryFile(delete=False, suffix=".png")  
         temp_file.write(image_bytes)
         temp_file.close()
-        queries_embedded = embeddingModel.embed_image([temp_file.name])
+        if hasattr(embeddingModel, "embed_image"):
+            queries_embedded = embeddingModel.embed_image([temp_file.name])
+        else:
+            queries_embedded = embeddingModel.embed_documents(["Image query fallback"])
     else:
         print("Image search 3")
         queries_embedded = embeddingModel.embed_documents([query])
@@ -382,7 +383,8 @@ def get_rag_answer_image(
         if "image_path" in doc.metadata
     ]
 
+    import json
     return {"answer": "",
-            "images": images_b64,
+            "images": json.dumps(images_b64),
             "citations": "[]"}
 

@@ -113,10 +113,10 @@ const RAGASEvaluationOutput: React.FC = () => {
             const baseEntry = results[baseMetric]?.[i];
 
             row["common"] = {
-                user_input: baseEntry?.user_input || "N/A",
-                response: baseEntry?.response || "N/A",
-                contexts: baseEntry?.contexts || [],
-                ground_truth: baseEntry?.ground_truth || "N/A",
+                user_input: baseEntry?.question || baseEntry?.user_input || baseEntry?.query || "N/A",
+                response: baseEntry?.answer || baseEntry?.response || baseEntry?.output || "N/A",
+                contexts: baseEntry?.contexts || baseEntry?.context || baseEntry?.retrieved_contexts || baseEntry?.reference || [],
+                ground_truth: baseEntry?.ground_truth || baseEntry?.ground_truths || baseEntry?.reference || "N/A",
             };
 
             metrics.forEach((metric) => {
@@ -210,23 +210,62 @@ const RAGASEvaluationOutput: React.FC = () => {
 
             <div className="relative z-10 flex flex-col min-h-screen max-w-[1600px] mx-auto p-6 space-y-8">
                 {/* HEAD */}
-                <header className="flex items-center justify-between p-4 bg-background/80 backdrop-blur-md border border-white/5 rounded-xl sticky top-4 z-50 shadow-sm">
-                    <div className="flex items-center gap-4">
-                        <Button variant="ghost" size="icon" onClick={() => navigate(`/evaluation-selection/${id}`)}>
-                            <ArrowLeft className="w-5 h-5" />
-                        </Button>
-                        <div>
-                            <h1 className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-white to-white/60">
-                                {chatbot.name}
-                            </h1>
-                            <p className="text-xs text-muted-foreground">RAGAS Evaluation Report</p>
+                <header className="bg-background/80 backdrop-blur-xl border-b border-white/10 rounded-xl sticky top-4 z-50 overflow-hidden">
+                    <div className="flex items-center justify-between px-8 h-20">
+                        <div className="flex items-center gap-5">
+                            <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => navigate(`/evaluation-selection/${id}`)}
+                                className="hover:bg-primary/10 hover:text-primary transition-colors rounded-xl w-10 h-10"
+                            >
+                                <ArrowLeft className="w-5 h-5" />
+                            </Button>
+                            <div className="flex flex-col">
+                                <h1 className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-white via-gray-100 to-gray-400 tracking-tight">
+                                    {chatbot.name}
+                                </h1>
+                                <span className="text-sm text-muted-foreground font-medium tracking-wide">
+                                    RAGAS Evaluation Report
+                                </span>
+                            </div>
+                        </div>
+                        <div className="flex items-center gap-3">
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={exportCSV}
+                                className="hidden sm:flex border-white/10 hover:border-primary/50 hover:bg-primary/5 text-sm gap-2 rounded-xl px-4 h-9"
+                            >
+                                <BarChart2 className="w-4 h-4" />
+                                Export CSV
+                            </Button>
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => {
+                                    saveAs(
+                                        new Blob([JSON.stringify(evaluationResponse, null, 2)], { type: "application/json" }),
+                                        `${chatbot.name}_ragas_results.json`
+                                    );
+                                    toast({ title: "JSON Exported Successfully" });
+                                }}
+                                className="hidden sm:flex border-white/10 hover:border-secondary/50 hover:bg-secondary/5 text-sm gap-2 rounded-xl px-4 h-9"
+                            >
+                                <FileText className="w-4 h-4" />
+                                Export JSON
+                            </Button>
+                            <Button
+                                variant="default"
+                                size="sm"
+                                onClick={() => navigate(`/evaluation-selection/${id}`)}
+                                className="bg-primary text-primary-foreground hover:bg-primary/90 shadow-lg shadow-primary/20 text-sm font-semibold rounded-xl px-5 h-9"
+                            >
+                                Back to Evaluation
+                            </Button>
                         </div>
                     </div>
-                    <div className="flex gap-2">
-                        <Button variant="outline" size="sm" onClick={exportCSV} className="gap-2">
-                            <Download className="w-4 h-4" /> Export It
-                        </Button>
-                    </div>
+                    <div className="h-[1px] w-full bg-gradient-to-r from-transparent via-primary/30 to-transparent" />
                 </header>
 
                 {/* CHARTS & STATS */}
@@ -346,16 +385,15 @@ const RAGASEvaluationOutput: React.FC = () => {
 
                 {/* DETAILS MODAL */}
                 <Dialog open={!!selectedRecord} onOpenChange={(open) => !open && setSelectedRecord(null)}>
-                    <DialogContent className="max-w-3xl max-h-[85vh] flex flex-col bg-background/95 backdrop-blur-md border-white/10">
+                    <DialogContent className="max-w-[95vw] w-[1400px] max-h-[90vh] flex flex-col bg-background/95 backdrop-blur-md border-white/10 p-6 overflow-hidden">
                         <DialogHeader>
-                            <DialogTitle className="flex items-center gap-2">
+                            <DialogTitle className="text-xl font-bold flex items-center gap-2">
                                 <FileText className="w-5 h-5 text-primary" />
                                 Record Details #{selectedRecord?.["#"]}
                             </DialogTitle>
                         </DialogHeader>
-
-                        {selectedRecord && (
-                            <ScrollArea className="flex-1 pr-4 mt-4">
+                        <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar">
+                            {selectedRecord && (
                                 <div className="space-y-6">
                                     {/* QA Section */}
                                     <div className="grid gap-4">
@@ -407,8 +445,8 @@ const RAGASEvaluationOutput: React.FC = () => {
                                         </div>
                                     </div>
                                 </div>
-                            </ScrollArea>
-                        )}
+                            )}
+                        </div>
                     </DialogContent>
                 </Dialog>
 

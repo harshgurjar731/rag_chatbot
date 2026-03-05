@@ -126,7 +126,8 @@ def spawn_bot_process(bot):
         # Run worker_wrapper.py
         # Assuming we are running from root /app
         proc = subprocess.Popen(
-            ["python", "-u", "worker_wrapper.py"],
+            # ["python", "-u", "worker_wrapper.py"],  # old: uses system Python
+            [sys.executable, "-u", "worker_wrapper.py"],  # use venv Python
             env=env,
             stdout=sys.stdout,
             stderr=sys.stderr

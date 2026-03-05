@@ -5,7 +5,7 @@ from sqlmodel import Session, select
 from models.FileRecord import FileRecord, DocumentRecord, ChunkRecord, Folder
 from database import get_session
 # from Services.chunking_service import chunk_documents, save_chunks_to_json, load_docs_from_json
-# from ingestion_pipleline.VectorStores.vector_store_generator import create_vector_store
+# from ingestion_pipeline.VectorStores.vector_store_generator import create_vector_store
 from models.datastore import DataStore
 import os
 import shutil
@@ -14,8 +14,8 @@ import redis
 import json
 from typing import List
 from config import CONFIG  # Load .env variables
-from ingestion_pipleline.ingestion_models import DataStoreCreate, DataStoreResponse
-from ingestion_pipleline.Config.Config import INGESTION_CONFIG
+from ingestion_pipeline.ingestion_models import DataStoreCreate, DataStoreResponse
+from ingestion_pipeline.Config.Config import INGESTION_CONFIG
 
 # Redis Setup
 REDIS_HOST = os.getenv("REDIS_HOST", "redis")

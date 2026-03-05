@@ -6,8 +6,8 @@ WORKDIR /build
 
 # Install build dependencies via conda (no apt needed)
 RUN conda install -y -c conda-forge \
-    gcc_linux-64 \
-    gxx_linux-64 \
+    gcc_linux-64=14.2.* \
+    gxx_linux-64=14.2.* \
     && conda clean -a -y
 
 # Set compiler environment variables
@@ -16,8 +16,7 @@ ENV CC=/opt/conda/bin/x86_64-conda-linux-gnu-gcc \
     PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1
 
-# Install uv
-RUN pip install --no-cache-dir --upgrade pip uv
+RUN pip install --no-cache-dir pip==24.0 uv==0.5.21
 
 # Copy requirements first to leverage Docker cache
 COPY requirements.txt .
@@ -38,8 +37,7 @@ COPY --from=builder /opt/conda/bin /opt/conda/bin
 COPY . .
 
 # Install runtime binary dependencies (ffmpeg)
-# We install here to ensure shared libraries are properly linked in the runtime environment
-RUN conda install -y -c conda-forge ffmpeg && conda clean -a -y
+RUN conda install -y -c conda-forge ffmpeg=6.1.* && conda clean -a -y
 
 # Environment variables
 ENV PYTHONUNBUFFERED=1 \

@@ -26,7 +26,7 @@ class EvaluationResult(SQLModel, table=True):
     
     # Results data
     results: str = Field(sa_column=Column(JSON))  # Full evaluation results as JSON
-    eval_metadata: Optional[str] = Field(default=None, sa_column=Column("metadata", JSON))  # Additional info (Q&A count, execution time, etc.)
+    meta_info: Optional[str] = Field(default=None, sa_column=Column(JSON))  # Additional info (Q&A count, execution time, etc.)
     
     # Status and validity
     is_valid: bool = Field(default=True)  # Can be set to False to invalidate cache

@@ -3,6 +3,9 @@ import sys
 import subprocess
 import socket
 
+# Disable Torch Dynamo globally to prevent segfaults on Windows
+os.environ["TORCH_DYNAMO_DISABLE"] = "1"
+
 def load_env(env_file='.env.local'):
     """Load environment variables from a file."""
     if not os.path.exists(env_file):

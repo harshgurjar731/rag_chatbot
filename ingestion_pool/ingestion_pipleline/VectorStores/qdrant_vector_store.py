@@ -4,23 +4,18 @@ from PIL import Image
 from langchain_core.documents import Document
 from langchain_core.embeddings import Embeddings
 from langchain_qdrant import QdrantVectorStore
-from langchain_experimental.open_clip.open_clip import OpenCLIPEmbeddings
+# from langchain_experimental.open_clip.open_clip import OpenCLIPEmbeddings  # lazy-imported where needed
 from langchain_community.embeddings import HuggingFaceEmbeddings, OpenAIEmbeddings
 import json
 import os
-import fitz  # PyMuPDF
-import pytesseract
-pytesseract.pytesseract.tesseract_cmd = r'C:\Program Files\Tesseract-OCR\tesseract.exe'  # Update this path as needed
-import camelot
-import csv
-import io
 import uuid
 from qdrant_client import QdrantClient, models
 from qdrant_client.models import VectorParams, Distance, PointStruct, Filter, FieldCondition, MatchValue
 import concurrent.futures
+from ingestion_pipleline.Config.Config import INGESTION_CONFIG
 
-QDRANT_API_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhY2Nlc3MiOiJtIn0.ernM56z1tGICY_kClkY1YatoJDT3cQq1qao_ciK16OU"
-QDRANT_CLUSTER_URL = "https://5c0a81e7-3111-4734-924f-caddc3276aa3.europe-west3-0.gcp.cloud.qdrant.io"
+QDRANT_API_KEY = INGESTION_CONFIG.get("QDRANT_API_KEY")
+QDRANT_CLUSTER_URL = INGESTION_CONFIG.get("QDRANT_CLUSTER_URL")
 QDRANT_TIMEOUT = 120
 
 class QDrantVectorDB(VectorStoreProtocol):

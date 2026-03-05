@@ -3,7 +3,7 @@ from pathlib import Path
 from dotenv import load_dotenv
 
 # Load variables from .env file
-load_dotenv()
+load_dotenv(override=True)
 
 # prompt = RAG_PROMPTS["rag_template"].format(context=context_text)
 # 10. Strictly respond as a valid json only which includes "response" to the query which is strictly like a human response & a "used_chunks" which is array of "tempID" value in metadata of the chunks from "Context:" section which were used to populate the response.

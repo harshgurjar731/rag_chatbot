@@ -3,7 +3,7 @@ from pathlib import Path
 from dotenv import load_dotenv
 
 # Load variables from .env file
-load_dotenv()
+load_dotenv(override=True)
 
 # Basic Config
 REDIS_HOST = os.getenv("REDIS_HOST", "redis")

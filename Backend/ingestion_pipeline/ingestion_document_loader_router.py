@@ -12,8 +12,8 @@ import redis
 import json
 from typing import List
 from config import CONFIG  # Load .env variables
-from ingestion_pipleline.ingestion_models import DataStoreCreate, DocumentRecordResponse, FolderCreate
-from ingestion_pipleline.Config.Config import INGESTION_CONFIG
+from ingestion_pipeline.ingestion_models import DataStoreCreate, DocumentRecordResponse, FolderCreate
+from ingestion_pipeline.Config.Config import INGESTION_CONFIG
 import shutil
 import urllib.parse
 

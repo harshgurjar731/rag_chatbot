@@ -94,7 +94,7 @@ class IntentDetectionService:
             # I will let it raise so it's visible in logs.
             raise e
 
-    async def detect_intent(self, query: str, intents: List[dict]) -> Optional[dict]:
+    async def detect_intent(self, query: str, intents: List[dict]) -> Optional[List[dict]]:
         if not intents or len(intents) == 0:
             return None
 
@@ -136,11 +136,11 @@ Available Intents:
 
 Instructions:
 1. Compare the query (meaning and context) with the Title, Description, and Source Metadata of each intent.
-2. If the query clearly matches an intent, return a JSON object with:
+2. If the query clearly matches one or more intents, return a JSON array containing an object for each matched intent with:
    - "title": The exact Title of the matched intent.
    - "witty_hook": A short, curious, or witty one-liner based on the intent description AND the source metadata (e.g. don't mention the file type or size ) to encourage the user to click the source link. using emojis is allowed.
-3. If the query does not match any intent, return the string "None" (or a JSON with "title": "None").
-4. Do not provide any explanation, only the JSON."""
+3. If the query does not match any intent, return the string "None" (or a JSON array with [{{"title": "None"}}]).
+4. Do not provide any explanation, only the JSON array."""
 
         human_prompt = f"Query: {query}"
 
@@ -167,13 +167,19 @@ Instructions:
             import json
             try:
                 result = json.loads(content)
-                if result.get("title") == "None":
+                if isinstance(result, dict) and result.get("title") == "None":
                     return None
-                return result
+                if isinstance(result, list):
+                    if len(result) > 0 and result[0].get("title") == "None":
+                        return None
+                    return result
+                if isinstance(result, dict):
+                    return [result]
+                return None
             except json.JSONDecodeError:
                 # Fallback if LLM returns just the title?
                 print(f"Failed to parse JSON from intent service: {content}")
-                return {"title": content, "witty_hook": "Check this out!"}
+                return [{"title": content, "witty_hook": "Check this out!"}]
 
         except Exception as e:
             print(f"Error in intent detection: {e}")

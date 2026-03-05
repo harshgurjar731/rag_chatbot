@@ -61,12 +61,7 @@
 #     # Raw LLM output
 #     final_answer = chatbot_chain.invoke({"question": query})
 
-#     # ✅ Apply guardrails
-#     validated = validate_output(final_answer, guardrail_level)
-#     if "⚠️ Response blocked" in validated["answer"]:
-#         return validated
-
-#     final_answer = validated["answer"]
+#     final_answer = chatbot_chain.invoke({"question": query})
 
 #     # ✅ Handle sources
 #     if include_sources and "Sources:" in final_answer:
@@ -89,7 +84,7 @@ and source attribution if requested.
 
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.output_parsers import StrOutputParser
-from Services.guardrail import validate_output  
+from Services.guardrail import validate_output
 from config import CONFIG
 from utils.llm_factory import LLMFactory  # ✅ Import our dynamic LLMFactory
 from rag_pipeline.LLMs.llm_model_protocol import create_llm_model
@@ -164,11 +159,13 @@ def get_llm_answer(
         answer_text = parts[0].strip()
         sources_text = parts[1].strip() if len(parts) > 1 else ""
         return {
-            "answer": answer_text + "\n\nSources: " + str(sources_text.split("\n") if sources_text else [])
+            "answer": answer_text + "\n\nSources: " + str(sources_text.split("\n") if sources_text else []),
+            "images": "[]",
+            "citations": "[]"
         }
 
     return {
         "answer": final_answer.strip(),
-        "images": [],
+        "images": "[]",
         "citations": "[]"
     }

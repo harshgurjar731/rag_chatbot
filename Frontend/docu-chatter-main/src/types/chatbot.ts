@@ -36,6 +36,11 @@ export interface ChatMessage {
   detected_intent?: string;
   witty_hook?: string;
   intent_source?: string;
+  secondary_intents?: {
+    detected_intent: string;
+    witty_hook?: string;
+    intent_source?: string;
+  }[];
 };
 
 export interface Chatbot {

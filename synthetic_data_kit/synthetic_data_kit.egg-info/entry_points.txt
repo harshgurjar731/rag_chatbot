@@ -1,0 +1,2 @@
+[console_scripts]
+synthetic-data-kit = synthetic_data_kit.cli:main

@@ -408,22 +408,42 @@ async def retrieve(
             detected_intent = None
             witty_hook = None
             intent_source = None
+            secondary_intents = []
             
-            if intent_result and isinstance(intent_result, dict):
-                detected_intent = intent_result.get("title", "").strip()
-                witty_hook = intent_result.get("witty_hook")
-                
-                print(f"DEBUG: Detected Intent: '{detected_intent}'")
-                # print(f"DEBUG: Available Sources: {[(s.intent, s.file_path) for s in secondary_sources]}")
-                
-                # Find the source file path (normalize both sides)
-                matched_source = next((s for s in secondary_sources if s.intent.strip() == detected_intent), None)
-                
-                if matched_source:
-                    intent_source = matched_source.file_path
-                    print(f"DEBUG: Found match. Source: {intent_source}")
-                else:
-                     print(f"DEBUG: No source match found for intent '{detected_intent}'")
+            if intent_result:
+                if isinstance(intent_result, dict):
+                    intent_result = [intent_result]
+                    
+                if isinstance(intent_result, list):
+                    for intent_dict in intent_result:
+                        if not isinstance(intent_dict, dict): continue
+                        
+                        d_intent = intent_dict.get("title", "").strip()
+                        w_hook = intent_dict.get("witty_hook")
+                        i_source = None
+                        
+                        print(f"DEBUG: Detected Intent: '{d_intent}'")
+                        
+                        # Find the source file path (normalize both sides)
+                        matched_source = next((s for s in secondary_sources if s.intent.strip() == d_intent), None)
+                        
+                        if matched_source:
+                            i_source = matched_source.file_path
+                            print(f"DEBUG: Found match. Source: {i_source}")
+                        else:
+                             print(f"DEBUG: No source match found for intent '{d_intent}'")
+                             
+                        if d_intent and d_intent.lower() != "none":
+                            secondary_intents.append({
+                                "detected_intent": d_intent,
+                                "witty_hook": w_hook,
+                                "intent_source": i_source
+                            })
+                            
+                    if secondary_intents:
+                        detected_intent = secondary_intents[0]["detected_intent"]
+                        witty_hook = secondary_intents[0]["witty_hook"]
+                        intent_source = secondary_intents[0]["intent_source"]
 
             if full_response and not full_response.startswith("Error:"):
                 
@@ -434,6 +454,7 @@ async def retrieve(
                          json_response["detected_intent"] = detected_intent
                          json_response["witty_hook"] = witty_hook
                          json_response["intent_source"] = intent_source
+                         json_response["secondary_intents"] = secondary_intents
                          
                          # Prefer trace ID from worker (contains correct project info)
                          if "traceId" not in json_response or not json_response["traceId"]:
@@ -455,6 +476,7 @@ async def retrieve(
                     "detected_intent": detected_intent,
                     "witty_hook": witty_hook,
                     "intent_source": intent_source,
+                    "secondary_intents": secondary_intents,
                     "traceId": trace_id,
                     "spanId": span_id
                 }

@@ -10,7 +10,7 @@ class VectorStoreProtocol(Protocol):
     def delete_collection(self, name: str) -> bool:
         ...
     
-    def insert_vectors(self, collection: str, vectors: List[List[float]], metadata: List[Dict[str, Any]]) -> List[str]:
+    def insert_vectors(self, collection: str, vectors: List[List[float]], metadata: List[Dict[str, Any]], chunk_ids: List[str] = None) -> Any:
         ...
     
     def query(self, collection: str, vector: List[float], top_k: int = 5, filters: Dict[str, Any] = None) -> List[Dict]:

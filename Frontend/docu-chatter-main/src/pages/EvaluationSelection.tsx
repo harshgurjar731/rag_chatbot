@@ -2,7 +2,7 @@
 import { SingleValue } from "react-select";
 import SelectMulti from "react-select";
 import { CardDescription } from '@/components/ui/card';
-import { Trash2, Upload, Plus, FileText, MessageSquarePlus, Settings, Loader2, Database, BrainCircuit, CheckCircle, Sparkles } from 'lucide-react';
+import { Trash2, Upload, Plus, FileText, MessageSquarePlus, Settings, Loader2, Database, BrainCircuit, CheckCircle, Sparkles, Clock } from 'lucide-react';
 import { API_BASE_URL } from '@/constants';
 // Define rich step info mapping
 const STEP_INFO = [
@@ -97,9 +97,13 @@ const EvaluationSelection = () => {
   const [timelineStatus, setTimelineStatus] = useState("");
   const [progress, setProgress] = useState(0);
 
-  // Cache state
-  const [cachedEvaluation, setCachedEvaluation] = useState<any>(null);
-  const [checkingCache, setCheckingCache] = useState(false);
+  // Cache state removed — only History is used now
+
+  // History state
+  const [showHistoryModal, setShowHistoryModal] = useState(false);
+  const [historyData, setHistoryData] = useState<Record<string, any[]>>({});
+  const [loadingHistory, setLoadingHistory] = useState(false);
+  const [activeHistoryTab, setActiveHistoryTab] = useState<string>("");
 
   // ✅ Call the hook once at the top level
   const { config } = useConfigOptions();
@@ -247,36 +251,53 @@ const EvaluationSelection = () => {
     }
   }, [chatbot?.datastoreId]);
 
-  // Check for cached evaluation when framework and chatbot are ready
-  const checkCachedEvaluation = useCallback(async () => {
-    if (!selectedFramework || !chatbot?.datastoreId) return;
-
-    setCheckingCache(true);
+  // Fetch evaluation history
+  const fetchHistory = async () => {
+    if (!chatbot?.datastoreId) return;
+    setLoadingHistory(true);
     try {
-      const response = await fetch(
-        `${API_BASE_URL}/evaluation/check-cache/${chatbot.datastoreId}?framework=${selectedFramework}&chatbot_id=${chatbot.id}`
+      const res = await fetch(
+        `${API_BASE_URL}/evaluation/history/${chatbot.datastoreId}?chatbot_id=${chatbot.id}`
       );
-      if (!response.ok) throw new Error("Failed to check cache");
-
-      const data = await response.json();
-      if (data.has_cache) {
-        setCachedEvaluation(data);
-        console.log("Found cached evaluation:", data);
-      } else {
-        setCachedEvaluation(null);
-      }
-    } catch (error) {
-      console.error("Error checking cache:", error);
-      setCachedEvaluation(null);
+      if (!res.ok) throw new Error("Failed to fetch history");
+      const data = await res.json();
+      setHistoryData(data);
+      // Default to first available tab
+      const keys = Object.keys(data);
+      if (keys.length > 0) setActiveHistoryTab(keys[0]);
+    } catch (err) {
+      console.error("Error fetching history:", err);
+      setHistoryData({});
     } finally {
-      setCheckingCache(false);
+      setLoadingHistory(false);
     }
-  }, [selectedFramework, chatbot?.datastoreId, chatbot?.id]);
+  };
 
-  // Check cache when framework or chatbot changes
-  useEffect(() => {
-    checkCachedEvaluation();
-  }, [checkCachedEvaluation]);
+  // View a specific historical result — navigate to the results dashboard
+  const handleViewHistoryResult = async (evalId: string, framework: string) => {
+    setShowHistoryModal(false);
+    try {
+      setLoading(true);
+      const response = await fetch(`${API_BASE_URL}/evaluation/results/${evalId}`);
+      if (!response.ok) throw new Error("Failed to fetch result");
+      const data = await response.json();
+
+      const fw = framework.toLowerCase();
+      const targetPath =
+        fw === "ragaas"
+          ? `/ragaas-output/${chatbot.id}?evalId=${evalId}`
+          : `/rag-output/${chatbot.id}?evalId=${evalId}`;
+
+      navigate(targetPath, {
+        state: { evaluationResponse: data },
+      });
+    } catch (err) {
+      console.error("Error loading history result:", err);
+      toast({ title: "Error", description: "Failed to load result.", variant: "destructive" });
+    } finally {
+      setLoading(false);
+    }
+  };
 
 
 
@@ -336,13 +357,14 @@ const EvaluationSelection = () => {
       const data = await response.json();
       console.log("Q&A saved:", data);
 
-      // Construct full Q&A object for state
+      // Construct full Q&A object for state with REAL question_id from server
       const qaData = [
         {
           question: newQuestion,
           answer: newAnswer,
           file_id: fileId,
-          question_id: Date.now(), // temporary unique id for frontend
+          document_id: fileId,
+          question_id: data.question_id, // REAL ID from backend
           datastore_id: chatbot.datastoreId,
         },
       ];
@@ -405,31 +427,45 @@ const EvaluationSelection = () => {
   }, [generatedQA]);
 
 
-  // Delete QA by question text and file_id
-  const deleteQA = async (file_id: number, question: string) => {
+  // Delete QA by question_id or lookup if missing
+  const deleteQA = async (id: number | { file_id: number, question: string }) => {
     try {
-      // 1∩╕ÅΓâú Get question_id from API
-      const questionIdResponse = await fetch(
-        `${API_BASE_URL}/evaluation/datastore/qna/id?file_id=${file_id}&question=${encodeURIComponent(
-          question
-        )}`
-      );
-      if (!questionIdResponse.ok) throw new Error("Failed to get question ID");
+      let question_id: number;
 
-      const { question_id } = await questionIdResponse.json();
+      if (typeof id === 'number') {
+        question_id = id;
+      } else {
+        // Fallback for cases where question_id is missing (legacy UI state)
+        const { file_id, question } = id;
+        const questionIdResponse = await fetch(
+          `${API_BASE_URL}/evaluation/datastore/qna/id?file_id=${file_id}&question=${encodeURIComponent(
+            question
+          )}`
+        );
+        if (!questionIdResponse.ok) throw new Error("Failed to get question ID");
+        const data = await questionIdResponse.json();
+        question_id = data.question_id;
+      }
 
-      // 2∩╕ÅΓâú Delete QA by question_id
+      // Delete QA by question_id
       const deleteResponse = await fetch(`${API_BASE_URL}/evaluation/datastore/qna/${question_id}`, {
         method: "DELETE",
       });
       if (!deleteResponse.ok) throw new Error("Failed to delete QA");
 
-      // 3∩╕ÅΓâú Update frontend state
+      // Update frontend state
       setGeneratedQA((prev) => prev.filter((item) => item.question_id !== question_id));
-      alert("QA deleted successfully");
+      toast({
+        title: "Q&A Deleted",
+        description: "The pair has been removed successfully.",
+      });
     } catch (err) {
       console.error(err);
-      alert("Error deleting QA");
+      toast({
+        title: "Error Deleting Q&A",
+        description: "There was a problem removing the pair.",
+        variant: "destructive"
+      });
     }
   };
 
@@ -543,7 +579,7 @@ const EvaluationSelection = () => {
     toast({ title: "Evaluation Completed", description: "Results are ready!" });
   };
 
-  const startEvaluationApi = async (forceRerun: boolean = false) => {
+  const startEvaluationApi = async () => {
     try {
       setLoading(true);
       const response = await fetch(`${API_BASE_URL}/evaluation/start-evaluation`, {
@@ -555,7 +591,6 @@ const EvaluationSelection = () => {
           framework: selectedFramework,
           metrics: selectedMetrics,
           chatbot_id: chatbot.id,
-          force_rerun: forceRerun,
         }),
       });
 
@@ -615,19 +650,19 @@ const EvaluationSelection = () => {
 
   // --- Step Status Helper ---
   const getStepStatus = (index: number) => {
+    if (isCompleted) return "completed";
     if (index < currentStep) return "completed";
     if (index === currentStep) return "current";
     return "pending";
   };
 
   // --- Handle start evaluation ---
-  const handleStartEvaluation = async (forceRerun: boolean = false) => {
+  const handleStartEvaluation = async () => {
     try {
       setEvaluationStarted(true);
-      setCachedEvaluation(null); // Clear cache when starting new evaluation
 
       // call backend to start evaluation
-      const startRes = await startEvaluationApi(forceRerun);
+      const startRes = await startEvaluationApi();
       if (!startRes?.evaluation_id) return;
 
       // save ID for polling
@@ -877,106 +912,57 @@ const EvaluationSelection = () => {
                   </div>
 
                   <div className="pt-4 space-y-3">
-                    {checkingCache ? (
-                      <div className="flex items-center justify-center py-3 text-gray-400">
-                        <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                        Checking for cached results...
-                      </div>
-                    ) : cachedEvaluation ? (
-                      // Show "View Results" and "Re-run" buttons when cache exists
-                      <>
-                        <div className="p-3 rounded-lg bg-indigo-500/10 border border-indigo-500/20">
-                          <div className="flex items-center gap-2 text-sm text-indigo-300">
-                            <CheckCircle className="h-4 w-4" />
-                            <span>Cached results available from {new Date(cachedEvaluation.created_at).toLocaleDateString()}</span>
-                          </div>
+                    <Button
+                      onClick={() => {
+                        if (!selectedFramework) {
+                          toast({
+                            title: "Framework Required",
+                            description: "Please select a framework first.",
+                            variant: "destructive",
+                          });
+                          return;
+                        }
+                        if (selectedMetrics.length === 0) {
+                          toast({
+                            title: "Metrics Required",
+                            description: "Please select at least one metric.",
+                            variant: "destructive",
+                          });
+                          return;
+                        }
+                        handleStartEvaluation();
+                      }}
+                      disabled={loading || evaluationStarted}
+                      className={`w-full h-12 rounded-xl text-md font-semibold font-medium transition-all duration-300 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white shadow-lg hover:shadow-indigo-500/25 ring-0 border-0 
+                        ${loading ? "opacity-70" : "hover:scale-[1.02]"}`}
+                    >
+                      {loading ? (
+                        <div className="flex items-center gap-2">
+                          <span className="w-4 h-4 rounded-full border-2 border-white/30 border-t-white animate-spin" />
+                          Starting...
                         </div>
-                        <Button
-                          onClick={handleViewCachedResults}
-                          disabled={loading || evaluationStarted}
-                          className="w-full h-12 rounded-xl text-md font-semibold transition-all duration-300 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-500 hover:to-emerald-500 text-white shadow-lg hover:shadow-green-500/25 hover:scale-[1.02]"
-                        >
-                          <div className="flex items-center gap-2">
-                            <Eye className="h-4 w-4" />
-                            View Cached Results
-                          </div>
-                        </Button>
-                        <Button
-                          onClick={() => {
-                            if (!selectedFramework) {
-                              toast({
-                                title: "Framework Required",
-                                description: "Please select a framework first.",
-                                variant: "destructive",
-                              });
-                              return;
-                            }
-                            if (selectedMetrics.length === 0) {
-                              toast({
-                                title: "Metrics Required",
-                                description: "Please select at least one metric.",
-                                variant: "destructive",
-                              });
-                              return;
-                            }
-                            handleStartEvaluation(true); // force_rerun = true
-                          }}
-                          disabled={loading || evaluationStarted}
-                          variant="outline"
-                          className="w-full h-12 rounded-xl text-md font-semibold transition-all duration-300 border-white/10 bg-white/5 hover:bg-white/10 text-white hover:scale-[1.02]"
-                        >
-                          {loading ? (
-                            <div className="flex items-center gap-2">
-                              <span className="w-4 h-4 rounded-full border-2 border-white/30 border-t-white animate-spin" />
-                              Starting...
-                            </div>
-                          ) : (
-                            <div className="flex items-center gap-2">
-                              <Play className="h-4 w-4" />
-                              Re-run Evaluation
-                            </div>
-                          )}
-                        </Button>
-                      </>
-                    ) : (
-                      // Show "Start Evaluation" button when no cache
-                      <Button
-                        onClick={() => {
-                          if (!selectedFramework) {
-                            toast({
-                              title: "Framework Required",
-                              description: "Please select a framework first.",
-                              variant: "destructive",
-                            });
-                            return;
-                          }
-                          if (selectedMetrics.length === 0) {
-                            toast({
-                              title: "Metrics Required",
-                              description: "Please select at least one metric.",
-                              variant: "destructive",
-                            });
-                            return;
-                          }
-                          handleStartEvaluation(false);
-                        }}
-                        disabled={loading || evaluationStarted}
-                        className={`w-full h-12 rounded-xl text-md font-semibold font-medium transition-all duration-300 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white shadow-lg hover:shadow-indigo-500/25 ring-0 border-0 
-                          ${loading ? "opacity-70" : "hover:scale-[1.02]"}`}
-                      >
-                        {loading ? (
-                          <div className="flex items-center gap-2">
-                            <span className="w-4 h-4 rounded-full border-2 border-white/30 border-t-white animate-spin" />
-                            Starting...
-                          </div>
-                        ) : (
-                          <div className="flex items-center gap-2">
-                            <Play className="h-4 w-4 fill-white" />
-                            Start Evaluation
-                          </div>
-                        )}
-                      </Button>
-                    )}
+                      ) : (
+                        <div className="flex items-center gap-2">
+                          <Play className="h-4 w-4 fill-white" />
+                          Start Evaluation
+                        </div>
+                      )}
+                    </Button>
+                  </div>
+
+                  {/* History Button — always visible below the evaluation buttons */}
+                  <div className="pt-2">
+                    <Button
+                      onClick={() => {
+                        fetchHistory();
+                        setShowHistoryModal(true);
+                      }}
+                      variant="ghost"
+                      className="w-full h-10 rounded-xl text-sm font-medium text-gray-400 hover:text-white hover:bg-white/5 border border-white/5 hover:border-white/10 flex items-center gap-2 transition-all duration-200"
+                    >
+                      <Clock className="h-4 w-4" />
+                      View Evaluation History
+                    </Button>
                   </div>
                 </CardContent>
               </Card>
@@ -1037,10 +1023,10 @@ const EvaluationSelection = () => {
                                       ? 'bg-gray-900 border-indigo-500 shadow-[0_0_30px_rgba(99,102,241,0.4)] text-indigo-400 scale-110'
                                       : 'bg-gray-900/80 border-white/10 text-gray-600'}
                                 `}>
-                                  {isActive && (
+                                  {isActive && !isCompleted && (
                                     <div className="absolute inset-0 bg-indigo-500/20 rounded-2xl animate-ping" />
                                   )}
-                                  <Icon className={`w-5 h-5 ${isActive && index === 0 ? 'animate-spin' : ''}`} />
+                                  <Icon className={`w-5 h-5 ${isActive && !isCompleted && index === 0 ? 'animate-spin' : ''}`} />
 
                                   {isCompleted && (
                                     <div className="absolute -top-1 -right-1 bg-green-500 rounded-full p-0.5 border-2 border-gray-900">
@@ -1245,7 +1231,16 @@ const EvaluationSelection = () => {
                               onClick={async (e) => {
                                 e.stopPropagation();
                                 if (!confirm("Are you sure?")) return;
-                                await deleteQA(qa.file_id, qa.question);
+
+                                if (qa.question_id) {
+                                  await deleteQA(qa.question_id);
+                                } else {
+                                  // Fallback for safety if question_id is somehow missing
+                                  await deleteQA({
+                                    file_id: (qa.document_id || qa.file_id) as number,
+                                    question: qa.question
+                                  });
+                                }
                               }}
                             >
                               <Trash2 className="w-4 h-4" />
@@ -1278,8 +1273,108 @@ const EvaluationSelection = () => {
           </TabsContent>
         </Tabs>
       </div>
+
+      {/* ─── Evaluation History Modal ─── */}
+      <Dialog open={showHistoryModal} onOpenChange={setShowHistoryModal}>
+        <DialogContent className="sm:max-w-[600px] bg-gray-950 border border-white/10 text-white rounded-2xl shadow-2xl">
+          <DialogHeader>
+            <DialogTitle className="text-xl font-semibold flex items-center gap-2">
+              <Clock className="h-5 w-5 text-indigo-400" />
+              Evaluation History
+            </DialogTitle>
+            <DialogDescription className="text-gray-400">
+              Last 5 evaluation runs per framework.
+            </DialogDescription>
+          </DialogHeader>
+
+          {loadingHistory ? (
+            <div className="flex items-center justify-center py-12">
+              <Loader2 className="h-6 w-6 animate-spin text-indigo-400" />
+              <span className="ml-3 text-gray-400">Loading history…</span>
+            </div>
+          ) : Object.keys(historyData).length === 0 ? (
+            <div className="text-center py-12 text-gray-500">
+              <Clock className="h-10 w-10 mx-auto mb-3 opacity-40" />
+              <p>No evaluation history found.</p>
+              <p className="text-sm mt-1">Run an evaluation to see results here.</p>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {/* Framework Tabs */}
+              <div className="flex gap-2 p-1 bg-black/40 rounded-xl">
+                {Object.keys(historyData).map((fw) => (
+                  <button
+                    key={fw}
+                    onClick={() => setActiveHistoryTab(fw)}
+                    className={`flex-1 py-2 px-4 rounded-lg text-sm font-medium capitalize transition-all duration-200 ${activeHistoryTab === fw
+                      ? "bg-indigo-600 text-white shadow-lg"
+                      : "text-gray-400 hover:text-white hover:bg-white/5"
+                      }`}
+                  >
+                    {fw}
+                  </button>
+                ))}
+              </div>
+
+              {/* Results list for active tab */}
+              <div className="space-y-2 max-h-[400px] overflow-y-auto pr-1 custom-scrollbar">
+                {(historyData[activeHistoryTab] || []).map((entry: any, idx: number) => (
+                  <div
+                    key={entry.evaluation_id}
+                    className="flex items-center justify-between p-4 bg-white/[0.03] border border-white/5 rounded-xl hover:border-indigo-500/30 hover:bg-white/[0.05] transition-all duration-200"
+                  >
+                    <div className="flex-1 min-w-0 space-y-1.5">
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm font-medium text-white">
+                          Run #{(historyData[activeHistoryTab] || []).length - idx}
+                        </span>
+                        <span className="text-xs text-gray-500">
+                          {new Date(entry.created_at).toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" })}{" "}
+                          {new Date(entry.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
+                        </span>
+                      </div>
+                      <div className="flex flex-wrap gap-1.5">
+                        {(entry.metrics || []).map((m: string) => (
+                          <Badge key={m} variant="outline" className="text-[10px] px-2 py-0 border-indigo-500/20 text-indigo-300 bg-indigo-500/10 rounded-md capitalize">
+                            {m.replace(/_/g, " ")}
+                          </Badge>
+                        ))}
+                      </div>
+                      <div className="flex gap-4 text-xs text-gray-500">
+                        <span className="flex items-center gap-1">
+                          <svg className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 2L2 7l10 5 10-5-10-5z" /><path d="M2 17l10 5 10-5" /><path d="M2 12l10 5 10-5" /></svg>
+                          {entry.qa_count != null && entry.qa_count > 0 ? `${entry.qa_count} Q&A pairs` : "N/A"}
+                        </span>
+                        <span className="flex items-center gap-1">
+                          <Clock className="w-3 h-3" />
+                          {entry.execution_time_seconds != null
+                            ? entry.execution_time_seconds >= 60
+                              ? `${Math.floor(entry.execution_time_seconds / 60)}m ${Math.round(entry.execution_time_seconds % 60)}s`
+                              : `${entry.execution_time_seconds.toFixed(1)}s`
+                            : "N/A"}
+                        </span>
+                      </div>
+                    </div>
+
+                    <Button
+                      size="sm"
+                      onClick={() => handleViewHistoryResult(entry.evaluation_id, entry.framework)}
+                      className="ml-4 rounded-lg bg-white/5 border border-white/10 hover:bg-indigo-600 hover:border-indigo-500 text-gray-300 hover:text-white transition-all duration-200 text-xs px-3"
+                    >
+                      <Eye className="h-3.5 w-3.5 mr-1.5" />
+                      View
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
     </div>
   );
 };
 
 export default EvaluationSelection;
+

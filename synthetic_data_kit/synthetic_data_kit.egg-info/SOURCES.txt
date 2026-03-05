@@ -1,0 +1,8 @@
+pyproject.toml
+setup.py
+synthetic_data_kit.egg-info/PKG-INFO
+synthetic_data_kit.egg-info/SOURCES.txt
+synthetic_data_kit.egg-info/dependency_links.txt
+synthetic_data_kit.egg-info/entry_points.txt
+synthetic_data_kit.egg-info/requires.txt
+synthetic_data_kit.egg-info/top_level.txt

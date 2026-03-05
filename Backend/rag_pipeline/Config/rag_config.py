@@ -3,7 +3,7 @@ from pathlib import Path
 from dotenv import load_dotenv
 
 # Load variables from .env file
-load_dotenv()
+load_dotenv(override=True)
 
 RAG_CONFIG = {
     # LLM Related
@@ -18,12 +18,12 @@ RAG_CONFIG = {
     "default_guardrail_type": os.getenv("DEFAULT_GUARDRAIL_TYPE", "None"),
 
     #Azure Open AI configs
-    "AZURE_OPENAI_ENDPOINT": "https://knowledgesynthesis.openai.azure.com/",
-    "AZURE_OPENAI_API_KEY": "239wAP9aB98yqPnlsfsIJEyUhYLq7dW254TkygU4q7w7swGzqMhbJQQJ99BLACYeBjFXJ3w3AAABACOGJ103",
-    "AZURE_OPENAI_API_VERSION": "2025-01-01-preview",
+    "AZURE_OPENAI_ENDPOINT": os.getenv("AZURE_API_BASE", ""),
+    "AZURE_OPENAI_API_KEY": os.getenv("AZURE_API_KEY", ""),
+    "AZURE_OPENAI_API_VERSION": os.getenv("AZURE_API_VERSION", "2025-01-01-preview"),
 
     #GROQ OPEN AI configs
-    "GROQ_API_KEY": "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",
+    "GROQ_API_KEY": os.getenv("GROQ_API_KEY", ""),
     "GROQ_API_BASE": "https://api.groq.com/openai/v1",
 
     "default_conversation_history_count": int(os.getenv("DEFAULT_CONVERSATION_HISTORY_COUNT", "10")),

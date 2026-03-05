@@ -117,24 +117,34 @@ class ChromaVectorDB(VectorStoreProtocol):
         return len(added_ids) > 0
 
     def test_retrieval(self, collection: str, embedding: HuggingFaceEmbeddings | OpenAIEmbeddings, queryList: List[str], topk: int, selected_docs: List[str] = []) -> List[List[Document]]:
-        from langchain_chroma import Chroma
-        vector_store = Chroma(
-            client=self.client,
-            collection_name=collection,
-            embedding_function=embedding,
-        )
-        
+        # Use raw chromadb client to avoid langchain_chroma version mismatch (_type KeyError)
+        chroma_coll = self.client.get_collection(name=collection)
+
         results = []
         for query in queryList:
-            # Note: filter by selected_docs if needed, Chroma uses 'where' filter
             filter_dict = None
             if selected_docs:
                 if len(selected_docs) == 1:
                     filter_dict = {"source": selected_docs[0]}
                 else:
                     filter_dict = {"source": {"$in": selected_docs}}
-            
-            docs = vector_store.similarity_search(query, k=topk, filter=filter_dict)
+
+            # Embed the query ourselves
+            query_embedding = embedding.embed_query(query)
+
+            query_results = chroma_coll.query(
+                query_embeddings=[query_embedding],
+                n_results=topk,
+                where=filter_dict,
+                include=["documents", "metadatas", "distances"]
+            )
+
+            docs = []
+            if query_results.get("ids") and query_results["ids"][0]:
+                for i in range(len(query_results["ids"][0])):
+                    page_content = (query_results["documents"][0][i] if query_results.get("documents") else "") or ""
+                    metadata = (query_results["metadatas"][0][i] if query_results.get("metadatas") else {}) or {}
+                    docs.append(Document(page_content=page_content, metadata=metadata))
             results.append(docs)
         return results
 

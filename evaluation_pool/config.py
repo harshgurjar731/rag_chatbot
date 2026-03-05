@@ -3,7 +3,10 @@ import os
 from dotenv import load_dotenv
 
 # Load environment variables
-load_dotenv()
+load_dotenv(override=True)
+
+# Auto-detect if running in Docker
+IS_DOCKER = os.path.exists('/.dockerenv') or os.path.exists('/proc/self/cgroup') and 'docker' in open('/proc/self/cgroup').read()
 
 CONFIG = {
     # Azure OpenAI
@@ -19,15 +22,15 @@ CONFIG = {
     # Database
     "db_user": os.getenv("DB_USER", "user").strip(),
     "db_password": os.getenv("DB_PASSWORD", "password").strip(),
-    "db_host": os.getenv("DB_HOST", "db").strip(),
+    "db_host": os.getenv("DB_HOST", "db" if IS_DOCKER else "localhost").strip(),
     "db_name": os.getenv("DB_NAME", "chatbot_db").strip(),
     
     # Redis
-    "redis_host": os.getenv("REDIS_HOST", "redis").strip(),
+    "redis_host": os.getenv("REDIS_HOST", "redis" if IS_DOCKER else "localhost").strip(),
     "redis_port": os.getenv("REDIS_PORT", "6379").strip(),
     
     # Paths
-    "data_directory": os.getenv("DATA_DIRECTORY", "/app/data_directory").strip(),
+    "data_directory": os.getenv("DATA_DIRECTORY", "/app/data_directory" if IS_DOCKER else os.path.join(os.path.dirname(os.path.dirname(__file__)), "data_directory")).strip(),
     
     # Evaluation Configuration
     "evaluation_llm_provider": os.getenv("EVALUATION_LLM_PROVIDER", "groq").strip(),

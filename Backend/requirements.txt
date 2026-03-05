@@ -1,33 +1,33 @@
 # --- Core Framework & Utils ---
-fastapi
-uvicorn
-python-multipart
-pydantic
-pydantic-settings
-sqlmodel
-python-dotenv
-aiofiles
-requests
-redis
-psycopg2-binary
-passlib[bcrypt]
-bcrypt<4.0
-python-jose[cryptography]
+fastapi==0.119.1
+uvicorn==0.38.0
+python-multipart==0.0.20
+pydantic==2.12.5
+pydantic-settings==2.10.1
+sqlmodel==0.0.24
+python-dotenv==1.2.1
+aiofiles==24.1.0
+requests==2.32.5
+redis==7.2.0
+psycopg2-binary==2.9.11
+passlib[bcrypt]==1.7.4
+bcrypt==5.0.0
+python-jose[cryptography]==3.5.0
 
 # --- LangChain Ecosystem (Lightweight) ---
-langchain-core
+langchain-core==1.2.15
 
 # --- Observability & Tracing (Phoenix) ---
-opentelemetry-api
-opentelemetry-sdk
-opentelemetry-exporter-otlp
-arize-phoenix-otel
-arize-phoenix
-openinference-instrumentation-langchain
-openinference-instrumentation-openai
-deep-translator
-langchain-text-splitters
-pypdf
-openai
-langchain-openai
-mistralai
+opentelemetry-api==1.39.1
+opentelemetry-sdk==1.39.1
+opentelemetry-exporter-otlp==1.39.1
+arize-phoenix-otel==0.14.0
+arize-phoenix==4.40.1
+openinference-instrumentation-langchain==0.1.59
+openinference-instrumentation-openai==0.1.41
+deep-translator==1.11.4
+langchain-text-splitters==0.3.8
+pypdf==5.7.0
+openai==2.23.0
+langchain-openai==0.3.32
+mistralai==1.9.11

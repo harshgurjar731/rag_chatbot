@@ -13,7 +13,7 @@ load_dotenv()
 
 # Initialize Mistral Client
 # MISTRAL_API_KEY should be passed or in env
-mistral_api_key = "ZpuwhInKUMLpkFTtA9zKmu7n0vxhLFRJ"
+mistral_api_key = RAG_CONFIG.get("mistral_api_key", "")
 mistral_model = "voxtral-mini-latest"
 
 def get_mistral_client():
@@ -25,8 +25,14 @@ def get_mistral_client():
 def extract_audio_to_mp3(video_path, output_audio_path):
     """Extract audio from video and convert to MP3"""
     # Verify ffmpeg presence (optional, subprocess will fail otherwise)
+    try:
+        import imageio_ffmpeg
+        ffmpeg_exe = imageio_ffmpeg.get_ffmpeg_exe()
+    except ImportError:
+        ffmpeg_exe = 'ffmpeg' # fallback if not installed
+
     command = [
-        'ffmpeg',
+        ffmpeg_exe,
         '-i', video_path,
         '-vn',
         '-acodec', 'libmp3lame',

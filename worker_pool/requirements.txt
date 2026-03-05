@@ -54,7 +54,6 @@ langchain-nvidia-ai-endpoints
 
 # Guardrails
 nemoguardrails
-guardrails-ai
 
 # Observability
 opentelemetry-api

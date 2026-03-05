@@ -3,11 +3,12 @@ from pathlib import Path
 from dotenv import load_dotenv
 
 # Load variables from .env file
-load_dotenv()
+load_dotenv(override=True)
 
 INGESTION_CONFIG = {
     #Folder Paths
-    "ingestion_root": Path("/app"),
+    # "ingestion_root": Path("/app"),
+    "ingestion_root": Path(os.getenv("DATA_DIRECTORY", "/app/data_directory")).parent,
     "ingestion_data_folder_name": "data_directory",
     "ingestion_temp_folder_name": "temp_directory",
 

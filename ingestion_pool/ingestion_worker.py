@@ -149,16 +149,21 @@ async def process_upsert_job(job_data: dict):
             )
             
             list_img_uri: List[str] = []
+            list_img_texts: List[str] = []
             list_metadata: List[dict] = []
             for id, imageDoc in enumerate(list_of_img_documents):
                 list_img_uri.append(imageDoc.metadata["source"])
+                list_img_texts.append(imageDoc.page_content)
                 list_metadata.append({"page_content": imageDoc.page_content, "metadata": imageDoc.metadata})
 
-            embeddingVectors = embeddingModel.embed_image(uris=list_img_uri)
+            if hasattr(embeddingModel, "embed_image"):
+                embeddingVectors = embeddingModel.embed_image(uris=list_img_uri)
+            else:
+                embeddingVectors = embeddingModel.embed_documents(list_img_texts)
             
             # Note: insert_success logic merging logic simplified here
             success_img = vectordb.insert_vectors(
-                collection=str(datastore_id) + "_image",
+                collection=f"datastore_{datastore_id}_image",
                 vectors=embeddingVectors,
                 metadata=list_metadata,
                 chunk_ids=img_chunk_ids
@@ -239,7 +244,7 @@ async def process_delete_collection_job(job_data: dict):
             vectorDB.delete_collection(name=str(datastore_id))
             # Also try delete image collection if exists
             try:
-                 vectorDB.delete_collection(name=str(datastore_id) + "_image")
+                 vectorDB.delete_collection(name=f"datastore_{datastore_id}_image")
             except:
                 pass
             print(f"[*] Collection {datastore_id} deleted from {vector_store_provider}")

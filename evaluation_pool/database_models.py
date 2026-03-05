@@ -73,7 +73,7 @@ class EvaluationResult(SQLModel, table=True):
     
     # Results data
     results: str = Field(sa_column=Column(JSON))
-    metadata: Optional[str] = Field(default=None, sa_column=Column(JSON))
+    meta_info: Optional[str] = Field(default=None, sa_column=Column(JSON))
     
     # Status and validity
     is_valid: bool = Field(default=True)

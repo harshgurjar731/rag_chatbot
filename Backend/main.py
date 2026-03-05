@@ -9,7 +9,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from dotenv import load_dotenv
 
 # Load env file to pick up OTEL configs locally (don't override Docker envs)
-load_dotenv(override=False)
+load_dotenv(override=True)
 
 # Standard OpenTelemetry Imports
 from opentelemetry import trace
@@ -32,7 +32,7 @@ def configure_opentelemetry_for_phoenix():
     endpoint = os.getenv("OTEL_EXPORTER_OTLP_ENDPOINT", "")
     project_name = os.getenv("OTEL_PROJECT_NAME", "RAGBOT")
 
-    print(f"📡 Configuring Phoenix Tracing to: {endpoint} (Project: {project_name})")
+    print(f"[INFO] Configuring Phoenix Tracing to: {endpoint} (Project: {project_name})")
 
     # 1. Define Resource
     resource = Resource(attributes={
@@ -56,15 +56,15 @@ def configure_opentelemetry_for_phoenix():
     try:
         trace.set_tracer_provider(tracer_provider)
     except Exception as e:
-        print(f"⚠️ Failed to set tracer provider: {e}")
+        print(f"[WARNING] Failed to set tracer provider: {e}")
     
     # 6. Instrument Libraries
     try:
         LangChainInstrumentor().instrument(tracer_provider=tracer_provider)
         OpenAIInstrumentor().instrument(tracer_provider=tracer_provider)
-        print("✅ Instrumentation Complete: LangChain & OpenAI")
+        print("[INFO] Instrumentation Complete: LangChain & OpenAI")
     except Exception as e:
-        print(f"⚠️ Instrumentation Error: {e}")
+        print(f"[WARNING] Instrumentation Error: {e}")
 
 # Execute instrumentation BEFORE anything else
 configure_opentelemetry_for_phoenix()
@@ -113,20 +113,20 @@ async def global_exception_handler(request: Request, exc: Exception):
 #     """Handle preflight requests for all routes"""
 #     return Response(status_code=200)
 
-from ingestion_pipleline.ingestion_datastore_router import router as ingestion_datastore_router
-from ingestion_pipleline.ingestion_document_loader_router import router as ingestion_document_router
-from ingestion_pipleline.ingestion_chunks_router import router as ingestion_chunking_router
+from ingestion_pipeline.ingestion_datastore_router import router as ingestion_datastore_router
+from ingestion_pipeline.ingestion_document_loader_router import router as ingestion_document_router
+from ingestion_pipeline.ingestion_chunks_router import router as ingestion_chunking_router
 from ingestion_pipeline.secondary_source_router import router as secondary_source_router # Added
 from rag_pipeline.rag_router import router as rag_knowledge_asst_router
 from authentication.authentication_router import router as authentication_router
-from routes import translate, frontend_config, embedding
+from routes import translate, frontend_config
 from routes.evaluation import router as evaluation_router
 # # Include all the different API routers
 # app.include_router(datastore.router, prefix="/datastore")
 # app.include_router(upload.router)
 # app.include_router(preview.router, prefix="/datastore")
 # app.include_router(chunking.router, prefix="/datastore")
-app.include_router(embedding.router, prefix="/datastore")
+
 # app.include_router(retriever.router, prefix="/retriever")
 # app.include_router(delete.router, prefix="/datastore")
 # app.include_router(url_scraper.router, prefix="/urlscraper")

@@ -11,7 +11,7 @@ from pydantic import BaseModel
 
 router = APIRouter()
 
-from ingestion_pipleline.Config.Config import INGESTION_CONFIG
+from ingestion_pipeline.Config.Config import INGESTION_CONFIG
 from fastapi.responses import FileResponse
 import urllib.parse
 

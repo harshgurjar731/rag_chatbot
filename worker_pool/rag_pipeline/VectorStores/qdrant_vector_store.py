@@ -3,8 +3,8 @@ from typing import List, Dict, Any, Optional
 from PIL import Image
 from langchain_core.documents import Document
 from langchain_core.embeddings import Embeddings
-from langchain_qdrant import QdrantVectorStore
-from langchain_experimental.open_clip.open_clip import OpenCLIPEmbeddings
+from langchain_qdrant import QdrantVectorStore  # installed: langchain-qdrant
+# from langchain_experimental.open_clip.open_clip import OpenCLIPEmbeddings  # lazy-imported where needed
 from langchain_community.embeddings import HuggingFaceEmbeddings, OpenAIEmbeddings
 import json
 import os

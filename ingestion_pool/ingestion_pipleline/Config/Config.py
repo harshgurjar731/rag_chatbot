@@ -3,12 +3,12 @@ from pathlib import Path
 from dotenv import load_dotenv
 
 # Load variables from .env file
-load_dotenv()
+load_dotenv(override=True)
 
 INGESTION_CONFIG = {
     #Folder Paths
-    #Folder Paths
-    "ingestion_root": Path("/app"),
+    # "ingestion_root": Path("/app"),
+    "ingestion_root": Path(os.getenv("DATA_DIRECTORY", "/app/data_directory")).parent,
     "ingestion_data_folder_name": "data_directory",
     "ingestion_temp_folder_name": "temp_directory",
 
@@ -121,6 +121,8 @@ INGESTION_CONFIG = {
         "gpt-4o-mini"
     ).split(","),
 
-
+    # Qdrant configs (with fallback for backwards compatibility)
+    "QDRANT_API_KEY": os.getenv("QDRANT_API_KEY", "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhY2Nlc3MiOiJtIn0.ernM56z1tGICY_kClkY1YatoJDT3cQq1qao_ciK16OU"),
+    "QDRANT_CLUSTER_URL": os.getenv("QDRANT_CLUSTER_URL", "https://5c0a81e7-3111-4734-924f-caddc3276aa3.europe-west3-0.gcp.cloud.qdrant.io"),
 
 }

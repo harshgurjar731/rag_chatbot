@@ -1,0 +1,13 @@
+Metadata-Version: 2.4
+Name: synthetic-data-kit
+Version: 0.1.0
+Summary: Synthetic Data Generation Toolkit
+Requires-Python: >=3.10
+Description-Content-Type: text/markdown
+Requires-Dist: pydantic
+Requires-Dist: pyyaml
+Requires-Dist: click
+Requires-Dist: openai
+Requires-Dist: langchain
+Requires-Dist: pandas
+Requires-Dist: numpy

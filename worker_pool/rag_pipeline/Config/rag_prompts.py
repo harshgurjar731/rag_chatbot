@@ -10,7 +10,7 @@ from pathlib import Path
 from dotenv import load_dotenv
 
 # Load variables from .env file
-load_dotenv()
+load_dotenv(override=True)
 
 # prompt = RAG_PROMPTS["rag_template"].format(context=context_text)
 
