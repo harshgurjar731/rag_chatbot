@@ -16,13 +16,10 @@ nemoguardrails
 # File Processing
 beautifulsoup4
 camelot-py
-
 PyMuPDF
-pytesseract
 Pillow
 opencv-python-headless
 python-multipart
-pdf2image
 scikit-learn
 ragas
 

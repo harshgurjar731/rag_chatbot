@@ -4,6 +4,10 @@ FROM continuumio/miniconda3:latest AS builder
 
 WORKDIR /build
 
+# Configure conda for slow networks
+RUN conda config --set remote_read_timeout_secs 600 && \
+    conda config --set remote_max_retries 5
+
 # Install build dependencies via conda (no apt needed)
 RUN conda install -y -c conda-forge \
     gcc_linux-64=14.2.* \
@@ -37,7 +41,9 @@ COPY --from=builder /opt/conda/bin /opt/conda/bin
 COPY . .
 
 # Install runtime binary dependencies (ffmpeg)
-RUN conda install -y -c conda-forge ffmpeg=6.1.* && conda clean -a -y
+RUN conda config --set remote_read_timeout_secs 600 && \
+    conda config --set remote_max_retries 5 && \
+    conda install -y -c conda-forge ffmpeg=6.1.* && conda clean -a -y
 
 # Environment variables
 ENV PYTHONUNBUFFERED=1 \

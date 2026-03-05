@@ -1,6 +1,5 @@
 from rag_pipeline.VectorStores.vector_store_protocol import VectorStoreProtocol
 from typing import List, Dict, Any, Optional
-from PIL import Image
 from langchain_core.documents import Document
 from langchain_core.embeddings import Embeddings
 from langchain_qdrant import QdrantVectorStore  # installed: langchain-qdrant
@@ -8,12 +7,6 @@ from langchain_qdrant import QdrantVectorStore  # installed: langchain-qdrant
 from langchain_community.embeddings import HuggingFaceEmbeddings, OpenAIEmbeddings
 import json
 import os
-import fitz  # PyMuPDF
-import pytesseract
-pytesseract.pytesseract.tesseract_cmd = r'C:\Program Files\Tesseract-OCR\tesseract.exe'  # Update this path as needed
-import camelot
-import csv
-import io
 import uuid
 from qdrant_client import QdrantClient, models
 from qdrant_client.models import VectorParams, Distance, PointStruct, Filter, FieldCondition, MatchValue

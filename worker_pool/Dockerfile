@@ -4,6 +4,10 @@ FROM continuumio/miniconda3:latest AS builder
 
 WORKDIR /build
 
+# Configure conda for slow networks
+RUN conda config --set remote_read_timeout_secs 600 && \
+    conda config --set remote_max_retries 5
+
 # Install build dependencies via conda (no apt needed)
 RUN conda install -y -c conda-forge \
     python=3.12 \
@@ -33,11 +37,10 @@ FROM continuumio/miniconda3:latest
 WORKDIR /app
 
 # Install only runtime system dependencies via conda
-RUN conda install -y -c conda-forge \
+RUN conda config --set remote_read_timeout_secs 600 && \
+    conda config --set remote_max_retries 5 && \
+    conda install -y -c conda-forge \
     python=3.12 \
-    tesseract \
-    poppler \
-    ghostscript \
     && conda clean -a -y
 
 # Copy installed packages from builder

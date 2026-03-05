@@ -142,9 +142,7 @@ arize-phoenix-evals==0.18.1
 # --- PDF & Document Processing ---
 pypdf==6.7.2
 PyMuPDF==1.25.3
-pdf2image==1.17.0
 pdfminer.six==20260107
-pytesseract==0.3.13
 camelot-py==1.0.9
 python-docx==1.2.0
 python-pptx==1.0.2

@@ -3,13 +3,16 @@ FROM continuumio/miniconda3:latest
 
 WORKDIR /app
 
+# Configure conda for slow networks
+RUN conda config --set remote_read_timeout_secs 600 && \
+    conda config --set remote_max_retries 5
+
 # Install system dependencies & Python 3.11 via conda
 # Python 3.11 is required for numpy<2 wheels and legacy ML lib compatibility
 RUN conda install -y -c conda-forge \
     python=3.11 \
     gcc_linux-64 \
     gxx_linux-64 \
-    tesseract \
     poppler \
     ghostscript \
     && conda clean -a -y
