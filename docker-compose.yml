@@ -29,7 +29,7 @@ services:
         condition: service_healthy
     volumes:
       - app-db:/app/db
-      - ./data_directory:/app/data_directory # Shared volume for files
+      - rag_data:/app/data_directory # Shared volume for files
 
   ingestion-pool:
     build:
@@ -55,7 +55,7 @@ services:
         condition: service_started
     volumes:
       - app-db:/app/db
-      - ./data_directory:/app/data_directory # Shared volume for files
+      - rag_data:/app/data_directory # Shared volume for files
 
   worker-pool:
     build: worker_pool
@@ -84,7 +84,7 @@ services:
       replicas: 1
     volumes:
       - app-db:/app/db
-      - ./data_directory:/app/data_directory # Shared volume for files
+      - rag_data:/app/data_directory # Shared volume for files
       - ./worker_pool:/app
 
   evaluation-pool:
@@ -114,7 +114,7 @@ services:
         condition: service_healthy
     volumes:
       - app-db:/app/db
-      - ./data_directory:/app/data_directory
+      - rag_data:/app/data_directory
       - ./synthetic_data_kit:/opt/conda/lib/python3.11/site-packages/synthetic_data_kit
       - ./data:/app/data
       - ./evaluation_pool:/app
@@ -144,7 +144,7 @@ services:
       chromadb:
         condition: service_started
     volumes:
-      - ./data_directory:/app/data_directory
+      - rag_data:/app/data_directory
       - video_graph_data:/app/data_directory/video_graphs
 
   frontend:
@@ -238,5 +238,6 @@ volumes:
   phoenix_data:
     driver: local
   app-db:
+  rag_data:
   video_graph_data:
     driver: local
