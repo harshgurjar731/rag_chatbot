@@ -145,6 +145,7 @@ services:
         condition: service_started
     volumes:
       - ./data_directory:/app/data_directory
+      - /data_directory:/data_directory
       - video_graph_data:/app/data_directory/video_graphs
 
   frontend:

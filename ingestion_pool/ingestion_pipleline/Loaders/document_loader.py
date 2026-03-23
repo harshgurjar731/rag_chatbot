@@ -15,12 +15,38 @@ from ingestion_pipleline.Loaders.azure_document_loader import AzureDocumentLoade
 import mimetypes
 
 def load_document_with_metadata(doc: DocumentRecord) -> List[Document]:
-    # Sanitize file path (Fix for legacy path issue)
+    # Sanitize file path (Fix for Docker/Native mismatched paths + fuzzy matching)
     raw_path = str(doc.filePath)
-    if "ingestion_pipleline/data_directory" in raw_path:
-        sanitized_path = raw_path.replace("ingestion_pipleline/data_directory", "data_directory")
-        print(f"[*] Sanitized path from {raw_path} to {sanitized_path}")
-        doc.filePath = sanitized_path # Assign as STRING, not Path object
+    
+    import os
+    import re
+    from ingestion_pipleline.Config.Config import _data_dir as DATA_DIRECTORY
+    
+    if not os.path.exists(raw_path):
+        rel_path = raw_path.replace("\\", "/")
+        if "data_directory/" in rel_path:
+            rel_path = rel_path.split("data_directory/")[-1]
+            
+        candidate = os.path.join(DATA_DIRECTORY, rel_path)
+        if os.path.exists(candidate):
+            doc.filePath = candidate
+            print(f"[*] Resolved mismatched path to {candidate}")
+        else:
+            filename = os.path.basename(rel_path)
+            target_fuzzy = re.sub(r'[^a-zA-Z0-9\.]', '', filename).lower()
+            print(f"[*] Path not found locally. Searching recursively for fuzzy match '{target_fuzzy}' in {DATA_DIRECTORY}...")
+            
+            found = False
+            for root_dir, _, files in os.walk(DATA_DIRECTORY):
+                for file in files:
+                    file_fuzzy = re.sub(r'[^a-zA-Z0-9\.]', '', file).lower()
+                    if target_fuzzy == file_fuzzy or (len(target_fuzzy) > 10 and target_fuzzy[:15] in file_fuzzy):
+                        doc.filePath = os.path.join(root_dir, file)
+                        print(f"[*] Found {filename} recursively at {doc.filePath}")
+                        found = True
+                        break
+                if found:
+                    break
 
     # Automatically determine file type if not provided
     print("LoaderType: ", doc.loaderType)
