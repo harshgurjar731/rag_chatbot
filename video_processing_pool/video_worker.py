@@ -188,13 +188,26 @@ async def process_video_job(job_data: dict):
             if os.path.exists(candidate_2):
                 video_path = candidate_2
             else:
-                # Candidate 3: Recursive filename search (bulletproof fallback for Azure/Windows mismatch)
+                # Candidate 3: Recursive filename search with fuzzy matching
+                import re
+                
                 filename = os.path.basename(video_path)
-                print(f"[*] Path not found locally. Searching recursively for {filename} in {DATA_DIRECTORY}...")
+                # Strip spaces, hyphens, en-dashes, and special chars for fuzzy matching
+                target_fuzzy = re.sub(r'[^a-zA-Z0-9\.]', '', filename).lower()
+                
+                print(f"[*] Path not found locally. Searching recursively for fuzzy match '{target_fuzzy}' in {DATA_DIRECTORY}...")
+                
+                found = False
                 for root_dir, _, files in os.walk(DATA_DIRECTORY):
-                    if filename in files:
-                        video_path = os.path.join(root_dir, filename)
-                        print(f"[*] Found {filename} recursively at {video_path}")
+                    for file in files:
+                        file_fuzzy = re.sub(r'[^a-zA-Z0-9\.]', '', file).lower()
+                        # If the alphanumeric strings match, we found our mangled file
+                        if target_fuzzy == file_fuzzy or (len(target_fuzzy) > 10 and target_fuzzy[:15] in file_fuzzy):
+                            video_path = os.path.join(root_dir, file)
+                            print(f"[*] Found {filename} recursively at {video_path}")
+                            found = True
+                            break
+                    if found:
                         break
 
     print(f"    Video path: {video_path}")
