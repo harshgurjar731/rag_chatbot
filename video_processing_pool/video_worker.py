@@ -168,18 +168,25 @@ async def process_video_job(job_data: dict):
     
     print(f"[*] Processing VIDEO job {job_id} for Datastore {datastore_id}, Document {document_id}")
     
-    # Resolve video path relative to project root if it's relative
-    if video_path and not os.path.isabs(video_path):
-        # Most paths coming from DB/backend start with 'data_directory' or are relative to rag_chatbot root
-        project_root = os.path.dirname(DATA_DIRECTORY)
-        candidate_path = os.path.abspath(os.path.join(project_root, video_path))
-        if os.path.exists(candidate_path):
-            video_path = candidate_path
+    # Resolve video path securely, especially when dealing with mismatched Docker mounts
+    if video_path and not os.path.exists(video_path):
+        # Normalize the path by stripping the 'data_directory' prefix 
+        rel_path = video_path.replace("\\\\", "/")
+        if rel_path.startswith("/data_directory/"):
+            rel_path = rel_path[len("/data_directory/"):]
+        elif rel_path.startswith("data_directory/"):
+            rel_path = rel_path[len("data_directory/"):]
+            
+        # Candidate 1: Try putting it inside DATA_DIRECTORY
+        candidate_1 = os.path.join(DATA_DIRECTORY, rel_path)
+        if os.path.exists(candidate_1):
+            video_path = candidate_1
         else:
-            # Fallback: try relative to DATA_DIRECTORY itself
-            candidate_path = os.path.abspath(os.path.join(DATA_DIRECTORY, video_path))
-            if os.path.exists(candidate_path):
-                video_path = candidate_path
+            # Candidate 2: Try relative to project root
+            project_root = os.path.dirname(DATA_DIRECTORY)
+            candidate_2 = os.path.abspath(os.path.join(project_root, rel_path))
+            if os.path.exists(candidate_2):
+                video_path = candidate_2
 
     print(f"    Video path: {video_path}")
     
