@@ -13,7 +13,7 @@ psycopg2-binary==2.9.11
 redis==7.2.0
 
 # Video / Audio Processing
-opencv-python-headless==4.13.0.92
+opencv-python-headless==4.9.0.80
 numpy==1.26.4
 pillow==11.3.0
 scenedetect[opencv]>=0.6.2
