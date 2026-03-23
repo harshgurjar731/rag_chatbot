@@ -187,6 +187,15 @@ async def process_video_job(job_data: dict):
             candidate_2 = os.path.abspath(os.path.join(project_root, rel_path))
             if os.path.exists(candidate_2):
                 video_path = candidate_2
+            else:
+                # Candidate 3: Recursive filename search (bulletproof fallback for Azure/Windows mismatch)
+                filename = os.path.basename(video_path)
+                print(f"[*] Path not found locally. Searching recursively for {filename} in {DATA_DIRECTORY}...")
+                for root_dir, _, files in os.walk(DATA_DIRECTORY):
+                    if filename in files:
+                        video_path = os.path.join(root_dir, filename)
+                        print(f"[*] Found {filename} recursively at {video_path}")
+                        break
 
     print(f"    Video path: {video_path}")
     
