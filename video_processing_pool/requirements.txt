@@ -1,3 +1,4 @@
+--extra-index-url https://download.pytorch.org/whl/cpu
 # Core
 PyYAML==6.0.3
 requests==2.32.5
