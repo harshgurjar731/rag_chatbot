@@ -30,9 +30,14 @@ CONFIG = {
     "redis_port": os.getenv("REDIS_PORT", "6379").strip(),
     
     # Paths
-    "data_directory": os.getenv("DATA_DIRECTORY", "/app/data_directory" if IS_DOCKER else os.path.join(os.path.dirname(os.path.dirname(__file__)), "data_directory")).strip(),
+    "data_directory": os.getenv("DATA_DIRECTORY", "/app/data_directory" if IS_DOCKER else os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "data_directory")).strip(),
     
     # Evaluation Configuration
     "evaluation_llm_provider": os.getenv("EVALUATION_LLM_PROVIDER", "groq").strip(),
     "evaluation_llm_model": os.getenv("EVALUATION_LLM_MODEL", "llama-3.3-70b-versatile").strip(),
 }
+
+# Resolve relative data_directory path if not in Docker
+if not IS_DOCKER and not os.path.isabs(CONFIG["data_directory"]):
+    base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    CONFIG["data_directory"] = os.path.abspath(os.path.join(base_dir, CONFIG["data_directory"]))

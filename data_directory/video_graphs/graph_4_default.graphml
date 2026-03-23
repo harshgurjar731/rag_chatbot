@@ -1,0 +1,1170 @@
+<?xml version='1.0' encoding='utf-8'?>
+<graphml xmlns="http://graphml.graphdrawing.org/xmlns" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://graphml.graphdrawing.org/xmlns http://graphml.graphdrawing.org/xmlns/1.0/graphml.xsd"><key id="d15" for="edge" attr.name="description" attr.type="string"/>
+<key id="d14" for="edge" attr.name="chunk_id" attr.type="long"/>
+<key id="d13" for="edge" attr.name="confidence" attr.type="double"/>
+<key id="d12" for="edge" attr.name="relationship" attr.type="string"/>
+<key id="d11" for="node" attr.name="description" attr.type="string"/>
+<key id="d10" for="node" attr.name="name" attr.type="string"/>
+<key id="d9" for="node" attr.name="chunk_ids" attr.type="string"/>
+<key id="d8" for="node" attr.name="confidence" attr.type="double"/>
+<key id="d7" for="node" attr.name="track_id" attr.type="long"/>
+<key id="d6" for="node" attr.name="class_name" attr.type="string"/>
+<key id="d5" for="node" attr.name="stream_id" attr.type="string"/>
+<key id="d4" for="node" attr.name="source_video" attr.type="string"/>
+<key id="d3" for="node" attr.name="end_timestamp" attr.type="double"/>
+<key id="d2" for="node" attr.name="start_timestamp" attr.type="double"/>
+<key id="d1" for="node" attr.name="chunk_id" attr.type="long"/>
+<key id="d0" for="node" attr.name="node_type" attr.type="string"/>
+<graph edgedefault="directed"><node id="chunk_0">
+  <data key="d0">VideoChunk</data>
+  <data key="d1">0</data>
+  <data key="d2">0.0</data>
+  <data key="d3">37.5</data>
+  <data key="d4">C:\Users\MrYashGupta\Desktop\NewRagDemo\rag_chatbot\data_directory\Test2\car video.mp4</data>
+  <data key="d5">default</data>
+</node>
+<node id="object_car_0">
+  <data key="d0">DetectedObject</data>
+  <data key="d6">car</data>
+  <data key="d7">0</data>
+  <data key="d8">0.5701160430908203</data>
+  <data key="d9">[0]</data>
+</node>
+<node id="object_car_1">
+  <data key="d0">DetectedObject</data>
+  <data key="d6">car</data>
+  <data key="d7">1</data>
+  <data key="d8">0.9271314144134521</data>
+  <data key="d9">[0, 2]</data>
+</node>
+<node id="object_car_2">
+  <data key="d0">DetectedObject</data>
+  <data key="d6">car</data>
+  <data key="d7">2</data>
+  <data key="d8">0.8510580062866211</data>
+  <data key="d9">[0, 2]</data>
+</node>
+<node id="object_bus_3">
+  <data key="d0">DetectedObject</data>
+  <data key="d6">bus</data>
+  <data key="d7">3</data>
+  <data key="d8">0.4952579736709595</data>
+  <data key="d9">[0]</data>
+</node>
+<node id="object_car_4">
+  <data key="d0">DetectedObject</data>
+  <data key="d6">car</data>
+  <data key="d7">4</data>
+  <data key="d8">0.8931188583374023</data>
+  <data key="d9">[0, 1]</data>
+</node>
+<node id="entity_outdoor_driving_test_area">
+  <data key="d0">Location</data>
+  <data key="d10">outdoor driving test area</data>
+  <data key="d11">Paved outdoor area with grassy patches, used for vehicle testing and object detection training.</data>
+  <data key="d9">[0]</data>
+</node>
+<node id="entity_reflective_signage_'dois'">
+  <data key="d0">Object</data>
+  <data key="d10">reflective signage 'dois'</data>
+  <data key="d11">Reflective traffic sign displaying the word 'dois' and 'dois 1', prominently visible throughout the video.</data>
+  <data key="d9">[0]</data>
+</node>
+<node id="entity_traffic_delineators">
+  <data key="d0">Object</data>
+  <data key="d10">traffic delineators</data>
+  <data key="d11">Traffic control devices used to guide vehicles, visible in the background.</data>
+  <data key="d9">[0]</data>
+</node>
+<node id="entity_circular_manhole_cover">
+  <data key="d0">Object</data>
+  <data key="d10">circular manhole cover</data>
+  <data key="d11">Round metal cover on the pavement, part of the test area infrastructure.</data>
+  <data key="d9">[0]</data>
+</node>
+<node id="entity_vehicle_(track_id=0)">
+  <data key="d0">Vehicle</data>
+  <data key="d10">vehicle (track_id=0)</data>
+  <data key="d11">Small car detected and tracked by the object detection system at 7.5s (confidence: 0.57).</data>
+  <data key="d9">[0]</data>
+</node>
+<node id="entity_vehicle_(track_id=1)">
+  <data key="d0">Vehicle</data>
+  <data key="d10">vehicle (track_id=1)</data>
+  <data key="d11">Car detected and tracked by the object detection system at 14.9s (confidence: 0.76).</data>
+  <data key="d9">[0]</data>
+</node>
+<node id="entity_vehicle_(track_id=2)">
+  <data key="d0">Vehicle</data>
+  <data key="d10">vehicle (track_id=2)</data>
+  <data key="d11">Car detected and tracked by the object detection system at 14.9s (confidence: 0.57).</data>
+  <data key="d9">[0]</data>
+</node>
+<node id="entity_bus_(track_id=3)">
+  <data key="d0">Vehicle</data>
+  <data key="d10">bus (track_id=3)</data>
+  <data key="d11">Bus detected and tracked by the object detection system from 22.4s to 29.9s (confidence: 0.50).</data>
+  <data key="d9">[0]</data>
+</node>
+<node id="entity_vehicle_(track_id=4)">
+  <data key="d0">Vehicle</data>
+  <data key="d10">vehicle (track_id=4)</data>
+  <data key="d11">Car detected and tracked by the object detection system from 22.4s to 37.5s (confidence: 0.89).</data>
+  <data key="d9">[0]</data>
+</node>
+<node id="entity_truck_(track_id=2)">
+  <data key="d0">Vehicle</data>
+  <data key="d10">truck (track_id=2)</data>
+  <data key="d11">Truck marked with number '2' in annotations, visible at 29.9s.</data>
+  <data key="d9">[0]</data>
+</node>
+<node id="entity_truck_(track_id=5)">
+  <data key="d0">Vehicle</data>
+  <data key="d10">truck (track_id=5)</data>
+  <data key="d11">New truck marked with number '5' in annotations, prominently visible at 37.5s.</data>
+  <data key="d9">[0]</data>
+</node>
+<node id="entity_lidar_sensor">
+  <data key="d0">Object</data>
+  <data key="d10">LiDAR sensor</data>
+  <data key="d11">LiDAR sensor data used for object detection, indicated in annotations at 22.4s.</data>
+  <data key="d9">[0]</data>
+</node>
+<node id="entity_object_detection_system">
+  <data key="d0">Object</data>
+  <data key="d10">object detection system</data>
+  <data key="d11">A system likely used for identifying and tracking race cars, inferred from bounding boxes and labels.</data>
+  <data key="d9">[0, 2]</data>
+</node>
+<node id="entity_object_detection_training">
+  <data key="d0">Event</data>
+  <data key="d10">object detection training</data>
+  <data key="d11">Activity involving the use of vehicles for training an object detection model.</data>
+  <data key="d9">[0]</data>
+</node>
+<node id="chunk_1">
+  <data key="d0">VideoChunk</data>
+  <data key="d1">1</data>
+  <data key="d2">37.5</data>
+  <data key="d3">62.5</data>
+  <data key="d4">C:\Users\MrYashGupta\Desktop\NewRagDemo\rag_chatbot\data_directory\Test2\car video.mp4</data>
+  <data key="d5">default</data>
+</node>
+<node id="object_bus_6">
+  <data key="d0">DetectedObject</data>
+  <data key="d6">bus</data>
+  <data key="d7">6</data>
+  <data key="d8">0.9299947023391724</data>
+  <data key="d9">[1]</data>
+</node>
+<node id="object_truck_7">
+  <data key="d0">DetectedObject</data>
+  <data key="d6">truck</data>
+  <data key="d7">7</data>
+  <data key="d8">0.6515903472900391</data>
+  <data key="d9">[1]</data>
+</node>
+<node id="object_truck_8">
+  <data key="d0">DetectedObject</data>
+  <data key="d6">truck</data>
+  <data key="d7">8</data>
+  <data key="d8">0.3894878923892975</data>
+  <data key="d9">[1]</data>
+</node>
+<node id="object_truck_9">
+  <data key="d0">DetectedObject</data>
+  <data key="d6">truck</data>
+  <data key="d7">9</data>
+  <data key="d8">0.3262951374053955</data>
+  <data key="d9">[1]</data>
+</node>
+<node id="object_person_5">
+  <data key="d0">DetectedObject</data>
+  <data key="d6">person</data>
+  <data key="d7">5</data>
+  <data key="d8">0.45733606815338135</data>
+  <data key="d9">[1]</data>
+</node>
+<node id="entity_red_fire_truck_labeled_5">
+  <data key="d0">Vehicle</data>
+  <data key="d10">red fire truck labeled 5</data>
+  <data key="d11">A red fire truck with the number '5' visible in the simulation area, present from 37.5s to 47.5s.</data>
+  <data key="d9">[1]</data>
+</node>
+<node id="entity_beige_pickup_truck">
+  <data key="d0">Vehicle</data>
+  <data key="d10">beige pickup truck</data>
+  <data key="d11">A beige pickup truck visible in the upper-middle section at 37.5s.</data>
+  <data key="d9">[1]</data>
+</node>
+<node id="entity_small_car_labeled_3">
+  <data key="d0">Vehicle</data>
+  <data key="d10">small car labeled 3</data>
+  <data key="d11">A small car with the number '3' visible on the right side at 37.5s.</data>
+  <data key="d9">[1]</data>
+</node>
+<node id="entity_large_black_truck_labeled_6">
+  <data key="d0">Vehicle</data>
+  <data key="d10">large black truck labeled 6</data>
+  <data key="d11">A large black truck labeled '6' moving through the intersection, visible from 42.5s to 52.5s.</data>
+  <data key="d9">[1]</data>
+</node>
+<node id="entity_small_red_car_labeled_8">
+  <data key="d0">Vehicle</data>
+  <data key="d10">small red car labeled 8</data>
+  <data key="d11">A small red car with the number '8' visible in the bottom-middle section at 42.5s.</data>
+  <data key="d9">[1]</data>
+</node>
+<node id="entity_black_truck_labeled_2">
+  <data key="d0">Vehicle</data>
+  <data key="d10">black truck labeled 2</data>
+  <data key="d11">A black truck labeled '2' visible in the upper-right quadrant at 47.5s.</data>
+  <data key="d9">[1]</data>
+</node>
+<node id="entity_small_car_labeled_6">
+  <data key="d0">Vehicle</data>
+  <data key="d10">small car labeled 6</data>
+  <data key="d11">A small car labeled '6' visible near the intersection from 47.5s to 62.5s.</data>
+  <data key="d9">[1]</data>
+</node>
+<node id="entity_small_car_labeled_7">
+  <data key="d0">Vehicle</data>
+  <data key="d10">small car labeled 7</data>
+  <data key="d11">A small car labeled '7' visible near the intersection from 47.5s to 57.5s.</data>
+  <data key="d9">[1]</data>
+</node>
+<node id="entity_yellow_bus_labeled_9">
+  <data key="d0">Vehicle</data>
+  <data key="d10">yellow bus labeled 9</data>
+  <data key="d11">A yellow bus labeled '9' visible in the middle-right section at 52.5s.</data>
+  <data key="d9">[1]</data>
+</node>
+<node id="entity_small_yellow_car_labeled_7">
+  <data key="d0">Vehicle</data>
+  <data key="d10">small yellow car labeled 7</data>
+  <data key="d11">A small yellow car labeled '7' visible at 57.5s.</data>
+  <data key="d9">[1]</data>
+</node>
+<node id="entity_small_vehicle_labeled_4_car">
+  <data key="d0">Vehicle</data>
+  <data key="d10">small vehicle labeled 4 car</data>
+  <data key="d11">A small vehicle labeled '#4 car' appearing in the left-middle section at 57.5s.</data>
+  <data key="d9">[1]</data>
+</node>
+<node id="entity_person_labeled_5_person">
+  <data key="d0">Person</data>
+  <data key="d10">person labeled 5 person</data>
+  <data key="d11">A person visible near the car labeled '6' in the upper-right quadrant at 57.5s.</data>
+  <data key="d9">[1]</data>
+</node>
+<node id="entity_yellow_vehicle_labeled_0">
+  <data key="d0">Vehicle</data>
+  <data key="d10">yellow vehicle labeled 0</data>
+  <data key="d11">A yellow vehicle labeled '0' visible in the bottom-left quadrant at 62.5s.</data>
+  <data key="d9">[1]</data>
+</node>
+<node id="entity_miniature_driving/parking_simulation_area">
+  <data key="d0">Location</data>
+  <data key="d10">miniature driving/parking simulation area</data>
+  <data key="d11">A small-scale driving/parking simulation area with paved roads, grassy patches, road markings, and miniature traffic signs, visible throughout the frames.</data>
+  <data key="d9">[1]</data>
+</node>
+<node id="entity_road_markings">
+  <data key="d0">Object</data>
+  <data key="d10">road markings</data>
+  <data key="d11">Road markings including the word 'STOP' along the road edges, visible from 57.5s to 62.5s.</data>
+  <data key="d9">[1]</data>
+</node>
+<node id="entity_miniature_traffic_signs">
+  <data key="d0">Object</data>
+  <data key="d10">miniature traffic signs</data>
+  <data key="d11">Miniature traffic signs present in the simulation area, visible throughout the frames.</data>
+  <data key="d9">[1]</data>
+</node>
+<node id="entity_text_'#7_truck'">
+  <data key="d0">Object</data>
+  <data key="d10">text '#7 Truck'</data>
+  <data key="d11">Text label '#7 Truck' visible near the red fire truck at 37.5s.</data>
+  <data key="d9">[1]</data>
+</node>
+<node id="chunk_2">
+  <data key="d0">VideoChunk</data>
+  <data key="d1">2</data>
+  <data key="d2">62.5</data>
+  <data key="d3">100.0</data>
+  <data key="d4">C:\Users\MrYashGupta\Desktop\NewRagDemo\rag_chatbot\data_directory\Test2\car video.mp4</data>
+  <data key="d5">default</data>
+</node>
+<node id="object_car_29">
+  <data key="d0">DetectedObject</data>
+  <data key="d6">car</data>
+  <data key="d7">29</data>
+  <data key="d8">0.8565132021903992</data>
+  <data key="d9">[2]</data>
+</node>
+<node id="object_car_3">
+  <data key="d0">DetectedObject</data>
+  <data key="d6">car</data>
+  <data key="d7">3</data>
+  <data key="d8">0.849546492099762</data>
+  <data key="d9">[2]</data>
+</node>
+<node id="object_car_32">
+  <data key="d0">DetectedObject</data>
+  <data key="d6">car</data>
+  <data key="d7">32</data>
+  <data key="d8">0.8890509009361267</data>
+  <data key="d9">[2, 3]</data>
+</node>
+<node id="object_car_33">
+  <data key="d0">DetectedObject</data>
+  <data key="d6">car</data>
+  <data key="d7">33</data>
+  <data key="d8">0.846619725227356</data>
+  <data key="d9">[2, 3]</data>
+</node>
+<node id="entity_racing_video_game">
+  <data key="d0">Object</data>
+  <data key="d10">racing video game</data>
+  <data key="d11">A video game featuring a racing simulation set in an urban environment with a curvy racetrack.</data>
+  <data key="d9">[2]</data>
+</node>
+<node id="entity_curvy_racetrack">
+  <data key="d0">Location</data>
+  <data key="d10">curvy racetrack</data>
+  <data key="d11">A racetrack with curves, located in an urban environment with grassy areas and trees.</data>
+  <data key="d9">[2]</data>
+</node>
+<node id="entity_urban_environment">
+  <data key="d0">Location</data>
+  <data key="d10">urban environment</data>
+  <data key="d11">A city-like setting surrounding the racetrack, featuring buildings and infrastructure.</data>
+  <data key="d9">[2]</data>
+</node>
+<node id="entity_grassy_areas">
+  <data key="d0">Location</data>
+  <data key="d10">grassy areas</data>
+  <data key="d11">Green spaces adjacent to the racetrack, likely part of the track's surroundings.</data>
+  <data key="d9">[2]</data>
+</node>
+<node id="entity_trees">
+  <data key="d0">Object</data>
+  <data key="d10">trees</data>
+  <data key="d11">Vegetation present near the racetrack, adding to the urban environment.</data>
+  <data key="d9">[2]</data>
+</node>
+<node id="entity_yellow_car_with_red_parts">
+  <data key="d0">Vehicle</data>
+  <data key="d10">yellow car with red parts</data>
+  <data key="d11">A yellow car with red components, tracked as competitor #1, #2, or #3 across frames (timestamps 62.5s–100.0s).</data>
+  <data key="d9">[2]</data>
+</node>
+<node id="entity_red_and_purple_car_with_number_12">
+  <data key="d0">Vehicle</data>
+  <data key="d10">red and purple car with number 12</data>
+  <data key="d11">A red and purple car bearing the number 12, appearing around 85.0s and approaching the yellow car over time.</data>
+  <data key="d9">[2]</data>
+</node>
+<node id="entity_bounding_box_system">
+  <data key="d0">Object</data>
+  <data key="d10">bounding box system</data>
+  <data key="d11">A visual tracking system using green and red bounding boxes to detect and monitor cars on the racetrack.</data>
+  <data key="d9">[2]</data>
+</node>
+<node id="entity_dois_signage">
+  <data key="d0">Object</data>
+  <data key="d10">dois signage</data>
+  <data key="d11">Repeated signage along the side of the racetrack with the word 'dois' visible throughout the frames (62.5s–100.0s).</data>
+  <data key="d9">[2]</data>
+</node>
+<node id="entity_windshield">
+  <data key="d0">Object</data>
+  <data key="d10">windshield</data>
+  <data key="d11">The front glass of the vehicle from which the viewpoint is shown in the racing video game.</data>
+  <data key="d9">[2]</data>
+</node>
+<node id="entity_viewpoint_inside_vehicle">
+  <data key="d0">Action</data>
+  <data key="d10">viewpoint inside vehicle</data>
+  <data key="d11">The perspective of the scene as seen from inside a vehicle, looking through the windshield.</data>
+  <data key="d9">[2]</data>
+</node>
+<node id="chunk_3">
+  <data key="d0">VideoChunk</data>
+  <data key="d1">3</data>
+  <data key="d2">100.0</data>
+  <data key="d3">130.65</data>
+  <data key="d4">C:\Users\MrYashGupta\Desktop\NewRagDemo\rag_chatbot\data_directory\Test2\car video.mp4</data>
+  <data key="d5">default</data>
+</node>
+<node id="object_car_35">
+  <data key="d0">DetectedObject</data>
+  <data key="d6">car</data>
+  <data key="d7">35</data>
+  <data key="d8">0.9355154633522034</data>
+  <data key="d9">[3]</data>
+</node>
+<node id="object_truck_6">
+  <data key="d0">DetectedObject</data>
+  <data key="d6">truck</data>
+  <data key="d7">6</data>
+  <data key="d8">0.9265550971031189</data>
+  <data key="d9">[3]</data>
+</node>
+<node id="entity_racing_track">
+  <data key="d0">Location</data>
+  <data key="d10">racing track</data>
+  <data key="d11">A driving simulation environment with curbs and signage, viewed from above.</data>
+  <data key="d9">[3]</data>
+</node>
+<node id="entity_car_#3?">
+  <data key="d0">Vehicle</data>
+  <data key="d10">car #3?</data>
+  <data key="d11">A car with an obscured number '#3?' visible in frames 0-5.</data>
+  <data key="d9">[3]</data>
+</node>
+<node id="entity_car_#35">
+  <data key="d0">Vehicle</data>
+  <data key="d10">car #35</data>
+  <data key="d11">A car with the number '#35' visible in frames 0-5.</data>
+  <data key="d9">[3]</data>
+</node>
+<node id="entity_motorcycle_#12">
+  <data key="d0">Vehicle</data>
+  <data key="d10">motorcycle #12</data>
+  <data key="d11">A motorcycle with the number '12' visible in frames 0-5.</data>
+  <data key="d9">[3]</data>
+</node>
+<node id="entity_ambulance_#6_truck">
+  <data key="d0">Vehicle</data>
+  <data key="d10">ambulance #6_truck</data>
+  <data key="d11">An ambulance entering the scene at 112.2s, highlighted from frame 3 onward with the label '#6_truck'.</data>
+  <data key="d9">[3]</data>
+</node>
+<node id="entity_green_bounding_boxes">
+  <data key="d0">Object</data>
+  <data key="d10">green bounding boxes</data>
+  <data key="d11">Highlighted regions around vehicles to indicate objects of interest, consistent across frames.</data>
+  <data key="d9">[3]</data>
+</node>
+<node id="entity_signage_'dios'">
+  <data key="d0">Object</data>
+  <data key="d10">signage 'dios'</data>
+  <data key="d11">Partial word 'dios' visible on track signage at the edges.</data>
+  <data key="d9">[3]</data>
+</node>
+<edge source="chunk_0" target="chunk_1">
+  <data key="d12">FOLLOWED_BY</data>
+</edge>
+<edge source="object_car_0" target="chunk_0">
+  <data key="d12">APPEARS_IN</data>
+  <data key="d13">0.5701160430908203</data>
+</edge>
+<edge source="object_car_0" target="object_car_1">
+  <data key="d12">CO_OCCURS_WITH</data>
+  <data key="d14">0</data>
+</edge>
+<edge source="object_car_0" target="object_car_2">
+  <data key="d12">CO_OCCURS_WITH</data>
+  <data key="d14">0</data>
+</edge>
+<edge source="object_car_0" target="object_bus_3">
+  <data key="d12">CO_OCCURS_WITH</data>
+  <data key="d14">0</data>
+</edge>
+<edge source="object_car_0" target="object_car_4">
+  <data key="d12">CO_OCCURS_WITH</data>
+  <data key="d14">0</data>
+</edge>
+<edge source="object_car_1" target="chunk_0">
+  <data key="d12">APPEARS_IN</data>
+  <data key="d13">0.7563163638114929</data>
+</edge>
+<edge source="object_car_1" target="object_car_2">
+  <data key="d12">CO_OCCURS_WITH</data>
+  <data key="d14">0</data>
+</edge>
+<edge source="object_car_1" target="object_bus_3">
+  <data key="d12">CO_OCCURS_WITH</data>
+  <data key="d14">0</data>
+</edge>
+<edge source="object_car_1" target="object_car_4">
+  <data key="d12">CO_OCCURS_WITH</data>
+  <data key="d14">0</data>
+</edge>
+<edge source="object_car_1" target="chunk_2">
+  <data key="d12">APPEARS_IN</data>
+  <data key="d13">0.9271314144134521</data>
+</edge>
+<edge source="object_car_1" target="object_car_3">
+  <data key="d12">CO_OCCURS_WITH</data>
+  <data key="d14">2</data>
+</edge>
+<edge source="object_car_1" target="object_car_32">
+  <data key="d12">CO_OCCURS_WITH</data>
+  <data key="d14">2</data>
+</edge>
+<edge source="object_car_1" target="object_car_33">
+  <data key="d12">CO_OCCURS_WITH</data>
+  <data key="d14">2</data>
+</edge>
+<edge source="object_car_2" target="chunk_0">
+  <data key="d12">APPEARS_IN</data>
+  <data key="d13">0.5728269815444946</data>
+</edge>
+<edge source="object_car_2" target="object_bus_3">
+  <data key="d12">CO_OCCURS_WITH</data>
+  <data key="d14">0</data>
+</edge>
+<edge source="object_car_2" target="object_car_4">
+  <data key="d12">CO_OCCURS_WITH</data>
+  <data key="d14">0</data>
+</edge>
+<edge source="object_car_2" target="chunk_2">
+  <data key="d12">APPEARS_IN</data>
+  <data key="d13">0.8510580062866211</data>
+</edge>
+<edge source="object_car_2" target="object_car_3">
+  <data key="d12">CO_OCCURS_WITH</data>
+  <data key="d14">2</data>
+</edge>
+<edge source="object_car_2" target="object_car_32">
+  <data key="d12">CO_OCCURS_WITH</data>
+  <data key="d14">2</data>
+</edge>
+<edge source="object_car_2" target="object_car_33">
+  <data key="d12">CO_OCCURS_WITH</data>
+  <data key="d14">2</data>
+</edge>
+<edge source="object_bus_3" target="chunk_0">
+  <data key="d12">APPEARS_IN</data>
+  <data key="d13">0.4952579736709595</data>
+</edge>
+<edge source="object_bus_3" target="object_car_4">
+  <data key="d12">CO_OCCURS_WITH</data>
+  <data key="d14">0</data>
+</edge>
+<edge source="object_car_4" target="chunk_0">
+  <data key="d12">APPEARS_IN</data>
+  <data key="d13">0.8931188583374023</data>
+</edge>
+<edge source="object_car_4" target="chunk_1">
+  <data key="d12">APPEARS_IN</data>
+  <data key="d13">0.6624531149864197</data>
+</edge>
+<edge source="object_car_4" target="object_person_5">
+  <data key="d12">CO_OCCURS_WITH</data>
+  <data key="d14">1</data>
+</edge>
+<edge source="entity_outdoor_driving_test_area" target="chunk_0">
+  <data key="d12">MENTIONED_IN</data>
+</edge>
+<edge source="entity_outdoor_driving_test_area" target="entity_reflective_signage_'dois'">
+  <data key="d12">LOCATED_AT</data>
+  <data key="d15">The reflective signage is positioned within the outdoor driving test area.</data>
+  <data key="d14">0</data>
+</edge>
+<edge source="entity_outdoor_driving_test_area" target="entity_traffic_delineators">
+  <data key="d12">LOCATED_AT</data>
+  <data key="d15">Traffic delineators are placed within the outdoor driving test area.</data>
+  <data key="d14">0</data>
+</edge>
+<edge source="entity_outdoor_driving_test_area" target="entity_circular_manhole_cover">
+  <data key="d12">LOCATED_AT</data>
+  <data key="d15">The circular manhole cover is part of the pavement in the outdoor driving test area.</data>
+  <data key="d14">0</data>
+</edge>
+<edge source="entity_reflective_signage_'dois'" target="chunk_0">
+  <data key="d12">MENTIONED_IN</data>
+</edge>
+<edge source="entity_traffic_delineators" target="chunk_0">
+  <data key="d12">MENTIONED_IN</data>
+</edge>
+<edge source="entity_circular_manhole_cover" target="chunk_0">
+  <data key="d12">MENTIONED_IN</data>
+</edge>
+<edge source="entity_vehicle_(track_id=0)" target="chunk_0">
+  <data key="d12">MENTIONED_IN</data>
+</edge>
+<edge source="entity_vehicle_(track_id=0)" target="entity_reflective_signage_'dois'">
+  <data key="d12">NEAR</data>
+  <data key="d15">Vehicle (track_id=0) is near the reflective signage 'dois' in the test area.</data>
+  <data key="d14">0</data>
+</edge>
+<edge source="entity_vehicle_(track_id=1)" target="chunk_0">
+  <data key="d12">MENTIONED_IN</data>
+</edge>
+<edge source="entity_vehicle_(track_id=2)" target="chunk_0">
+  <data key="d12">MENTIONED_IN</data>
+</edge>
+<edge source="entity_bus_(track_id=3)" target="chunk_0">
+  <data key="d12">MENTIONED_IN</data>
+</edge>
+<edge source="entity_bus_(track_id=3)" target="entity_reflective_signage_'dois'">
+  <data key="d12">NEAR</data>
+  <data key="d15">Bus (track_id=3) is near the reflective signage 'dois' in the test area.</data>
+  <data key="d14">0</data>
+</edge>
+<edge source="entity_vehicle_(track_id=4)" target="chunk_0">
+  <data key="d12">MENTIONED_IN</data>
+</edge>
+<edge source="entity_vehicle_(track_id=4)" target="entity_reflective_signage_'dois'">
+  <data key="d12">NEAR</data>
+  <data key="d15">Vehicle (track_id=4) is near the reflective signage 'dois' in the test area.</data>
+  <data key="d14">0</data>
+</edge>
+<edge source="entity_truck_(track_id=2)" target="chunk_0">
+  <data key="d12">MENTIONED_IN</data>
+</edge>
+<edge source="entity_truck_(track_id=2)" target="entity_outdoor_driving_test_area">
+  <data key="d12">LOCATED_AT</data>
+  <data key="d15">The truck marked with number '2' is located in the outdoor driving test area.</data>
+  <data key="d14">0</data>
+</edge>
+<edge source="entity_truck_(track_id=5)" target="chunk_0">
+  <data key="d12">MENTIONED_IN</data>
+</edge>
+<edge source="entity_truck_(track_id=5)" target="entity_outdoor_driving_test_area">
+  <data key="d12">LOCATED_AT</data>
+  <data key="d15">The truck marked with number '5' is located in the outdoor driving test area.</data>
+  <data key="d14">0</data>
+</edge>
+<edge source="entity_lidar_sensor" target="chunk_0">
+  <data key="d12">MENTIONED_IN</data>
+</edge>
+<edge source="entity_object_detection_system" target="chunk_0">
+  <data key="d12">MENTIONED_IN</data>
+</edge>
+<edge source="entity_object_detection_system" target="entity_vehicle_(track_id=0)">
+  <data key="d12">USES</data>
+  <data key="d15">The object detection system tracks and annotates vehicle (track_id=0).</data>
+  <data key="d14">0</data>
+</edge>
+<edge source="entity_object_detection_system" target="entity_vehicle_(track_id=1)">
+  <data key="d12">USES</data>
+  <data key="d15">The object detection system tracks and annotates vehicle (track_id=1).</data>
+  <data key="d14">0</data>
+</edge>
+<edge source="entity_object_detection_system" target="entity_vehicle_(track_id=2)">
+  <data key="d12">USES</data>
+  <data key="d15">The object detection system tracks and annotates vehicle (track_id=2).</data>
+  <data key="d14">0</data>
+</edge>
+<edge source="entity_object_detection_system" target="entity_bus_(track_id=3)">
+  <data key="d12">USES</data>
+  <data key="d15">The object detection system tracks and annotates bus (track_id=3).</data>
+  <data key="d14">0</data>
+</edge>
+<edge source="entity_object_detection_system" target="entity_vehicle_(track_id=4)">
+  <data key="d12">USES</data>
+  <data key="d15">The object detection system tracks and annotates vehicle (track_id=4).</data>
+  <data key="d14">0</data>
+</edge>
+<edge source="entity_object_detection_system" target="entity_lidar_sensor">
+  <data key="d12">USES</data>
+  <data key="d15">The object detection system uses LiDAR sensor data for tracking.</data>
+  <data key="d14">0</data>
+</edge>
+<edge source="entity_object_detection_system" target="chunk_2">
+  <data key="d12">MENTIONED_IN</data>
+</edge>
+<edge source="entity_object_detection_system" target="entity_yellow_car_with_red_parts">
+  <data key="d12">USES</data>
+  <data key="d15">The object detection system uses bounding boxes to track the yellow car with red parts.</data>
+  <data key="d14">2</data>
+</edge>
+<edge source="entity_object_detection_system" target="entity_red_and_purple_car_with_number_12">
+  <data key="d12">USES</data>
+  <data key="d15">The object detection system uses bounding boxes to track the red and purple car with number 12.</data>
+  <data key="d14">2</data>
+</edge>
+<edge source="entity_object_detection_training" target="chunk_0">
+  <data key="d12">MENTIONED_IN</data>
+</edge>
+<edge source="entity_object_detection_training" target="entity_outdoor_driving_test_area">
+  <data key="d12">OCCURS_AT</data>
+  <data key="d15">The object detection training occurs in the outdoor driving test area.</data>
+  <data key="d14">0</data>
+</edge>
+<edge source="entity_object_detection_training" target="entity_vehicle_(track_id=0)">
+  <data key="d12">INVOLVES</data>
+  <data key="d15">The object detection training involves tracking vehicle (track_id=0).</data>
+  <data key="d14">0</data>
+</edge>
+<edge source="entity_object_detection_training" target="entity_vehicle_(track_id=1)">
+  <data key="d12">INVOLVES</data>
+  <data key="d15">The object detection training involves tracking vehicle (track_id=1).</data>
+  <data key="d14">0</data>
+</edge>
+<edge source="entity_object_detection_training" target="entity_vehicle_(track_id=2)">
+  <data key="d12">INVOLVES</data>
+  <data key="d15">The object detection training involves tracking vehicle (track_id=2).</data>
+  <data key="d14">0</data>
+</edge>
+<edge source="entity_object_detection_training" target="entity_bus_(track_id=3)">
+  <data key="d12">INVOLVES</data>
+  <data key="d15">The object detection training involves tracking bus (track_id=3).</data>
+  <data key="d14">0</data>
+</edge>
+<edge source="entity_object_detection_training" target="entity_vehicle_(track_id=4)">
+  <data key="d12">INVOLVES</data>
+  <data key="d15">The object detection training involves tracking vehicle (track_id=4).</data>
+  <data key="d14">0</data>
+</edge>
+<edge source="chunk_1" target="chunk_2">
+  <data key="d12">FOLLOWED_BY</data>
+</edge>
+<edge source="object_bus_6" target="chunk_1">
+  <data key="d12">APPEARS_IN</data>
+  <data key="d13">0.9299947023391724</data>
+</edge>
+<edge source="object_bus_6" target="object_truck_7">
+  <data key="d12">CO_OCCURS_WITH</data>
+  <data key="d14">1</data>
+</edge>
+<edge source="object_bus_6" target="object_truck_8">
+  <data key="d12">CO_OCCURS_WITH</data>
+  <data key="d14">1</data>
+</edge>
+<edge source="object_bus_6" target="object_truck_9">
+  <data key="d12">CO_OCCURS_WITH</data>
+  <data key="d14">1</data>
+</edge>
+<edge source="object_bus_6" target="object_car_4">
+  <data key="d12">CO_OCCURS_WITH</data>
+  <data key="d14">1</data>
+</edge>
+<edge source="object_bus_6" target="object_person_5">
+  <data key="d12">CO_OCCURS_WITH</data>
+  <data key="d14">1</data>
+</edge>
+<edge source="object_truck_7" target="chunk_1">
+  <data key="d12">APPEARS_IN</data>
+  <data key="d13">0.6515903472900391</data>
+</edge>
+<edge source="object_truck_7" target="object_truck_8">
+  <data key="d12">CO_OCCURS_WITH</data>
+  <data key="d14">1</data>
+</edge>
+<edge source="object_truck_7" target="object_truck_9">
+  <data key="d12">CO_OCCURS_WITH</data>
+  <data key="d14">1</data>
+</edge>
+<edge source="object_truck_7" target="object_car_4">
+  <data key="d12">CO_OCCURS_WITH</data>
+  <data key="d14">1</data>
+</edge>
+<edge source="object_truck_7" target="object_person_5">
+  <data key="d12">CO_OCCURS_WITH</data>
+  <data key="d14">1</data>
+</edge>
+<edge source="object_truck_8" target="chunk_1">
+  <data key="d12">APPEARS_IN</data>
+  <data key="d13">0.3894878923892975</data>
+</edge>
+<edge source="object_truck_8" target="object_truck_9">
+  <data key="d12">CO_OCCURS_WITH</data>
+  <data key="d14">1</data>
+</edge>
+<edge source="object_truck_8" target="object_car_4">
+  <data key="d12">CO_OCCURS_WITH</data>
+  <data key="d14">1</data>
+</edge>
+<edge source="object_truck_8" target="object_person_5">
+  <data key="d12">CO_OCCURS_WITH</data>
+  <data key="d14">1</data>
+</edge>
+<edge source="object_truck_9" target="chunk_1">
+  <data key="d12">APPEARS_IN</data>
+  <data key="d13">0.3262951374053955</data>
+</edge>
+<edge source="object_truck_9" target="object_car_4">
+  <data key="d12">CO_OCCURS_WITH</data>
+  <data key="d14">1</data>
+</edge>
+<edge source="object_truck_9" target="object_person_5">
+  <data key="d12">CO_OCCURS_WITH</data>
+  <data key="d14">1</data>
+</edge>
+<edge source="object_person_5" target="chunk_1">
+  <data key="d12">APPEARS_IN</data>
+  <data key="d13">0.45733606815338135</data>
+</edge>
+<edge source="entity_red_fire_truck_labeled_5" target="chunk_1">
+  <data key="d12">MENTIONED_IN</data>
+</edge>
+<edge source="entity_red_fire_truck_labeled_5" target="entity_miniature_driving/parking_simulation_area">
+  <data key="d12">LOCATED_AT</data>
+  <data key="d15">The red fire truck labeled '5' remains within the miniature driving/parking simulation area.</data>
+  <data key="d14">1</data>
+</edge>
+<edge source="entity_beige_pickup_truck" target="chunk_1">
+  <data key="d12">MENTIONED_IN</data>
+</edge>
+<edge source="entity_beige_pickup_truck" target="entity_miniature_driving/parking_simulation_area">
+  <data key="d12">LOCATED_AT</data>
+  <data key="d15">The beige pickup truck is located within the miniature driving/parking simulation area.</data>
+  <data key="d14">1</data>
+</edge>
+<edge source="entity_small_car_labeled_3" target="chunk_1">
+  <data key="d12">MENTIONED_IN</data>
+</edge>
+<edge source="entity_small_car_labeled_3" target="entity_miniature_driving/parking_simulation_area">
+  <data key="d12">LOCATED_AT</data>
+  <data key="d15">The small car labeled '3' is located within the miniature driving/parking simulation area.</data>
+  <data key="d14">1</data>
+</edge>
+<edge source="entity_large_black_truck_labeled_6" target="chunk_1">
+  <data key="d12">MENTIONED_IN</data>
+</edge>
+<edge source="entity_large_black_truck_labeled_6" target="entity_miniature_driving/parking_simulation_area">
+  <data key="d12">LOCATED_AT</data>
+  <data key="d15">The large black truck labeled '6' is located within the miniature driving/parking simulation area.</data>
+  <data key="d14">1</data>
+</edge>
+<edge source="entity_large_black_truck_labeled_6" target="entity_road_markings">
+  <data key="d12">OCCURS_AT</data>
+  <data key="d15">The large black truck labeled '6' moves through the intersection marked by road markings.</data>
+  <data key="d14">1</data>
+</edge>
+<edge source="entity_small_red_car_labeled_8" target="chunk_1">
+  <data key="d12">MENTIONED_IN</data>
+</edge>
+<edge source="entity_small_red_car_labeled_8" target="entity_miniature_driving/parking_simulation_area">
+  <data key="d12">LOCATED_AT</data>
+  <data key="d15">The small red car labeled '8' is located within the miniature driving/parking simulation area.</data>
+  <data key="d14">1</data>
+</edge>
+<edge source="entity_black_truck_labeled_2" target="chunk_1">
+  <data key="d12">MENTIONED_IN</data>
+</edge>
+<edge source="entity_black_truck_labeled_2" target="entity_miniature_driving/parking_simulation_area">
+  <data key="d12">LOCATED_AT</data>
+  <data key="d15">The black truck labeled '2' is located within the miniature driving/parking simulation area.</data>
+  <data key="d14">1</data>
+</edge>
+<edge source="entity_small_car_labeled_6" target="chunk_1">
+  <data key="d12">MENTIONED_IN</data>
+</edge>
+<edge source="entity_small_car_labeled_6" target="entity_miniature_driving/parking_simulation_area">
+  <data key="d12">LOCATED_AT</data>
+  <data key="d15">The small car labeled '6' is located within the miniature driving/parking simulation area.</data>
+  <data key="d14">1</data>
+</edge>
+<edge source="entity_small_car_labeled_7" target="chunk_1">
+  <data key="d12">MENTIONED_IN</data>
+</edge>
+<edge source="entity_small_car_labeled_7" target="entity_miniature_driving/parking_simulation_area">
+  <data key="d12">LOCATED_AT</data>
+  <data key="d15">The small car labeled '7' is located within the miniature driving/parking simulation area.</data>
+  <data key="d14">1</data>
+</edge>
+<edge source="entity_yellow_bus_labeled_9" target="chunk_1">
+  <data key="d12">MENTIONED_IN</data>
+</edge>
+<edge source="entity_yellow_bus_labeled_9" target="entity_miniature_driving/parking_simulation_area">
+  <data key="d12">LOCATED_AT</data>
+  <data key="d15">The yellow bus labeled '9' is located within the miniature driving/parking simulation area.</data>
+  <data key="d14">1</data>
+</edge>
+<edge source="entity_small_yellow_car_labeled_7" target="chunk_1">
+  <data key="d12">MENTIONED_IN</data>
+</edge>
+<edge source="entity_small_yellow_car_labeled_7" target="entity_miniature_driving/parking_simulation_area">
+  <data key="d12">LOCATED_AT</data>
+  <data key="d15">The small yellow car labeled '7' is located within the miniature driving/parking simulation area.</data>
+  <data key="d14">1</data>
+</edge>
+<edge source="entity_small_vehicle_labeled_4_car" target="chunk_1">
+  <data key="d12">MENTIONED_IN</data>
+</edge>
+<edge source="entity_small_vehicle_labeled_4_car" target="entity_miniature_driving/parking_simulation_area">
+  <data key="d12">LOCATED_AT</data>
+  <data key="d15">The small vehicle labeled '#4 car' is located within the miniature driving/parking simulation area.</data>
+  <data key="d14">1</data>
+</edge>
+<edge source="entity_person_labeled_5_person" target="chunk_1">
+  <data key="d12">MENTIONED_IN</data>
+</edge>
+<edge source="entity_person_labeled_5_person" target="entity_small_car_labeled_6">
+  <data key="d12">NEAR</data>
+  <data key="d15">The person labeled '5 person' is near the small car labeled '6' at 57.5s.</data>
+  <data key="d14">1</data>
+</edge>
+<edge source="entity_person_labeled_5_person" target="entity_miniature_driving/parking_simulation_area">
+  <data key="d12">LOCATED_AT</data>
+  <data key="d15">The person labeled '5 person' is located within the miniature driving/parking simulation area.</data>
+  <data key="d14">1</data>
+</edge>
+<edge source="entity_yellow_vehicle_labeled_0" target="chunk_1">
+  <data key="d12">MENTIONED_IN</data>
+</edge>
+<edge source="entity_yellow_vehicle_labeled_0" target="entity_miniature_driving/parking_simulation_area">
+  <data key="d12">LOCATED_AT</data>
+  <data key="d15">The yellow vehicle labeled '0' is located within the miniature driving/parking simulation area.</data>
+  <data key="d14">1</data>
+</edge>
+<edge source="entity_miniature_driving/parking_simulation_area" target="chunk_1">
+  <data key="d12">MENTIONED_IN</data>
+</edge>
+<edge source="entity_road_markings" target="chunk_1">
+  <data key="d12">MENTIONED_IN</data>
+</edge>
+<edge source="entity_road_markings" target="entity_miniature_driving/parking_simulation_area">
+  <data key="d12">PART_OF</data>
+  <data key="d15">The road markings are part of the miniature driving/parking simulation area.</data>
+  <data key="d14">1</data>
+</edge>
+<edge source="entity_miniature_traffic_signs" target="chunk_1">
+  <data key="d12">MENTIONED_IN</data>
+</edge>
+<edge source="entity_miniature_traffic_signs" target="entity_miniature_driving/parking_simulation_area">
+  <data key="d12">PART_OF</data>
+  <data key="d15">The miniature traffic signs are part of the miniature driving/parking simulation area.</data>
+  <data key="d14">1</data>
+</edge>
+<edge source="entity_text_'#7_truck'" target="chunk_1">
+  <data key="d12">MENTIONED_IN</data>
+</edge>
+<edge source="entity_text_'#7_truck'" target="entity_red_fire_truck_labeled_5">
+  <data key="d12">NEAR</data>
+  <data key="d15">The text '#7 Truck' is near the red fire truck labeled '5' at 37.5s.</data>
+  <data key="d14">1</data>
+</edge>
+<edge source="chunk_2" target="chunk_3">
+  <data key="d12">FOLLOWED_BY</data>
+</edge>
+<edge source="object_car_29" target="chunk_2">
+  <data key="d12">APPEARS_IN</data>
+  <data key="d13">0.8565132021903992</data>
+</edge>
+<edge source="object_car_29" target="object_car_1">
+  <data key="d12">CO_OCCURS_WITH</data>
+  <data key="d14">2</data>
+</edge>
+<edge source="object_car_29" target="object_car_2">
+  <data key="d12">CO_OCCURS_WITH</data>
+  <data key="d14">2</data>
+</edge>
+<edge source="object_car_29" target="object_car_3">
+  <data key="d12">CO_OCCURS_WITH</data>
+  <data key="d14">2</data>
+</edge>
+<edge source="object_car_29" target="object_car_32">
+  <data key="d12">CO_OCCURS_WITH</data>
+  <data key="d14">2</data>
+</edge>
+<edge source="object_car_29" target="object_car_33">
+  <data key="d12">CO_OCCURS_WITH</data>
+  <data key="d14">2</data>
+</edge>
+<edge source="object_car_3" target="chunk_2">
+  <data key="d12">APPEARS_IN</data>
+  <data key="d13">0.849546492099762</data>
+</edge>
+<edge source="object_car_3" target="object_car_32">
+  <data key="d12">CO_OCCURS_WITH</data>
+  <data key="d14">2</data>
+</edge>
+<edge source="object_car_3" target="object_car_33">
+  <data key="d12">CO_OCCURS_WITH</data>
+  <data key="d14">2</data>
+</edge>
+<edge source="object_car_32" target="chunk_2">
+  <data key="d12">APPEARS_IN</data>
+  <data key="d13">0.8247061371803284</data>
+</edge>
+<edge source="object_car_32" target="object_car_33">
+  <data key="d12">CO_OCCURS_WITH</data>
+  <data key="d14">2</data>
+</edge>
+<edge source="object_car_32" target="chunk_3">
+  <data key="d12">APPEARS_IN</data>
+  <data key="d13">0.8890509009361267</data>
+</edge>
+<edge source="object_car_32" target="object_car_35">
+  <data key="d12">CO_OCCURS_WITH</data>
+  <data key="d14">3</data>
+</edge>
+<edge source="object_car_32" target="object_truck_6">
+  <data key="d12">CO_OCCURS_WITH</data>
+  <data key="d14">3</data>
+</edge>
+<edge source="object_car_33" target="chunk_2">
+  <data key="d12">APPEARS_IN</data>
+  <data key="d13">0.7667244672775269</data>
+</edge>
+<edge source="object_car_33" target="chunk_3">
+  <data key="d12">APPEARS_IN</data>
+  <data key="d13">0.846619725227356</data>
+</edge>
+<edge source="object_car_33" target="object_car_35">
+  <data key="d12">CO_OCCURS_WITH</data>
+  <data key="d14">3</data>
+</edge>
+<edge source="object_car_33" target="object_truck_6">
+  <data key="d12">CO_OCCURS_WITH</data>
+  <data key="d14">3</data>
+</edge>
+<edge source="entity_racing_video_game" target="chunk_2">
+  <data key="d12">MENTIONED_IN</data>
+</edge>
+<edge source="entity_racing_video_game" target="entity_curvy_racetrack">
+  <data key="d12">PART_OF</data>
+  <data key="d15">The curvy racetrack is part of the racing video game's environment.</data>
+  <data key="d14">2</data>
+</edge>
+<edge source="entity_racing_video_game" target="entity_urban_environment">
+  <data key="d12">PART_OF</data>
+  <data key="d15">The urban environment is part of the racing video game's setting.</data>
+  <data key="d14">2</data>
+</edge>
+<edge source="entity_racing_video_game" target="entity_object_detection_system">
+  <data key="d12">INVOLVES</data>
+  <data key="d15">The racing video game involves the use of an object detection system for tracking cars.</data>
+  <data key="d14">2</data>
+</edge>
+<edge source="entity_curvy_racetrack" target="chunk_2">
+  <data key="d12">MENTIONED_IN</data>
+</edge>
+<edge source="entity_urban_environment" target="chunk_2">
+  <data key="d12">MENTIONED_IN</data>
+</edge>
+<edge source="entity_grassy_areas" target="chunk_2">
+  <data key="d12">MENTIONED_IN</data>
+</edge>
+<edge source="entity_trees" target="chunk_2">
+  <data key="d12">MENTIONED_IN</data>
+</edge>
+<edge source="entity_yellow_car_with_red_parts" target="chunk_2">
+  <data key="d12">MENTIONED_IN</data>
+</edge>
+<edge source="entity_yellow_car_with_red_parts" target="entity_curvy_racetrack">
+  <data key="d12">LOCATED_AT</data>
+  <data key="d15">The yellow car with red parts is positioned on the curvy racetrack during the video chunk.</data>
+  <data key="d14">2</data>
+</edge>
+<edge source="entity_yellow_car_with_red_parts" target="entity_bounding_box_system">
+  <data key="d12">INTERACTS_WITH</data>
+  <data key="d15">The yellow car with red parts is detected and tracked by the bounding box system.</data>
+  <data key="d14">2</data>
+</edge>
+<edge source="entity_yellow_car_with_red_parts" target="entity_red_and_purple_car_with_number_12">
+  <data key="d12">NEAR</data>
+  <data key="d15">The yellow car with red parts is near the red and purple car with number 12 as it approaches over time.</data>
+  <data key="d14">2</data>
+</edge>
+<edge source="entity_red_and_purple_car_with_number_12" target="chunk_2">
+  <data key="d12">MENTIONED_IN</data>
+</edge>
+<edge source="entity_red_and_purple_car_with_number_12" target="entity_curvy_racetrack">
+  <data key="d12">LOCATED_AT</data>
+  <data key="d15">The red and purple car with number 12 is positioned on the curvy racetrack during the video chunk.</data>
+  <data key="d14">2</data>
+</edge>
+<edge source="entity_red_and_purple_car_with_number_12" target="entity_bounding_box_system">
+  <data key="d12">INTERACTS_WITH</data>
+  <data key="d15">The red and purple car with number 12 is detected and tracked by the bounding box system.</data>
+  <data key="d14">2</data>
+</edge>
+<edge source="entity_bounding_box_system" target="chunk_2">
+  <data key="d12">MENTIONED_IN</data>
+</edge>
+<edge source="entity_dois_signage" target="chunk_2">
+  <data key="d12">MENTIONED_IN</data>
+</edge>
+<edge source="entity_dois_signage" target="entity_curvy_racetrack">
+  <data key="d12">LOCATED_AT</data>
+  <data key="d15">The 'dois' signage is positioned along the side of the curvy racetrack.</data>
+  <data key="d14">2</data>
+</edge>
+<edge source="entity_windshield" target="chunk_2">
+  <data key="d12">MENTIONED_IN</data>
+</edge>
+<edge source="entity_viewpoint_inside_vehicle" target="chunk_2">
+  <data key="d12">MENTIONED_IN</data>
+</edge>
+<edge source="entity_viewpoint_inside_vehicle" target="entity_windshield">
+  <data key="d12">PERFORMS</data>
+  <data key="d15">The viewpoint inside the vehicle is shown through the windshield.</data>
+  <data key="d14">2</data>
+</edge>
+<edge source="object_car_35" target="chunk_3">
+  <data key="d12">APPEARS_IN</data>
+  <data key="d13">0.9355154633522034</data>
+</edge>
+<edge source="object_car_35" target="object_truck_6">
+  <data key="d12">CO_OCCURS_WITH</data>
+  <data key="d14">3</data>
+</edge>
+<edge source="object_truck_6" target="chunk_3">
+  <data key="d12">APPEARS_IN</data>
+  <data key="d13">0.9265550971031189</data>
+</edge>
+<edge source="entity_racing_track" target="chunk_3">
+  <data key="d12">MENTIONED_IN</data>
+</edge>
+<edge source="entity_car_#3?" target="chunk_3">
+  <data key="d12">MENTIONED_IN</data>
+</edge>
+<edge source="entity_car_#3?" target="entity_racing_track">
+  <data key="d12">LOCATED_AT</data>
+  <data key="d15">The car '#3?' is positioned on the racing track.</data>
+  <data key="d14">3</data>
+</edge>
+<edge source="entity_car_#35" target="chunk_3">
+  <data key="d12">MENTIONED_IN</data>
+</edge>
+<edge source="entity_car_#35" target="entity_racing_track">
+  <data key="d12">LOCATED_AT</data>
+  <data key="d15">The car '#35' is positioned on the racing track.</data>
+  <data key="d14">3</data>
+</edge>
+<edge source="entity_motorcycle_#12" target="chunk_3">
+  <data key="d12">MENTIONED_IN</data>
+</edge>
+<edge source="entity_motorcycle_#12" target="entity_racing_track">
+  <data key="d12">LOCATED_AT</data>
+  <data key="d15">The motorcycle '#12' is positioned on the racing track.</data>
+  <data key="d14">3</data>
+</edge>
+<edge source="entity_ambulance_#6_truck" target="chunk_3">
+  <data key="d12">MENTIONED_IN</data>
+</edge>
+<edge source="entity_ambulance_#6_truck" target="entity_racing_track">
+  <data key="d12">LOCATED_AT</data>
+  <data key="d15">The ambulance '#6_truck' is positioned on the racing track, entering from the right side at 112.2s.</data>
+  <data key="d14">3</data>
+</edge>
+<edge source="entity_green_bounding_boxes" target="chunk_3">
+  <data key="d12">MENTIONED_IN</data>
+</edge>
+<edge source="entity_green_bounding_boxes" target="entity_car_#3?">
+  <data key="d12">PART_OF</data>
+  <data key="d15">The green bounding box highlights the car '#3?'.</data>
+  <data key="d14">3</data>
+</edge>
+<edge source="entity_green_bounding_boxes" target="entity_car_#35">
+  <data key="d12">PART_OF</data>
+  <data key="d15">The green bounding box highlights the car '#35'.</data>
+  <data key="d14">3</data>
+</edge>
+<edge source="entity_green_bounding_boxes" target="entity_motorcycle_#12">
+  <data key="d12">PART_OF</data>
+  <data key="d15">The green bounding box highlights the motorcycle '#12'.</data>
+  <data key="d14">3</data>
+</edge>
+<edge source="entity_green_bounding_boxes" target="entity_ambulance_#6_truck">
+  <data key="d12">PART_OF</data>
+  <data key="d15">The green bounding box highlights the ambulance '#6_truck' from frame 3 onward.</data>
+  <data key="d14">3</data>
+</edge>
+<edge source="entity_signage_'dios'" target="chunk_3">
+  <data key="d12">MENTIONED_IN</data>
+</edge>
+<edge source="entity_signage_'dios'" target="entity_racing_track">
+  <data key="d12">LOCATED_AT</data>
+  <data key="d15">The partial word 'dios' is located along the edges of the racing track.</data>
+  <data key="d14">3</data>
+</edge>
+</graph></graphml>

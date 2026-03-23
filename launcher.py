@@ -6,23 +6,35 @@ import socket
 # Disable Torch Dynamo globally to prevent segfaults on Windows
 os.environ["TORCH_DYNAMO_DISABLE"] = "1"
 
-def load_env(env_file='.env.local'):
-    """Load environment variables from a file."""
-    if not os.path.exists(env_file):
-        if os.path.exists(os.path.join('..', env_file)):
-            env_file = os.path.join('..', env_file)
-        else:
-            print(f"Warning: {env_file} not found. Proceeding without it.")
-            return
-    print(f"Loading {env_file}...")
-    with open(env_file, 'r', encoding='utf-8') as f:
-        for line in f:
-            line = line.strip()
-            if not line or line.startswith('#') or '=' not in line:
+def load_env():
+    """Load environment variables from .env and then .env.local (as overrides)."""
+    env_files = ['.env', '.env.local']
+    for env_file in env_files:
+        if not os.path.exists(env_file):
+            if os.path.exists(os.path.join('..', env_file)):
+                actual_file = os.path.join('..', env_file)
+            else:
+                print(f"Warning: {env_file} not found. Skipping.")
                 continue
-            key, value = line.split('=', 1)
-            os.environ[key.strip()] = value.strip()
-    print("Environment loaded!")
+        else:
+            actual_file = env_file
+
+        print(f"Loading {env_file}...")
+        with open(actual_file, 'r', encoding='utf-8') as f:
+            for line in f:
+                line = line.strip()
+                if not line or line.startswith('#') or '=' not in line:
+                    continue
+                key, value = line.split('=', 1)
+                os.environ[key.strip()] = value.strip()
+    print("Environment variables loaded!")
+    
+    # Ensure DATA_DIRECTORY is absolute to prevent fragmentation across services
+    data_dir = os.environ.get("DATA_DIRECTORY")
+    if data_dir and not os.path.isabs(data_dir):
+        # Resolve relative to the current working directory (project root)
+        os.environ["DATA_DIRECTORY"] = os.path.abspath(data_dir)
+        print(f"Resolved DATA_DIRECTORY to: {os.environ['DATA_DIRECTORY']}")
 
 def kill_port(port, retries=5):
     """Kill any process listening on the given port, with retries."""

@@ -1,6 +1,7 @@
 from typing import Protocol
 from langchain_openai import ChatOpenAI
 from langchain_openai import AzureChatOpenAI
+from langchain_mistralai import ChatMistralAI
 from rag_pipeline.Config.rag_config import RAG_CONFIG
 
 class LLMModelsProtocol(Protocol):
@@ -18,6 +19,13 @@ def create_llm_model(provider: str, model_name: str, temperature: str, max_token
     elif (provider.lower() == "azureopenai" or provider.lower() == "azure-openai"):
         print("Creating Azure OpenAI LLM")
         return AzureOpenAILLMModel().get_llm(
+            model_name=model_name,
+            temperature= temperature,
+            max_tokens= max_tokens
+        )
+    elif (provider.lower() == "mistral"):
+        print("Creating Mistral LLM")
+        return MistralLLMModel().get_llm(
             model_name=model_name,
             temperature= temperature,
             max_tokens= max_tokens
@@ -61,4 +69,19 @@ class AzureOpenAILLMModel(LLMModelsProtocol):
             azure_deployment=model_name,  # or use self.model_name if dynamic
             temperature=temperature,
             max_completion_tokens=max_tokens,
+        )
+
+class MistralLLMModel(LLMModelsProtocol):
+    def get_llm(self, model_name: str, temperature: float, max_tokens):
+        mistral_api_key = RAG_CONFIG.get("mistral_api_key")
+
+        if not mistral_api_key:
+            raise ValueError("Missing mistral_api_key in config or environment")
+
+        return ChatMistralAI(
+            api_key=mistral_api_key,
+            model=model_name,
+            temperature=temperature,
+            max_retries=2,
+            max_tokens=max_tokens,
         )

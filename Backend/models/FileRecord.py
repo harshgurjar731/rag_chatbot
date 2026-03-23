@@ -24,7 +24,7 @@ class Folder(SQLModel, table=True):
     parent: Optional["Folder"] = Relationship(
         sa_relationship_kwargs={"remote_side": "Folder.id"}
     )
-    children: List["Folder"] = Relationship()
+    children: List["Folder"] = Relationship(sa_relationship_kwargs={"overlaps": "parent"})
     documents: List["DocumentRecord"] = Relationship(back_populates="folder")
 
 class DocumentRecord(SQLModel, table=True):

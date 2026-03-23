@@ -52,6 +52,7 @@ export const EmbeddingConfigWizard = ({
   const embeddingProviders = {
     "HuggingFace": ["all-MiniLM-L6-v2", "bge-large-en", "e5-large-v2", "ViT-H-14"],
     "OpenAI": ["text-embedding-3-small", "text-embedding-3-large"],
+    "Mistral": ["mistral-embed"],
   };
 
   const similarityMetricOptions = ["Cosine", "Dot", "Euclidean"];

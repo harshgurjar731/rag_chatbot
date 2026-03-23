@@ -120,21 +120,26 @@ async def process_upsert_job(job_data: dict):
 
         # Text Flow
         if len(list_of_text_documents) > 0:
+            print(f"[*] Creating embedding model for {embedding_provider}/{embedding_model} with {len(list_of_text_documents)} text documents")
             embeddingModel = create_embedding_model(
                 provider=embedding_provider,
                 model_name=embedding_model
             )
+            print("[*] Creating vector store")
             vectordb = create_vector_store(provider=vector_store_provider)
+            print(f"[*] Ensuring collection 'datastore_{datastore_id}' exists")
             vectordb.create_collection(
                 name=f"datastore_{datastore_id}",
                 embedding=embeddingModel
             )
+            print(f"[*] Calling insert_docs (this might be slow for many/large documents)")
             insert_success = vectordb.insert_docs(
                 collection=f"datastore_{datastore_id}",
                 documents=list_of_text_documents,
                 chunkids=text_chunk_ids,
                 embedding=embeddingModel
             )
+            print(f"[*] insert_docs result: {'Success' if insert_success else 'Failure'}")
 
         # Image Flow
         if len(list_of_img_documents) > 0:
@@ -266,6 +271,13 @@ async def process_delete_vectors_job(job_data: dict):
     except Exception as e:
         print(f"[!] Error deleting vectors: {e}")
 
+async def process_video_job(job_data: dict):
+    """Forward video processing job to the video processing pool via Redis."""
+    job_id = job_data.get("job_id", "unknown")
+    print(f"[*] Forwarding VIDEO job {job_id} to video_processing:inbox")
+    r.rpush("video_processing:inbox", json.dumps(job_data))
+    print(f"[*] Video job {job_id} forwarded successfully")
+
 async def message_loop():
     inbox_key = "ingestion:inbox"
     print(f"[*] Ingestion Worker listening on {inbox_key}")
@@ -287,6 +299,8 @@ async def message_loop():
                     await process_delete_collection_job(job_data)
                 elif job_type == "delete_vectors":
                     await process_delete_vectors_job(job_data)
+                elif job_type == "process_video":
+                    await process_video_job(job_data)
                 else:
                     print(f"[!] Unknown job type: {job_type}")
                     
@@ -294,7 +308,9 @@ async def message_loop():
                 await asyncio.sleep(0.1)
                 
         except Exception as e:
+            import traceback
             print(f"[!] Worker Loop Error: {e}")
+            traceback.print_exc()
             await asyncio.sleep(1)
 
 if __name__ == "__main__":

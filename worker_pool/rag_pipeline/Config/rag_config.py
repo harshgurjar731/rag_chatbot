@@ -20,7 +20,7 @@ RAG_CONFIG = {
     "default_llm_model": os.getenv("DEFAULT_LLM_MODEL", "llama-3.3-70b-versatile"),
     "default_temperature": float(os.getenv("DEFAULT_TEMPERATURE", 0.0)),
     "default_top_p": float(os.getenv("DEFAULT_TOP_P", 0.0)),
-    "default_max_tokens": int(os.getenv("DEFAULT_MAX_TOKENS", 256)),
+    "default_max_tokens": int(os.getenv("DEFAULT_MAX_TOKENS", 2048)),
     "default_reranker_type": os.getenv("DEFAULT_RERANKER_TYPE", "None"),
     "default_query_rewriting_type": os.getenv("DEFAULT_QUERY_REWRITING_TYPE", "None"),
     "default_guardrail_type": os.getenv("DEFAULT_GUARDRAIL_TYPE", "None"),
@@ -117,6 +117,11 @@ RAG_CONFIG = {
     "azure_supported_models": os.getenv(
         "AZURE_SUPPORTED_MODELS",
         "gpt-4o-mini"
+    ).split(","),
+
+    "mistral_supported_models": os.getenv(
+        "MISTRAL_SUPPORTED_MODELS",
+        "mistral-large-latest,mistral-small-latest,pixtral-large-latest"
     ).split(","),
 
 

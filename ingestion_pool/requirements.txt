@@ -44,5 +44,7 @@ langchain-text-splitters
 langchain-openai
 langchain-experimental
 langchain-nvidia-ai-endpoints
+mistralai
+langchain-mistralai
 openinference-instrumentation-langchain
 openinference-instrumentation-openai

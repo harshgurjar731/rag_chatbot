@@ -1,0 +1,421 @@
+[
+  {
+    "chunk_id": 0,
+    "stream_id": "default",
+    "source_video": "C:\\Users\\MrYashGupta\\Desktop\\NewRagDemo\\rag_chatbot\\data_directory\\Test2\\car video.mp4",
+    "start_timestamp": 0.0,
+    "end_timestamp": 37.5,
+    "duration_seconds": 37.5,
+    "transcript": {
+      "engine": "mistral_api",
+      "model": "voxtral-mini-latest",
+      "segments": [],
+      "full_text": ""
+    },
+    "caption": {
+      "engine": "mistral_api",
+      "model": "mistral-large-2512",
+      "text": "Here is analysis covers thebased on the provided frames with timestamps:\n\n**0.0s (Frame 1):**\nThe scene is set in what appears to be an outdoor driving or parking test area with paved surfaces and some grassy patches. No people are visible in this frame. The primary focus is on reflective signage displaying the words \"dois\" and \"dois 1.\" There are no visible actions from individuals. Objects include traffic delineators and a circular manhole cover. No specific tiny numbers are visible in this frame.\n\n**7.5s (Frame 2):**\nThe environment remains unchanged. A vehicle, likely being used for object detection training, appears in the bottom left corner. The reflective signage continues to be prominent. Annotations appear on-screen, showing object detection boxes, but no specific numbers or text within these boxes are readable yet.\n\n**14.9s (Frame 3):**\nObject detection annotations become clearer. There are two visible detection boxes labeled \"0\" and another unnumbered box. The detection box labeled \"0\" seems to be tracking a small vehicle or object on the road. The environment and signage remain consistent.\n\n**22.4s (Frame 4):**\nMore vehicles are detected and annotated with green boxes. The detection boxes are numbered \"1,\" \"2,\" and \"3.\" The text \"LiDAR\" appears in one of the annotations, indicating LiDAR sensor data usage. The reflective signage \"dois\" remains visible.\n\n**29.9s (Frame 5):**\nAdditional vehicles enter the frame, with one truck clearly marked with the number \"2.\" Another vehicle is marked with the number \"3.\" The scene continues to show the same environment with consistent signage.\n\n**37.5s (Frame 6):**\nA new truck, marked with the number \"5,\" appears prominently in the frame. The object detection system continues to track multiple vehicles, maintaining the same environment and reflective signage. The progression shows an increase in the number of detected objects and vehicles over time."
+    },
+    "cv_metadata": {
+      "detector": "yolov8l",
+      "tracker": "bytetrack",
+      "objects": [
+        {
+          "class": "car",
+          "bbox": [
+            730.8572387695312,
+            22.3228759765625,
+            810.3817138671875,
+            132.22854614257812
+          ],
+          "confidence": 0.5701160430908203,
+          "track_id": 0,
+          "frames_seen": [
+            2
+          ]
+        },
+        {
+          "class": "car",
+          "bbox": [
+            41.62668991088867,
+            586.2078857421875,
+            205.5299072265625,
+            804.1256713867188
+          ],
+          "confidence": 0.7563163638114929,
+          "track_id": 1,
+          "frames_seen": [
+            3
+          ]
+        },
+        {
+          "class": "car",
+          "bbox": [
+            148.389892578125,
+            0.0,
+            301.1873474121094,
+            145.56407165527344
+          ],
+          "confidence": 0.5728269815444946,
+          "track_id": 2,
+          "frames_seen": [
+            3
+          ]
+        },
+        {
+          "class": "bus",
+          "bbox": [
+            154.8208465576172,
+            0.1695556640625,
+            331.524169921875,
+            168.6825714111328
+          ],
+          "confidence": 0.4952579736709595,
+          "track_id": 3,
+          "frames_seen": [
+            3,
+            4
+          ]
+        },
+        {
+          "class": "car",
+          "bbox": [
+            711.33544921875,
+            0.2580299973487854,
+            910.0321044921875,
+            125.98892211914062
+          ],
+          "confidence": 0.8931188583374023,
+          "track_id": 4,
+          "frames_seen": [
+            3,
+            4,
+            5
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "chunk_id": 1,
+    "stream_id": "default",
+    "source_video": "C:\\Users\\MrYashGupta\\Desktop\\NewRagDemo\\rag_chatbot\\data_directory\\Test2\\car video.mp4",
+    "start_timestamp": 37.5,
+    "end_timestamp": 62.5,
+    "duration_seconds": 25.0,
+    "transcript": {
+      "engine": "mistral_api",
+      "model": "voxtral-mini-latest",
+      "segments": [],
+      "full_text": ""
+    },
+    "caption": {
+      "engine": "mistral_api",
+      "model": "mistral-large-2512",
+      "text": "Here is a detailed analysis of the provided frames following the requested structure:\n\n---\n\n**37.5 seconds:**\nThe scene is set in what appears to be a small-scale driving/parking simulation area with paved roads and some grassy patches. The environment includes road markings and miniature traffic signs. A red fire truck labeled with the number \"5\" is visible in the bottom-left quadrant, and a beige pickup truck is seen in the upper-middle section. There is a small car with the number \"3\" visible on the right side. No people are distinctly visible in this frame. The text \"#7 Truck\" is visible near the red fire truck.\n\n**42.5 seconds:**\nThe environment remains the same, depicting a miniature road network. A large black truck labeled with the number \"6\" is prominently seen moving through the intersection. The red fire truck labeled \"5\" is still present. A small red car with the number \"8\" is visible in the bottom-middle section. There are no clearly identifiable people in this frame.\n\n**47.5 seconds:**\nThe scene continues in the same environment. The black truck labeled \"2\" is now visible in the upper-right quadrant. The red fire truck labeled \"5\" remains stationary. Two small cars, one labeled \"6\" and another \"7,\" are seen near the intersection. No people are distinctly visible in this frame.\n\n**52.5 seconds:**\nThe environment remains unchanged. A yellow bus labeled with the number \"9\" is now visible in the middle-right section. The black truck is no longer in the frame. The small cars labeled \"6\" and \"7\" are still present near the intersection. No people are distinctly visible.\n\n**57.5 seconds:**\nThe scene setting is consistent with previous frames. A small yellow car labeled with the number \"7\" and another car labeled \"6\" are seen. A new object, a small vehicle labeled \"#4 car,\" appears in the left-middle section. Additionally, a person labeled \"#5 person\" is visible near the car labeled \"6\" in the upper-right quadrant.\n\n**62.5 seconds:**\nThe environment remains the same. A yellow vehicle labeled with the number \"0\" is now visible in the bottom-left quadrant. The small car labeled \"6\" is still present. The road markings include the word \"STOP\" repeatedly along the road edges. The person previously seen near car \"6\" is no longer distinctly visible.\n\n---\n\n**Summary of Temporal Progression:**\nAcross these frames, the vehicles move through the miniature road network, indicating a simulation or tracking scenario. The numbers on the vehicles change as different vehicles come into view, suggesting either a tracking algorithm or a game-like progression. The text and numbers observed include vehicle labels (#3, #4 car, #5 person, #5 truck, #6, #7, #7 Truck, #8, #9, #0) and road markings (\"STOP\"). The environment remains constant, depicting a controlled driving/parking area. People appear sporadically, indicating potential movement or interaction within the simulation."
+    },
+    "cv_metadata": {
+      "detector": "yolov8l",
+      "tracker": "bytetrack",
+      "objects": [
+        {
+          "class": "bus",
+          "bbox": [
+            660.8811645507812,
+            0.05706307291984558,
+            928.084716796875,
+            217.46888732910156
+          ],
+          "confidence": 0.9299947023391724,
+          "track_id": 6,
+          "frames_seen": [
+            0,
+            1,
+            2,
+            5
+          ]
+        },
+        {
+          "class": "truck",
+          "bbox": [
+            153.94369506835938,
+            55.602447509765625,
+            307.5721130371094,
+            304.34100341796875
+          ],
+          "confidence": 0.6515903472900391,
+          "track_id": 7,
+          "frames_seen": [
+            0
+          ]
+        },
+        {
+          "class": "truck",
+          "bbox": [
+            193.63462829589844,
+            0.234100341796875,
+            372.641845703125,
+            211.82760620117188
+          ],
+          "confidence": 0.3894878923892975,
+          "track_id": 8,
+          "frames_seen": [
+            0
+          ]
+        },
+        {
+          "class": "truck",
+          "bbox": [
+            152.01666259765625,
+            0.0,
+            372.7899169921875,
+            303.99871826171875
+          ],
+          "confidence": 0.3262951374053955,
+          "track_id": 9,
+          "frames_seen": [
+            0
+          ]
+        },
+        {
+          "class": "car",
+          "bbox": [
+            244.9954071044922,
+            299.326416015625,
+            310.4442443847656,
+            482.56939697265625
+          ],
+          "confidence": 0.6624531149864197,
+          "track_id": 4,
+          "frames_seen": [
+            4
+          ]
+        },
+        {
+          "class": "person",
+          "bbox": [
+            670.0197143554688,
+            175.6482391357422,
+            788.3528442382812,
+            275.20196533203125
+          ],
+          "confidence": 0.45733606815338135,
+          "track_id": 5,
+          "frames_seen": [
+            4
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "chunk_id": 2,
+    "stream_id": "default",
+    "source_video": "C:\\Users\\MrYashGupta\\Desktop\\NewRagDemo\\rag_chatbot\\data_directory\\Test2\\car video.mp4",
+    "start_timestamp": 62.5,
+    "end_timestamp": 100.0,
+    "duration_seconds": 37.5,
+    "transcript": {
+      "engine": "mistral_api",
+      "model": "voxtral-mini-latest",
+      "segments": [],
+      "full_text": ""
+    },
+    "caption": {
+      "engine": "mistral_api",
+      "model": "mistral-large-2512",
+      "text": "Here is a detailed analysis of the provided frames in a structured format:\n\n**62.5 seconds:**\nThe scene appears to be from a racing video game, set on a curvy racetrack in an urban environment with grassy areas and some trees. The viewpoint is from inside a vehicle, looking through the windshield. There is a yellow car ahead with a bounding box and the label \"#1 cor\" indicating it is the first competitor. The focus is on detecting and tracking objects, as shown by the green and red bounding boxes. Visible signage on the side of the track includes the words \"dois\" repeated multiple times.\n\n**70.0 seconds:**\nThe environment remains the same, with the track curving to the right. No significant changes in the surroundings are observed. The yellow car ahead is still being tracked, but no bounding box is visible in this frame. The repeated \"dois\" signage is still present along the side of the track.\n\n**77.5 seconds:**\nThe yellow car with red parts is again visible ahead, now with two bounding boxes labeled \"#1 cor\" and \"#2 cor,\" indicating tracking of two cars. The environment and track layout remain consistent with previous frames. The \"dois\" signage is still visible.\n\n**85.0 seconds:**\nThe yellow car with red parts continues to be tracked, now showing \"#3 cor\" in the bounding box. Another car, red and purple, appears in the scene with the number \"12\" visible on it. The environment remains unchanged, and the \"dois\" signage is still present.\n\n**92.5 seconds:**\nThe yellow car with red parts is still being tracked with the bounding box labeled \"#3 cor.\" The red and purple car with the number \"12\" is closer now. The scene and signage remain consistent with previous frames.\n\n**100.0 seconds:**\nThe yellow car with red parts is still tracked, showing the same \"#3 cor\" label. The red and purple car with the number \"12\" is now more prominently visible, approaching from behind or the side. The environment and \"dois\" signage continue unchanged.\n\n**Summary of Temporal Progression:**\nAcross the frames, the primary focus is on tracking the positions of various cars on the racetrack. The yellow car with red parts is consistently tracked, and its competitor number changes from #1 to #3. Another car, red and purple with the number \"12,\" appears and gets closer over time. The environment remains constant, featuring a curvy track and repeated \"dois\" signage along the sides. The bounding boxes and labels indicate an object detection system in use, likely for identifying and tracking race cars."
+    },
+    "cv_metadata": {
+      "detector": "yolov8l",
+      "tracker": "bytetrack",
+      "objects": [
+        {
+          "class": "car",
+          "bbox": [
+            0.0,
+            642.0389404296875,
+            145.84828186035156,
+            894.5052490234375
+          ],
+          "confidence": 0.8565132021903992,
+          "track_id": 29,
+          "frames_seen": [
+            0
+          ]
+        },
+        {
+          "class": "car",
+          "bbox": [
+            772.5692138671875,
+            483.4032287597656,
+            943.7062377929688,
+            678.6956176757812
+          ],
+          "confidence": 0.9271314144134521,
+          "track_id": 1,
+          "frames_seen": [
+            2
+          ]
+        },
+        {
+          "class": "car",
+          "bbox": [
+            467.59326171875,
+            272.4554748535156,
+            607.0897216796875,
+            385.28826904296875
+          ],
+          "confidence": 0.8510580062866211,
+          "track_id": 2,
+          "frames_seen": [
+            3
+          ]
+        },
+        {
+          "class": "car",
+          "bbox": [
+            422.85302734375,
+            202.0086669921875,
+            551.2706298828125,
+            325.30889892578125
+          ],
+          "confidence": 0.849546492099762,
+          "track_id": 3,
+          "frames_seen": [
+            3
+          ]
+        },
+        {
+          "class": "car",
+          "bbox": [
+            465.929931640625,
+            269.92047119140625,
+            608.531494140625,
+            385.29351806640625
+          ],
+          "confidence": 0.8247061371803284,
+          "track_id": 32,
+          "frames_seen": [
+            4,
+            5
+          ]
+        },
+        {
+          "class": "car",
+          "bbox": [
+            422.5838317871094,
+            201.4335174560547,
+            551.3638305664062,
+            325.0871276855469
+          ],
+          "confidence": 0.7667244672775269,
+          "track_id": 33,
+          "frames_seen": [
+            4,
+            5
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "chunk_id": 3,
+    "stream_id": "default",
+    "source_video": "C:\\Users\\MrYashGupta\\Desktop\\NewRagDemo\\rag_chatbot\\data_directory\\Test2\\car video.mp4",
+    "start_timestamp": 100.0,
+    "end_timestamp": 130.65,
+    "duration_seconds": 30.650000000000006,
+    "transcript": {
+      "engine": "mistral_api",
+      "model": "voxtral-mini-latest",
+      "segments": [],
+      "full_text": ""
+    },
+    "caption": {
+      "engine": "mistral_api",
+      "model": "mistral-large-2512",
+      "text": "Here is a structured analysis of the provided frames with the specified details:\n\n1. **100.0s (Frame 1):**\n   The scene is set in what appears to be a racing track or a driving simulation environment viewed from above. The track has curbs and some signage along the edges, including partial words \"dios.\" Three vehicles are visible: two cars and one motorcycle. The objects of interest are highlighted with green bounding boxes. The cars and motorcycle have numbers obscured but visible as \"#3?\" and \"12.\" No people are distinctly visible in this frame.\n\n2. **106.1s (Frame 2):**\n   The environment remains the same, showing the same segment of the track. The same three vehicles are present, maintaining their positions relative to each other. The bounding boxes and obscured numbers remain unchanged. The motorcycle still displays the number \"12.\"\n\n3. **112.2s (Frame 3):**\n   The setting continues unchanged. A new vehicle, an ambulance, appears in the scene, entering from the right side. The bounding boxes around the cars and motorcycle remain consistent, with the same obscured numbers \"#3?\" and \"12.\" The ambulance is not yet highlighted.\n\n4. **118.3s (Frame 4):**\n   The environment and track remain consistent. The ambulance is now more prominently visible and highlighted with a green bounding box labeled \"#6_truck.\" The previously identified cars and motorcycle still show the same obscured numbers \"#3?\" and \"12.\"\n\n5. **124.5s (Frame 5):**\n   The scene shows the same track area. The bounding boxes around all vehicles, including the two cars, motorcycle, and ambulance, are clearly visible. The numbers and labels remain consistent: \"#3?_car,\" \"#35_car,\" \"12,\" and \"#6_truck.\"\n\n6. **130.6s (Frame 6):**\n   The final frame shows the same environment and vehicles. The bounding boxes and labels remain unchanged, indicating the same vehicles with the same obscured numbers and identifiers: \"#3?_car,\" \"#35_car,\" \"12,\" and \"#6_truck.\"\n\n**Critical Text/Signage/Numbers:**\n- Partial words on the track: \"dios.\"\n- Numbers on vehicles: \"#3?,\" \"#35,\" \"12,\" and \"#6_truck.\"\n\n**Temporal Progression:**\nAcross the frames, the primary change is the introduction and stabilization of an ambulance (#6_truck) into the scene starting from 112.2s. The other vehicles remain in similar positions, and the bounding boxes consistently track them, showing no significant movement or action changes among the cars and motorcycle. The environment and track layout remain static throughout the sequence."
+    },
+    "cv_metadata": {
+      "detector": "yolov8l",
+      "tracker": "bytetrack",
+      "objects": [
+        {
+          "class": "car",
+          "bbox": [
+            466.5145568847656,
+            272.26708984375,
+            609.1358642578125,
+            388.61126708984375
+          ],
+          "confidence": 0.8890509009361267,
+          "track_id": 32,
+          "frames_seen": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5
+          ]
+        },
+        {
+          "class": "car",
+          "bbox": [
+            421.9095153808594,
+            201.85772705078125,
+            550.5853271484375,
+            325.4425964355469
+          ],
+          "confidence": 0.846619725227356,
+          "track_id": 33,
+          "frames_seen": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5
+          ]
+        },
+        {
+          "class": "car",
+          "bbox": [
+            409.8116455078125,
+            355.738525390625,
+            572.353515625,
+            536.232666015625
+          ],
+          "confidence": 0.9355154633522034,
+          "track_id": 35,
+          "frames_seen": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5
+          ]
+        },
+        {
+          "class": "truck",
+          "bbox": [
+            559.6450805664062,
+            207.9231414794922,
+            941.2312622070312,
+            543.7205200195312
+          ],
+          "confidence": 0.9265550971031189,
+          "track_id": 6,
+          "frames_seen": [
+            3,
+            4,
+            5
+          ]
+        }
+      ]
+    }
+  }
+]

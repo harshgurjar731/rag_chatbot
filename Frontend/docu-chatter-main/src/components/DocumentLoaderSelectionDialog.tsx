@@ -3,6 +3,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Input } from "@/components/ui/input";
 import { Search, X } from "lucide-react";
 import { DocumentLoaderConfigForm } from "./DocumentLoaderConfigForm";
+import { VideoUploadDialog } from "./VideoUploadDialog";
 import { DocumentObj } from "@/pages/DatastoreConfigDetail";
 
 const loaderTypes = [
@@ -19,6 +20,7 @@ const loaderTypes = [
   // { id: "figma", name: "Figma", icon: "🎨" },
   { id: "pdf", name: "PDF File", icon: "📁" },
   { id: "img", name: "Image Loader", icon: "🎨" },
+  { id: "video", name: "Video File", icon: "🎬" },
 ];
 
 interface DocumentLoaderSelectionDialogProps {
@@ -47,7 +49,7 @@ export const DocumentLoaderSelectionDialog = ({
 
   useEffect(() => {
     console.log("Calling setSelectedLoader ")
-    if(selectedDocument){
+    if (selectedDocument) {
       setSelectedLoader(selectedDocument.loaderType)
     }
   }, [selectedDocument])
@@ -60,14 +62,31 @@ export const DocumentLoaderSelectionDialog = ({
     setSelectedLoader(null);
   };
 
+  // Route to VideoUploadDialog for video type
+  if (selectedLoader === "video") {
+    return (
+      <VideoUploadDialog
+        open={open}
+        onOpenChange={(open) => {
+          if (!open) {
+            setSelectedLoader(null);
+          }
+          onOpenChange(open);
+        }}
+        datastoreId={datastoreId}
+        onBack={handleBack}
+      />
+    );
+  }
+
   if (selectedLoader) {
     return (
       <DocumentLoaderConfigForm
         open={open}
-         onOpenChange={async(open) => {
-          if(!open){
+        onOpenChange={async (open) => {
+          if (!open) {
             setSelectedLoader(null)
-          }  
+          }
           onOpenChange(open)
         }}
         // onOpenChange={onOpenChange}
@@ -85,7 +104,7 @@ export const DocumentLoaderSelectionDialog = ({
         <DialogHeader>
           <DialogTitle className="text-2xl">Select Document Loader</DialogTitle>
         </DialogHeader>
-        
+
         <div className="relative mb-4">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
@@ -126,3 +145,4 @@ export const DocumentLoaderSelectionDialog = ({
     </Dialog>
   );
 };
+

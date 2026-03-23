@@ -1,0 +1,32 @@
+{
+  "summary": "The Shared Parental Leave (SPL) policy provides eligible parents with flexible options to share up to 50\u202fweeks of leave during the child\u2019s first year, allowing mothers or adopters to curtail their statutory leave and partners to take the remaining balance. Eligibility requires continuous employment of at least 26\u202fweeks before the due date, ongoing employment at the start of SPL, and meeting statutory maternity/adoption and earnings tests for both parents. SPL must be requested at least eight weeks in advance, can be taken in continuous or discontinuous blocks (subject to approval), and ends no later than the child\u2019s first birthday or anniversary of placement. The policy also outlines the timing of commencement, the interaction with paternity leave, and the conditions for receiving Shared Parental Pay (ShPP). Employees are encouraged to discuss any questions with HR to ensure compliance and smooth administration.",
+  "qa_pairs": [
+    {
+      "question": "What is the definition of Shared Parental Leave (SPL) as described in the policy?",
+      "answer": "Shared Parental Leave (SPL) is a type of leave that is available to parents with babies due on or after 5 April 2015 or due to be adopted on or after 5 April 2015. SPL allows eligible parents to choose how to share the care of their child in the first year of birth or adoption by enabling mothers to commit to ending their maternity or adoption leave and pay at a future date, and to share the outstanding balance of leave and pay as SPL and pay with their partner, or to return to work early from maternity leave and opt in to SPL and pay at a later date.",
+      "rating": 10
+    }
+  ],
+  "conversations": [
+    [
+      {
+        "role": "system",
+        "content": "You are a helpful AI assistant that provides accurate, detailed responses."
+      },
+      {
+        "role": "user",
+        "content": "What is the definition of Shared Parental Leave (SPL) as described in the policy?"
+      },
+      {
+        "role": "assistant",
+        "content": "Shared Parental Leave (SPL) is a type of leave that is available to parents with babies due on or after 5 April 2015 or due to be adopted on or after 5 April 2015. SPL allows eligible parents to choose how to share the care of their child in the first year of birth or adoption by enabling mothers to commit to ending their maternity or adoption leave and pay at a future date, and to share the outstanding balance of leave and pay as SPL and pay with their partner, or to return to work early from maternity leave and opt in to SPL and pay at a later date."
+      }
+    ]
+  ],
+  "metrics": {
+    "total": 1,
+    "filtered": 1,
+    "retention_rate": 1.0,
+    "avg_score": 10.0
+  }
+}

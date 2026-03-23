@@ -50,7 +50,7 @@ def spawn_worker():
 
     try:
         proc = subprocess.Popen(
-            ["python", "-u", "ingestion_worker.py"],
+            [sys.executable, "-u", "ingestion_worker.py"],
             env=env,
             stdout=sys.stdout,
             stderr=sys.stderr

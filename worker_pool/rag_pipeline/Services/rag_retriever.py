@@ -7,6 +7,7 @@ incorporating query decomposition, rewriting, vector store retrieval, and rerank
 
 from typing import List
 import json
+import os
 from operator import itemgetter
 from collections import defaultdict
 from langchain_core.prompts import ChatPromptTemplate
@@ -34,6 +35,95 @@ from rag_pipeline.Services.query_rewriting_handler import handle_query_rewriting
 from rag_pipeline.Embeddings.embedding_models import create_embedding_model
 from rag_pipeline.VectorStores.vector_store_generator import create_vector_store
 from rag_pipeline.Reranker.reranking_helper import apply_reranker, get_reranker_model
+
+def _load_graph_context(collection_name: str) -> str:
+    """
+    Load knowledge graph data from GraphML files for a given datastore.
+    Returns a structured text summary of entities and relationships,
+    or empty string if no graph data exists.
+    """
+    import glob
+    import xml.etree.ElementTree as ET
+
+    # Extract datastore_id from collection name (format: "datastore_123")
+    datastore_id = collection_name.replace("datastore_", "")
+
+    # Resolve graph directory (same DATA_DIRECTORY used by video_processing_pool)
+    data_dir = os.getenv("DATA_DIRECTORY", "/app/data_directory")
+    if not os.path.isabs(data_dir):
+        # Resolve relative to project root (rag_chatbot)
+        # This file is in rag_chatbot/worker_pool/rag_pipeline/Services/rag_retriever.py
+        # Project root is 4 levels up
+        base_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+        data_dir = os.path.abspath(os.path.join(base_dir, data_dir))
+    
+    graph_dir = os.path.join(data_dir, "video_graphs")
+
+    pattern = os.path.join(graph_dir, f"graph_{datastore_id}_*.graphml")
+    graph_files = glob.glob(pattern)
+
+    if not graph_files:
+        return ""
+
+    all_entities = []
+    all_relationships = []
+
+    for gf in graph_files:
+        try:
+            tree = ET.parse(gf)
+            root = tree.getroot()
+            # GraphML namespace
+            ns = {"g": "http://graphml.graphstruct.org/xmlns"}
+            # Try with namespace first, then without
+            nodes = root.findall(".//g:node", ns) or root.findall(".//{http://graphml.graphstruct.org/xmlns}node") or root.iter("node")
+            edges = root.findall(".//g:edge", ns) or root.findall(".//{http://graphml.graphstruct.org/xmlns}edge") or root.iter("edge")
+
+            node_labels = {}
+            for node in nodes:
+                node_id = node.get("id", "")
+                # Extract label from data elements
+                label = node_id
+                for data_el in node:
+                    key = data_el.get("key", "")
+                    if "label" in key.lower() or "name" in key.lower():
+                        label = data_el.text or label
+                        break
+                    if data_el.text and len(data_el.text) > len(label):
+                        label = data_el.text
+                node_labels[node_id] = label
+                all_entities.append(label)
+
+            for edge in edges:
+                src = edge.get("source", "")
+                tgt = edge.get("target", "")
+                rel_type = ""
+                for data_el in edge:
+                    if data_el.text:
+                        rel_type = data_el.text
+                        break
+                src_label = node_labels.get(src, src)
+                tgt_label = node_labels.get(tgt, tgt)
+                rel_str = f"{src_label} --[{rel_type}]--> {tgt_label}" if rel_type else f"{src_label} --> {tgt_label}"
+                all_relationships.append(rel_str)
+        except Exception as e:
+            print(f"[GRAPH] Error parsing {gf}: {e}")
+            continue
+
+    if not all_entities and not all_relationships:
+        return ""
+
+    # Build structured text
+    parts = ["[Knowledge Graph Context]"]
+    if all_entities:
+        unique_entities = list(dict.fromkeys(all_entities))  # deduplicate, preserve order
+        parts.append(f"Entities: {', '.join(unique_entities)}")
+    if all_relationships:
+        parts.append("Relationships:")
+        for rel in all_relationships:
+            parts.append(f"  - {rel}")
+
+    return "\n".join(parts)
+
 
 def encode_image_to_base64(path: str) -> str:
     """
@@ -115,8 +205,13 @@ def get_rag_answer_text(
     system_prompt = [("system", rag_prompt_template)]
     prompt_final = system_prompt + message_history
     
-    print("***************************************************************************")
-    print("\n\nPrompt Final:", prompt_final)
+    # Safe printing for Windows
+    try:
+        print("***************************************************************************")
+        # Only print first few chars and handle encoding
+        print("\n\nPrompt Final (truncated):", str(prompt_final)[:500].encode('ascii', 'ignore').decode('ascii'))
+    except:
+        pass
 
     embedding_model = create_embedding_model(provider=embedding_model_provider, model_name=embedding_model_name)
     
@@ -183,6 +278,20 @@ def get_rag_answer_text(
             docs=returned_chunks, 
             top_k= reranker_top_k)
 
+    # --- Knowledge Graph Context Injection ---
+    # If GraphML files exist for this datastore, parse and inject as extra context
+    try:
+        graph_context = _load_graph_context(vector_store_collection_name)
+        if graph_context:
+            graph_doc = Document(
+                page_content=graph_context,
+                metadata={"source": "knowledge_graph", "content_type": "graph"}
+            )
+            returned_chunks.insert(0, graph_doc)
+            print(f"[GRAPH] Injected knowledge graph context ({len(graph_context)} chars)")
+    except Exception as e:
+        print(f"[GRAPH] Could not load graph context: {e}")
+
     # print("Reranked Chunks", returned_chunks)
 
     for index, chunk in enumerate(returned_chunks):
@@ -190,7 +299,10 @@ def get_rag_answer_text(
             chunk.metadata["tempID"] = index
 
     prompt = ChatPromptTemplate.from_messages(prompt_final)
-    print("\n\nFinal Query to LLM:", updated_query)
+    try:
+        print("\n\nFinal Query to LLM:", str(updated_query).encode('ascii', 'ignore').decode('ascii'))
+    except:
+        pass
 
     # ✅ Chain: prompt → LLM → output parser
     chatbot_chain = (
@@ -214,23 +326,66 @@ def get_rag_answer_text(
     final_response = validated["answer"]
 
     # ✅ Handle sources
-    print("LLM Answer:", final_response)
     try:
-        final_response_obj = json.loads(final_response)
+        print("LLM Answer (truncated):", final_response[:500].encode('ascii', 'ignore').decode('ascii'))
+    except:
+        pass
+    try:
+        # Strip markdown code fences if the LLM wrapped JSON in ```json ... ```
+        cleaned = final_response.strip()
+        if cleaned.startswith("```"):
+            # Remove opening fence (```json or ```)
+            cleaned = cleaned.split("\n", 1)[1] if "\n" in cleaned else cleaned[3:]
+        if cleaned.endswith("```"):
+            cleaned = cleaned.rsplit("```", 1)[0]
+        cleaned = cleaned.strip()
+
+        # Try to find the JSON object if there's surrounding text
+        if not (cleaned.startswith("{") and cleaned.endswith("}")):
+            start = cleaned.find("{")
+            end = cleaned.rfind("}") + 1
+            if start != -1 and end > start:
+                cleaned = cleaned[start:end]
+            else:
+                # If no matching brackets found, it's definitely not raw JSON as requested
+                raise ValueError("No JSON object found in LLM response")
+
+        final_response_obj = json.loads(cleaned)
+        
         # Handle cases where response might be missing keys
         if not isinstance(final_response_obj, dict):
              # If it parsed but is not a dict (e.g. list or string), treat as raw response
              final_response_obj = {"response": str(final_response_obj), "used_chunks": []}
         
-        print("LLM Response:", final_response_obj.get("response", "")[:100]) # Print first 100 char safe
+        try:
+            print("LLM Response (truncated):", final_response_obj.get("response", "")[:100].encode('ascii', 'ignore').decode('ascii'))
+        except:
+            pass
         used_chunk_indices = final_response_obj.get("used_chunks", [])
-    except json.JSONDecodeError:
-        print("⚠️ Warning: LLM validation failed to return JSON. Using raw text.")
-        final_response_obj = {"response": final_response}
-        # Fallback: assume all chunks were potentially relevant or none. 
-        # For safety, let's say none to avoid hallucinated citations, 
-        # or maybe we can try to heuristic match? For now, empty list is safest to prevent crashes.
-        used_chunk_indices = []
+        
+    except (json.JSONDecodeError, ValueError) as e:
+        print(f"⚠️ Warning: LLM validation failed to return valid JSON: {e}")
+        print(f"⚠️ Raw LLM Output (first 500 chars): {final_response[:500]}...")
+        
+        # Heuristic: If it looks like JSON but is missing a closing brace (likely truncation)
+        if final_response.strip().startswith("{") and not final_response.strip().endswith("}"):
+            print("⚠️ Detected likely JSON truncation (missing closing brace)")
+            # Try to fix by appending '}' and re-parsing
+            try:
+                fixed_response = final_response.strip() + '}'
+                # If used_chunks was open, try to close it too
+                if '"used_chunks": [' in fixed_response and ']' not in fixed_response.split('"used_chunks": [')[-1]:
+                     fixed_response = final_response.strip() + ']}'
+                
+                final_response_obj = json.loads(fixed_response)
+                print("✅ Successfully recovered JSON by adding closing braces.")
+                used_chunk_indices = final_response_obj.get("used_chunks", [])
+            except:
+                final_response_obj = {"response": final_response}
+                used_chunk_indices = []
+        else:
+            final_response_obj = {"response": final_response}
+            used_chunk_indices = []
     
     # Ensure used_chunk_indices is a list
     if not isinstance(used_chunk_indices, list):

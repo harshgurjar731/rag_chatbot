@@ -117,6 +117,7 @@ from ingestion_pipeline.ingestion_datastore_router import router as ingestion_da
 from ingestion_pipeline.ingestion_document_loader_router import router as ingestion_document_router
 from ingestion_pipeline.ingestion_chunks_router import router as ingestion_chunking_router
 from ingestion_pipeline.secondary_source_router import router as secondary_source_router # Added
+from ingestion_pipeline.video_upload_router import router as video_upload_router  # Video Processing
 from rag_pipeline.rag_router import router as rag_knowledge_asst_router
 from authentication.authentication_router import router as authentication_router
 from routes import translate, frontend_config
@@ -142,6 +143,7 @@ app.include_router(ingestion_datastore_router, prefix="/ingestion")
 app.include_router(ingestion_document_router, prefix="/ingestion")
 app.include_router(ingestion_chunking_router, prefix="/ingestion")
 app.include_router(secondary_source_router, prefix="/ingestion", tags=["Secondary Sources"]) # Added
+app.include_router(video_upload_router, prefix="/ingestion", tags=["Video Processing"])  # Video Processing
 
 app.include_router(rag_knowledge_asst_router, prefix="/rag")
 

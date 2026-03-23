@@ -46,6 +46,7 @@ langchain-experimental
 langchain-huggingface
 langchain-qdrant
 langchain-nvidia-ai-endpoints
+langchain-mistralai
 
 # Guardrails
 nemoguardrails

@@ -1,0 +1,78 @@
+# ============================================
+# Video Processing Pool — Pipeline Configuration
+# ============================================
+
+# --- Stream Handler (Video Chunking) ---
+stream_handler:
+  chunk_duration_seconds: 30
+  max_parallel_chunks: 8
+  supported_formats: [mp4, mkv, avi, mov]
+  supported_codecs: [h264, h265, vp9]
+
+# --- Video Processing (Frame Selection) ---
+video_processing:
+  frames_per_chunk: 6
+  frame_selection: scene_change
+  scene_change_threshold: 30.0
+  resize_resolution: [1024, 1024]
+  use_gpu_decode: false
+
+# --- Audio Processing (Voxtral Mini Transcribe) ---
+audio_processing:
+  enabled: true
+  model: voxtral-mini-latest
+  audio_format: mp3
+  sample_rate: 16000
+  response_format: verbose_json
+  timestamp_granularities: [segment]
+  diarization: true
+  language: null
+
+# --- CV Pipeline (YOLO + ByteTrack) ---
+cv_pipeline:
+  enabled: true
+  detector: yolov8l
+  tracker: bytetrack
+  confidence_threshold: 0.3
+  som_prompting: true
+  classes_of_interest: [person, vehicle, backpack, suitcase]
+
+# --- VLM Captioning (Mistral Large via API) ---
+vlm:
+  model: mistral-large-2512
+  max_tokens: 4096
+  temperature: 0.1
+  frames_per_request: 6
+
+# --- Pipeline ---
+inter_chunk_delay: 0
+max_parallel_workers: 2
+
+# --- Paths (overridden by env vars in Docker) ---
+output_dir: ./data/output
+temp_dir: ./data/temp
+
+# --- Embedding Pipeline ---
+embedding:
+  enabled: true
+  model: all-MiniLM-L6-v2
+  batch_size: 32
+  vector_store:
+    backend: chromadb
+    persist_dir: ./data/vector_store
+    collection_name: video_chunks
+    distance_metric: cosine
+
+# --- Knowledge Graph ---
+graph:
+  enabled: true
+  entity_extraction: llm
+  llm_model: mistral-small-latest
+  llm_temperature: 0.1
+  llm_max_tokens: 2048
+  persist_dir: ./data/graph
+  output_format: graphml
+  node_types: [VideoChunk, Person, Vehicle, Location, Object, Action, Event]
+  edge_types: [APPEARS_IN, MENTIONED_IN, FOLLOWED_BY, CO_OCCURS_WITH, INTERACTS_WITH, LOCATED_AT]
+  deduplicate_nodes: true
+  duplicate_score_threshold: 0.9

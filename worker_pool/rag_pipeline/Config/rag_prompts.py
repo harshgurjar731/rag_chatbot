@@ -53,7 +53,7 @@ RAG_PROMPTS = {
         }}
 
         Rules for the JSON:
-        - "response" MUST be a plain text string. It must NOT be a JSON object or array.
+        - "response" MUST be a plain text or markdown-formatted string. Use markdown formatting (bold, bullet points, numbered lists, headers) to make the response well-structured and easy to read.
         - "used_chunks" which is array of "tempID" value in metadata of the chunks from "Context:" section which were used to populate the response.
         - "used_chunks" MUST be an array of integers.
         - Each element inside "used_chunks" MUST be a number, not a string.

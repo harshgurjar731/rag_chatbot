@@ -384,7 +384,7 @@ const ChatbotDetail = () => {
                 llm_model_provider: llmProvider || "groq",
                 llm_model_name: llmModel || "llama-3.3-70b-versatile",
                 temperature: temperature || 0.0,
-                max_token: tokenSize || 256,
+                max_token: tokenSize || 2048,
                 reranker_type: rerankerOption || "None",
                 query_rewriting_type: optimizer || "None",
                 guardrail_type: guardrailOption || "None",

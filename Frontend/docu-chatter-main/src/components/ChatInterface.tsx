@@ -1,4 +1,6 @@
 import { useState, useRef, useEffect } from "react";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 import {
   Send,
   Mic,
@@ -258,7 +260,7 @@ export const ChatInterface = ({
   const [isSpeaking, setIsSpeaking] = useState(false);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
-  const [tokenSize, setTokenSize] = useState(256);
+  const [tokenSize, setTokenSize] = useState(2048);
   const [showSources, setShowSources] = useState(false);
   const [urlInput, setUrlInput] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -952,9 +954,17 @@ export const ChatInterface = ({
                     >
                       <CardContent className="p-3">
 
-                        <p className="text-sm whitespace-pre-wrap">
-                          {message.content}
-                        </p>
+                        {message.isUser ? (
+                          <p className="text-sm whitespace-pre-wrap">
+                            {message.content}
+                          </p>
+                        ) : (
+                          <div className="text-sm prose prose-sm max-w-none dark:prose-invert prose-headings:my-2 prose-headings:text-foreground prose-p:my-1 prose-p:text-foreground prose-ul:my-1 prose-ol:my-1 prose-li:my-0.5 prose-li:text-foreground prose-strong:text-foreground prose-a:text-primary prose-code:bg-muted prose-code:text-foreground prose-code:px-1 prose-code:py-0.5 prose-code:rounded prose-code:text-xs prose-pre:bg-muted prose-pre:rounded-lg prose-pre:p-3 [&>*]:text-foreground">
+                            <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                              {message.content}
+                            </ReactMarkdown>
+                          </div>
+                        )}
 
                         {/* Witty Hook and Intent Source Link */}
                         {/* Witty Hook and Intent Source Link */}

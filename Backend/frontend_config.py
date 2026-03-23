@@ -56,12 +56,14 @@ def get_embedding_models() -> List[str]:
         "bge-base-en",
         "bge-large-en",
         "e5-large-v2",
+        "mistral-embed"
     ]
 
 def get_llm_providers() -> List[str]:
     return [
         "groq",
-        "azureopenai"
+        "azureopenai",
+        "mistral"
     ]
 
 def get_llm_models() -> List[str]:
@@ -74,6 +76,9 @@ def get_llm_models() -> List[str]:
         "gemma2-9b-it",
         "llama-3.1-8b-instant",
         "openai/gpt-oss-20b",
+        "mistral-large-latest",
+        "mistral-small-latest",
+        "pixtral-large-latest"
     ]
 
 def get_evaluation_frameworks() -> Dict[str, List[str]]:

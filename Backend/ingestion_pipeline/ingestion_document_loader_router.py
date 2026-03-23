@@ -280,6 +280,16 @@ async def delete_document(
             r.rpush("ingestion:inbox", json.dumps(job_payload))
             print(f"[*] Queued vector deletion for document {document_id}")
 
+        if getattr(document, "loaderType", None) == "video":
+            video_job_payload = {
+                "job_type": "delete_video",
+                "datastore_id": datastore.id,
+                "document_id": document_id,
+            }
+            r.rpush("video_processing:inbox", json.dumps(video_job_payload))
+            print(f"[*] Queued video cleanup for document {document_id}")
+
+
         if os.path.exists(document.filePath):
             try:
                 os.remove(document.filePath)

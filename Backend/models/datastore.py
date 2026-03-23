@@ -85,11 +85,11 @@ class RAGResponse(SQLModel, table=True):
 class ChatbotSettings(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     chatbot_id: str = Field(index=True) # Removed unique=True to allow history
-    llm_provider: Optional[str] = "azure-openai"
-    llm_model: Optional[str] = "gpt-4o-mini"
+    llm_provider: Optional[str] = "groq"
+    llm_model: Optional[str] = "llama-3.3-70b-versatile"
     temperature: Optional[float] = 0.0
     optimizer: Optional[str] = "None"
-    token_size: Optional[int] = 512
+    token_size: Optional[int] = 256
     guardrail_option: Optional[str] = "off"
     reranker_option: Optional[str] = "none"
     show_sources: Optional[bool] = True

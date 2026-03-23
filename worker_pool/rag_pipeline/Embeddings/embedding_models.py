@@ -2,6 +2,7 @@ from typing import Protocol
 from typing import List
 from langchain_core.documents import Document
 from rag_pipeline.Config.rag_config import RAG_CONFIG
+from langchain_mistralai import MistralAIEmbeddings
 
 class EmbeddingModelsProtocol(Protocol):
     def configureModel(self, model_name: str):
@@ -18,6 +19,11 @@ def create_embedding_model(provider: str, model_name: str):
         return OpenAIModel().configureModel(
            model_name=model_name 
         ) 
+    elif (provider.lower() == "mistral"):
+        print("Creating Mistral Embedding")
+        return MistralModel().configureModel(
+            model_name=model_name
+        )
     
 from langchain_community.embeddings import HuggingFaceEmbeddings
 # from langchain_experimental.open_clip.open_clip import OpenCLIPEmbeddings  # lazy-imported below
@@ -39,4 +45,15 @@ class OpenAIModel(EmbeddingModelsProtocol):
             api_key=RAG_CONFIG["AZURE_OPENAI_API_KEY"],
             api_version=RAG_CONFIG["AZURE_OPENAI_API_VERSION"],
             azure_deployment=model_name
+        )
+
+class MistralModel(EmbeddingModelsProtocol):
+    def configureModel(self, model_name: str):
+        mistral_api_key = RAG_CONFIG.get("mistral_api_key")
+        if not mistral_api_key:
+            raise ValueError("Missing mistral_api_key in config or environment")
+        
+        return MistralAIEmbeddings(
+            api_key=mistral_api_key,
+            model=model_name
         )

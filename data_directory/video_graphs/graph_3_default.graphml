@@ -1,0 +1,768 @@
+<?xml version='1.0' encoding='utf-8'?>
+<graphml xmlns="http://graphml.graphdrawing.org/xmlns" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://graphml.graphdrawing.org/xmlns http://graphml.graphdrawing.org/xmlns/1.0/graphml.xsd"><key id="d15" for="edge" attr.name="description" attr.type="string"/>
+<key id="d14" for="edge" attr.name="chunk_id" attr.type="long"/>
+<key id="d13" for="edge" attr.name="confidence" attr.type="double"/>
+<key id="d12" for="edge" attr.name="relationship" attr.type="string"/>
+<key id="d11" for="node" attr.name="description" attr.type="string"/>
+<key id="d10" for="node" attr.name="name" attr.type="string"/>
+<key id="d9" for="node" attr.name="chunk_ids" attr.type="string"/>
+<key id="d8" for="node" attr.name="confidence" attr.type="double"/>
+<key id="d7" for="node" attr.name="track_id" attr.type="long"/>
+<key id="d6" for="node" attr.name="class_name" attr.type="string"/>
+<key id="d5" for="node" attr.name="stream_id" attr.type="string"/>
+<key id="d4" for="node" attr.name="source_video" attr.type="string"/>
+<key id="d3" for="node" attr.name="end_timestamp" attr.type="double"/>
+<key id="d2" for="node" attr.name="start_timestamp" attr.type="double"/>
+<key id="d1" for="node" attr.name="chunk_id" attr.type="long"/>
+<key id="d0" for="node" attr.name="node_type" attr.type="string"/>
+<graph edgedefault="directed"><node id="chunk_0">
+  <data key="d0">VideoChunk</data>
+  <data key="d1">0</data>
+  <data key="d2">0.0</data>
+  <data key="d3">35.033</data>
+  <data key="d4">\app\data_directory\Test1\nvidea video.mp4</data>
+  <data key="d5">default</data>
+</node>
+<node id="object_person_0">
+  <data key="d0">DetectedObject</data>
+  <data key="d6">person</data>
+  <data key="d7">0</data>
+  <data key="d8">0.8809279203414917</data>
+  <data key="d9">[0, 2]</data>
+</node>
+<node id="object_person_1">
+  <data key="d0">DetectedObject</data>
+  <data key="d6">person</data>
+  <data key="d7">1</data>
+  <data key="d8">0.9565987586975098</data>
+  <data key="d9">[0, 1, 2, 3, 4, 5, 6, 7, 8, 9]</data>
+</node>
+<node id="object_person_2">
+  <data key="d0">DetectedObject</data>
+  <data key="d6">person</data>
+  <data key="d7">2</data>
+  <data key="d8">0.8385061025619507</data>
+  <data key="d9">[0, 8]</data>
+</node>
+<node id="object_person_3">
+  <data key="d0">DetectedObject</data>
+  <data key="d6">person</data>
+  <data key="d7">3</data>
+  <data key="d8">0.7430946826934814</data>
+  <data key="d9">[0, 8]</data>
+</node>
+<node id="object_car_4">
+  <data key="d0">DetectedObject</data>
+  <data key="d6">car</data>
+  <data key="d7">4</data>
+  <data key="d8">0.34829071164131165</data>
+  <data key="d9">[0]</data>
+</node>
+<node id="entity_nvidia_geforce_rtx_5090_graphics_card">
+  <data key="d0">Object</data>
+  <data key="d10">NVIDIA GeForce RTX 5090 graphics card</data>
+  <data key="d11">A high-end computer graphics card from NVIDIA, placed on a reflective surface during a tech demonstration.</data>
+  <data key="d9">[0]</data>
+</node>
+<node id="entity_person_#0">
+  <data key="d0">Person</data>
+  <data key="d10">Person #0</data>
+  <data key="d11">A small 3D model or icon representing a person, detected at 0.0s during object/person detection.</data>
+  <data key="d9">[0]</data>
+</node>
+<node id="entity_person_#1">
+  <data key="d0">Person</data>
+  <data key="d10">Person #1</data>
+  <data key="d11">A person walking in a hallway at 0.1s, later standing and looking around in an ornate conservatory at 7.0s and 25.4s.</data>
+  <data key="d9">[0]</data>
+</node>
+<node id="entity_person_#2">
+  <data key="d0">Person</data>
+  <data key="d10">Person #2</data>
+  <data key="d11">A person standing and looking around in an ornate conservatory at 25.4s.</data>
+  <data key="d9">[0]</data>
+</node>
+<node id="entity_person_#3">
+  <data key="d0">Person</data>
+  <data key="d10">Person #3</data>
+  <data key="d11">A partially visible person in an ornate conservatory at 25.4s.</data>
+  <data key="d9">[0]</data>
+</node>
+<node id="entity_cup_#4">
+  <data key="d0">Object</data>
+  <data key="d10">Cup #4</data>
+  <data key="d11">A cup visible in an ornate conservatory at 25.4s.</data>
+  <data key="d9">[0]</data>
+</node>
+<node id="entity_hallway">
+  <data key="d0">Location</data>
+  <data key="d10">Hallway</data>
+  <data key="d11">A dimly lit indoor corridor where Person #1 is walking at 0.1s.</data>
+  <data key="d9">[0]</data>
+</node>
+<node id="entity_ornate_conservatory">
+  <data key="d0">Location</data>
+  <data key="d10">Ornate conservatory</data>
+  <data key="d11">An elaborate indoor setting resembling a grand conservatory or palace with intricate architectural details, including a large dome and lush greenery, shown at 7.0s and 25.4s.</data>
+  <data key="d9">[0]</data>
+</node>
+<node id="entity_tv_show_or_live_event_stage">
+  <data key="d0">Location</data>
+  <data key="d10">TV show or live event stage</data>
+  <data key="d11">A stage or set with decorative elements like railings, plants, and a fountain, shown at 19.2s and 30.9s.</data>
+  <data key="d9">[0]</data>
+</node>
+<node id="entity_person_presenting">
+  <data key="d0">Person</data>
+  <data key="d10">Person presenting</data>
+  <data key="d11">A person speaking or presenting on a stage at 19.2s and 30.9s.</data>
+  <data key="d9">[0]</data>
+</node>
+<node id="entity_artificial_intelligence">
+  <data key="d0">Object</data>
+  <data key="d10">Artificial Intelligence</data>
+  <data key="d11">AI used to predict additional pixels for real-time computer graphics rendering, mentioned in the audio transcript.</data>
+  <data key="d9">[0]</data>
+</node>
+<node id="entity_real-time_computer_graphics_rendering">
+  <data key="d0">Event</data>
+  <data key="d10">Real-time computer graphics rendering</data>
+  <data key="d11">The process of rendering graphics in real-time with AI assistance, as described in the audio transcript.</data>
+  <data key="d9">[0]</data>
+</node>
+<node id="chunk_1">
+  <data key="d0">VideoChunk</data>
+  <data key="d1">1</data>
+  <data key="d2">35.033</data>
+  <data key="d3">60.033</data>
+  <data key="d4">\app\data_directory\Test1\nvidea video.mp4</data>
+  <data key="d5">default</data>
+</node>
+<node id="entity_man_in_black_leather_jacket">
+  <data key="d0">Person</data>
+  <data key="d10">man in black leather jacket</data>
+  <data key="d11">A man wearing glasses, a black leather jacket, and dark clothing, holding a cane and a microphone. Present in outdoor and indoor settings, speaking or presenting.</data>
+  <data key="d9">[1]</data>
+</node>
+<node id="entity_cane">
+  <data key="d0">Object</data>
+  <data key="d10">cane</data>
+  <data key="d11">A walking cane held by the man in black leather jacket during outdoor and indoor presentations.</data>
+  <data key="d9">[1]</data>
+</node>
+<node id="entity_microphone">
+  <data key="d0">Object</data>
+  <data key="d10">microphone</data>
+  <data key="d11">A handheld microphone used by the man in black leather jacket during presentations.</data>
+  <data key="d9">[1]</data>
+</node>
+<node id="entity_urban_outdoor_setting">
+  <data key="d0">Location</data>
+  <data key="d10">urban outdoor setting</data>
+  <data key="d11">An outdoor urban area with architectural structures, a decorative railing, and a historic or significant building visible in the background.</data>
+  <data key="d9">[1]</data>
+</node>
+<node id="entity_historic_building">
+  <data key="d0">Location</data>
+  <data key="d10">historic building</data>
+  <data key="d11">A significant or historic building visible in the background of the urban outdoor setting.</data>
+  <data key="d9">[1]</data>
+</node>
+<node id="entity_decorative_railing">
+  <data key="d0">Object</data>
+  <data key="d10">decorative railing</data>
+  <data key="d11">A decorative railing visible in the urban outdoor setting.</data>
+  <data key="d9">[1]</data>
+</node>
+<node id="entity_theater_or_auditorium">
+  <data key="d0">Location</data>
+  <data key="d10">theater or auditorium</data>
+  <data key="d11">An indoor venue with an elaborate stage backdrop resembling a cathedral or large hall, set for a performance or presentation.</data>
+  <data key="d9">[1]</data>
+</node>
+<node id="entity_stage_backdrop">
+  <data key="d0">Object</data>
+  <data key="d10">stage backdrop</data>
+  <data key="d11">An elaborate stage backdrop depicting a grand architectural structure resembling a cathedral or large hall in the theater or auditorium.</data>
+  <data key="d9">[1]</data>
+</node>
+<node id="entity_audience">
+  <data key="d0">Person</data>
+  <data key="d10">audience</data>
+  <data key="d11">A group of people visible in the foreground of the theater or auditorium, likely attending a performance or presentation.</data>
+  <data key="d9">[1]</data>
+</node>
+<node id="entity_blurred_person_on_stage">
+  <data key="d0">Person</data>
+  <data key="d10">blurred person on stage</data>
+  <data key="d11">A person standing on the stage in the theater or auditorium, but blurred out and not identifiable.</data>
+  <data key="d9">[1]</data>
+</node>
+<node id="entity_digital_ai_interface">
+  <data key="d0">Object</data>
+  <data key="d10">digital AI interface</data>
+  <data key="d11">A futuristic or digital interface overlay showing a human figure with labels and categories of AI technologies, including 'Perception AI,' 'Generative AI,' 'Ancient AI,' and 'Physical AI'.</data>
+  <data key="d9">[1]</data>
+</node>
+<node id="entity_ai_categories">
+  <data key="d0">Object</data>
+  <data key="d10">AI categories</data>
+  <data key="d11">Labels and categories of AI technologies displayed on the digital interface, including 'Perception AI,' 'Generative AI,' 'Ancient AI,' and 'Physical AI'.</data>
+  <data key="d9">[1]</data>
+</node>
+<node id="entity_ai_functions">
+  <data key="d0">Object</data>
+  <data key="d10">AI functions</data>
+  <data key="d11">Specific AI functions noted on the digital interface, such as 'Speech Recognition,' 'Medical Aide,' 'Deep Learning,' 'Customer Service,' and 'Query Handling'.</data>
+  <data key="d9">[1]</data>
+</node>
+<node id="entity_black_background">
+  <data key="d0">Location</data>
+  <data key="d10">black background</data>
+  <data key="d11">A plain black background against which the man in black leather jacket stands during the final frame.</data>
+  <data key="d9">[1]</data>
+</node>
+<node id="entity_2023_asuet_innovations">
+  <data key="d0">Object</data>
+  <data key="d10">2023 ASUET Innovations</data>
+  <data key="d11">Text visible on the left side of the digital AI interface screen, indicating a reference to '2023 ASUET' and 'INNOVATIONS'.</data>
+  <data key="d9">[1]</data>
+</node>
+<node id="entity_ai_technological_advancements_discussion">
+  <data key="d0">Event</data>
+  <data key="d10">AI technological advancements discussion</data>
+  <data key="d11">A conceptual or thematic discussion on AI technologies and their implications, transitioning from real-world presentation to digital interface.</data>
+  <data key="d9">[1]</data>
+</node>
+<node id="chunk_2">
+  <data key="d0">VideoChunk</data>
+  <data key="d1">2</data>
+  <data key="d2">60.033</data>
+  <data key="d3">85.033</data>
+  <data key="d4">\app\data_directory\Test1\nvidea video.mp4</data>
+  <data key="d5">default</data>
+</node>
+<node id="object_person_16">
+  <data key="d0">DetectedObject</data>
+  <data key="d6">person</data>
+  <data key="d7">16</data>
+  <data key="d8">0.8752715587615967</data>
+  <data key="d9">[2]</data>
+</node>
+<node id="chunk_3">
+  <data key="d0">VideoChunk</data>
+  <data key="d1">3</data>
+  <data key="d2">85.033</data>
+  <data key="d3">120.033</data>
+  <data key="d4">\app\data_directory\Test1\nvidea video.mp4</data>
+  <data key="d5">default</data>
+</node>
+<node id="chunk_4">
+  <data key="d0">VideoChunk</data>
+  <data key="d1">4</data>
+  <data key="d2">120.033</data>
+  <data key="d3">145.03300000000002</data>
+  <data key="d4">\app\data_directory\Test1\nvidea video.mp4</data>
+  <data key="d5">default</data>
+</node>
+<node id="object_person_18">
+  <data key="d0">DetectedObject</data>
+  <data key="d6">person</data>
+  <data key="d7">18</data>
+  <data key="d8">0.7609395980834961</data>
+  <data key="d9">[4]</data>
+</node>
+<node id="chunk_5">
+  <data key="d0">VideoChunk</data>
+  <data key="d1">5</data>
+  <data key="d2">145.03300000000002</data>
+  <data key="d3">165.03300000000002</data>
+  <data key="d4">\app\data_directory\Test1\nvidea video.mp4</data>
+  <data key="d5">default</data>
+</node>
+<node id="chunk_6">
+  <data key="d0">VideoChunk</data>
+  <data key="d1">6</data>
+  <data key="d2">165.03300000000002</data>
+  <data key="d3">190.03300000000002</data>
+  <data key="d4">\app\data_directory\Test1\nvidea video.mp4</data>
+  <data key="d5">default</data>
+</node>
+<node id="chunk_7">
+  <data key="d0">VideoChunk</data>
+  <data key="d1">7</data>
+  <data key="d2">190.03300000000002</data>
+  <data key="d3">220.03300000000002</data>
+  <data key="d4">\app\data_directory\Test1\nvidea video.mp4</data>
+  <data key="d5">default</data>
+</node>
+<node id="chunk_8">
+  <data key="d0">VideoChunk</data>
+  <data key="d1">8</data>
+  <data key="d2">220.03300000000002</data>
+  <data key="d3">260.033</data>
+  <data key="d4">\app\data_directory\Test1\nvidea video.mp4</data>
+  <data key="d5">default</data>
+</node>
+<node id="object_person_22">
+  <data key="d0">DetectedObject</data>
+  <data key="d6">person</data>
+  <data key="d7">22</data>
+  <data key="d8">0.8746966123580933</data>
+  <data key="d9">[8]</data>
+</node>
+<node id="object_person_4">
+  <data key="d0">DetectedObject</data>
+  <data key="d6">person</data>
+  <data key="d7">4</data>
+  <data key="d8">0.4969184696674347</data>
+  <data key="d9">[8]</data>
+</node>
+<node id="chunk_9">
+  <data key="d0">VideoChunk</data>
+  <data key="d1">9</data>
+  <data key="d2">260.033</data>
+  <data key="d3">266.333</data>
+  <data key="d4">\app\data_directory\Test1\nvidea video.mp4</data>
+  <data key="d5">default</data>
+</node>
+<node id="object_person_23">
+  <data key="d0">DetectedObject</data>
+  <data key="d6">person</data>
+  <data key="d7">23</data>
+  <data key="d8">0.8519118428230286</data>
+  <data key="d9">[9]</data>
+</node>
+<node id="object_person_24">
+  <data key="d0">DetectedObject</data>
+  <data key="d6">person</data>
+  <data key="d7">24</data>
+  <data key="d8">0.7805348038673401</data>
+  <data key="d9">[9]</data>
+</node>
+<edge source="chunk_0" target="chunk_1">
+  <data key="d12">FOLLOWED_BY</data>
+</edge>
+<edge source="object_person_0" target="chunk_0">
+  <data key="d12">APPEARS_IN</data>
+  <data key="d13">0.8489585518836975</data>
+</edge>
+<edge source="object_person_0" target="object_person_1">
+  <data key="d12">CO_OCCURS_WITH</data>
+  <data key="d14">0</data>
+</edge>
+<edge source="object_person_0" target="object_person_2">
+  <data key="d12">CO_OCCURS_WITH</data>
+  <data key="d14">0</data>
+</edge>
+<edge source="object_person_0" target="object_person_3">
+  <data key="d12">CO_OCCURS_WITH</data>
+  <data key="d14">0</data>
+</edge>
+<edge source="object_person_0" target="object_car_4">
+  <data key="d12">CO_OCCURS_WITH</data>
+  <data key="d14">0</data>
+</edge>
+<edge source="object_person_0" target="chunk_2">
+  <data key="d12">APPEARS_IN</data>
+  <data key="d13">0.8809279203414917</data>
+</edge>
+<edge source="object_person_0" target="object_person_16">
+  <data key="d12">CO_OCCURS_WITH</data>
+  <data key="d14">2</data>
+</edge>
+<edge source="object_person_1" target="chunk_0">
+  <data key="d12">APPEARS_IN</data>
+  <data key="d13">0.9454160928726196</data>
+</edge>
+<edge source="object_person_1" target="object_person_2">
+  <data key="d12">CO_OCCURS_WITH</data>
+  <data key="d14">0</data>
+</edge>
+<edge source="object_person_1" target="object_person_3">
+  <data key="d12">CO_OCCURS_WITH</data>
+  <data key="d14">0</data>
+</edge>
+<edge source="object_person_1" target="object_car_4">
+  <data key="d12">CO_OCCURS_WITH</data>
+  <data key="d14">0</data>
+</edge>
+<edge source="object_person_1" target="chunk_1">
+  <data key="d12">APPEARS_IN</data>
+  <data key="d13">0.9528722763061523</data>
+</edge>
+<edge source="object_person_1" target="chunk_2">
+  <data key="d12">APPEARS_IN</data>
+  <data key="d13">0.8906093835830688</data>
+</edge>
+<edge source="object_person_1" target="chunk_3">
+  <data key="d12">APPEARS_IN</data>
+  <data key="d13">0.9565987586975098</data>
+</edge>
+<edge source="object_person_1" target="chunk_4">
+  <data key="d12">APPEARS_IN</data>
+  <data key="d13">0.9471840858459473</data>
+</edge>
+<edge source="object_person_1" target="chunk_5">
+  <data key="d12">APPEARS_IN</data>
+  <data key="d13">0.9478545784950256</data>
+</edge>
+<edge source="object_person_1" target="chunk_6">
+  <data key="d12">APPEARS_IN</data>
+  <data key="d13">0.9545552730560303</data>
+</edge>
+<edge source="object_person_1" target="chunk_7">
+  <data key="d12">APPEARS_IN</data>
+  <data key="d13">0.9378872513771057</data>
+</edge>
+<edge source="object_person_1" target="chunk_8">
+  <data key="d12">APPEARS_IN</data>
+  <data key="d13">0.9487969279289246</data>
+</edge>
+<edge source="object_person_1" target="object_person_4">
+  <data key="d12">CO_OCCURS_WITH</data>
+  <data key="d14">8</data>
+</edge>
+<edge source="object_person_1" target="chunk_9">
+  <data key="d12">APPEARS_IN</data>
+  <data key="d13">0.9542948603630066</data>
+</edge>
+<edge source="object_person_2" target="chunk_0">
+  <data key="d12">APPEARS_IN</data>
+  <data key="d13">0.5785220861434937</data>
+</edge>
+<edge source="object_person_2" target="object_person_3">
+  <data key="d12">CO_OCCURS_WITH</data>
+  <data key="d14">0</data>
+</edge>
+<edge source="object_person_2" target="object_car_4">
+  <data key="d12">CO_OCCURS_WITH</data>
+  <data key="d14">0</data>
+</edge>
+<edge source="object_person_2" target="chunk_8">
+  <data key="d12">APPEARS_IN</data>
+  <data key="d13">0.8385061025619507</data>
+</edge>
+<edge source="object_person_2" target="object_person_4">
+  <data key="d12">CO_OCCURS_WITH</data>
+  <data key="d14">8</data>
+</edge>
+<edge source="object_person_3" target="chunk_0">
+  <data key="d12">APPEARS_IN</data>
+  <data key="d13">0.3660154938697815</data>
+</edge>
+<edge source="object_person_3" target="object_car_4">
+  <data key="d12">CO_OCCURS_WITH</data>
+  <data key="d14">0</data>
+</edge>
+<edge source="object_person_3" target="chunk_8">
+  <data key="d12">APPEARS_IN</data>
+  <data key="d13">0.7430946826934814</data>
+</edge>
+<edge source="object_person_3" target="object_person_4">
+  <data key="d12">CO_OCCURS_WITH</data>
+  <data key="d14">8</data>
+</edge>
+<edge source="object_car_4" target="chunk_0">
+  <data key="d12">APPEARS_IN</data>
+  <data key="d13">0.34829071164131165</data>
+</edge>
+<edge source="entity_nvidia_geforce_rtx_5090_graphics_card" target="chunk_0">
+  <data key="d12">MENTIONED_IN</data>
+</edge>
+<edge source="entity_nvidia_geforce_rtx_5090_graphics_card" target="entity_person_#0">
+  <data key="d12">LOCATED_AT</data>
+  <data key="d15">The graphics card is placed on a reflective surface during a tech demonstration at 0.0s.</data>
+  <data key="d14">0</data>
+</edge>
+<edge source="entity_person_#0" target="chunk_0">
+  <data key="d12">MENTIONED_IN</data>
+</edge>
+<edge source="entity_person_#1" target="chunk_0">
+  <data key="d12">MENTIONED_IN</data>
+</edge>
+<edge source="entity_person_#1" target="entity_hallway">
+  <data key="d12">LOCATED_AT</data>
+  <data key="d15">Person #1 is walking in the hallway at 0.1s.</data>
+  <data key="d14">0</data>
+</edge>
+<edge source="entity_person_#1" target="entity_ornate_conservatory">
+  <data key="d12">LOCATED_AT</data>
+  <data key="d15">Person #1 is standing and looking around in the ornate conservatory at 7.0s and 25.4s.</data>
+  <data key="d14">0</data>
+</edge>
+<edge source="entity_person_#1" target="entity_person_presenting">
+  <data key="d12">PERFORMS</data>
+  <data key="d15">Person #1 is the person presenting on the stage at 19.2s and 30.9s.</data>
+  <data key="d14">0</data>
+</edge>
+<edge source="entity_person_#2" target="chunk_0">
+  <data key="d12">MENTIONED_IN</data>
+</edge>
+<edge source="entity_person_#2" target="entity_ornate_conservatory">
+  <data key="d12">LOCATED_AT</data>
+  <data key="d15">Person #2 is standing and looking around in the ornate conservatory at 25.4s.</data>
+  <data key="d14">0</data>
+</edge>
+<edge source="entity_person_#3" target="chunk_0">
+  <data key="d12">MENTIONED_IN</data>
+</edge>
+<edge source="entity_person_#3" target="entity_ornate_conservatory">
+  <data key="d12">LOCATED_AT</data>
+  <data key="d15">Person #3 is partially visible in the ornate conservatory at 25.4s.</data>
+  <data key="d14">0</data>
+</edge>
+<edge source="entity_cup_#4" target="chunk_0">
+  <data key="d12">MENTIONED_IN</data>
+</edge>
+<edge source="entity_cup_#4" target="entity_ornate_conservatory">
+  <data key="d12">LOCATED_AT</data>
+  <data key="d15">The cup is visible in the ornate conservatory at 25.4s.</data>
+  <data key="d14">0</data>
+</edge>
+<edge source="entity_hallway" target="chunk_0">
+  <data key="d12">MENTIONED_IN</data>
+</edge>
+<edge source="entity_ornate_conservatory" target="chunk_0">
+  <data key="d12">MENTIONED_IN</data>
+</edge>
+<edge source="entity_tv_show_or_live_event_stage" target="chunk_0">
+  <data key="d12">MENTIONED_IN</data>
+</edge>
+<edge source="entity_person_presenting" target="chunk_0">
+  <data key="d12">MENTIONED_IN</data>
+</edge>
+<edge source="entity_person_presenting" target="entity_tv_show_or_live_event_stage">
+  <data key="d12">LOCATED_AT</data>
+  <data key="d15">The person is speaking or presenting on the stage at 19.2s and 30.9s.</data>
+  <data key="d14">0</data>
+</edge>
+<edge source="entity_artificial_intelligence" target="chunk_0">
+  <data key="d12">MENTIONED_IN</data>
+</edge>
+<edge source="entity_artificial_intelligence" target="entity_real-time_computer_graphics_rendering">
+  <data key="d12">USES</data>
+  <data key="d15">AI is used to predict additional pixels for real-time computer graphics rendering, as described in the audio transcript.</data>
+  <data key="d14">0</data>
+</edge>
+<edge source="entity_real-time_computer_graphics_rendering" target="chunk_0">
+  <data key="d12">MENTIONED_IN</data>
+</edge>
+<edge source="chunk_1" target="chunk_2">
+  <data key="d12">FOLLOWED_BY</data>
+</edge>
+<edge source="entity_man_in_black_leather_jacket" target="chunk_1">
+  <data key="d12">MENTIONED_IN</data>
+</edge>
+<edge source="entity_man_in_black_leather_jacket" target="entity_cane">
+  <data key="d12">USES</data>
+  <data key="d15">The man holds and uses the cane during his presentations.</data>
+  <data key="d14">1</data>
+</edge>
+<edge source="entity_man_in_black_leather_jacket" target="entity_microphone">
+  <data key="d12">USES</data>
+  <data key="d15">The man holds and uses the microphone during his presentations.</data>
+  <data key="d14">1</data>
+</edge>
+<edge source="entity_man_in_black_leather_jacket" target="entity_urban_outdoor_setting">
+  <data key="d12">LOCATED_AT</data>
+  <data key="d15">The man is present in the urban outdoor setting during the initial frames.</data>
+  <data key="d14">1</data>
+</edge>
+<edge source="entity_man_in_black_leather_jacket" target="entity_theater_or_auditorium">
+  <data key="d12">LOCATED_AT</data>
+  <data key="d15">The man is present in the theater or auditorium during the indoor presentation frames.</data>
+  <data key="d14">1</data>
+</edge>
+<edge source="entity_man_in_black_leather_jacket" target="entity_digital_ai_interface">
+  <data key="d12">LOCATED_AT</data>
+  <data key="d15">The man is standing against the black background with the digital AI interface overlay during the final frame.</data>
+  <data key="d14">1</data>
+</edge>
+<edge source="entity_man_in_black_leather_jacket" target="entity_ai_technological_advancements_discussion">
+  <data key="d12">PERFORMS</data>
+  <data key="d15">The man performs the AI technological advancements discussion, transitioning from real-world presentation to digital interface.</data>
+  <data key="d14">1</data>
+</edge>
+<edge source="entity_cane" target="chunk_1">
+  <data key="d12">MENTIONED_IN</data>
+</edge>
+<edge source="entity_microphone" target="chunk_1">
+  <data key="d12">MENTIONED_IN</data>
+</edge>
+<edge source="entity_urban_outdoor_setting" target="chunk_1">
+  <data key="d12">MENTIONED_IN</data>
+</edge>
+<edge source="entity_historic_building" target="chunk_1">
+  <data key="d12">MENTIONED_IN</data>
+</edge>
+<edge source="entity_historic_building" target="entity_urban_outdoor_setting">
+  <data key="d12">PART_OF</data>
+  <data key="d15">The historic building is part of the urban outdoor setting's background.</data>
+  <data key="d14">1</data>
+</edge>
+<edge source="entity_decorative_railing" target="chunk_1">
+  <data key="d12">MENTIONED_IN</data>
+</edge>
+<edge source="entity_decorative_railing" target="entity_urban_outdoor_setting">
+  <data key="d12">PART_OF</data>
+  <data key="d15">The decorative railing is part of the urban outdoor setting.</data>
+  <data key="d14">1</data>
+</edge>
+<edge source="entity_theater_or_auditorium" target="chunk_1">
+  <data key="d12">MENTIONED_IN</data>
+</edge>
+<edge source="entity_stage_backdrop" target="chunk_1">
+  <data key="d12">MENTIONED_IN</data>
+</edge>
+<edge source="entity_stage_backdrop" target="entity_theater_or_auditorium">
+  <data key="d12">PART_OF</data>
+  <data key="d15">The stage backdrop is part of the theater or auditorium's stage setup.</data>
+  <data key="d14">1</data>
+</edge>
+<edge source="entity_audience" target="chunk_1">
+  <data key="d12">MENTIONED_IN</data>
+</edge>
+<edge source="entity_audience" target="entity_theater_or_auditorium">
+  <data key="d12">LOCATED_AT</data>
+  <data key="d15">The audience is located in the theater or auditorium during the indoor presentation.</data>
+  <data key="d14">1</data>
+</edge>
+<edge source="entity_blurred_person_on_stage" target="chunk_1">
+  <data key="d12">MENTIONED_IN</data>
+</edge>
+<edge source="entity_blurred_person_on_stage" target="entity_theater_or_auditorium">
+  <data key="d12">LOCATED_AT</data>
+  <data key="d15">The blurred person is standing on the stage in the theater or auditorium.</data>
+  <data key="d14">1</data>
+</edge>
+<edge source="entity_digital_ai_interface" target="chunk_1">
+  <data key="d12">MENTIONED_IN</data>
+</edge>
+<edge source="entity_ai_categories" target="chunk_1">
+  <data key="d12">MENTIONED_IN</data>
+</edge>
+<edge source="entity_ai_categories" target="entity_digital_ai_interface">
+  <data key="d12">PART_OF</data>
+  <data key="d15">The AI categories are displayed as part of the digital AI interface.</data>
+  <data key="d14">1</data>
+</edge>
+<edge source="entity_ai_functions" target="chunk_1">
+  <data key="d12">MENTIONED_IN</data>
+</edge>
+<edge source="entity_ai_functions" target="entity_digital_ai_interface">
+  <data key="d12">PART_OF</data>
+  <data key="d15">The AI functions are displayed as part of the digital AI interface.</data>
+  <data key="d14">1</data>
+</edge>
+<edge source="entity_black_background" target="chunk_1">
+  <data key="d12">MENTIONED_IN</data>
+</edge>
+<edge source="entity_2023_asuet_innovations" target="chunk_1">
+  <data key="d12">MENTIONED_IN</data>
+</edge>
+<edge source="entity_2023_asuet_innovations" target="entity_digital_ai_interface">
+  <data key="d12">PART_OF</data>
+  <data key="d15">The text '2023 ASUET' and 'INNOVATIONS' is part of the digital AI interface screen.</data>
+  <data key="d14">1</data>
+</edge>
+<edge source="entity_ai_technological_advancements_discussion" target="chunk_1">
+  <data key="d12">MENTIONED_IN</data>
+</edge>
+<edge source="entity_ai_technological_advancements_discussion" target="entity_urban_outdoor_setting">
+  <data key="d12">OCCURS_AT</data>
+  <data key="d15">The AI technological advancements discussion begins with the man in the urban outdoor setting.</data>
+  <data key="d14">1</data>
+</edge>
+<edge source="entity_ai_technological_advancements_discussion" target="entity_theater_or_auditorium">
+  <data key="d12">OCCURS_AT</data>
+  <data key="d15">The AI technological advancements discussion continues in the theater or auditorium.</data>
+  <data key="d14">1</data>
+</edge>
+<edge source="entity_ai_technological_advancements_discussion" target="entity_digital_ai_interface">
+  <data key="d12">OCCURS_AT</data>
+  <data key="d15">The AI technological advancements discussion culminates in the digital AI interface overlay.</data>
+  <data key="d14">1</data>
+</edge>
+<edge source="chunk_2" target="chunk_3">
+  <data key="d12">FOLLOWED_BY</data>
+</edge>
+<edge source="object_person_16" target="chunk_2">
+  <data key="d12">APPEARS_IN</data>
+  <data key="d13">0.8752715587615967</data>
+</edge>
+<edge source="object_person_16" target="object_person_1">
+  <data key="d12">CO_OCCURS_WITH</data>
+  <data key="d14">2</data>
+</edge>
+<edge source="chunk_3" target="chunk_4">
+  <data key="d12">FOLLOWED_BY</data>
+</edge>
+<edge source="chunk_4" target="chunk_5">
+  <data key="d12">FOLLOWED_BY</data>
+</edge>
+<edge source="object_person_18" target="chunk_4">
+  <data key="d12">APPEARS_IN</data>
+  <data key="d13">0.7609395980834961</data>
+</edge>
+<edge source="object_person_18" target="object_person_1">
+  <data key="d12">CO_OCCURS_WITH</data>
+  <data key="d14">4</data>
+</edge>
+<edge source="chunk_5" target="chunk_6">
+  <data key="d12">FOLLOWED_BY</data>
+</edge>
+<edge source="chunk_6" target="chunk_7">
+  <data key="d12">FOLLOWED_BY</data>
+</edge>
+<edge source="chunk_7" target="chunk_8">
+  <data key="d12">FOLLOWED_BY</data>
+</edge>
+<edge source="chunk_8" target="chunk_9">
+  <data key="d12">FOLLOWED_BY</data>
+</edge>
+<edge source="object_person_22" target="chunk_8">
+  <data key="d12">APPEARS_IN</data>
+  <data key="d13">0.8746966123580933</data>
+</edge>
+<edge source="object_person_22" target="object_person_1">
+  <data key="d12">CO_OCCURS_WITH</data>
+  <data key="d14">8</data>
+</edge>
+<edge source="object_person_22" target="object_person_2">
+  <data key="d12">CO_OCCURS_WITH</data>
+  <data key="d14">8</data>
+</edge>
+<edge source="object_person_22" target="object_person_3">
+  <data key="d12">CO_OCCURS_WITH</data>
+  <data key="d14">8</data>
+</edge>
+<edge source="object_person_22" target="object_person_4">
+  <data key="d12">CO_OCCURS_WITH</data>
+  <data key="d14">8</data>
+</edge>
+<edge source="object_person_4" target="chunk_8">
+  <data key="d12">APPEARS_IN</data>
+  <data key="d13">0.4969184696674347</data>
+</edge>
+<edge source="object_person_23" target="chunk_9">
+  <data key="d12">APPEARS_IN</data>
+  <data key="d13">0.8519118428230286</data>
+</edge>
+<edge source="object_person_23" target="object_person_24">
+  <data key="d12">CO_OCCURS_WITH</data>
+  <data key="d14">9</data>
+</edge>
+<edge source="object_person_23" target="object_person_1">
+  <data key="d12">CO_OCCURS_WITH</data>
+  <data key="d14">9</data>
+</edge>
+<edge source="object_person_24" target="chunk_9">
+  <data key="d12">APPEARS_IN</data>
+  <data key="d13">0.7805348038673401</data>
+</edge>
+<edge source="object_person_24" target="object_person_1">
+  <data key="d12">CO_OCCURS_WITH</data>
+  <data key="d14">9</data>
+</edge>
+</graph></graphml>

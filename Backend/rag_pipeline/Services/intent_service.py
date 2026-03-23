@@ -3,12 +3,26 @@ import os
 import mimetypes
 from langchain_openai import ChatOpenAI
 from langchain_openai import AzureChatOpenAI
+from langchain_mistralai import ChatMistralAI
 # from ingestion_pipleline.Config.Config import INGESTION_CONFIG # Commenting out as likely not needed for this service and path might be tricky
 from rag_pipeline.Config.rag_config import RAG_CONFIG
 
 class LLMModelsProtocol(Protocol):
     def get_llm(self, model_name: str, temperature: float, max_tokens: int):
         ...
+
+class MistralLLMModel(LLMModelsProtocol):
+    def get_llm(self, model_name: str, temperature: float, max_tokens: int):
+        api_key = os.getenv("MISTRAL_API_KEY")
+        if not api_key:
+            raise ValueError("MISTRAL_API_KEY not found in environment")
+        
+        return ChatMistralAI(
+            model=model_name,
+            temperature=temperature,
+            max_tokens=max_tokens,
+            api_key=api_key
+        )
 
 class GroqLLMModel(LLMModelsProtocol):
     def get_llm(self, model_name: str, temperature: float, max_tokens: int):
@@ -53,6 +67,13 @@ def create_llm_model(provider: str, model_name: str, temperature: float, max_tok
     if p == "groq":
         print("Creating Groq LLM")
         return GroqLLMModel().get_llm(
+            model_name=model_name,
+            temperature=temperature,
+            max_tokens=max_tokens
+        )
+    elif p == "mistral":
+        print("Creating Mistral LLM")
+        return MistralLLMModel().get_llm(
             model_name=model_name,
             temperature=temperature,
             max_tokens=max_tokens

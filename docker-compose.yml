@@ -8,22 +8,14 @@ services:
     container_name: rag_backend
     ports:
       - "8000:8000"
+    env_file: .env
     environment:
       - REDIS_HOST=redis
       - DB_HOST=db
-      - DB_NAME=chatbot_db
-      - DB_USER=user
-      - DB_PASSWORD=password
       - CHROMA_SERVER_HOST=chromadb
-      - CHROMA_SERVER_PORT=8000
-      - DEFAULT_VECTOR_DB=Chroma
-      # - PHOENIX_COLLECTOR_ENDPOINT=http://20.98.116.35:5000
-      # - OTEL_EXPORTER_OTLP_ENDPOINT=http://20.98.116.35:5000/v1/traces
       - PHOENIX_COLLECTOR_ENDPOINT=http://phoenix:6006
       - OTEL_EXPORTER_OTLP_ENDPOINT=http://phoenix:6006/v1/traces
       - OTEL_PROJECT_NAME="RAGBOT_API"
-      - NVIDIA_API_KEY=${NVIDIA_API_KEY}
-      - GROQ_API_KEY=${GROQ_API_KEY}
     networks:
       - chatbot_network
     depends_on:
@@ -44,26 +36,14 @@ services:
       context: ./ingestion_pool
       dockerfile: Dockerfile
     container_name: ingestion_pool
+    env_file: .env
     environment:
       - REDIS_HOST=redis
       - DB_HOST=db
-      - DB_NAME=chatbot_db
-      - DB_USER=user
-      - DB_PASSWORD=password
-      - INGESTION_POOL_SIZE=2
-      # - PHOENIX_COLLECTOR_ENDPOINT=http://20.98.116.35:5000
       - PHOENIX_COLLECTOR_ENDPOINT=http://phoenix:6006
       - OTEL_EXPORTER_OTLP_ENDPOINT=http://phoenix:6006/v1/traces
       - CHROMA_SERVER_HOST=chromadb
-      - CHROMA_SERVER_PORT=8000
-      # API Keys for embeddings which now happen here
-      - MISTRAL_API_KEY=${MISTRAL_API_KEY}
-      - GROQ_API_KEY=${GROQ_API_KEY}
-      - AZURE_API_KEY=${AZURE_API_KEY}
-      - NVIDIA_API_KEY=${NVIDIA_API_KEY}
-      - AZURE_DOCUMENT_INTELLIGENCE_ENDPOINT=${AZURE_DOCUMENT_INTELLIGENCE_ENDPOINT}
-      - AZURE_DOCUMENT_INTELLIGENCE_KEY=${AZURE_DOCUMENT_INTELLIGENCE_KEY}
-      - PDF_LOADER_TYPE=${PDF_LOADER_TYPE}
+      - DATA_DIRECTORY=/app/data_directory
     networks:
       - chatbot_network
     depends_on:
@@ -80,26 +60,15 @@ services:
   worker-pool:
     build: worker_pool
     command: python main.py
+    env_file: .env
     environment:
       - REDIS_HOST=redis
       - DB_HOST=db
-      - DB_NAME=chatbot_db
-      - DB_USER=user
-      - DB_PASSWORD=password
-      - WORKER_POOL_SIZE=2
       - CHROMA_SERVER_HOST=chromadb
-      - CHROMA_SERVER_PORT=8000
-      - DEFAULT_VECTOR_DB=Chroma
-      # - GOOGLE_API_KEY=${GOOGLE_API_KEY}
-      # - PHOENIX_COLLECTOR_ENDPOINT=http://20.98.116.35:5000
-      # - OTEL_EXPORTER_OTLP_ENDPOINT=http://20.98.116.35:5000/v1/traces
       - PHOENIX_COLLECTOR_ENDPOINT=http://phoenix:6006
       - OTEL_EXPORTER_OTLP_ENDPOINT=http://phoenix:6006/v1/traces
       - PYTHONPATH=/app
-      # API Keys for Generation/Reranking
-      - MISTRAL_API_KEY=${MISTRAL_API_KEY}
-      - GROQ_API_KEY=${GROQ_API_KEY}
-      - AZURE_API_KEY=${AZURE_API_KEY}
+      - DATA_DIRECTORY=/app/data_directory
     networks:
       - chatbot_network
     depends_on:
@@ -130,22 +99,12 @@ services:
           memory: 4G
         reservations:
           memory: 2G
+    env_file: .env
     environment:
       - REDIS_HOST=redis
       - DB_HOST=db
-      - DB_NAME=chatbot_db
-      - DB_USER=user
-      - DB_PASSWORD=password
       - PHOENIX_COLLECTOR_ENDPOINT=http://phoenix:6006
       - DATA_DIRECTORY=/app/data_directory
-      # API Keys for RAGAS evaluation
-      - MISTRAL_API_KEY=${MISTRAL_API_KEY}
-      - GROQ_API_KEY=${GROQ_API_KEY}
-      - AZURE_API_KEY=${AZURE_API_KEY}
-      - EVALUATION_LLM_PROVIDER=${EVALUATION_LLM_PROVIDER}
-      - EVALUATION_LLM_MODEL=${EVALUATION_LLM_MODEL}
-      - AZURE_API_BASE=${AZURE_API_BASE}
-      - AZURE_API_VERSION=${AZURE_API_VERSION}
     networks:
       - chatbot_network
     depends_on:
@@ -161,6 +120,33 @@ services:
       - ./evaluation_pool:/app
       - ./Backend/models:/app/models # Map models directory for import compatibility
 
+  video-processing-pool:
+    build:
+      context: ./video_processing_pool
+      dockerfile: Dockerfile
+    container_name: video_processing_pool
+    env_file: .env
+    environment:
+      - REDIS_HOST=redis
+      - DB_HOST=db
+      - CHROMA_SERVER_HOST=chromadb
+      - DATA_DIRECTORY=/app/data_directory
+      - OUTPUT_DIR=/app/data_directory/video_output
+      - TEMP_DIR=/app/data_directory/video_temp
+      - GRAPH_DIR=/app/data_directory/video_graphs
+    networks:
+      - chatbot_network
+    depends_on:
+      redis:
+        condition: service_started
+      postgres:
+        condition: service_healthy
+      chromadb:
+        condition: service_started
+    volumes:
+      - rag_data:/app/data_directory
+      - video_graph_data:/app/data_directory/video_graphs
+
   frontend:
     build:
       context: ./Frontend/docu-chatter-main
@@ -171,8 +157,9 @@ services:
     volumes:
       - ./Frontend/docu-chatter-main:/app
       - /app/node_modules
+    env_file: .env
     environment:
-      - VITE_API_BASE_URL=http://knowledgesynthesis.eastus2.cloudapp.azure.com:8000
+      - VITE_API_BASE_URL=http://localhost:8000
     networks:
       - chatbot_network
 
@@ -250,6 +237,6 @@ volumes:
   phoenix_data:
     driver: local
   app-db:
-  rag_data:
-    # New shared volume
-
+  rag_data: # New shared volume
+  video_graph_data:
+    driver: local

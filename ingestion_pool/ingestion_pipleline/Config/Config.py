@@ -5,16 +5,21 @@ from dotenv import load_dotenv
 # Load variables from .env file
 load_dotenv(override=True)
 
+# Folder Paths
+_data_dir = os.getenv("DATA_DIRECTORY", "/app/data_directory")
+if not os.path.isabs(_data_dir):
+    _base_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+    _data_dir = os.path.abspath(os.path.join(_base_dir, _data_dir))
+
 INGESTION_CONFIG = {
-    #Folder Paths
-    # "ingestion_root": Path("/app"),
-    "ingestion_root": Path(os.getenv("DATA_DIRECTORY", "/app/data_directory")).parent,
-    "ingestion_data_folder_name": "data_directory",
+    "ingestion_root": Path(_data_dir).parent,
+    "ingestion_data_folder_name": os.path.basename(_data_dir),
     "ingestion_temp_folder_name": "temp_directory",
 
     "ingestion_embedding_providers": {
         "HuggingFace": ["all-MiniLM-L6-v2", ""],       
         "Azure OpenAI": ["text-embedding-3-small", "text-embedding-3-large"],
+        "Mistral": ["mistral-embed"],
     },
 
     "ingestion_vectoredb_providers": ["Qdrant", "Pinecone"],
@@ -119,6 +124,11 @@ INGESTION_CONFIG = {
     "azure_supported_models": os.getenv(
         "AZURE_SUPPORTED_MODELS",
         "gpt-4o-mini"
+    ).split(","),
+
+    "mistral_supported_models": os.getenv(
+        "MISTRAL_SUPPORTED_MODELS",
+        "mistral-large-latest,mistral-small-latest,pixtral-large-latest"
     ).split(","),
 
     # Qdrant configs (with fallback for backwards compatibility)

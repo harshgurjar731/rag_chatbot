@@ -110,13 +110,52 @@ class ChromaVectorDB(VectorStoreProtocol):
 
     def insert_docs(self, collection: str, documents: List[Document], chunkids: List[str], embedding: HuggingFaceEmbeddings | OpenAIEmbeddings) -> bool:
         from langchain_chroma import Chroma
+        import time
+
+        print(f"[*] Initializing LangChain-Chroma for collection '{collection}'")
         vector_store = Chroma(
             client=self.client,
             collection_name=collection,
             embedding_function=embedding,
         )
-        added_ids = vector_store.add_documents(documents=documents, ids=chunkids)
-        return len(added_ids) > 0
+
+        total_docs = len(documents)
+        print(f"[*] Starting vector_store.add_documents for {total_docs} documents")
+
+        # Implementing manual batching to avoid API limits (e.g., Mistral/OpenAI) 
+        # Mistral recommended batch size: 50-100
+        batch_size = 50
+        all_added_ids = []
+
+        try:
+            for i in range(0, total_docs, batch_size):
+                batch_docs = documents[i : i + batch_size]
+                batch_ids = chunkids[i : i + batch_size]
+                
+                print(f"[*] Adding batch {i // batch_size + 1} ({len(batch_docs)}/ {total_docs} documents)...")
+                
+                # Add documents for this batch
+                added_ids = vector_store.add_documents(documents=batch_docs, ids=batch_ids)
+                all_added_ids.extend(added_ids)
+                
+                # Optional: slight delay to avoid hammering the API if rate limited
+                if i + batch_size < total_docs:
+                    time.sleep(0.5)
+
+            print(f"[*] Successfully added {len(all_added_ids)} documents in total")
+            return len(all_added_ids) > 0
+
+        except Exception as e:
+            # Better error reporting to identify the underlying cause (e.g. 401, 429, 400)
+            error_msg = str(e)
+            print(f"[!] Error in vector_store.add_documents during batch starting at {i}: {error_msg}")
+            
+            # If it's a known API error, it might have more details like status code
+            if hasattr(e, "response") and hasattr(e.response, "status_code"):
+                print(f"[!] API Response Status Code: {e.response.status_code}")
+                print(f"[!] API Response Content: {getattr(e.response, 'text', 'No text')}")
+            
+            raise e
 
     def test_retrieval(self, collection: str, embedding: HuggingFaceEmbeddings | OpenAIEmbeddings, queryList: List[str], topk: int, selected_docs: List[str] = []) -> List[List[Document]]:
         from langchain_chroma import Chroma

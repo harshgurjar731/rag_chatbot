@@ -19,6 +19,8 @@ IS_DOCKER = os.path.exists('/.dockerenv') or os.path.exists('/proc/self/cgroup')
 # Base paths
 PROJECT_ROOT = Path(__file__).parent.parent
 DATA_DIRECTORY = os.getenv("DATA_DIRECTORY", "/app/data_directory" if IS_DOCKER else os.path.join(PROJECT_ROOT, "data_directory"))
+if not os.path.isabs(DATA_DIRECTORY):
+    DATA_DIRECTORY = os.path.abspath(os.path.join(PROJECT_ROOT, DATA_DIRECTORY))
 
 # DB Connection
 DB_USER = os.getenv("DB_USER", "user")
