@@ -29,7 +29,7 @@ COPY requirements.txt .
 
 # Install dependencies from requirements.txt
 # Using uv pip install --system for speed as requested in original Dockerfile, but respecting requirements.txt
-RUN uv pip install --system -r requirements.txt
+RUN uv pip install --system --index-strategy unsafe-best-match -r requirements.txt
 
 # Stage 2: Runtime - Minimal image with only runtime dependencies
 FROM continuumio/miniconda3:latest

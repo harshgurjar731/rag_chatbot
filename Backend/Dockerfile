@@ -26,7 +26,7 @@ RUN pip install --no-cache-dir pip==24.0 uv==0.5.21
 COPY requirements.txt .
 
 # Install dependencies from requirements.txt
-RUN uv pip install --system -r requirements.txt
+RUN uv pip install --system --index-strategy unsafe-best-match -r requirements.txt
 
 # Stage 2: Runtime - Minimal image with only runtime dependencies
 FROM continuumio/miniconda3:latest
