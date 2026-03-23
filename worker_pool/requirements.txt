@@ -1,64 +1,67 @@
 # Worker Pool Requirements
 
 --extra-index-url https://download.pytorch.org/whl/cpu
-torch
+torch==2.10.0+cpu
 
 # Core & Utils
-fastapi
-uvicorn
-python-multipart
-pydantic
-pydantic-settings
-sqlmodel
-python-dotenv
-aiofiles
-requests
-psycopg2-binary
-redis
-tqdm
-numpy
-pandas
-scikit-learn
+fastapi==0.129.0
+uvicorn==0.41.0
+python-multipart==0.0.22
+pydantic==2.12.5
+pydantic-settings==2.13.0
+sqlmodel==0.0.34
+python-dotenv==1.2.1
+aiofiles==25.1.0
+requests==2.32.5
+psycopg2-binary==2.9.11
+redis==7.2.0
+tqdm==4.67.3
+numpy==1.26.4
+pandas==2.3.3
+scikit-learn==1.8.0
 
 # Web Scraping
-beautifulsoup4
+beautifulsoup4==4.14.3
 
 # Vector Stores & AI Models
-chromadb
-qdrant-client
-faiss-cpu
+chromadb==0.5.23
+qdrant-client==1.16.2
+faiss-cpu==1.13.2
 huggingface-hub
-transformers
-sentence-transformers
-mistralai
-openai
-groq
-nvidia-riva-client
+transformers==4.46.3
+sentence-transformers==2.7.0
+mistralai==1.12.2
+openai==1.109.1
+groq==1.0.0
+nvidia-riva-client==2.24.0
 
 # LangChain Ecosystem
-langchain
-langchain-core
-langchain-community
-langchain-text-splitters
-langchain-chroma
-langchain-openai
-langchain-experimental
-langchain-huggingface
-langchain-qdrant
-langchain-nvidia-ai-endpoints
+langchain==0.3.27
+langchain-core==0.3.83
+langchain-community==0.3.31
+langchain-text-splitters==0.3.11
+langchain-chroma==0.1.4
+langchain-openai==0.2.14
+langchain-experimental==0.3.4
+langchain-huggingface==0.1.2
+langchain-qdrant==0.2.1
+langchain-nvidia-ai-endpoints==0.3.19
 langchain-mistralai
 
 # Guardrails
-nemoguardrails
+nemoguardrails==0.20.0
 
 # Observability
-opentelemetry-api
-opentelemetry-sdk
-opentelemetry-exporter-otlp
-arize-phoenix-otel
-arize-phoenix
-openinference-instrumentation-langchain
-openinference-instrumentation-openai
+opentelemetry-api==1.39.1
+opentelemetry-sdk==1.39.1
+opentelemetry-exporter-otlp==1.39.1
+arize-phoenix-otel==0.14.0
+arize-phoenix==13.0.3
+openinference-instrumentation-langchain==0.1.59
+openinference-instrumentation-openai==0.1.41
 
 # Misc
-deep-translator
+deep-translator==1.11.4
+psutil==7.2.2
+SQLAlchemy==2.0.46
+pillow==11.3.0

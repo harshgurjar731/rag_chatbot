@@ -6,7 +6,7 @@ export interface ConfigOptions {
   optimizer: { value: string; label: string }[]
   embedding_models: string[]
   llm_providers: string[]
-  llm_models: string[]
+  llm_models: Record<string, string[]>
   vector_dbs: string[]
   reranker_options: string[]
   guardrail_options: { value: string; label: string }[]   // ✅ updated type

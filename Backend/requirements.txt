@@ -10,9 +10,9 @@ aiofiles==25.1.0
 requests==2.32.5
 redis==7.2.0
 psycopg2-binary==2.9.11
-passlib[bcrypt]==1.7.4
+passlib==1.7.4
 bcrypt==5.0.0
-python-jose[cryptography]==3.5.0
+python-jose==3.5.0
 
 # --- LangChain Ecosystem (Lightweight) ---
 langchain-core==0.3.83
@@ -31,3 +31,10 @@ pypdf==6.7.2
 openai==1.109.1
 langchain-openai==0.2.14
 mistralai==1.12.2
+langchain-mistralai
+openinference-instrumentation==0.1.44
+torch==2.10.0+cpu
+SQLAlchemy==2.0.46
+nemoguardrails==0.20.0
+langchain-community==0.3.31
+sentence-transformers==2.7.0

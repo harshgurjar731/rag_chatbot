@@ -972,10 +972,10 @@ export const ChatInterface = ({
                           ((message.secondary_intents && message.secondary_intents.length > 0)
                             ? message.secondary_intents
                             : (message.witty_hook ? [{
-                                detected_intent: message.detected_intent,
-                                witty_hook: message.witty_hook,
-                                intent_source: message.intent_source
-                              }] : [])
+                              detected_intent: message.detected_intent,
+                              witty_hook: message.witty_hook,
+                              intent_source: message.intent_source
+                            }] : [])
                           ).map((intentItem, idx) => (
                             <div key={idx} className={`mt-4 pt-3 ${idx === 0 ? 'border-t border-border/40' : 'border-t border-border/20'}`}>
                               {/* Integrated Intent Badge */}
@@ -1386,7 +1386,7 @@ export const ChatInterface = ({
                     <Label>LLM Provider</Label>
                     <Select
                       onValueChange={(value) =>
-                        setTempSettings({ ...tempSettings, llmProvider: value })
+                        setTempSettings({ ...tempSettings, llmProvider: value, llmModel: "" })
                       }
                       disabled={isLoading || !isAdmin}
                     >
@@ -1422,7 +1422,10 @@ export const ChatInterface = ({
                         />
                       </SelectTrigger>
                       <SelectContent>
-                        {config?.llm_models.map((model) => (
+                        {(tempSettings.llmProvider && config?.llm_models?.[tempSettings.llmProvider]
+                          ? config.llm_models[tempSettings.llmProvider]
+                          : []
+                        ).map((model: string) => (
                           <SelectItem key={model} value={model}>
                             {model}
                           </SelectItem>

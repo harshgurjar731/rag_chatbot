@@ -16,7 +16,7 @@ class ModelConfig(BaseModel):
     optimizer: List[Dict[str, str]] 
     embedding_models: List[str]
     llm_providers: List[str]
-    llm_models: List[str]
+    llm_models: Dict[str, List[str]]
     vector_dbs: List[str]
     reranker_options: List[str]
     guardrail_options: List[Dict[str, str]]
@@ -66,20 +66,26 @@ def get_llm_providers() -> List[str]:
         "mistral"
     ]
 
-def get_llm_models() -> List[str]:
-    return [
-        "gpt-4o-mini",
-        "gpt-4o",
-        "gpt-5.2-chat",
-        "llama-3.3-70b-versatile",
-        "deepseek-r1-distill-llama-70b",
-        "gemma2-9b-it",
-        "llama-3.1-8b-instant",
-        "openai/gpt-oss-20b",
-        "mistral-large-latest",
-        "mistral-small-latest",
-        "pixtral-large-latest"
-    ]
+def get_llm_models() -> Dict[str, List[str]]:
+    return {
+        "groq": [
+            "llama-3.3-70b-versatile",
+            "deepseek-r1-distill-llama-70b",
+            "gemma2-9b-it",
+            "llama-3.1-8b-instant"
+        ],
+        "azureopenai": [
+            "gpt-4o-mini",
+            "gpt-4o",
+            "gpt-5.2-chat",
+            "openai/gpt-oss-20b"
+        ],
+        "mistral": [
+            "mistral-large-latest",
+            "mistral-small-latest",
+            "pixtral-large-latest"
+        ]
+    }
 
 def get_evaluation_frameworks() -> Dict[str, List[str]]:
     return {

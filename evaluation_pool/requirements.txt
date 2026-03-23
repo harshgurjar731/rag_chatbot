@@ -1,39 +1,40 @@
 # ML Stack
-numpy<2
+numpy==1.26.4
 huggingface-hub>=0.23.0,<1.0
-transformers>=4.39.3,<5.0.0
+transformers==4.46.3
 sentence-transformers==2.7.0
-langchain-huggingface
-onnxruntime
+langchain-huggingface==0.1.2
+onnxruntime==1.24.2
 
 # Vector Stores
-chromadb
-langchain-chroma
+chromadb==0.5.23
+langchain-chroma==0.1.4
 
 # Evaluation Frameworks
-ragas
-datasets
-arize-phoenix-evals
+ragas==0.2.15
+datasets==4.5.0
+arize-phoenix-evals==0.18.1
 
 # Common Utils & API
-fastapi
-uvicorn
-requests
-redis
-psycopg2-binary
-sqlmodel
-python-dotenv
-aiofiles
-pandas
-pydantic-settings
-psutil
+fastapi==0.129.0
+uvicorn==0.41.0
+requests==2.32.5
+redis==7.2.0
+psycopg2-binary==2.9.11
+sqlmodel==0.0.34
+python-dotenv==1.2.1
+aiofiles==25.1.0
+pandas==2.3.3
+pydantic-settings==2.13.0
+psutil==7.2.2
 
 # LangChain
-langchain
-langchain-core
-langchain-community
-langchain-text-splitters
-langchain-openai
-langchain-experimental
-openinference-instrumentation-langchain
-openinference-instrumentation-openai
+langchain==0.3.27
+langchain-core==0.3.83
+langchain-community==0.3.31
+langchain-text-splitters==0.3.11
+langchain-openai==0.2.14
+langchain-experimental==0.3.4
+openinference-instrumentation-langchain==0.1.59
+openinference-instrumentation-openai==0.1.41
+pydantic==2.12.5
