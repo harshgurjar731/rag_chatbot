@@ -201,7 +201,7 @@ services:
       - chatbot_network
 
   chromadb:
-    image: chromadb/chroma
+    image: chromadb/chroma:0.5.23
     ports:
       - "8001:8000"
     volumes:
