@@ -50,6 +50,8 @@ class ChromaVectorDB(VectorStoreProtocol):
         for meta in metadata:
             flat_meta = {}
             for k, v in meta.items():
+                if v is None:
+                    continue
                 if isinstance(v, (dict, list)):
                     flat_meta[k] = str(v)
                 else:
@@ -134,8 +136,12 @@ class ChromaVectorDB(VectorStoreProtocol):
                 
                 print(f"[*] Adding batch {i // batch_size + 1} ({len(batch_docs)}/ {total_docs} documents)...")
                 
+                # Sanitize metadata (Chroma strictly forbids None or complex dicts/lists)
+                from langchain_community.vectorstores.utils import filter_complex_metadata
+                safe_batch_docs = filter_complex_metadata(batch_docs)
+                
                 # Add documents for this batch
-                added_ids = vector_store.add_documents(documents=batch_docs, ids=batch_ids)
+                added_ids = vector_store.add_documents(documents=safe_batch_docs, ids=batch_ids)
                 all_added_ids.extend(added_ids)
                 
                 # Optional: slight delay to avoid hammering the API if rate limited
