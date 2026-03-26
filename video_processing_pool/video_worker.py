@@ -234,32 +234,31 @@ async def process_video_job(job_data: dict):
         publish_status(job_id, "ingesting", 60, f"Pipeline complete. {len(results)} chunks processed.")
         
         # Convert results to ChunkRecords and save to Postgres
+        # Strategy: Create SEPARATE chunks for transcript and caption with cross-references
+        # This enables focused embeddings while preserving full context via metadata
         with Session(engine) as session:
             chunk_records = []
             for idx, chunk_result in enumerate(results):
-                # Build text content from all available data
-                text_parts = []
-                
-                # Transcript (use .full_text string, not the object)
+                # Extract raw text from each modality
+                transcript_text = ""
                 if chunk_result.transcript and chunk_result.transcript.full_text:
-                    text_parts.append(f"[Transcript] {chunk_result.transcript.full_text}")
+                    transcript_text = chunk_result.transcript.full_text
                 
-                # VLM Caption (field is 'caption', not 'vlm_caption')
+                caption_text = ""
                 if chunk_result.caption and chunk_result.caption.text:
-                    text_parts.append(f"[Visual Description] {chunk_result.caption.text}")
+                    caption_text = chunk_result.caption.text
                 
-                # CV detections (field is 'cv_metadata', not 'cv_detections')
+                # Build detected objects summary (short, goes into metadata on both)
+                det_summary = ""
                 if chunk_result.cv_metadata and chunk_result.cv_metadata.objects:
                     det_summary = ", ".join([
                         f"{obj.class_name} (conf: {obj.confidence:.2f})"
                         for obj in chunk_result.cv_metadata.objects[:10]
                     ])
-                    text_parts.append(f"[Detected Objects] {det_summary}")
                 
-                text_content = "\n\n".join(text_parts) if text_parts else f"Video chunk {idx + 1}"
-                
-                # Build metadata
-                metadata = {
+                # Shared metadata fields for all chunks from this segment
+                video_segment_id = f"{document_id}_{idx}"
+                base_metadata = {
                     "content_type": "video",
                     "source": video_path,
                     "stream_id": stream_id,
@@ -267,30 +266,71 @@ async def process_video_job(job_data: dict):
                     "filename": os.path.basename(video_path),
                     "folder_id": None,
                     "loaderType": "video",
+                    "video_segment_id": video_segment_id,
+                    "detected_objects": det_summary,
                 }
                 
                 # Add timestamps if available
                 if hasattr(chunk_result, 'start_time'):
-                    metadata["start_timestamp"] = chunk_result.start_time
+                    base_metadata["start_timestamp"] = chunk_result.start_time
                 if hasattr(chunk_result, 'end_time'):
-                    metadata["end_timestamp"] = chunk_result.end_time
+                    base_metadata["end_timestamp"] = chunk_result.end_time
                 if hasattr(chunk_result, 'chunk_id'):
-                    metadata["video_chunk_id"] = chunk_result.chunk_id
+                    base_metadata["video_chunk_id"] = chunk_result.chunk_id
                 
-                chunk_record = ChunkRecord(
-                    datastore_id=datastore_id,
-                    document_id=document_id,
-                    chunk_index=str(uuid.uuid4()),
-                    text=text_content,
-                    metadatas=metadata
-                )
-                chunk_records.append(chunk_record)
+                has_content = False
+                
+                # --- Transcript Chunk: text=transcript, metadata carries caption ---
+                if transcript_text:
+                    has_content = True
+                    transcript_metadata = {
+                        **base_metadata,
+                        "chunk_type": "transcript",
+                        "caption": caption_text,  # cross-reference
+                    }
+                    chunk_records.append(ChunkRecord(
+                        datastore_id=datastore_id,
+                        document_id=document_id,
+                        chunk_index=str(uuid.uuid4()),
+                        text=transcript_text,
+                        metadatas=transcript_metadata,
+                    ))
+                
+                # --- Caption Chunk: text=caption, metadata carries transcript ---
+                if caption_text:
+                    has_content = True
+                    caption_metadata = {
+                        **base_metadata,
+                        "chunk_type": "caption",
+                        "transcript": transcript_text,  # cross-reference
+                    }
+                    chunk_records.append(ChunkRecord(
+                        datastore_id=datastore_id,
+                        document_id=document_id,
+                        chunk_index=str(uuid.uuid4()),
+                        text=caption_text,
+                        metadatas=caption_metadata,
+                    ))
+                
+                # --- Fallback: if neither transcript nor caption, create placeholder ---
+                if not has_content:
+                    fallback_metadata = {
+                        **base_metadata,
+                        "chunk_type": "fallback",
+                    }
+                    chunk_records.append(ChunkRecord(
+                        datastore_id=datastore_id,
+                        document_id=document_id,
+                        chunk_index=str(uuid.uuid4()),
+                        text=f"Video chunk {idx + 1} (no transcript or caption available)",
+                        metadatas=fallback_metadata,
+                    ))
             
             # Bulk insert
             if chunk_records:
                 session.add_all(chunk_records)
                 session.commit()
-                print(f"[*] Saved {len(chunk_records)} video chunk records to DB")
+                print(f"[*] Saved {len(chunk_records)} video chunk records to DB (dual-chunk mode)")
             
             publish_status(job_id, "ingesting", 70, f"Saved {len(chunk_records)} chunks to database.")
         

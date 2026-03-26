@@ -1,12 +1,14 @@
 """
 Knowledge graph builder using NetworkX.
 
-Constructs a directed graph from extracted entities, relationships,
-and temporal chunk connections.
+Constructs a directed graph with the following schema:
+Nodes: Video, Chunk, Summary, Object, Frame
+Edges: HAS_CHUNK, HAS_FRAME, DESCRIBES, CONTAINS_OBJECT, TEMPORAL_NEXT, INVOLVED_IN
 """
 
 import logging
 import os
+import json
 from typing import Optional
 
 import networkx as nx
@@ -18,267 +20,194 @@ from .entity_extractor import LLMEntityExtractor
 logger = logging.getLogger(__name__)
 
 
-def _normalize_node_id(name: str) -> str:
-    """
-    Normalize an entity name to a consistent node ID.
-
-    Lowercases, strips whitespace, replaces spaces with underscores.
-    """
-    return name.strip().lower().replace(" ", "_")
+def _normalize_id(val: str) -> str:
+    return str(val).lower().strip().replace(" ", "_")
 
 
 class GraphBuilder:
-    """
-    Builds a NetworkX DiGraph from video chunk data.
-
-    Creates nodes for:
-    - VideoChunks (temporal segments of the video)
-    - Entities extracted by the LLM (Person, Object, Location, etc.)
-    - Detected objects from CV pipeline
-
-    Creates edges for:
-    - Temporal sequence (FOLLOWED_BY between chunks)
-    - Entity ↔ Chunk membership (MENTIONED_IN, APPEARS_IN)
-    - Entity ↔ Entity relationships (from LLM extraction)
-    - Object co-occurrence (CO_OCCURS_WITH)
-    """
-
     def __init__(self, config: GraphConfig):
         self.config = config
         self.graph = nx.DiGraph()
-        self._entity_names: dict[str, str] = {}  # normalized → display name
+
+    def _add_video_node(self, stream_id: str, source_video: str):
+        node_id = f"video_{stream_id}"
+        if not self.graph.has_node(node_id):
+            self.graph.add_node(
+                node_id,
+                node_type="Video",
+                uuid=stream_id,
+                filename=os.path.basename(source_video) if source_video else "unknown",
+                camera_id="default",
+                is_live=False
+            )
+        return node_id
 
     def _add_chunk_node(self, chunk: dict):
-        """Add a VideoChunk node to the graph."""
-        chunk_id = chunk["chunk_id"]
-        node_id = f"chunk_{chunk_id}"
+        chunk_idx = chunk["chunk_id"]
+        node_id = f"chunk_{chunk_idx}"
+        cv_meta_str = json.dumps(chunk.get("cv_metadata", {}))
 
         self.graph.add_node(
             node_id,
-            node_type="VideoChunk",
-            chunk_id=chunk_id,
-            start_timestamp=chunk.get("start_timestamp", 0.0),
-            end_timestamp=chunk.get("end_timestamp", 0.0),
-            source_video=chunk.get("source_video", ""),
-            stream_id=chunk.get("stream_id", "default"),
+            node_type="Chunk",
+            chunkIdx=chunk_idx,
+            start_time=float(chunk.get("start_timestamp", 0.0)),
+            end_time=float(chunk.get("end_timestamp", 0.0)),
+            cv_meta=cv_meta_str
         )
         return node_id
 
-    def _add_entity_node(self, entity: ExtractedEntity) -> str:
-        """
-        Add an entity node to the graph (or merge if it already exists).
+    def _add_summary_node(self, chunk: dict):
+        chunk_idx = chunk["chunk_id"]
+        caption_data = chunk.get("caption", {})
+        transcript_data = chunk.get("transcript", {})
 
-        Returns the node ID.
-        """
-        normalized = _normalize_node_id(entity.name)
-        node_id = f"entity_{normalized}"
+        text = caption_data.get("text", "")
+        if not text:
+            text = transcript_data.get("full_text", "")
 
-        if self.graph.has_node(node_id):
-            # Node exists — update description if longer
-            existing_desc = self.graph.nodes[node_id].get("description", "")
-            if len(entity.description) > len(existing_desc):
-                self.graph.nodes[node_id]["description"] = entity.description
-            # Track which chunks mention this entity
-            chunks = self.graph.nodes[node_id].get("chunk_ids", [])
-            if entity.source_chunk_id not in chunks:
-                chunks.append(entity.source_chunk_id)
-                self.graph.nodes[node_id]["chunk_ids"] = chunks
-        else:
-            self.graph.add_node(
-                node_id,
-                node_type=entity.entity_type,
-                name=entity.name,
-                description=entity.description,
-                chunk_ids=[entity.source_chunk_id],
-            )
-            self._entity_names[normalized] = entity.name
+        model_id = caption_data.get("model", transcript_data.get("model", "unknown"))
+        start_time = float(chunk.get("start_timestamp", 0.0))
 
+        if not text:
+            return None
+
+        node_id = f"summary_{chunk_idx}"
+        self.graph.add_node(
+            node_id,
+            node_type="Summary",
+            text=text,
+            embedding=[],  # Add vector store embedding here if supported natively by graph
+            model_id=model_id,
+            timestamp=start_time
+        )
         return node_id
 
-    def _add_cv_object_nodes(self, chunk: dict, chunk_node_id: str):
-        """
-        Add detected CV objects as nodes and link to their chunk.
-        """
-        cv_meta = chunk.get("cv_metadata", {})
-        if not cv_meta or not cv_meta.get("objects"):
-            return
-
-        objects = cv_meta["objects"]
-        object_nodes = []
-
-        for obj in objects:
-            cls = obj.get("class", "unknown")
-            track_id = obj.get("track_id", -1)
-            node_id = f"object_{cls}_{track_id}"
-
-            if not self.graph.has_node(node_id):
-                self.graph.add_node(
-                    node_id,
-                    node_type="DetectedObject",
-                    class_name=cls,
-                    track_id=track_id,
-                    confidence=obj.get("confidence", 0.0),
-                    chunk_ids=[chunk["chunk_id"]],
-                )
-            else:
-                # Merge: track additional chunk appearances
-                chunks = self.graph.nodes[node_id].get("chunk_ids", [])
-                if chunk["chunk_id"] not in chunks:
-                    chunks.append(chunk["chunk_id"])
-                    self.graph.nodes[node_id]["chunk_ids"] = chunks
-                # Update confidence if higher
-                if obj.get("confidence", 0) > self.graph.nodes[node_id].get(
-                    "confidence", 0
-                ):
-                    self.graph.nodes[node_id]["confidence"] = obj["confidence"]
-
-            # Edge: object APPEARS_IN chunk
-            self.graph.add_edge(
+    def _add_frame_node(self, chunk_idx: int, frame_offset: int, timestamp: float):
+        node_id = f"frame_{chunk_idx}_{frame_offset}"
+        if not self.graph.has_node(node_id):
+            self.graph.add_node(
                 node_id,
-                chunk_node_id,
-                relationship="APPEARS_IN",
-                confidence=obj.get("confidence", 0.0),
+                node_type="Frame",
+                timestamp=float(timestamp),
+                image_path=""
             )
-            object_nodes.append(node_id)
+        return node_id
 
-        # Co-occurrence edges between objects in the same chunk
-        for i in range(len(object_nodes)):
-            for j in range(i + 1, len(object_nodes)):
-                if not self.graph.has_edge(object_nodes[i], object_nodes[j]):
-                    self.graph.add_edge(
-                        object_nodes[i],
-                        object_nodes[j],
-                        relationship="CO_OCCURS_WITH",
-                        chunk_id=chunk["chunk_id"],
-                    )
+    def _add_object_node(self, obj: dict):
+        label = obj.get("class", "unknown").capitalize()
+        track_id = str(obj.get("track_id", "unknown"))
 
-    def _add_extraction_results(
-        self, extraction: ExtractionResult, chunk_node_id: str
-    ):
-        """
-        Add LLM-extracted entities and relationships to the graph.
-        """
-        # Add entity nodes and link to chunk
-        entity_node_ids = {}
-        for entity in extraction.entities:
-            ent_node_id = self._add_entity_node(entity)
-            entity_node_ids[entity.name] = ent_node_id
-
-            # Edge: entity MENTIONED_IN chunk
-            if not self.graph.has_edge(ent_node_id, chunk_node_id):
-                self.graph.add_edge(
-                    ent_node_id,
-                    chunk_node_id,
-                    relationship="MENTIONED_IN",
-                )
-
-        # Add inter-entity relationships
-        for rel in extraction.relationships:
-            source_norm = _normalize_node_id(rel.source)
-            target_norm = _normalize_node_id(rel.target)
-            source_id = f"entity_{source_norm}"
-            target_id = f"entity_{target_norm}"
-
-            # Ensure both nodes exist (they should from entities above)
-            if not self.graph.has_node(source_id):
-                self.graph.add_node(
-                    source_id,
-                    node_type="Object",
-                    name=rel.source,
-                    description="",
-                    chunk_ids=[extraction.chunk_id],
-                )
-            if not self.graph.has_node(target_id):
-                self.graph.add_node(
-                    target_id,
-                    node_type="Object",
-                    name=rel.target,
-                    description="",
-                    chunk_ids=[extraction.chunk_id],
-                )
-
-            self.graph.add_edge(
-                source_id,
-                target_id,
-                relationship=rel.relationship_type,
-                description=rel.description,
-                chunk_id=extraction.chunk_id,
+        node_id = f"object_{_normalize_id(label)}_{track_id}"
+        if not self.graph.has_node(node_id):
+            self.graph.add_node(
+                node_id,
+                node_type="Object",
+                label=label,
+                object_id=track_id
             )
-
-    def _add_temporal_edges(self, chunk_ids: list[int]):
-        """
-        Add FOLLOWED_BY edges between consecutive chunks.
-        """
-        sorted_ids = sorted(chunk_ids)
-        for i in range(len(sorted_ids) - 1):
-            src = f"chunk_{sorted_ids[i]}"
-            tgt = f"chunk_{sorted_ids[i + 1]}"
-            if self.graph.has_node(src) and self.graph.has_node(tgt):
-                self.graph.add_edge(
-                    src, tgt, relationship="FOLLOWED_BY"
-                )
+        return node_id
 
     def build_from_chunks(
         self,
         chunk_results: list[dict],
         extractor: LLMEntityExtractor,
     ):
-        """
-        Build the full knowledge graph from ingestion results.
-
-        Args:
-            chunk_results: List of chunk dicts from the ingestion JSON.
-            extractor: LLMEntityExtractor for entity/relationship extraction.
-        """
         logger.info("=" * 60)
         logger.info("KNOWLEDGE GRAPH CONSTRUCTION")
         logger.info("=" * 60)
         logger.info(f"Processing {len(chunk_results)} chunks")
 
-        chunk_ids = []
-
-        # Step 1: Extract entities from all chunks via LLM
         extractions = extractor.extract_batch(chunk_results)
 
-        # Step 2: Build graph
-        for chunk, extraction in zip(chunk_results, extractions):
-            chunk_id = chunk["chunk_id"]
-            chunk_ids.append(chunk_id)
+        chunk_nodes_created = []
 
-            # Add chunk node
-            chunk_node_id = self._add_chunk_node(chunk)
+        for chunk_idx, (chunk, extraction) in enumerate(zip(chunk_results, extractions)):
+            # 1. Video Node
+            stream_id = chunk.get("stream_id", "default")
+            source_video = chunk.get("source_video", "")
+            video_node = self._add_video_node(stream_id, source_video)
 
-            # Add CV-detected objects
-            self._add_cv_object_nodes(chunk, chunk_node_id)
+            # 2. Chunk Node
+            chunk_node = self._add_chunk_node(chunk)
+            chunk_nodes_created.append((chunk["chunk_id"], chunk_node))
 
-            # Add LLM-extracted entities and relationships
-            self._add_extraction_results(extraction, chunk_node_id)
+            # Edge: HAS_CHUNK
+            self.graph.add_edge(
+                video_node, chunk_node, relationship="HAS_CHUNK", sequence_order=chunk["chunk_id"]
+            )
 
-        # Step 3: Add temporal edges
-        self._add_temporal_edges(chunk_ids)
+            # 3. Summary Node
+            summary_node = self._add_summary_node(chunk)
+            if summary_node:
+                # Edge: DESCRIBES
+                self.graph.add_edge(
+                    summary_node, chunk_node, relationship="DESCRIBES", confidence_score=1.0
+                )
+
+            # 4. CV Objects and Frames
+            cv_meta = chunk.get("cv_metadata", {})
+            objects = cv_meta.get("objects", [])
+
+            start_time = float(chunk.get("start_timestamp", 0.0))
+
+            # Extract normalized labels from LLM for INVOLVED_IN heuristic
+            llm_entity_names = [_normalize_id(ent.name) for ent in extraction.entities]
+
+            for obj in objects:
+                obj_node = self._add_object_node(obj)
+                bbox = obj.get("bbox", [])
+                conf = float(obj.get("confidence", 0.0))
+                label_norm = _normalize_id(obj.get("class", ""))
+
+                # Edge: CONTAINS_OBJECT (Chunk -> Object)
+                self.graph.add_edge(
+                    chunk_node, obj_node, relationship="CONTAINS_OBJECT", bbox=bbox, confidence=conf
+                )
+
+                frames_seen = obj.get("frames_seen", [])
+                for f_offset in frames_seen:
+                    # Approximate frame timestamp based on offset
+                    frame_ts = start_time + (f_offset * 0.5)
+                    frame_node = self._add_frame_node(chunk["chunk_id"], f_offset, frame_ts)
+
+                    # Edge: HAS_FRAME (Chunk -> Frame)
+                    if not self.graph.has_edge(chunk_node, frame_node):
+                        self.graph.add_edge(
+                            chunk_node, frame_node, relationship="HAS_FRAME", offset_ns=f_offset
+                        )
+
+                    # Edge: CONTAINS_OBJECT (Frame -> Object)
+                    self.graph.add_edge(
+                        frame_node, obj_node, relationship="CONTAINS_OBJECT", bbox=bbox, confidence=conf
+                    )
+
+                # 5. INVOLVED_IN (Object -> Summary)
+                if summary_node:
+                    summary_text = self.graph.nodes[summary_node].get("text", "").lower()
+                    if label_norm in summary_text or label_norm in llm_entity_names:
+                        self.graph.add_edge(
+                            obj_node, summary_node, relationship="INVOLVED_IN"
+                        )
+
+        # 6. TEMPORAL_NEXT Edges
+        chunk_nodes_created.sort(key=lambda x: x[0])
+        for i in range(len(chunk_nodes_created) - 1):
+            src_node = chunk_nodes_created[i][1]
+            tgt_node = chunk_nodes_created[i + 1][1]
+            self.graph.add_edge(src_node, tgt_node, relationship="TEMPORAL_NEXT")
 
         logger.info(
-            f"Graph built: {self.graph.number_of_nodes()} nodes, "
-            f"{self.graph.number_of_edges()} edges"
+            f"Graph built: {self.graph.number_of_nodes()} nodes, {self.graph.number_of_edges()} edges"
         )
 
     def save(self, path: Optional[str] = None):
-        """
-        Save the graph to disk.
-
-        Args:
-            path: Override path. Defaults to config.persist_dir.
-        """
         if path is None:
             os.makedirs(self.config.persist_dir, exist_ok=True)
             if self.config.output_format == "graphml":
-                path = os.path.join(
-                    self.config.persist_dir, "knowledge_graph.graphml"
-                )
+                path = os.path.join(self.config.persist_dir, "knowledge_graph.graphml")
             else:
-                path = os.path.join(
-                    self.config.persist_dir, "knowledge_graph.json"
-                )
+                path = os.path.join(self.config.persist_dir, "knowledge_graph.json")
 
         os.makedirs(os.path.dirname(path), exist_ok=True)
 
@@ -288,20 +217,21 @@ class GraphBuilder:
             self._save_json(path)
 
     def _save_graphml(self, path: str):
-        """Save as GraphML (compatible with Gephi, yEd, etc.)."""
-        # GraphML doesn't support list attributes, so convert them
         G_copy = self.graph.copy()
         for node_id in G_copy.nodes:
             for key, value in list(G_copy.nodes[node_id].items()):
-                if isinstance(value, list):
-                    G_copy.nodes[node_id][key] = str(value)
+                if isinstance(value, list) or isinstance(value, dict):
+                    G_copy.nodes[node_id][key] = json.dumps(value)
+
+        for src, tgt in G_copy.edges:
+            for key, value in list(G_copy.edges[src, tgt].items()):
+                if isinstance(value, list) or isinstance(value, dict):
+                    G_copy.edges[src, tgt][key] = json.dumps(value)
 
         nx.write_graphml(G_copy, path)
         logger.info(f"Graph saved as GraphML: {path}")
 
     def _save_json(self, path: str):
-        """Save as JSON (node-link format)."""
-        import json
         from networkx.readwrite import json_graph
 
         data = json_graph.node_link_data(G=self.graph)
@@ -310,7 +240,6 @@ class GraphBuilder:
         logger.info(f"Graph saved as JSON: {path}")
 
     def get_stats(self) -> dict:
-        """Return summary statistics of the graph."""
         node_types = {}
         for _, attrs in self.graph.nodes(data=True):
             nt = attrs.get("node_type", "unknown")

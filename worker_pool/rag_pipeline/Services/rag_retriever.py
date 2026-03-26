@@ -5,6 +5,9 @@ It includes functions to retrieve text and image answers using the RAG pipeline,
 incorporating query decomposition, rewriting, vector store retrieval, and reranking.
 """
 
+import logging
+logger = logging.getLogger(__name__)
+
 from typing import List
 import json
 import os
@@ -35,6 +38,36 @@ from rag_pipeline.Services.query_rewriting_handler import handle_query_rewriting
 from rag_pipeline.Embeddings.embedding_models import create_embedding_model
 from rag_pipeline.VectorStores.vector_store_generator import create_vector_store
 from rag_pipeline.Reranker.reranking_helper import apply_reranker, get_reranker_model
+
+def _deduplicate_video_segments(chunks: List[Document]) -> List[Document]:
+    """
+    Deduplicate video chunks that share the same video_segment_id.
+    
+    When transcript and caption are stored as separate chunks, both may be
+    retrieved for the same video segment. This keeps only the highest-ranked
+    one (earliest in the list) to avoid wasting LLM context window.
+    Non-video chunks pass through unchanged.
+    """
+    seen_segments = set()
+    deduped = []
+    
+    for chunk in chunks:
+        segment_id = chunk.metadata.get("video_segment_id") if isinstance(chunk.metadata, dict) else None
+        
+        if segment_id is None:
+            # Non-video chunk — always keep
+            deduped.append(chunk)
+        elif segment_id not in seen_segments:
+            # First time seeing this video segment — keep it
+            seen_segments.add(segment_id)
+            deduped.append(chunk)
+        # else: duplicate video segment — skip
+    
+    if len(chunks) != len(deduped):
+        logger.info(f"[DEDUP] Removed {len(chunks) - len(deduped)} duplicate video segment chunks")
+    
+    return deduped
+
 
 def _load_graph_context(collection_name: str) -> str:
     """
@@ -83,15 +116,36 @@ def _load_graph_context(collection_name: str) -> str:
                 node_id = node.get("id", "")
                 # Extract label from data elements
                 label = node_id
+                node_type = "Entity"
                 for data_el in node:
-                    key = data_el.get("key", "")
-                    if "label" in key.lower() or "name" in key.lower():
-                        label = data_el.text or label
-                        break
-                    if data_el.text and len(data_el.text) > len(label):
+                    key = data_el.get("key", "").lower()
+                    if "node_type" in key:
+                        node_type = data_el.text or "Entity"
+                    
+                    if key in ["label", "name", "text", "class_name", "filename"]:
+                        if data_el.text:
+                            label = data_el.text
+                    elif data_el.text and len(data_el.text) > len(label) and key not in ["uuid", "embedding", "cv_meta"]:
+                        # Fallback for weird keys but exclude noise
                         label = data_el.text
+                
+                # Format node representation based on type
+                if node_type == "Summary":
+                    label = f'Summary: "{label}"'
+                elif node_type == "Object":
+                    label = f"Object: {label}"
+                elif node_type == "Video":
+                    label = f"Video: {label}"
+                elif node_type == "Chunk":
+                    label = f"Chunk (ID: {node_id.replace('chunk_', '')})"
+                elif node_type == "Frame":
+                    label = f"Frame (ID: {node_id.replace('frame_', '')})"
+                
                 node_labels[node_id] = label
-                all_entities.append(label)
+                
+                # Exclude purely structural nodes from the main entities list to reduce noise
+                if node_type not in ["Chunk", "Frame"]:
+                    all_entities.append(label)
 
             for edge in edges:
                 src = edge.get("source", "")
@@ -104,6 +158,9 @@ def _load_graph_context(collection_name: str) -> str:
                 src_label = node_labels.get(src, src)
                 tgt_label = node_labels.get(tgt, tgt)
                 rel_str = f"{src_label} --[{rel_type}]--> {tgt_label}" if rel_type else f"{src_label} --> {tgt_label}"
+                
+                # Filter out pure structural noise from relationships if not needed, 
+                # but relationships like DESCRIBES or TEMPORAL_NEXT can be helpful context
                 all_relationships.append(rel_str)
         except Exception as e:
             print(f"[GRAPH] Error parsing {gf}: {e}")
@@ -278,6 +335,11 @@ def get_rag_answer_text(
             docs=returned_chunks, 
             top_k= reranker_top_k)
 
+    # --- Video Segment Deduplication ---
+    # When transcript and caption are separate chunks, both may be retrieved
+    # for the same time segment. Keep only the highest-ranked one.
+    returned_chunks = _deduplicate_video_segments(returned_chunks)
+
     # --- Knowledge Graph Context Injection ---
     # If GraphML files exist for this datastore, parse and inject as extra context
     try:
@@ -409,7 +471,14 @@ def get_rag_answer_text(
         metadata = chunk.metadata
         if isinstance(metadata, dict):
             source = metadata.get("source", "Unknown Source")
-            page = metadata.get("page_number", "N/A")
+            # For video chunks, use timestamp range as "page"; for docs, use page_number
+            chunk_type = metadata.get("chunk_type", "")
+            if chunk_type in ("transcript", "caption", "fallback"):
+                start_ts = metadata.get("start_timestamp", "?")
+                end_ts = metadata.get("end_timestamp", "?")
+                page = f"{start_ts}s-{end_ts}s ({chunk_type})"
+            else:
+                page = metadata.get("page_number", "N/A")
             unique_pairs.add((source, page))
 
     unique_list = [{"source": s, "page_number": p} for s, p in unique_pairs]
